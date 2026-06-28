@@ -1,0 +1,10 @@
+{
+  "name": "sistema-academico-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node dist/main.js",
+    "dev": "ts-node src/main.ts"
+  },
+  "dependencies": {}
+}
