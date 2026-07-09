@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PortafolioInformeFinal } from './modules/portafolio-docente/domain/informe-final.entity';
+import { PortafolioReporteNotas } from './modules/portafolio-docente/domain/reporte-notas.entity';
+import { PortafolioAceptacionEstudiante } from './modules/portafolio-docente/domain/aceptacion-estudiante.entity';
 import { PortafolioModule } from './modules/portafolio-docente/portafolio.module';
 
 @Module({
@@ -17,7 +19,7 @@ import { PortafolioModule } from './modules/portafolio-docente/portafolio.module
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [PortafolioInformeFinal],
+        entities: [PortafolioInformeFinal, PortafolioReporteNotas, PortafolioAceptacionEstudiante],
         synchronize: false,
       }),
     }),
