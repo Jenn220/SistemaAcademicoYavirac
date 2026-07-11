@@ -14,6 +14,10 @@ export interface IVinculacionRepository {
   obtenerVinculacionesEstudiantes(): Promise<VinculacionEstudianteEntity[]>;
   obtenerInformes(): Promise<VinculacionInforme[]>;
   obtainReporteConsolidadoRaw(idVinculacion: number): Promise<any[]>;
+  obtainActaCompromisoRaw(idVinculacion: number): Promise<any>;
+  obtainReporteAsistenciaTutorRaw(idVinculacion: number): Promise<any[]>;
+  obtainCertificadoVinculacionRaw(idVinculacion: number): Promise<any>;
+  obtainInformeActividadesRaw(idVinculacion: number): Promise<any[]>;
   crearActividadEstudiante(datos: CreateActividadEstudianteDto): Promise<VinculacionActividadEstudiante>;
   crearAsistenciaTutor(datos: CreateAsistenciaTutorDto): Promise<VinculacionAsistenciaTutor>; 
   crearVinculacion(datos: CreateVinculacionDto): Promise<VinculacionEstudianteEntity>;

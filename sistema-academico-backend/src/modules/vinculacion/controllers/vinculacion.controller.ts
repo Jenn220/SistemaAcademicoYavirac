@@ -59,4 +59,23 @@ export class VinculacionController {
   async crearInforme(@Body() createInformeDto: CreateInformeDto) {
     return await this.vinculacionService.crearInforme(createInformeDto);
   }
+
+ @Get('acta-compromiso/:id')
+  async obtenerActaCompromiso(@Param('id', ParseIntPipe) id: number) {
+    return await this.vinculacionService.obtenerActaCompromiso(id);
+  }
+
+  @Get('asistencia-tutor/:id')
+  async obtenerReporteAsistenciaTutor(@Param('id', ParseIntPipe) id: number) {
+    return await this.vinculacionService.obtenerReporteAsistenciaTutor(id);
+  }
+  @Get('informe-actividades/:id')
+  async obtenerInformeActividades(@Param('id', ParseIntPipe) id: number) {
+    return await this.vinculacionService.obtenerInformeActividades(id);
+  }
+
+  @Get('certificado/:id')
+  async obtenerCertificadoVinculacion(@Param('id', ParseIntPipe) id: number) {
+    return await this.vinculacionService.obtenerCertificadoVinculacion(id);
+  }
 }
