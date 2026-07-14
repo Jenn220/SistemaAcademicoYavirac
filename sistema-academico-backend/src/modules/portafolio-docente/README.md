@@ -20,12 +20,12 @@ Módulo NestJS que expone los endpoints del portafolio docente: **Informe Final*
 
 Cada feature del módulo sigue arquitectura hexagonal, en 5 capas dentro de `src/modules/portafolio-docente/`:
 
-| Capa | Carpeta | Responsabilidad |
-|---|---|---|
-| Dominio | `domain/` | Entidad TypeORM, 1 archivo por tabla |
-| DTO | `dto/` | Forma de entrada (`Create...Dto`) y de salida (`...ResponseDto`) de la API |
-| Puerto | `ports/` | Interfaz `I...Repository` + token de inyección `..._REPOSITORY` |
-| Adaptador | `adapters/` | Implementación Postgres (`...Pg`) |
+| Capa                 | Carpeta                     | Responsabilidad                                                                                          |
+| -------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Dominio              | `domain/`                   | Entidad TypeORM, 1 archivo por tabla                                                                     |
+| DTO                  | `dto/`                      | Forma de entrada (`Create...Dto`) y de salida (`...ResponseDto`) de la API                               |
+| Puerto               | `ports/`                    | Interfaz `I...Repository` + token de inyección `..._REPOSITORY`                                          |
+| Adaptador            | `adapters/`                 | Implementación Postgres (`...Pg`)                                                                        |
 | Controller / Service | `controllers/`, `services/` | Controller delgado que delega en el service; el service contiene la lógica y lanza excepciones de NestJS |
 
 **Convención de nombres (importante, es mixta a propósito):**
@@ -135,6 +135,7 @@ Base: `/api/portafolio/informe-final`
 Crea el registro de informe final (cabecera: docente, periodo, asignatura, paralelo, horario).
 
 **Body** (`CreateInformeFinalDto`):
+
 ```json
 {
   "id_docente": 1,
@@ -150,6 +151,7 @@ Crea el registro de informe final (cabecera: docente, periodo, asignatura, paral
 Devuelve el informe final de ese docente en ese periodo.
 
 **Respuesta** (`InformeFinalResponseDto`), `404` si no existe:
+
 ```json
 {
   "informe": {
@@ -180,6 +182,7 @@ Corresponde al **Formato 07 — Aceptación de Nota** (cabecera con carrera/doce
 Crea la cabecera (`portafolio_reporte_notas`) y copia, para cada estudiante matriculado en esa `oferta_asignatura`, su nota correspondiente desde `matricula_detalle` hacia `portafolio_aceptacion_estudiante` (todo en una transacción).
 
 **Body** (`CreateReporteNotasDto`):
+
 ```json
 {
   "id_periodo": 4,
@@ -190,20 +193,22 @@ Crea la cabecera (`portafolio_reporte_notas`) y copia, para cada estudiante matr
 
 `tipo_reporte` acepta 6 alias fijos que se normalizan al valor canónico antes de validar (`dto/tipo-reporte.util.ts`):
 
-| Alias aceptado | Valor guardado en BD |
-|---|---|
-| `"PARCIAL UNO"` / `"APORTE_1"` | `APORTE_1` |
-| `"PARCIAL DOS"` / `"APORTE_2"` | `APORTE_2` |
-| `"EXAMEN SUPLETORIO"` / `"SUPLETORIO"` | `SUPLETORIO` |
+| Alias aceptado                         | Valor guardado en BD |
+| -------------------------------------- | -------------------- |
+| `"PARCIAL UNO"` / `"APORTE_1"`         | `APORTE_1`           |
+| `"PARCIAL DOS"` / `"APORTE_2"`         | `APORTE_2`           |
+| `"EXAMEN SUPLETORIO"` / `"SUPLETORIO"` | `SUPLETORIO`         |
 
 Cualquier otro valor → `400 Bad Request` (rechazado por `@IsIn` de `class-validator`).
 
 **Reglas de negocio:**
+
 - Si ya existe un reporte para esa `id_oferta_asignatura` + `tipo_reporte` (constraint `uk_prn_oferta_tipo`), el service lanza `409 Conflict` con mensaje `"Ya existe un reporte de <TIPO> generado para esta materia"` **antes** de intentar el insert (no se deja fallar la BD con el error crudo).
 - La columna de nota que se copia depende del tipo: `APORTE_1 → nota_ap1`, `APORTE_2 → nota_ap2`, `SUPLETORIO → nota_supletorio` (mapa `COLUMNA_NOTA` en `aceptacion-notas.pg.ts`).
 - Se crea 1 fila de `portafolio_aceptacion_estudiante` por cada fila de `matricula_detalle` con ese `id_oferta_asignatura`, sin filtrar por estado.
 
 **Respuesta** (entidad creada, valores por defecto de BD como `estado`/`fecha_generacion` aparecen `null` porque TypeORM no relee la fila tras el insert):
+
 ```json
 {
   "idPeriodo": 4,
@@ -225,6 +230,7 @@ GET /api/portafolio/aceptacion-notas/1/APORTE_1
 ```
 
 **Respuesta** (`ReporteNotasResponseDto`), `404` si no existe:
+
 ```json
 {
   "reporte": {
@@ -281,4 +287,4 @@ GET /api/portafolio/aceptacion-notas/1/APORTE_1
 
 La BD normalmente no trae datos base. Para poder probar estos endpoints hace falta, en orden: `periodo_academico` → `carrera` → `nivel` → `asignatura` → `docente` → `jornada` → `paralelo` → `periodo_carrera` → `periodo_docente` → `oferta_asignatura` → `estudiante` → `matricula` → `matricula_detalle` (con notas reales) → recién ahí se puede llamar al `POST` de este módulo.
 
-Recordar el detalle de `periodo_docente`: `oferta_asignatura` no se llena con `id_docente` directo, primero hay que crear la fila en `periodo_docente` y usar su `id_periodo_docente`.
+Recordar el detalle de `periodo_docente`: `oferta_asignatura` no se llena con `id_docente` directo, primero hay que crear la fila en `periodo_docente` y usar su `id_periodo_docente`...
