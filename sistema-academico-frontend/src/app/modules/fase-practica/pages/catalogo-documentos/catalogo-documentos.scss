@@ -1,0 +1,51 @@
+body{
+
+    background:#F5F7FA;
+
+}
+
+.titulo{
+
+    color:#003B71;
+
+    font-weight:bold;
+
+}
+
+.subtitulo{
+
+    color:#F7941D;
+
+}
+
+.descripcion{
+
+    color:#666;
+
+}
+
+.card{
+
+    border:none;
+
+    border-radius:16px;
+
+    transition:.3s;
+
+}
+
+.card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+.icono{
+
+    font-size:55px;
+
+    color:#003B71;
+
+    margin-bottom:20px;
+
+}

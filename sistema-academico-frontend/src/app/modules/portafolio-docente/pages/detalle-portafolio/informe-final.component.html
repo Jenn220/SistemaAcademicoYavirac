@@ -1,0 +1,179 @@
+<div class="informe-container" *ngIf="informe">
+
+  <!-- Encabezado institucional, igual al PDF -->
+  <table class="header-table">
+    <tr>
+      <td class="logo-cell" rowspan="4">
+        <img src="assets/images/logo.png" alt="Logo Yavirac" />
+      </td>
+      <td class="titulo-cell">INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC</td>
+      <td class="codigo-label">CÓDIGO</td>
+      <td class="codigo-valor" rowspan="4">010104</td>
+    </tr>
+    <tr><td class="titulo-cell">MACROPROCESO 01 DOCENCIA</td><td></td></tr>
+    <tr><td class="titulo-cell rojo">PROCESO 01 SEGUIMIENTO, CONTROL Y EVALUACIÓN DEL PROCESO DOCENTE</td><td></td></tr>
+    <tr><td class="titulo-cell">FORMATO 04 INFORME FINAL PROCESO DOCENTE</td><td></td></tr>
+  </table>
+
+  <h1 class="main-title">INFORME FINAL DE PROCESO DOCENTE</h1>
+
+  <form [formGroup]="form">
+
+    <!-- 1. Antecedentes -->
+    <section>
+      <h2>1. Antecedentes</h2>
+      <textarea formControlName="antecedentes" rows="5"></textarea>
+      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
+  Este campo es obligatorio.
+</small>
+    </section>
+
+    <!-- 2. Datos de la asignatura -->
+    <section>
+      <h2>2. Datos de la asignatura</h2>
+      <table class="datos-table">
+        <tr><td class="label">Nombre del Docente</td><td>{{ informe.informe.nombre_docente }}</td></tr>
+        <tr>
+          <td class="label">Nombre de la Asignatura</td>
+          <td>
+            <select formControlName="idAsignatura">
+              <option *ngFor="let a of asignaturas" [value]="a.id">{{ a.nombre }}</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td class="label">Paralelo</td>
+          <td>
+            <select formControlName="idParalelo">
+              <option *ngFor="let p of paralelos" [value]="p.id">{{ p.nombre }}</option>
+            </select>
+          </td>
+        </tr>
+        <tr><td class="label">Horario</td><td><input type="text" formControlName="horario" /></td></tr>
+        <tr><td class="label">Periodo</td><td>{{ informe.informe.periodo }}</td></tr>
+        <tr><td class="label">Fecha</td><td>{{ fechaActual | date:'dd-MM-yyyy' }}</td></tr>
+      </table>
+    </section>
+
+    <!-- 3. Desarrollo general de actividades -->
+    <section>
+      <h2>3. Desarrollo general de actividades</h2>
+      <textarea formControlName="desarrolloActividades" rows="5" placeholder="Describe cómo se desarrolló la asignatura durante el semestre..."></textarea>
+      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
+  Este campo es obligatorio.
+</small>
+    </section>
+
+    <!-- 4. Resultados cualitativos obtenidos -->
+    <section>
+      <h2>4. Resultados cualitativos obtenidos</h2>
+
+      <h3>a. Infraestructura y ambiente pedagógico</h3>
+      <textarea formControlName="infraestructuraResultado" rows="3"></textarea>
+      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
+  Este campo es obligatorio.
+</small>
+      <h4>Recomendaciones de mejora en la Infraestructura y ambiente pedagógico</h4>
+      <textarea formControlName="infraestructuraRecomendacion" rows="3"></textarea>
+      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
+  Este campo es obligatorio.
+</small>
+
+      <h3>b. Desarrollo del Plan de Estudios de la Asignatura</h3>
+      <textarea formControlName="planEstudiosResultado" rows="3"></textarea>
+      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
+  Este campo es obligatorio.
+</small>
+      <h4>Recomendaciones de mejora o actualización del Plan de Estudios de la Asignatura</h4>
+      <textarea formControlName="planEstudiosRecomendacion" rows="3"></textarea>
+      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
+  Este campo es obligatorio.
+</small>
+    </section>
+
+    <!-- 5. Resultados cuantitativos obtenidos -->
+    <section>
+      <h2>5. Resultados cuantitativos obtenidos</h2>
+
+      <table class="notas-table">
+        <thead>
+          <tr>
+            <th>No</th><th>Cédula</th><th>Apellidos</th><th>Nombres</th>
+            <th>Asist.</th><th>P1</th><th>P2</th><th>RC</th><th>NF</th>
+            <th>Evaluación</th><th>Promoción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of estudiantes; let i = index">
+            <td>{{ i + 1 }}</td><td>{{ e.cedula }}</td><td>{{ e.apellidos }}</td><td>{{ e.nombres }}</td>
+            <td>{{ e.asistencia }}%</td><td>{{ e.p1 }}</td><td>{{ e.p2 }}</td><td>{{ e.rc ?? '' }}</td>
+            <td>{{ e.nf }}</td><td>{{ e.evaluacion }}</td><td>{{ e.promocion }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tablas-resumen">
+        <table class="resumen-table">
+          <thead><tr><th>Calificación</th><th>Equivalencia</th><th>Frecuencia</th><th>Porcentaje</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of resumenEquivalencia">
+              <td>{{ r.min }} - {{ r.max }}</td><td>{{ r.label }}</td><td>{{ r.frecuencia }}</td><td>{{ r.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr class="total-row"><td colspan="2">TOTAL</td><td>{{ totalEstudiantes }}</td><td>100,00%</td></tr>
+          </tbody>
+        </table>
+
+        <table class="resumen-table">
+          <thead><tr><th>Promoción</th><th>Frecuencia</th><th>Porcentaje</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let p of resumenPromocion">
+              <td>{{ p.label }}</td><td>{{ p.frecuencia }}</td><td>{{ p.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr class="total-row"><td>TOTAL</td><td>{{ totalEstudiantes }}</td><td>100,00%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Recomendaciones para los resultados cuantitativos</h4>
+      <textarea formControlName="recomendacionesFinales" rows="3"></textarea>
+      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
+  Este campo es obligatorio.
+</small>
+    </section>
+
+    <!-- Firmas -->
+    <section class="firmas">
+      <table class="firmas-table">
+        <tr>
+          <td>Docente: {{ informe.firmas.docente }}</td>
+          <td>Coordinador: {{ informe.firmas.fecha_firma_coordinador ? 'Ing. Raúl Páez' : 'Pendiente' }}</td>
+        </tr>
+        <tr>
+  <td>Fecha: {{ fechaActual | date:'dd-MM-yyyy' }}</td>
+  <td>Fecha: {{ fechaActual | date:'dd-MM-yyyy' }}</td>
+</tr>
+      </table>
+    </section>
+
+    <div class="acciones">
+      <button type="button" [disabled]="guardando" (click)="solicitarGuardar()">
+        {{ guardando ? 'Guardando...' : 'Guardar informe' }}
+      </button>
+      <span *ngIf="guardadoOk" class="ok-msg">✅ Guardado (datos de asignatura)</span>
+    </div>
+  </form>
+
+  <!-- Modal de confirmación -->
+  <div class="modal-overlay" *ngIf="mostrarConfirmacion">
+    <div class="modal-box">
+      <h3>¿Guardar informe?</h3>
+      <p>Se van a guardar los datos de la asignatura (asignatura, paralelo y horario). El resto de las secciones aún no se guarda en el sistema.</p>
+      <div class="modal-acciones">
+        <button type="button" class="btn-cancelar" (click)="cancelarGuardar()">Cancelar</button>
+        <button type="button" class="btn-confirmar" (click)="confirmarGuardar()">Sí, guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="error" class="error-msg">{{ error }}</div>

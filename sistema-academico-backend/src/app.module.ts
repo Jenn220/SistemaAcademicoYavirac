@@ -8,6 +8,7 @@ import { PortafolioModule } from './modules/portafolio-docente/portafolio.module
 import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
 import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   controllers: [AppController],
@@ -31,6 +32,7 @@ import { FasePracticaModule } from './modules/fase-practica/fase-practica.module
     PortafolioModule,
     VinculacionModule,
     FasePracticaModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

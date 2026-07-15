@@ -1,0 +1,89 @@
+<div class="layout">
+
+  <aside class="sidebar">
+
+    <h2>Sistema Académico</h2>
+
+    <div class="menu">
+
+      <div class="menu-title">
+        Inicio
+      </div>
+
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        🏠 Bienvenida
+      </a>
+
+
+      <div class="menu-title">
+        Portafolio Docente
+      </div>
+
+      <a routerLink="/portafolio-docente"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact:true}">
+
+        Informe Final
+
+      </a>
+
+      <a routerLink="/portafolio-docente/aceptacion-notas"
+         routerLinkActive="active">
+
+        Aceptación de Notas
+
+      </a>
+
+
+
+      <div class="menu-title">
+        Fase Práctica
+      </div>
+
+      <a routerLink="/fase-practica"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact:true}">
+
+        Catálogo Documentos
+
+      </a>
+
+      <a routerLink="/fase-practica/carta-compromiso"
+         routerLinkActive="active">
+
+        Carta Compromiso
+
+      </a>
+
+      <a routerLink="/fase-practica/registro-asistencia"
+         routerLinkActive="active">
+
+        Registro Asistencia
+
+      </a>
+
+
+
+      <div class="menu-title">
+        Otros módulos
+      </div>
+
+      <a routerLink="/vinculacion">
+
+        Vinculación
+
+      </a>
+
+    </div>
+
+  </aside>
+
+
+
+  <main class="contenido">
+
+    <router-outlet></router-outlet>
+
+  </main>
+
+</div>

@@ -1,0 +1,147 @@
+@if(carta){
+
+<div class="toolbar no-print">
+
+    <button
+        class="btn btn-outline-secondary"
+        (click)="volver()">
+
+        <i class="bi bi-arrow-left"></i>
+
+        Volver
+
+    </button>
+
+    <button
+        class="btn btn-danger"
+        (click)="descargarPDF()">
+
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+
+        Descargar PDF
+
+    </button>
+
+</div>
+
+<div
+    id="documento-f01"
+    class="documento">
+
+    <app-document-header
+        [titulo]="'CARTA DE PRESENTACIÓN Y ACTA COMPROMISO'"
+        [codigo]="'010201'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        <app-student-presentation
+            [carta]="carta">
+        </app-student-presentation>
+        
+
+        <br>
+
+        <p>
+
+            <strong>Señores:</strong>
+
+        </p>
+
+        <p>
+
+            {{ carta.destinatario }}
+
+        </p>
+
+        @for(parrafo of carta.cuerpo; track parrafo){
+
+            <p>
+
+                {{ parrafo }}
+
+            </p>
+
+        }
+
+        <h4>
+
+            OBLIGACIONES
+
+        </h4>
+
+        <ol>
+
+            @for(item of carta.obligaciones; track item){
+
+                <li>
+
+                    {{ item }}
+
+                </li>
+
+            }
+
+        </ol>
+
+        <h4>
+
+            PROHIBICIONES
+
+        </h4>
+
+        <ol>
+
+            @for(item of carta.prohibiciones; track item){
+
+                <li>
+
+                    {{ item }}
+
+                </li>
+
+            }
+
+        </ol>
+
+        <h4>
+
+            COMPROMISOS DE CONFIDENCIALIDAD
+
+        </h4>
+
+        <ol>
+
+            @for(item of carta.compromisosConfidencialidad; track item){
+
+                <li>
+
+                    {{ item }}
+
+                </li>
+
+            }
+
+        </ol>
+
+        <div class="firma">
+
+            <div class="linea"></div>
+
+            <strong>
+
+                {{ carta.estudiante.nombre }}
+
+            </strong>
+
+            <br>
+
+            C.C. {{ carta.estudiante.cedula }}
+
+        </div>
+
+    </div>
+
+</div>
+
+}
