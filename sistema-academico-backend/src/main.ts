@@ -11,7 +11,7 @@ pg.types.setTypeParser(20, (value: string) => (value === null ? null : parseInt(
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -19,7 +19,12 @@ async function bootstrap() {
       forbidNonWhitelisted: false,
     }),
   );
-  await app.listen(process.env.PORT || 3000);
+  app.enableCors({ origin: process.env.CORS_ORIGIN || 'http://localhost:4200' });
+  app.setGlobalPrefix('api');
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Servidor corriendo en http://localhost:${port}/api`);
 }
 
 bootstrap();

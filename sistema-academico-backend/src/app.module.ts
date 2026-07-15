@@ -1,6 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PortafolioInformeFinal } from './modules/portafolio-docente/domain/informe-final.entity';
+import { PortafolioReporteNotas } from './modules/portafolio-docente/domain/reporte-notas.entity';
+import { PortafolioAceptacionEstudiante } from './modules/portafolio-docente/domain/aceptacion-estudiante.entity';
+import { PortafolioModule } from './modules/portafolio-docente/portafolio.module';
+import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
 import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
 
@@ -8,17 +13,23 @@ import { FasePracticaModule } from './modules/fase-practica/fase-practica.module
   controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT || 5432),
-      username: process.env.DB_USERNAME || process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || process.env.DB_PASS || 'postgres',
-      database: process.env.DB_NAME || process.env.DB_DATABASE || 'postgres',
-      autoLoadEntities: true,
-      synchronize: true,
-      logging: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST') || 'localhost',
+        port: config.get<number>('DB_PORT') || 5432,
+        username: config.get<string>('DB_USER') || 'postgres',
+        password: String(config.get('DB_PASSWORD') || 'postgres'),
+        database: config.get<string>('DB_NAME') || 'postgres',
+        entities: [PortafolioInformeFinal, PortafolioReporteNotas, PortafolioAceptacionEstudiante],
+        autoLoadEntities: true,
+        synchronize: false,
+      }),
     }),
+    PortafolioModule,
+    VinculacionModule,
     FasePracticaModule,
   ],
 })
