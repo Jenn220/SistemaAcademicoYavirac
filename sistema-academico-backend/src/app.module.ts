@@ -6,8 +6,11 @@ import { PortafolioReporteNotas } from './modules/portafolio-docente/domain/repo
 import { PortafolioAceptacionEstudiante } from './modules/portafolio-docente/domain/aceptacion-estudiante.entity';
 import { PortafolioModule } from './modules/portafolio-docente/portafolio.module';
 import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
+import { AppController } from './app.controller';
+import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
 
 @Module({
+  controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
@@ -15,11 +18,11 @@ import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get<string>('DB_USER'),
-        password: String(config.get('DB_PASSWORD')),
-        database: config.get<string>('DB_NAME'),
+        host: config.get<string>('DB_HOST') || 'localhost',
+        port: config.get<number>('DB_PORT') || 5432,
+        username: config.get<string>('DB_USER') || 'postgres',
+        password: String(config.get('DB_PASSWORD') || 'postgres'),
+        database: config.get<string>('DB_NAME') || 'postgres',
         entities: [PortafolioInformeFinal, PortafolioReporteNotas, PortafolioAceptacionEstudiante],
         autoLoadEntities: true,
         synchronize: false,
@@ -27,6 +30,7 @@ import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
     }),
     PortafolioModule,
     VinculacionModule,
+    FasePracticaModule,
   ],
 })
 export class AppModule {}

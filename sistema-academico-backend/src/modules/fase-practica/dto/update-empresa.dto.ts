@@ -1,13 +1,15 @@
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class CreateEmpresaDto {
+export class UpdateEmpresaDto {
+  @IsOptional()
   @IsString()
   @MaxLength(20)
-  ruc!: string;
+  ruc?: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(200)
-  razon_social!: string;
+  razon_social?: string;
 
   @IsOptional()
   @IsString()
@@ -34,4 +36,3 @@ export class CreateEmpresaDto {
   @MaxLength(50)
   estado?: string;
 }
-
