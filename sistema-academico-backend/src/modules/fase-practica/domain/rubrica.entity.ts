@@ -7,11 +7,11 @@ export class RubricaEntity {
   @Generated('increment')
   id_rubrica!: number;
 
-  @Column({ name: 'nombre', type: 'varchar', length: 200 })
-  nombre!: string;
+  @Column({ name: 'nombre', type: 'varchar', length: 200, nullable: true })
+  nombre?: string;
 
-  @Column({ name: 'tipo', type: 'varchar', length: 100 })
-  tipo!: string;
+  @Column({ name: 'tipo', type: 'varchar', length: 100, nullable: true })
+  tipo?: string;
 
   @Column({ name: 'estado', type: 'varchar', length: 50, default: 'ACTIVO' })
   estado?: string;
