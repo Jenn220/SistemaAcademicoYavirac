@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CreateEmpresaDto } from '../dto/create-empresa.dto';
 import { UpdateEmpresaDto } from '../dto/update-empresa.dto';
 import { EmpresaService } from '../services/empresa.service';
@@ -13,8 +13,8 @@ export class EmpresaController {
   }
 
   @Get('empresas')
-  findAllEmpresas() {
-    return this.empresaService.findAllEmpresas();
+  findAllEmpresas(@Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.empresaService.findAllEmpresas(skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Get('empresas/:id')
