@@ -1,45 +1,38 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// 👇 1. Descomentamos la importación del archivo
+import { PortafolioInformeFinal } from './modules/portafolio-docente/domain/informe-final.entity';
+import { PortafolioReporteNotas } from './modules/portafolio-docente/domain/reporte-notas.entity';
+import { PortafolioAceptacionEstudiante } from './modules/portafolio-docente/domain/aceptacion-estudiante.entity';
+import { PortafolioModule } from './modules/portafolio-docente/portafolio.module';
 import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
-<<<<<<< Updated upstream
-=======
 import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
 import { HealthModule } from './health/health.module';
->>>>>>> Stashed changes
 
 @Module({
+  controllers: [AppController],
   imports: [
-    ConfigModule.forRoot({ 
-      isGlobal: true 
-    }),
-
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USER'),
-        password: String(configService.get('DB_PASSWORD')),
-        database: configService.get<string>('DB_NAME'),
-        autoLoadEntities: true, 
-        synchronize: true, 
+        host: config.get<string>('DB_HOST') || 'localhost',
+        port: config.get<number>('DB_PORT') || 5432,
+        username: config.get<string>('DB_USER') || 'postgres',
+        password: String(config.get('DB_PASSWORD') || 'postgres'),
+        database: config.get<string>('DB_NAME') || 'postgres',
+        entities: [PortafolioInformeFinal, PortafolioReporteNotas, PortafolioAceptacionEstudiante],
+        autoLoadEntities: true,
+        synchronize: false,
       }),
     }),
-
-    // 👇 2. Descomentamos el módulo para que NestJS lo registre
+    PortafolioModule,
     VinculacionModule,
-<<<<<<< Updated upstream
-=======
     FasePracticaModule,
     HealthModule,
->>>>>>> Stashed changes
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

@@ -1,0 +1,71 @@
+<app-layout-shell title="Detalle de proyecto" subtitle="Información del proyecto de vinculación">
+  <div class="detail-shell" *ngIf="proyecto; else notFound">
+    <section class="detail-card">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span>Carrera</span>
+          <strong>{{ proyecto.carrera || 'No disponible' }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Entidad beneficiaria</span>
+          <strong>{{ proyecto.entidad_beneficiaria || 'No disponible' }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Estudiante</span>
+          <strong>{{ proyecto.estudiante || 'No disponible' }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Docente tutor</span>
+          <strong>{{ proyecto.docente_tutor || 'No disponible' }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Tutor entidad receptora</span>
+          <strong>{{ proyecto.tutor_entidad_receptora || 'No disponible' }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Horas totales</span>
+          <strong>{{ proyecto.total_horas ?? 0 }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="activities-card" *ngIf="proyecto.actividades?.length; else noActivities">
+      <h2>Actividades registradas</h2>
+      <div class="activity-table">
+        <div class="activity-row activity-header">
+          <span>Fecha</span>
+          <span>Entrada</span>
+          <span>Salida</span>
+          <span>Horas</span>
+          <span>Actividad</span>
+        </div>
+        <div class="activity-row" *ngFor="let actividad of proyecto.actividades">
+          <span>{{ actividad.fecha }}</span>
+          <span>{{ actividad.hora_entrada }}</span>
+          <span>{{ actividad.hora_salida }}</span>
+          <span>{{ actividad.total_horas }}</span>
+          <span>{{ actividad.actividad_realizada }}</span>
+        </div>
+      </div>
+    </section>
+
+    <ng-template #noActivities>
+      <section class="detail-panel">
+        <h2>Actividades</h2>
+        <p>No hay actividades registradas para este proyecto.</p>
+      </section>
+    </ng-template>
+
+    <section class="detail-panel">
+      <h2>Observaciones</h2>
+      <p>{{ proyecto.observaciones || 'Ninguna' }}</p>
+    </section>
+  </div>
+
+  <ng-template #notFound>
+    <div class="not-found">
+      <p>Proyecto no encontrado.</p>
+      <a routerLink="/vinculacion" class="btn-view">Volver a la lista</a>
+    </div>
+  </ng-template>
+</app-layout-shell>

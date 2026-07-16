@@ -1,0 +1,61 @@
+.header-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    font-size:12px;
+
+}
+
+.header-table td{
+
+    border:1px solid #000;
+
+    padding:6px;
+
+    vertical-align:middle;
+
+}
+
+.logo-cell{
+
+    width:95px;
+
+    text-align:center;
+
+}
+
+.logo-cell img{
+
+    width:70px;
+
+}
+
+.title-cell{
+
+    text-align:center;
+
+    font-size:14px;
+
+}
+
+.code-cell{
+
+    width:90px;
+
+    text-align:center;
+
+    font-weight:bold;
+
+}
+
+.document-name{
+
+    text-align:center;
+
+    font-weight:bold;
+
+    background:#efefef;
+
+}

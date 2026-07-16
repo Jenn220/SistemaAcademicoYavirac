@@ -1,0 +1,30 @@
+<app-layout-shell title="Informes de vinculación" subtitle="Gestión de informes de seguimiento">
+  <div class="page-card">
+    <h3>Registrar informe</h3>
+    <form (ngSubmit)="guardar()" #informeForm="ngForm">
+      <div class="form-grid">
+        <label>ID vinculación<input type="number" [(ngModel)]="form.id_vinculacion" name="id_vinculacion" required></label>
+        <label>Fecha informe<input type="date" [(ngModel)]="form.fecha_informe" name="fecha_informe" required></label>
+        <label>Actividad macro<input [(ngModel)]="form.actividad_macro" name="actividad_macro" required></label>
+        <label>Resultado aprendizaje<input [(ngModel)]="form.resultado_aprendizaje" name="resultado_aprendizaje" required></label>
+      </div>
+      <button type="submit">Guardar informe</button>
+    </form>
+    <p class="success" *ngIf="mensaje">{{ mensaje }}</p>
+    <p class="error" *ngIf="error">{{ error }}</p>
+  </div>
+
+  <div class="page-card">
+    <h3>Informes registrados</h3>
+    <table>
+      <thead><tr><th>Fecha</th><th>Actividad macro</th><th>Resultado aprendizaje</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let item of informes">
+          <td>{{ item.fecha_informe }}</td>
+          <td>{{ item.actividad_macro }}</td>
+          <td>{{ item.resultado_aprendizaje }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</app-layout-shell>

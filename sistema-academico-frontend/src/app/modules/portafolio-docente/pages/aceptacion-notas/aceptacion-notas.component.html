@@ -1,0 +1,105 @@
+<form [formGroup]="form">
+<div class="reporte-container" *ngIf="reporte">
+
+  <!-- Encabezado institucional -->
+  <table class="header-table">
+  <tr>
+    <td class="logo-cell" rowspan="4">
+      <img src="assets/images/logo.png" alt="Logo Yavirac" />
+    </td>
+    <td class="titulo-cell">INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC</td>
+    <td class="codigo-label">CÓDIGO</td>
+    <td class="codigo-valor" rowspan="4">010107</td>
+  </tr>
+  <tr><td class="titulo-cell">MACROPROCESO 01 DOCENCIA</td><td></td></tr>
+  <tr><td class="titulo-cell rojo">PROCESO 01 SEGUIMIENTO, CONTROL Y EVALUACIÓN DEL PROCESO DOCENTE</td><td></td></tr>
+  <tr><td class="titulo-cell">FORMATO 07 FORMATO DE ACEPTACIÓN DE NOTA</td><td></td></tr>
+</table>
+
+  <!-- Datos generales -->
+  <table class="datos-generales">
+    <tr>
+      <td class="label">CARRERA</td><td>{{ reporte.reporte.carrera }}</td>
+      <td class="label">DOCENTE</td><td>{{ reporte.reporte.docente }}</td>
+    </tr>
+    <tr>
+      <td class="label">ASIGNATURA</td><td>{{ reporte.reporte.asignatura }}</td>
+      <td class="label">TIPO DE NOTA</td>
+      <td>
+        <select formControlName="tipoReporte" (change)="onTipoReporteChange()">
+  <option *ngFor="let o of opcionesTipoReporte" [value]="o.valorPost">{{ o.label }}</option>
+</select>
+      </td>
+    </tr>
+    <tr>
+  <td class="label">PARALELO</td><td>{{ reporte.reporte.paralelo }}</td>
+  <td class="label">PER. ACADÉMICO</td><td>{{ reporte.reporte.periodo }}</td>
+</tr>
+<tr>
+  <td class="label">FECHA</td><td colspan="3">{{ fechaActual | date:'dd-MM-yyyy' }}</td>
+</tr>
+  </table>
+
+  <!-- Tabla de estudiantes -->
+  <table class="notas-table">
+    <thead>
+      <tr>
+        <th>N°</th><th>Nombre</th><th>Apellido</th><th>Cédula</th>
+        <th>Nota</th><th>Asistencia</th><th>Firma</th><th>Observación</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let e of estudiantes; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ e.nombre }}</td>
+        <td>{{ e.apellido }}</td>
+        <td>{{ e.cedula }}</td>
+        <td>{{ e.nota_registrada }}</td>
+        <td>{{ e.asistencia }}%</td>
+        <td class="firma-cell"></td>
+        <td>{{ e.observacion }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <small class="nota-limitacion">
+    * Asistencia, Firma y Observación son referenciales — el sistema aún no las guarda en la base de datos.
+  </small>
+
+  <!-- Firmas -->
+  <section class="firmas">
+    <table class="firmas-table">
+      <tr>
+        <td>Docente: {{ reporte.reporte.docente }}</td>
+        <td>Coordinador: Ing. Raúl Alejandro Páez Andrade</td>
+      </tr>
+      <tr>
+  <td>Fecha: {{ fechaActual | date:'dd-MM-yyyy' }}</td>
+  <td>Fecha: {{ fechaActual | date:'dd-MM-yyyy' }}</td>
+</tr>
+    </table>
+  </section>
+
+  <!-- Acciones -->
+  <div class="acciones">
+    <button type="button" [disabled]="guardando" (click)="solicitarGuardar()">
+      {{ guardando ? 'Guardando...' : 'Generar reporte' }}
+    </button>
+    <span *ngIf="guardadoOk" class="ok-msg">✅ Reporte generado</span>
+  </div>
+</div>
+</form>
+
+<div *ngIf="cargando" class="cargando-msg">Cargando reporte...</div>
+<div *ngIf="error" class="error-msg">{{ error }}</div>
+
+<!-- Modal de confirmación -->
+<div class="modal-overlay" *ngIf="mostrarConfirmacion">
+  <div class="modal-box">
+    <h3>¿Generar reporte?</h3>
+    <p>Se va a generar el reporte de <strong>{{ labelTipoActual }}</strong> para esta asignatura. Si ya existe uno de este tipo, el sistema lo rechazará.</p>
+    <div class="modal-acciones">
+      <button type="button" class="btn-cancelar" (click)="cancelarGuardar()">Cancelar</button>
+      <button type="button" class="btn-confirmar" (click)="confirmarGuardar()">Sí, generar</button>
+    </div>
+  </div>
+</div>

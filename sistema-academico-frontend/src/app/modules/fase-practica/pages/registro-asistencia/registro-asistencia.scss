@@ -1,0 +1,159 @@
+:host{
+
+    display:block;
+
+    background:#e9ecef;
+
+    min-height:100vh;
+
+    padding:30px 0;
+
+}
+
+/*=========================
+Toolbar
+=========================*/
+
+.toolbar{
+
+    width:210mm;
+
+    margin:0 auto 20px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+}
+
+/*=========================
+Hoja
+=========================*/
+
+.documento{
+
+    width:210mm;
+
+    min-height:297mm;
+
+    margin:auto;
+
+    background:white;
+
+    padding:15mm;
+
+    box-shadow:0 0 15px rgba(0,0,0,.18);
+
+}
+
+/*=========================
+Contenido
+=========================*/
+
+.contenido{
+
+    font-family:"Times New Roman", serif;
+
+    font-size:13px;
+
+    margin-top:20px;
+
+}
+
+/*=========================
+Datos
+=========================*/
+
+.datos-estudiante{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-bottom:20px;
+
+}
+
+.datos-estudiante td{
+
+    border:1px solid black;
+
+    padding:8px;
+
+}
+
+/*=========================
+Tabla
+=========================*/
+
+.tabla-asistencia{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    font-size:12px;
+
+}
+
+.tabla-asistencia th,
+
+.tabla-asistencia td{
+
+    border:1px solid black;
+
+    padding:6px;
+
+    text-align:center;
+
+}
+
+.tabla-asistencia th{
+
+    background:#efefef;
+
+}
+
+/*=========================
+Totales
+=========================*/
+
+.totales{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-top:20px;
+
+    font-size:14px;
+
+}
+
+/*=========================
+PDF
+=========================*/
+
+@media print{
+
+.toolbar{
+
+display:none;
+
+}
+
+.documento{
+
+margin:0;
+
+width:100%;
+
+min-height:auto;
+
+box-shadow:none;
+
+padding:12mm;
+
+}
+
+}

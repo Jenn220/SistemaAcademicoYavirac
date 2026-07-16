@@ -109,6 +109,7 @@ export class VinculacionController {
   async obtenerCertificadoVinculacion(@Param('id', ParseIntPipe) id: number) {
     return await this.vinculacionService.obtenerCertificadoVinculacion(id);
   }
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
 
@@ -138,3 +139,6 @@ export class VinculacionController {
   }
 >>>>>>> Stashed changes
 }
+=======
+}
+>>>>>>> fc61248064cfd0d840a4ded6720a968e81302bfb

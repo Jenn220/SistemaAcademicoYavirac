@@ -1,0 +1,146 @@
+@if(registro){
+
+<div class="toolbar no-print">
+
+    <button
+        class="btn btn-outline-secondary"
+        (click)="volver()">
+
+        <i class="bi bi-arrow-left"></i>
+
+        Volver
+
+    </button>
+
+    <button
+        class="btn btn-danger"
+        (click)="descargarPDF()">
+
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+
+        Descargar PDF
+
+    </button>
+
+</div>
+
+<div
+    id="documento-f05"
+    class="documento">
+
+    <app-document-header
+        [titulo]="'REGISTRO DE ASISTENCIA'"
+        [codigo]="'010205'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        <table class="datos-estudiante">
+
+            <tr>
+
+                <td>
+
+                    <strong>Estudiante:</strong>
+
+                    {{ registro.estudiante.nombre }}
+
+                </td>
+
+                <td>
+
+                    <strong>Cédula:</strong>
+
+                    {{ registro.estudiante.cedula }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td colspan="2">
+
+                    <strong>Empresa:</strong>
+
+                    {{ registro.empresa }}
+
+                </td>
+
+            </tr>
+
+        </table>
+
+        <table class="tabla-asistencia">
+
+            <thead>
+
+                <tr>
+
+                    <th>Fecha</th>
+                    <th>Ingreso</th>
+                    <th>Almuerzo</th>
+                    <th>Salida</th>
+                    <th>Horas</th>
+                    <th>Firma</th>
+                    <th>Observaciones</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @for(item of registro.registros; track item){
+
+                <tr>
+
+                    <td>{{item.fecha}}</td>
+                    <td>{{item.horaIngreso}}</td>
+                    <td>{{item.almuerzo}}</td>
+                    <td>{{item.horaSalida}}</td>
+                    <td>{{item.horasDia}}</td>
+                    <td>{{item.firma}}</td>
+                    <td>{{item.observaciones}}</td>
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <div class="totales">
+
+            <div>
+
+                <strong>
+
+                    Horas Autónomas:
+
+                </strong>
+
+                {{ registro.horasAutonomas }}
+
+            </div>
+
+            <div>
+
+                <strong>
+
+                    Subtotal Horas:
+
+                </strong>
+
+                {{ registro.subtotalHorasPractica }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+}

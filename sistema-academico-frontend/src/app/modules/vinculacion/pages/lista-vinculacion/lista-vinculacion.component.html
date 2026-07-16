@@ -1,0 +1,144 @@
+<app-layout-shell title="Vinculación con la Sociedad" subtitle="Seguimiento de proyectos de vinculación institucional.">
+  <section class="cards">
+
+        <div class="card">
+
+          <div class="card-icon">
+            <img src="assets/icons/proyecto.png" alt="">
+          </div>
+
+          <div>
+
+            <h3>{{ resumen.proyectosActivos }}</h3>
+
+            <span>Proyectos Activos</span>
+
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="card-icon">
+            <img src="assets/icons/estudiantes.png" alt="">
+          </div>
+
+          <div>
+
+            <h3>{{ resumen.estudiantesVinculados }}</h3>
+
+            <span>Estudiantes Vinculados</span>
+
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="card-icon">
+            <img src="assets/icons/impacto.png" alt="">
+          </div>
+
+          <div>
+
+            <h3>{{ resumen.impactoSocial }}%</h3>
+
+            <span>Impacto Social</span>
+
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="card-icon">
+            <img src="assets/icons/estrella.png" alt="">
+          </div>
+
+          <div>
+
+            <h3>{{ resumen.evaluacionesPendientes }}</h3>
+
+            <span>Evaluaciones Pendientes</span>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <section class="table-box">
+
+        <h2>Proyectos de Vinculación</h2>
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>Proyecto</th>
+
+              <th>Tutor</th>
+
+              <th>Estado</th>
+
+              <th>Estudiantes</th>
+
+              <th>Acción</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let p of proyectos">
+
+              <td>{{ p.nombre }}</td>
+
+              <td>{{ p.tutor }}</td>
+
+              <td>
+
+                <span
+                  class="status"
+                  [ngClass]="{
+                    'activo': p.estado.toLowerCase() === 'activo',
+                    'ejecucion': p.estado.toLowerCase() === 'en ejecución',
+                    'finalizado': p.estado.toLowerCase() === 'finalizado'
+                  }">
+
+                  {{ p.estado }}
+
+                </span>
+
+              </td>
+
+              <td>
+
+                {{ p.estudiantes }}
+
+              </td>
+
+              <td>
+
+                <a
+                  class="btn"
+                  [routerLink]="['/vinculacion', p.id]">
+
+                  Ver
+
+                </a>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </section>
+</app-layout-shell>
