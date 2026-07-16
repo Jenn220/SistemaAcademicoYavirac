@@ -109,9 +109,7 @@ export class VinculacionController {
   async obtenerCertificadoVinculacion(@Param('id', ParseIntPipe) id: number) {
     return await this.vinculacionService.obtenerCertificadoVinculacion(id);
   }
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
+
 
   @Get('inicio-tutor/:id')
   async obtenerInicioActividadesTutor(@Param('id', ParseIntPipe) id: number) {
@@ -137,8 +135,14 @@ export class VinculacionController {
   async verificarCierre(@Param('id') idVinculacion: number) {
     return await this.vinculacionService.verificarRequisitosCierre(idVinculacion);
   }
->>>>>>> Stashed changes
+
+
 }
-=======
-}
->>>>>>> fc61248064cfd0d840a4ded6720a968e81302bfb
+
+
+
+
+
+
+
+

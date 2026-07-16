@@ -1,8 +1,6 @@
-<<<<<<< HEAD
-﻿﻿import 'reflect-metadata';
-=======
-﻿import 'reflect-metadata';
->>>>>>> fc61248064cfd0d840a4ded6720a968e81302bfb
+
+import 'reflect-metadata';
+import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 import { join } from 'node:path';
 import { DataSource } from 'typeorm';
