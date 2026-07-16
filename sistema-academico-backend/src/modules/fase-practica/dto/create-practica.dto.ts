@@ -2,16 +2,19 @@ import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreatePracticaDto {
   @IsNumber()
+  id_periodo!: number;
+
+  @IsNumber()
   id_matricula_detalle!: number;
 
   @IsNumber()
-  id_periodo_empresa!: number;
+  id_empresa!: number;
 
   @IsNumber()
-  id_periodo_tutor_empresarial!: number;
+  id_tutor_empresarial!: number;
 
   @IsNumber()
-  id_periodo_docente!: number;
+  id_docente!: number;
 
   @IsOptional()
   @IsNumber()
