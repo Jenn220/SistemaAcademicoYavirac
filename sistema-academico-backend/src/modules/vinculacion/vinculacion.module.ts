@@ -10,6 +10,7 @@ import { VinculacionInforme } from './domain/vinculacion-informe.entity';
 // Hexagonal
 import { VINCULACION_REPOSITORY, IVinculacionRepository } from './ports/vinculacion.repository.port';
 import { VinculacionTypeOrmAdapter } from './adapters/vinculacion.typeorm.adapter';
+import { VinculacionObjetivo } from './domain/vinculacion-objetivo.entity';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { VinculacionTypeOrmAdapter } from './adapters/vinculacion.typeorm.adapte
       VinculacionAsistenciaTutor,
       VinculacionEstudianteEntity,
       VinculacionInforme,
+      VinculacionObjetivo
     ]),
   ],
   controllers: [VinculacionController],

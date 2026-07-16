@@ -24,4 +24,8 @@ export class CreateActividadEstudianteDto {
   @IsString()
   @IsNotEmpty()
   actividades_realizadas: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  resultado_aprendizaje: string;
 }

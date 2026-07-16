@@ -3,6 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 // 👇 1. Descomentamos la importación del archivo
 import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
+<<<<<<< Updated upstream
+=======
+import { AppController } from './app.controller';
+import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
+import { HealthModule } from './health/health.module';
+>>>>>>> Stashed changes
 
 @Module({
   imports: [
@@ -27,6 +33,11 @@ import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
 
     // 👇 2. Descomentamos el módulo para que NestJS lo registre
     VinculacionModule,
+<<<<<<< Updated upstream
+=======
+    FasePracticaModule,
+    HealthModule,
+>>>>>>> Stashed changes
   ],
   controllers: [],
   providers: [],
