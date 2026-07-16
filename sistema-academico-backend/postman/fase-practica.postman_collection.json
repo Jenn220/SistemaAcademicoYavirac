@@ -1,0 +1,107 @@
+{
+  "info": {
+    "name": "Fase Práctica - Backend",
+    "description": "Colección para probar el módulo fase-practica. Base URL por defecto: http://localhost:3000. Variables: {{baseUrl}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Documentos (datos quemados + persistencia)",
+      "item": [
+        { "name": "GET datos (hoja maestra)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/datos", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "datos"] } } },
+        { "name": "GET carta-compromiso", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/carta-compromiso", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "carta-compromiso"] } } },
+        { "name": "GET curriculum", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/curriculum", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "curriculum"] } } },
+        { "name": "GET registro-asistencia", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/registro-asistencia", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "registro-asistencia"] } } },
+        { "name": "GET informe-aprendizaje", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/informe-aprendizaje", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "informe-aprendizaje"] } } },
+        { "name": "GET evaluacion-empresarial", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/evaluacion-empresarial", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "evaluacion-empresarial"] } } },
+        { "name": "GET evaluacion-instituto", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/evaluacion-instituto", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "evaluacion-instituto"] } } },
+        { "name": "GET todos", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/todos", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "todos"] } } },
+        { "name": "POST carta-compromiso (guardar)", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/carta-compromiso", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "carta-compromiso"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{}" } } },
+        { "name": "POST curriculum (guardar)", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/documentos/curriculum", "host": ["{{baseUrl}}"], "path": ["fase-practica", "documentos", "curriculum"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{}" } } }
+      ]
+    },
+    {
+      "name": "Empresa",
+      "item": [
+        { "name": "POST empresas", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/empresas", "host": ["{{baseUrl}}"], "path": ["fase-practica", "empresas"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"ruc\": \"1790012345001\",\n  \"razon_social\": \"Empresa Demo SA\",\n  \"nombre\": \"Demo\",\n  \"direccion\": \"Av. Siempre Viva 123\",\n  \"telefono\": \"0991234567\",\n  \"email\": \"contacto@demo.com\",\n  \"estado\": \"ACTIVA\"\n}" } } },
+        { "name": "GET empresas", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/empresas", "host": ["{{baseUrl}}"], "path": ["fase-practica", "empresas"] } } },
+        { "name": "GET empresas/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/empresas/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "empresas", "1"] } } },
+        { "name": "PATCH empresas/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/empresas/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "empresas", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"estado\": \"INACTIVA\" }" } } },
+        { "name": "DELETE empresas/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/empresas/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "empresas", "1"] } } }
+      ]
+    },
+    {
+      "name": "Rubrica",
+      "item": [
+        { "name": "POST rubrica", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/rubrica", "host": ["{{baseUrl}}"], "path": ["fase-practica", "rubrica"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Rúbrica Técnica\",\n  \"tipo\": \"TECNICA\",\n  \"estado\": \"ACTIVO\"\n}" } } },
+        { "name": "GET rubrica", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/rubrica", "host": ["{{baseUrl}}"], "path": ["fase-practica", "rubrica"] } } },
+        { "name": "PATCH rubrica/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/rubrica/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "rubrica", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"estado\": \"INACTIVO\" }" } } },
+        { "name": "DELETE rubrica/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/rubrica/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "rubrica", "1"] } } }
+      ]
+    },
+    {
+      "name": "Practica",
+      "item": [
+        { "name": "POST practicas", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/practicas", "host": ["{{baseUrl}}"], "path": ["fase-practica", "practicas"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"id_matricula_detalle\": 1,\n  \"id_periodo_empresa\": 1,\n  \"id_periodo_tutor_empresarial\": 1,\n  \"id_periodo_docente\": 1,\n  \"total_horas_requeridas\": 400,\n  \"estado\": \"EN_CURSO\"\n}" } } },
+        { "name": "GET practicas", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/practicas", "host": ["{{baseUrl}}"], "path": ["fase-practica", "practicas"] } } },
+        { "name": "GET practicas/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/practicas/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "practicas", "1"] } } },
+        { "name": "PATCH practicas/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/practicas/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "practicas", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"estado\": \"FINALIZADA\" }" } } },
+        { "name": "DELETE practicas/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/practicas/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "practicas", "1"] } } }
+      ]
+    },
+    {
+      "name": "Registro Diario",
+      "item": [
+        { "name": "POST registro-diario", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/registro-diario", "host": ["{{baseUrl}}"], "path": ["fase-practica", "registro-diario"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"id_practica\": 1,\n  \"fecha\": \"2026-01-05\",\n  \"hora_ingreso\": \"08:00\",\n  \"hora_salida_almuerzo\": \"13:00\",\n  \"hora_regreso_almuerzo\": \"14:00\",\n  \"hora_salida\": \"17:00\",\n  \"observaciones\": \"Jornada normal\",\n  \"firma_estudiante\": true\n}" } } },
+        { "name": "GET registro-diario/practica/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/registro-diario/practica/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "registro-diario", "practica", "1"] } } },
+        { "name": "PATCH registro-diario/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/registro-diario/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "registro-diario", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"hora_salida\": \"18:00\" }" } } },
+        { "name": "DELETE registro-diario/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/registro-diario/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "registro-diario", "1"] } } }
+      ]
+    },
+    {
+      "name": "Plan Rotacion",
+      "item": [
+        { "name": "POST plan-rotacion", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/plan-rotacion", "host": ["{{baseUrl}}"], "path": ["fase-practica", "plan-rotacion"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"id_practica\": 1,\n  \"id_item_pm\": 1,\n  \"puesto_aprendizaje\": \"Desarrollo Backend\"\n}" } } },
+        { "name": "GET plan-rotacion/practica/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/plan-rotacion/practica/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "plan-rotacion", "practica", "1"] } } },
+        { "name": "PATCH plan-rotacion/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/plan-rotacion/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "plan-rotacion", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"puesto_aprendizaje\": \"Frontend\" }" } } },
+        { "name": "DELETE plan-rotacion/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/plan-rotacion/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "plan-rotacion", "1"] } } }
+      ]
+    },
+    {
+      "name": "Informe Aprendizaje",
+      "item": [
+        { "name": "POST informe-aprendizaje", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/informe-aprendizaje", "host": ["{{baseUrl}}"], "path": ["fase-practica", "informe-aprendizaje"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"id_practica\": 1,\n  \"reflexion_aprendizaje\": \"Aprendí mucho en la práctica\",\n  \"observaciones_empresa\": \"Buen desempeño\"\n}" } } },
+        { "name": "GET informe-aprendizaje/practica/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/informe-aprendizaje/practica/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "informe-aprendizaje", "practica", "1"] } } },
+        { "name": "PATCH informe-aprendizaje/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/informe-aprendizaje/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "informe-aprendizaje", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"reflexion_aprendizaje\": \"Reflexión actualizada\" }" } } },
+        { "name": "DELETE informe-aprendizaje/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/informe-aprendizaje/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "informe-aprendizaje", "1"] } } }
+      ]
+    },
+    {
+      "name": "Evaluacion",
+      "item": [
+        { "name": "POST evaluacion", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/evaluacion", "host": ["{{baseUrl}}"], "path": ["fase-practica", "evaluacion"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"id_practica\": 1,\n  \"id_rubrica\": 1,\n  \"tipo_evaluador\": \"EMPRESA\",\n  \"nota_final_calculada\": 8.5,\n  \"fecha_evaluacion\": \"2026-05-20\"\n}" } } },
+        { "name": "GET evaluacion/practica/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/evaluacion/practica/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "evaluacion", "practica", "1"] } } },
+        { "name": "PATCH evaluacion/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/evaluacion/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "evaluacion", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"nota_final_calculada\": 9.0 }" } } },
+        { "name": "DELETE evaluacion/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/evaluacion/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "evaluacion", "1"] } } }
+      ]
+    },
+    {
+      "name": "Bitacora Semanal",
+      "item": [
+        { "name": "POST bitacora-semanal", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/fase-practica/bitacora-semanal", "host": ["{{baseUrl}}"], "path": ["fase-practica", "bitacora-semanal"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"id_informe\": 1,\n  \"semana\": 1,\n  \"fecha_inicio_semana\": \"2026-01-05\",\n  \"fecha_fin_semana\": \"2026-01-11\",\n  \"puesto_aprendizaje\": \"Backend\",\n  \"actividades_realizadas\": \"Apoyo en APIs\",\n  \"actividades_autonomas\": \"Estudio\"\n}" } } },
+        { "name": "GET bitacora-semanal/informe/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/bitacora-semanal/informe/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "bitacora-semanal", "informe", "1"] } } },
+        { "name": "PATCH bitacora-semanal/:id", "request": { "method": "PATCH", "url": { "raw": "{{baseUrl}}/fase-practica/bitacora-semanal/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "bitacora-semanal", "1"] }, "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{ \"actividades_realizadas\": \"Apoyo en APIs y base de datos\" }" } } },
+        { "name": "DELETE bitacora-semanal/:id", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/fase-practica/bitacora-semanal/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "bitacora-semanal", "1"] } } }
+      ]
+    },
+    {
+      "name": "Informe Consolidado (SQL nativo)",
+      "item": [
+        { "name": "GET informes/:idPractica", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/fase-practica/informes/1", "host": ["{{baseUrl}}"], "path": ["fase-practica", "informes", "1"] } } }
+      ]
+    }
+  ]
+}
