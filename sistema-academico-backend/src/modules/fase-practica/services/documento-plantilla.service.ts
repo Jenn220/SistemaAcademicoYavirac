@@ -84,6 +84,8 @@ export class DocumentoPlantillaService {
       cuerpo: [
         `Yo, ${estudiante.nombre}, con cédula ${estudiante.cedula}, estudiante de la carrera ${estudiante.carrera}, curso ${estudiante.curso}, me presento para cumplir mi fase práctica pre profesional en la empresa beneficiaria ${empresaBeneficiaria.razonSocial}.`,
         'Me comprometo a cumplir el horario establecido y las normativas de la institución y la empresa beneficiaria.',
+        'Entiendo que esta práctica es parte de mi formación académica y que debo cumplir con los objetivos establecidos en el plan de rotación.',
+        'Autorizo a la empresa beneficiaria a evaluar mi desempeño y a emitir los informes correspondientes para la institución educativa.',
       ],
       prohibicionesIntro: 'Queda estrictamente prohibido:',
       prohibiciones: [
@@ -98,7 +100,12 @@ export class DocumentoPlantillaService {
         'No divulgar datos de la empresa beneficiaria ni de terceros.',
         'Devolver toda la documentación y activos al finalizar la práctica.',
       ],
-      cierre: 'En señal de conformidad, firmo en la ciudad de Quito a la fecha indicada.',
+      cierre: [
+        'En señal de conformidad, firmo en la ciudad de Quito a la fecha indicada.',
+        'Declaro que he leído y aceptado todas las condiciones establecidas en el presente documento.',
+        'Me comprometo a cumplir con las políticas de seguridad y salud ocupacional de la empresa.',
+        'Entiendo que el incumplimiento de estos compromisos puede dar lugar a la terminación anticipada de la práctica.',
+      ],
       estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
       espacioFirma: { lugar: 'Quito', fecha: '2025-12-01' },
     };
@@ -189,15 +196,22 @@ export class DocumentoPlantillaService {
       'Soporte e Integración',
       'Despliegue y DevOps',
     ];
-    const semanas: InformeSemana[] = puestos.map((puesto, i) => ({
-      semana: i + 1,
-      rangoFechas: `Semana ${i + 1}`,
-      puestoAprendizaje: puesto,
-      actividadesRealizadas: `Apoyo en tareas de ${puesto.toLowerCase()} dentro del proyecto institucional.`,
-      actividadesAutonomas: 'Estudio de documentación y cursos complementarios.',
-      reflexion: 'He reforzado mis conocimientos prácticos y el trabajo en equipo.',
-      observacionesEmpresa: 'Buen desempeño y compromiso.',
-    }));
+    const semanas: InformeSemana[] = puestos.map((puesto, i) => {
+      const fechaInicio = new Date(2025, 11, 1 + i * 7);
+      const fechaFin = new Date(2025, 11, 1 + i * 7 + 6);
+      const rangoFechas = `${fechaInicio.toISOString().slice(0, 10)} al ${fechaFin.toISOString().slice(0, 10)}`;
+      return {
+        semana: i + 1,
+        fechaInicio: fechaInicio.toISOString().slice(0, 10),
+        fechaFin: fechaFin.toISOString().slice(0, 10),
+        rangoFechas,
+        puestoAprendizaje: puesto,
+        actividadesRealizadas: `Apoyo en tareas de ${puesto.toLowerCase()} dentro del proyecto institucional.`,
+        actividadesAutonomas: 'Estudio de documentación y cursos complementarios.',
+        reflexion: 'He reforzado mis conocimientos prácticos y el trabajo en equipo.',
+        observacionesEmpresa: 'Buen desempeño y compromiso.',
+      };
+    });
     return {
       encabezado,
       semanas,

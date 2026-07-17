@@ -65,7 +65,7 @@ export interface CartaCompromiso {
   prohibiciones: string[];
   compromisosIntro: string;
   compromisosConfidencialidad: string[];
-  cierre: string;
+  cierre: string[];
   estudiante: { nombre: string; cedula: string };
   espacioFirma: { lugar: string; fecha: string };
 }
@@ -109,6 +109,8 @@ export interface InformeAprendizajeEncabezado {
 
 export interface InformeSemana {
   semana: number;
+  fechaInicio: string;
+  fechaFin: string;
   rangoFechas: string;
   puestoAprendizaje: string;
   actividadesRealizadas: string;
