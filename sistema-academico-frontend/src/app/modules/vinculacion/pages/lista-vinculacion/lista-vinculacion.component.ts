@@ -1,7 +1,6 @@
 import { Component, OnInit,ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { LayoutShellComponent } from '../../../../shared/components/layout/layout.component';
 import { VinculacionService } from '../../services/vinculacion.service';
 import { ProyectoVinculacion } from '../../models/proyecto-vinculacion.model';
 
@@ -9,7 +8,7 @@ import { ProyectoVinculacion } from '../../models/proyecto-vinculacion.model';
 @Component({
   selector: 'app-lista-vinculacion',
   standalone: true,
-  imports: [CommonModule, RouterModule, LayoutShellComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './lista-vinculacion.component.html',
   styleUrls: ['./lista-vinculacion.component.scss']
 })

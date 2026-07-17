@@ -1,6 +1,11 @@
-<app-layout-shell title="Detalle de proyecto" subtitle="Información del proyecto de vinculación">
+
   <div class="detail-shell" *ngIf="proyecto; else notFound">
     <section class="detail-card">
+      <div class="detail-actions">
+        <button type="button" class="btn-export" (click)="descargarExcel()" [disabled]="exportando">
+          {{ exportando ? 'Generando...' : 'Descargar Excel' }}
+        </button>
+      </div>
       <div class="detail-grid">
         <div class="detail-item">
           <span>Carrera</span>
@@ -68,4 +73,4 @@
       <a routerLink="/vinculacion" class="btn-view">Volver a la lista</a>
     </div>
   </ng-template>
-</app-layout-shell>
+

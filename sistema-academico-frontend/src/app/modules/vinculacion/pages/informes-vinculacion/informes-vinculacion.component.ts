@@ -2,14 +2,13 @@ import { Component, OnInit ,ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { LayoutShellComponent } from '../../../../shared/components/layout/layout.component';
 import { VinculacionService } from '../../services/vinculacion.service';
 import { InformePayload } from '../../models/proyecto-vinculacion.model';
 
 @Component({
   selector: 'app-informes-vinculacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LayoutShellComponent],
+  imports: [CommonModule, FormsModule, RouterModule,],
   templateUrl: './informes-vinculacion.component.html',
   styleUrls: ['./informes-vinculacion.component.scss']
 })

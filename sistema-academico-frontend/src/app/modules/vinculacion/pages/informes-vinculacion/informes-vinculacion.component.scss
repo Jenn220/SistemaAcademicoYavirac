@@ -1,3 +1,23 @@
+.hero{
+  background: linear-gradient(90deg,#174a99,#3578e5);
+  color:#fff;
+  padding:30px;
+  border-radius:18px;
+  margin-bottom:30px;
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
+
+.hero h2{
+  margin:0;
+  font-size:40px;
+  font-weight:700;
+}
+
+.hero p{
+  margin-top:10px;
+  font-size:16px;
+  opacity:.9;
+}   
 .page-card {
   background: white;
   border-radius: 16px;

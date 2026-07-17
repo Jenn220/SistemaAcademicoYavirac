@@ -2,14 +2,13 @@ import { Component, OnInit,ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { LayoutShellComponent } from '../../../../shared/components/layout/layout.component';
 import { VinculacionService } from '../../services/vinculacion.service';
 import { AsistenciaTutorPayload } from '../../models/proyecto-vinculacion.model';
 
 @Component({
   selector: 'app-asistencia-tutor',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LayoutShellComponent],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './asistencia-tutor.component.html',
   styleUrls: ['./asistencia-tutor.component.scss']
 })

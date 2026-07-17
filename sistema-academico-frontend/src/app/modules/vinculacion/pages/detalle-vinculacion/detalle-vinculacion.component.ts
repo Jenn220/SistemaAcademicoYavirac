@@ -1,7 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LayoutShellComponent } from '../../../../shared/components/layout/layout.component';
 import { VinculacionService } from '../../services/vinculacion.service';
 import { ProyectoVinculacion } from '../../models/proyecto-vinculacion.model';
 
@@ -10,7 +9,6 @@ import { ProyectoVinculacion } from '../../models/proyecto-vinculacion.model';
   standalone: true,
   imports: [
     CommonModule,
-    LayoutShellComponent,
     RouterLink
   ],
   templateUrl: './detalle-vinculacion.component.html',
@@ -19,6 +17,7 @@ import { ProyectoVinculacion } from '../../models/proyecto-vinculacion.model';
 export class DetalleVinculacionComponent implements OnInit {
 
   proyecto?: ProyectoVinculacion;
+  exportando = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -82,6 +81,20 @@ export class DetalleVinculacionComponent implements OnInit {
 
     });
 
+  }
+
+  descargarExcel(): void {
+    if (!this.proyecto?.id) {
+      return;
+    }
+
+    this.exportando = true;
+    try {
+      this.svc.exportarReporteExcel(this.proyecto.id, this.proyecto);
+    } finally {
+      this.cd.detectChanges();
+      this.exportando = false;
+    }
   }
 
 }
