@@ -1,8 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Generated, PrimaryColumn } from 'typeorm';
+import { bigintTransformer } from '../../../config/bigint-transformer';
 
 @Entity({ name: 'documento_fase_practica' })
 export class DocumentoEntity {
-  @PrimaryGeneratedColumn({ name: 'id_documento' })
+  @PrimaryColumn({ name: 'id_documento', type: 'bigint', transformer: bigintTransformer })
+  @Generated('increment')
   id_documento!: number;
 
   @Column({ name: 'codigo_formato', type: 'varchar', length: 20 })

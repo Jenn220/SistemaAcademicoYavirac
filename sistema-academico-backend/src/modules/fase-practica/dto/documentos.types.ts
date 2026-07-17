@@ -2,24 +2,29 @@ export interface DatosEstudiante {
   nombre: string;
   cedula: string;
   carrera: string;
+  curso: string;
   nivel: string;
   email: string;
   telefono: string;
   estadoCivil: string;
   tipoSangre: string;
   domicilio: string;
-  contactoEmergencia: string;
+  contactoEmergenciaNombre: string;
+  contactoEmergenciaTelefono: string;
 }
 
 export interface DatosCarrera {
   coordinador: string;
   tutorAcademico: string;
+  nucleoEstructurante: string;
+  objetivoNucleoEstructurante: string;
 }
 
 export interface DatosProyectoEmpresarial {
   nombre: string;
   cobertura: string;
   plazo: string;
+  empresaAsignada: string;
   fechaInicio: string;
   fechaFin: string;
 }
@@ -32,6 +37,13 @@ export interface DatosEmpresaBeneficiaria {
   ubicacion: string;
 }
 
+export interface PeriodoAcademico {
+  codigo: string;
+  nombre: string;
+  fechaInicio: string;
+  fechaFin: string;
+}
+
 export interface CronogramaFecha {
   fecha: string;
   descripcion: string;
@@ -42,16 +54,18 @@ export interface DatosMaestra {
   carrera: DatosCarrera;
   proyectoEmpresarial: DatosProyectoEmpresarial;
   empresaBeneficiaria: DatosEmpresaBeneficiaria;
+  periodoAcademico: PeriodoAcademico;
   cronograma: CronogramaFecha[];
 }
 
 export interface CartaCompromiso {
   encabezado: string;
-  destinatario: string;
   cuerpo: string[];
-  obligaciones: string[];
+  prohibicionesIntro: string;
   prohibiciones: string[];
+  compromisosIntro: string;
   compromisosConfidencialidad: string[];
+  cierre: string;
   estudiante: { nombre: string; cedula: string };
   espacioFirma: { lugar: string; fecha: string };
 }
@@ -82,6 +96,17 @@ export interface RegistroAsistencia {
   subtotalHorasPractica: number;
 }
 
+export interface InformeAprendizajeEncabezado {
+  estudiante: { nombre: string; cedula: string };
+  empresa: string;
+  periodoAcademico: string;
+  tutorAcademico: string;
+  tutorEmpresarial: string;
+  fechaInicio: string;
+  fechaFin: string;
+  totalSemanas: number;
+}
+
 export interface InformeSemana {
   semana: number;
   rangoFechas: string;
@@ -93,10 +118,8 @@ export interface InformeSemana {
 }
 
 export interface InformeAprendizaje {
-  estudiante: { nombre: string; cedula: string };
-  empresa: string;
+  encabezado: InformeAprendizajeEncabezado;
   semanas: InformeSemana[];
-  totalSemanas: number;
 }
 
 export interface CriterioEmpresarial {

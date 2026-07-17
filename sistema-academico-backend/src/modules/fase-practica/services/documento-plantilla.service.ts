@@ -4,12 +4,14 @@ import {
   DatosCarrera,
   DatosProyectoEmpresarial,
   DatosEmpresaBeneficiaria,
+  PeriodoAcademico,
   CronogramaFecha,
   DatosMaestra,
   CartaCompromiso,
   Curriculum,
   RegistroAsistenciaDia,
   RegistroAsistencia,
+  InformeAprendizajeEncabezado,
   InformeSemana,
   InformeAprendizaje,
   CriterioEmpresarial,
@@ -25,22 +27,27 @@ export class DocumentoPlantillaService {
       nombre: 'MARÍA FERNANDA QUISPE ÑAUPARI',
       cedula: '1750123456',
       carrera: 'Tecnología Superior en Desarrollo de Software',
+      curso: 'Sexto Nivel',
       nivel: 'Sexto Nivel - Fase Práctica',
       email: 'maria.quispe@estudiante.yavirac.edu.ec',
       telefono: '0987654321',
       estadoCivil: 'Soltera',
       tipoSangre: 'O+',
       domicilio: 'Calle Los Capulíes N23-45 y Av. Amazonas, Quito',
-      contactoEmergencia: 'LUZ MARÍA ÑAUPARI - 0991234567 (Madre)',
+      contactoEmergenciaNombre: 'LUZ MARÍA ÑAUPARI',
+      contactoEmergenciaTelefono: '0991234567',
     },
     carrera: {
       coordinador: 'ING. PATRICIO RAMÍREZ',
       tutorAcademico: 'ING. CARLOS MONTENEGRO',
+      nucleoEstructurante: 'Núcleo de Desarrollo Tecnológico',
+      objetivoNucleoEstructurante: 'Formar profesionales capaces de diseñar, implementar y gestionar soluciones tecnológicas innovadoras.',
     },
     proyectoEmpresarial: {
       nombre: 'Sistema de Gestión Académica Yavirac',
       cobertura: 'Institucional - Campus Matriz',
       plazo: '6 meses',
+      empresaAsignada: 'INSTITUTO TECNOLÓGICO SUPERIOR YAVIRAC',
       fechaInicio: '2025-12-01',
       fechaFin: '2026-05-29',
     },
@@ -50,6 +57,12 @@ export class DocumentoPlantillaService {
       tutorEmpresarial: 'ING. DIANA VÁSQUEZ',
       direccion: 'Av. 12 de Octubre N12-10 y Wilson, Quito',
       ubicacion: 'Quito - Ecuador',
+    },
+    periodoAcademico: {
+      codigo: '2026-1P',
+      nombre: 'Periodo 2026-1P',
+      fechaInicio: '2026-04-01',
+      fechaFin: '2026-08-30',
     },
     cronograma: [
       { fecha: '2025-12-01', descripcion: 'Inicio de fase práctica' },
@@ -68,28 +81,24 @@ export class DocumentoPlantillaService {
     const { estudiante, empresaBeneficiaria } = this.datosMaestra;
     return {
       encabezado: 'CARTA DE COMPROMISO (Formato 01)',
-      destinatario: `A la ${empresaBeneficiaria.razonSocial}`,
       cuerpo: [
-        `Yo, ${estudiante.nombre}, con cédula ${estudiante.cedula}, estudiante de la ${estudiante.carrera}, me presento para cumplir mi fase práctica pre profesional.`,
+        `Yo, ${estudiante.nombre}, con cédula ${estudiante.cedula}, estudiante de la carrera ${estudiante.carrera}, curso ${estudiante.curso}, me presento para cumplir mi fase práctica pre profesional en la empresa beneficiaria ${empresaBeneficiaria.razonSocial}.`,
         'Me comprometo a cumplir el horario establecido y las normativas de la institución y la empresa beneficiaria.',
       ],
-      obligaciones: [
-        'Cumplir el horario y plan de rotación acordado.',
-        'Ejecutar las actividades asignadas con responsabilidad.',
-        'Entregar los informes y bitácoras en los plazos establecidos.',
-        'Cuidar los recursos y equipos asignados.',
-      ],
+      prohibicionesIntro: 'Queda estrictamente prohibido:',
       prohibiciones: [
         'Consumo de bebidas alcohólicas dentro de la jornada y las instalaciones.',
         'Consumo o porte de sustancias estupefacientes o psicotrópicas.',
         'Malos tratos, acoso o cualquier forma de violencia hacia el personal.',
         'Abandono del puesto de trabajo sin autorización.',
       ],
+      compromisosIntro: 'Asumo los siguientes compromisos:',
       compromisosConfidencialidad: [
         'Mantener reserva de la información confidencial a la que tenga acceso.',
         'No divulgar datos de la empresa beneficiaria ni de terceros.',
         'Devolver toda la documentación y activos al finalizar la práctica.',
       ],
+      cierre: 'En señal de conformidad, firmo en la ciudad de Quito a la fecha indicada.',
       estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
       espacioFirma: { lugar: 'Quito', fecha: '2025-12-01' },
     };
@@ -159,7 +168,17 @@ export class DocumentoPlantillaService {
   }
 
   getInformeAprendizaje(): InformeAprendizaje {
-    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
+    const { estudiante, empresaBeneficiaria, periodoAcademico } = this.datosMaestra;
+    const encabezado: InformeAprendizajeEncabezado = {
+      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
+      empresa: empresaBeneficiaria.razonSocial,
+      periodoAcademico: periodoAcademico.nombre,
+      tutorAcademico: this.datosMaestra.carrera.tutorAcademico,
+      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
+      fechaInicio: this.datosMaestra.proyectoEmpresarial.fechaInicio,
+      fechaFin: this.datosMaestra.proyectoEmpresarial.fechaFin,
+      totalSemanas: 8,
+    };
     const puestos = [
       'Desarrollo de Backend',
       'Desarrollo de Frontend',
@@ -180,15 +199,13 @@ export class DocumentoPlantillaService {
       observacionesEmpresa: 'Buen desempeño y compromiso.',
     }));
     return {
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      empresa: empresaBeneficiaria.razonSocial,
+      encabezado,
       semanas,
-      totalSemanas: semanas.length,
     };
   }
 
   getEvaluacionEmpresarial(): EvaluacionEmpresarial {
-    const { estudiante, empresaBeneficiaria, carrera } = this.datosMaestra;
+    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
     const criteriosBase = [
       'Puntualidad y asistencia',
       'Responsabilidad',
