@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, catchError, of } from 'rxjs';
+import { utils, writeFile } from 'xlsx';
 import {
   ActividadEstudiantePayload,
   AsistenciaTutorPayload,
@@ -122,10 +123,48 @@ export class VinculacionService {
           observaciones: totales.observaciones ?? 'Ninguna'
         };
       }),
-   catchError(error => {
-  console.error('ERROR AL OBTENER REPORTE:', error);
-  return of(undefined);
-})
+      catchError(error => {
+        console.error('ERROR AL OBTENER REPORTE:', error);
+        return of(undefined);
+      })
     );
+  }
+
+  exportarReporteExcel(id: number, proyecto: ProyectoVinculacion | undefined): void {
+    if (!proyecto) {
+      return;
+    }
+
+    const filas: Array<Array<string | number | null>> = [
+      ['REPORTE DE VINCULACIÓN'],
+      [],
+      ['ID', id],
+      ['Nombre del proyecto', proyecto.nombre ?? ''],
+      ['Carrera', proyecto.carrera ?? ''],
+      ['Entidad beneficiaria', proyecto.entidad_beneficiaria ?? ''],
+      ['Estudiante', proyecto.estudiante ?? ''],
+      ['Docente tutor', proyecto.docente_tutor ?? ''],
+      ['Tutor entidad receptora', proyecto.tutor_entidad_receptora ?? ''],
+      ['Periodo académico', proyecto.periodo_academico ?? ''],
+      ['Horas totales', proyecto.total_horas ?? 0],
+      ['Observaciones', proyecto.observaciones ?? ''],
+      [],
+      ['Fecha', 'Hora de entrada', 'Hora de salida', 'Horas', 'Actividad realizada']
+    ];
+
+    (proyecto.actividades ?? []).forEach(actividad => {
+      filas.push([
+        actividad.fecha ?? '',
+        actividad.hora_entrada ?? '',
+        actividad.hora_salida ?? '',
+        actividad.total_horas ?? 0,
+        actividad.actividad_realizada ?? ''
+      ]);
+    });
+
+    const sheet = utils.aoa_to_sheet(filas);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, sheet, 'Reporte');
+    writeFile(workbook, `reporte-vinculacion-${id}.xlsx`);
   }
 }

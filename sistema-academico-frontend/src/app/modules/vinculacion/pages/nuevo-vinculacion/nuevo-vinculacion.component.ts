@@ -2,14 +2,13 @@ import { Component ,ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { LayoutShellComponent } from '../../../../shared/components/layout/layout.component';
 import { VinculacionService } from '../../services/vinculacion.service';
 import { CrearProyectoVinculacionPayload } from '../../models/proyecto-vinculacion.model';
 
 @Component({
   selector: 'app-nuevo-vinculacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LayoutShellComponent],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './nuevo-vinculacion.component.html',
   styleUrls: ['./nuevo-vinculacion.component.scss']
 })

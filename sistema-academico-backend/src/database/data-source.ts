@@ -1,4 +1,6 @@
-﻿import 'reflect-metadata';
+
+import 'reflect-metadata';
+import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 import { join } from 'node:path';
 import { DataSource } from 'typeorm';

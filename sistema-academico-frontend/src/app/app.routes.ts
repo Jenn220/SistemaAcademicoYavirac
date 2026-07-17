@@ -35,13 +35,6 @@ import {
 } from './modules/fase-practica/pages/registro-asistencia/registro-asistencia';
 
 
-// ==============================
-// Layout Vinculación
-// ==============================
-
-import {
-  LayoutShellComponent as VinculacionLayout
-} from './modules/vinculacion/components/layout/layout.component';
 
 
 
@@ -150,136 +143,86 @@ export const routes: Routes = [
 
         ]
 
-      }
-
-    ]
-
-  },
-
-
-
-  // =====================================================
+      },
+        // =====================================================
   // VINCULACIÓN
-  // LAYOUT INDEPENDIENTE
-  // =====================================================
-
-  {
-
-    path: 'vinculacion',
-
-    component: VinculacionLayout,
-
-    children: [
 
       {
+        path: 'vinculacion',
 
-        path: '',
+        children: [
 
-        loadComponent: () =>
+          {
+            path: '',
+            loadComponent: () =>
+              import(
+                './modules/vinculacion/pages/lista-vinculacion/lista-vinculacion.component'
+              ).then(
+                m => m.ListaVinculacionComponent
+              )
+          },
 
-          import(
-            './modules/vinculacion/pages/lista-vinculacion/lista-vinculacion.component'
-          )
+          {
+            path: 'nuevo',
+            loadComponent: () =>
+              import(
+                './modules/vinculacion/pages/nuevo-vinculacion/nuevo-vinculacion.component'
+              ).then(
+                m => m.NuevoVinculacionComponent
+              )
+          },
 
-          .then(
-            m => m.ListaVinculacionComponent
-          )
+          {
+            path: 'actividades',
+            loadComponent: () =>
+              import(
+                './modules/vinculacion/pages/actividades-vinculacion/actividades-vinculacion.component'
+              ).then(
+                m => m.ActividadesVinculacionComponent
+              )
+          },
 
+          {
+            path: 'asistencia',
+            loadComponent: () =>
+              import(
+                './modules/vinculacion/pages/asistencia-tutor/asistencia-tutor.component'
+              ).then(
+                m => m.AsistenciaTutorComponent
+              )
+          },
+
+          {
+            path: 'informes',
+            loadComponent: () =>
+              import(
+                './modules/vinculacion/pages/informes-vinculacion/informes-vinculacion.component'
+              ).then(
+                m => m.InformesVinculacionComponent
+              )
+          },
+
+          {
+            path: ':id',
+            loadComponent: () =>
+              import(
+                './modules/vinculacion/pages/detalle-vinculacion/detalle-vinculacion.component'
+              ).then(
+                m => m.DetalleVinculacionComponent
+              )
+          }
+
+        ]
       },
 
-
-
-      {
-
-        path: 'nuevo',
-
-        loadComponent: () =>
-
-          import(
-            './modules/vinculacion/pages/nuevo-vinculacion/nuevo-vinculacion.component'
-          )
-
-          .then(
-            m => m.NuevoVinculacionComponent
-          )
-
-      },
-
-
-
-      {
-
-        path: 'actividades',
-
-        loadComponent: () =>
-
-          import(
-            './modules/vinculacion/pages/actividades-vinculacion/actividades-vinculacion.component'
-          )
-
-          .then(
-            m => m.ActividadesVinculacionComponent
-          )
-
-      },
-
-
-
-      {
-
-        path: 'asistencia',
-
-        loadComponent: () =>
-
-          import(
-            './modules/vinculacion/pages/asistencia-tutor/asistencia-tutor.component'
-          )
-
-          .then(
-            m => m.AsistenciaTutorComponent
-          )
-
-      },
-
-
-
-      {
-
-        path: 'informes',
-
-        loadComponent: () =>
-
-          import(
-            './modules/vinculacion/pages/informes-vinculacion/informes-vinculacion.component'
-          )
-
-          .then(
-            m => m.InformesVinculacionComponent
-          )
-
-      },
-
-
-
-      {
-
-        path: ':id',
-
-        loadComponent: () =>
-
-          import(
-            './modules/vinculacion/pages/detalle-vinculacion/detalle-vinculacion.component'
-          )
-
-          .then(
-            m => m.DetalleVinculacionComponent
-          )
-
-      }
+      
 
     ]
 
   },
+
+
+
 
 
 

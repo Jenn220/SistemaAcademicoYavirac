@@ -2,14 +2,13 @@ import { ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { LayoutShellComponent } from '../../../../shared/components/layout/layout.component';
 import { VinculacionService } from '../../services/vinculacion.service';
 import { ActividadEstudiantePayload } from '../../models/proyecto-vinculacion.model';
 
 @Component({
   selector: 'app-actividades-vinculacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LayoutShellComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ],
   templateUrl: './actividades-vinculacion.component.html',
   styleUrls: ['./actividades-vinculacion.component.scss']
 })
