@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateBitacoraSemanalDto } from '../dto/create-bitacora-semanal.dto';
 import { CreateEvaluacionPracticaDto } from '../dto/create-evaluacion-practica.dto';
@@ -33,8 +34,8 @@ export class PracticaController {
   }
 
   @Get('practicas')
-  findAllPracticas() {
-    return this.practicaService.findAllPracticas();
+  findAllPracticas(@Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findAllPracticas(skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Get('practicas/:id')
@@ -61,8 +62,8 @@ export class PracticaController {
   }
 
   @Get('registro-diario/practica/:id')
-  findRegistrosByPractica(@Param('id') id: string) {
-    return this.practicaService.findRegistrosByPractica(Number(id));
+  findRegistrosByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findRegistrosByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('registro-diario/:id')
@@ -84,8 +85,8 @@ export class PracticaController {
   }
 
   @Get('plan-rotacion/practica/:id')
-  findPlanRotacionByPractica(@Param('id') id: string) {
-    return this.practicaService.findPlanRotacionByPractica(Number(id));
+  findPlanRotacionByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findPlanRotacionByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('plan-rotacion/:id')
@@ -107,8 +108,8 @@ export class PracticaController {
   }
 
   @Get('informe-aprendizaje/practica/:id')
-  findInformesByPractica(@Param('id') id: string) {
-    return this.practicaService.findInformesByPractica(Number(id));
+  findInformesByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findInformesByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('informe-aprendizaje/:id')
@@ -130,8 +131,8 @@ export class PracticaController {
   }
 
   @Get('evaluacion/practica/:id')
-  findEvaluacionesByPractica(@Param('id') id: string) {
-    return this.practicaService.findEvaluacionesByPractica(Number(id));
+  findEvaluacionesByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findEvaluacionesByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('evaluacion/:id')
@@ -153,8 +154,8 @@ export class PracticaController {
   }
 
   @Get('bitacora-semanal/informe/:id')
-  findBitacorasByInforme(@Param('id') id: string) {
-    return this.practicaService.findBitacorasByInforme(Number(id));
+  findBitacorasByInforme(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findBitacorasByInforme(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('bitacora-semanal/:id')
@@ -176,8 +177,8 @@ export class PracticaController {
   }
 
   @Get('rubrica')
-  findAllRubricas() {
-    return this.practicaService.findAllRubricas();
+  findAllRubricas(@Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findAllRubricas(skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('rubrica/:id')

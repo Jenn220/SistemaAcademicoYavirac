@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Inject } from '@nestjs/common';
+import { EMPRESA_REPOSITORY, IEmpresaRepository } from '../ports/empresa.repository.port';
 import { EmpresaEntity } from '../domain/empresa.entity';
 import { CreateEmpresaDto } from '../dto/create-empresa.dto';
 import { UpdateEmpresaDto } from '../dto/update-empresa.dto';
@@ -8,21 +8,20 @@ import { UpdateEmpresaDto } from '../dto/update-empresa.dto';
 @Injectable()
 export class EmpresaService {
   constructor(
-    @InjectRepository(EmpresaEntity)
-    private readonly empresaRepository: Repository<EmpresaEntity>,
+    @Inject(EMPRESA_REPOSITORY)
+    private readonly empresaRepository: IEmpresaRepository,
   ) {}
 
   async createEmpresa(dto: CreateEmpresaDto): Promise<EmpresaEntity> {
-    const empresa = this.empresaRepository.create(dto);
-    return this.empresaRepository.save(empresa);
+    return this.empresaRepository.createEmpresa(dto);
   }
 
-  async findAllEmpresas(): Promise<EmpresaEntity[]> {
-    return this.empresaRepository.find();
+  async findAllEmpresas(skip?: number, take?: number): Promise<EmpresaEntity[]> {
+    return this.empresaRepository.findAllEmpresas(skip, take);
   }
 
   async findEmpresaById(id: number): Promise<EmpresaEntity> {
-    const empresa = await this.empresaRepository.findOneBy({ id_empresa: id });
+    const empresa = await this.empresaRepository.findEmpresaById(id);
     if (!empresa) {
       throw new NotFoundException(`Empresa con id ${id} no encontrada`);
     }
@@ -30,13 +29,12 @@ export class EmpresaService {
   }
 
   async updateEmpresa(id: number, dto: UpdateEmpresaDto): Promise<EmpresaEntity> {
-    const empresa = await this.findEmpresaById(id);
-    Object.assign(empresa, dto);
-    return this.empresaRepository.save(empresa);
+    await this.findEmpresaById(id);
+    return this.empresaRepository.updateEmpresa(id, dto);
   }
 
   async removeEmpresa(id: number): Promise<void> {
-    const empresa = await this.findEmpresaById(id);
-    await this.empresaRepository.remove(empresa);
+    await this.findEmpresaById(id);
+    await this.empresaRepository.removeEmpresa(id);
   }
 }

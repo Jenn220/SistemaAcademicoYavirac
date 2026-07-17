@@ -7,17 +7,20 @@ export class PracticaEntity {
   @Generated('increment')
   id_practica!: number;
 
+  @Column({ name: 'id_periodo', type: 'bigint' })
+  id_periodo!: number;
+
   @Column({ name: 'id_matricula_detalle', type: 'bigint' })
   id_matricula_detalle!: number;
 
-  @Column({ name: 'id_periodo_empresa', type: 'bigint' })
-  id_periodo_empresa!: number;
+  @Column({ name: 'id_empresa', type: 'bigint' })
+  id_empresa!: number;
 
-  @Column({ name: 'id_periodo_tutor_empresarial', type: 'bigint' })
-  id_periodo_tutor_empresarial!: number;
+  @Column({ name: 'id_tutor_empresarial', type: 'bigint' })
+  id_tutor_empresarial!: number;
 
-  @Column({ name: 'id_periodo_docente', type: 'bigint' })
-  id_periodo_docente!: number;
+  @Column({ name: 'id_docente', type: 'bigint' })
+  id_docente!: number;
 
   @Column({ name: 'total_horas_requeridas', type: 'int', nullable: true, default: 400 })
   total_horas_requeridas?: number;

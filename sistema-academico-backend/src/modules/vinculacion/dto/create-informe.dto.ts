@@ -1,6 +1,10 @@
-import { IsInt, IsString, IsDateString, IsNotEmpty } from 'class-validator';
+import { IsInt, IsString, IsDateString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateInformeDto {
+  @IsInt()
+  @IsOptional() // Lo ponemos opcional para no romper otros flujos
+  id_informe?: number;
+
   @IsInt()
   @IsNotEmpty()
   id_vinculacion: number;

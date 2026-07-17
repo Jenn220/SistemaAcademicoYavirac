@@ -1,4 +1,4 @@
-import { IsDateString, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString, MaxLength, Min, Max } from 'class-validator';
 
 export class CreateEvaluacionPracticaDto {
   @IsNumber()
@@ -13,6 +13,8 @@ export class CreateEvaluacionPracticaDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(10)
   nota_final_calculada?: number;
 
   @IsOptional()
