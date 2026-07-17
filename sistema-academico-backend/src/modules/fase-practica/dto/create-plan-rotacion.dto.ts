@@ -8,6 +8,6 @@ export class CreatePlanRotacionDto {
   id_item_pm!: number;
 
   @IsString()
-  @MaxLength(200)
+  @MaxLength(150)
   puesto_aprendizaje!: string;
 }

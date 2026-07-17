@@ -19,7 +19,7 @@ export class BitacoraSemanalEntity {
   @Column({ name: 'fecha_fin_semana', type: 'date', nullable: true })
   fecha_fin_semana?: string;
 
-  @Column({ name: 'puesto_aprendizaje', type: 'varchar', nullable: true })
+  @Column({ name: 'puesto_aprendizaje', type: 'varchar', length: 150, nullable: true })
   puesto_aprendizaje?: string;
 
   @Column({ name: 'actividades_realizadas', type: 'text', nullable: true })

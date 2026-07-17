@@ -28,6 +28,6 @@ export class PracticaEntity {
   @Column({ name: 'total_horas_cumplidas', type: 'int', nullable: true, default: 0 })
   total_horas_cumplidas?: number;
 
-  @Column({ name: 'estado', type: 'varchar', nullable: true, default: 'EN_CURSO' })
+  @Column({ name: 'estado', type: 'varchar', length: 30, nullable: true, default: 'EN_CURSO' })
   estado?: string;
 }
