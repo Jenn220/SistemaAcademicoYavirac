@@ -1,7 +1,7 @@
 import {
   __commonJS,
   __spreadValues
-} from "./chunk-66NJCWRM.js";
+} from "./chunk-WJX643IC.js";
 
 // node_modules/html2canvas/dist/html2canvas.js
 var require_html2canvas = __commonJS({

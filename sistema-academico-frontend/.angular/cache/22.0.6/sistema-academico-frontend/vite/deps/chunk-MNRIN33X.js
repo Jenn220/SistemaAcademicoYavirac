@@ -11,7 +11,7 @@ import {
   __spreadProps,
   __spreadValues,
   __yieldStar
-} from "./chunk-66NJCWRM.js";
+} from "./chunk-WJX643IC.js";
 
 // node_modules/@angular/core/fesm2022/_effect-chunk.mjs
 var activeConsumer = null;
@@ -27776,4 +27776,4 @@ export {
   declareExperimentalWebMcpTool,
   provideExperimentalWebMcpTools
 };
-//# sourceMappingURL=chunk-O7PHWVOF.js.map
+//# sourceMappingURL=chunk-MNRIN33X.js.map

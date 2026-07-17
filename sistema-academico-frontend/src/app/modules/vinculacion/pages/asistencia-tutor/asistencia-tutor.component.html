@@ -1,37 +1,95 @@
- <section class="hero">
+<section class="hero">
   <h2>Vinculación</h2>
   <p>Seguimiento de proyectos de vinculación institucional.</p>
- </section>
-  <div class="page-card">
-    <h3>Registrar asistencia</h3>
-    <form (ngSubmit)="guardar()" #asistenciaForm="ngForm">
-      <div class="form-grid">
-        <label>ID vinculación<input type="number" [(ngModel)]="form.id_vinculacion" name="id_vinculacion" required></label>
-        <label>Fecha<input type="date" [(ngModel)]="form.fecha" name="fecha" required></label>
-        <label>Hora inicio<input [(ngModel)]="form.hora_inicio" name="hora_inicio" required></label>
-        <label>Hora fin<input [(ngModel)]="form.hora_fin" name="hora_fin" required></label>
-        <label>Horas<input type="number" [(ngModel)]="form.horas_total" name="horas_total" required></label>
-        <label>Observaciones<input [(ngModel)]="form.observaciones" name="observaciones"></label>
-      </div>
-      <button type="submit">Guardar asistencia</button>
-    </form>
-    <p class="success" *ngIf="mensaje">{{ mensaje }}</p>
-    <p class="error" *ngIf="error">{{ error }}</p>
-  </div>
+</section>
 
-  <div class="page-card">
+<div class="page-card">
+  <h3>Registrar asistencia de Tutor</h3>
+  <form (ngSubmit)="guardar()" #asistenciaForm="ngForm">
+    <div class="form-grid">
+      <label>ID vinculación
+        <input type="number" [(ngModel)]="form.id_vinculacion" name="id_vinculacion" required>
+      </label>
+      <label>Fecha
+        <input type="date" [(ngModel)]="form.fecha" name="fecha" required>
+      </label>
+      <label>Hora inicio
+        <input [(ngModel)]="form.hora_inicio" name="hora_inicio" placeholder="e.g. 08:00" required>
+      </label>
+      <label>Hora fin
+        <input [(ngModel)]="form.hora_fin" name="hora_fin" placeholder="e.g. 12:00" required>
+      </label>
+      <label>Horas
+        <input type="number" [(ngModel)]="form.horas_total" name="horas_total" required>
+      </label>
+      <label>Observaciones / Actividad
+        <input [(ngModel)]="form.observaciones" name="observaciones" placeholder="Describa la actividad">
+      </label>
+    </div>
+    <button type="submit" [disabled]="!asistenciaForm.form.valid">Guardar asistencia</button>
+  </form>
+  <p class="success" *ngIf="mensaje">{{ mensaje }}</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+</div>
+
+<div class="page-card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
     <h3>Asistencias registradas</h3>
-    <table>
-      <thead><tr><th>Fecha</th><th>Hora inicio</th><th>Hora fin</th><th>Horas</th><th>Observaciones</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let item of asistencias">
-          <td>{{ item.fecha }}</td>
-          <td>{{ item.hora_inicio }}</td>
-          <td>{{ item.hora_fin }}</td>
-          <td>{{ item.horas_total }}</td>
-          <td>{{ item.observaciones }}</td>
-        </tr>
-      </tbody>
-    </table>
+    
+    <!-- Corregido el botón al Formato 07 (Asistencia del Tutor) -->
+    <button 
+      type="button" 
+      class="btn-download" 
+      (click)="descargarExcel()" 
+      [disabled]="asistencias.length === 0"
+      style="background-color: #006699; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+      <span>📥</span> Descargar Reporte Formato 07
+    </button>
   </div>
+  
+<table>
+  <thead>
+    <tr>
+      <th>ID Vinculación</th>
+      <th>Fecha</th>
+      <th>Hora inicio</th>
+      <th>Hora fin</th>
+      <th>Horas</th>
+      <th>Observaciones / Actividades</th>
+    </tr>
+  </thead>
 
+  <tbody>
+
+    <tr *ngFor="let item of asistencias">
+
+      <td>{{ item.id_vinculacion }}</td>
+
+      <td>{{ item.fecha }}</td>
+
+      <td>{{ item.hora_inicio }}</td>
+
+      <td>{{ item.hora_fin }}</td>
+
+      <td>{{ item.horas_total }}</td>
+
+      <td>{{ item.observaciones }}</td>
+
+    </tr>
+
+
+    <tr *ngIf="asistencias.length === 0">
+
+      <td colspan="6" 
+          style="text-align: center; color: #8c8c8c; padding: 1.5rem;">
+
+        No se encontraron asistencias registradas para este tutor.
+
+      </td>
+
+    </tr>
+
+  </tbody>
+
+</table>
+</div>
