@@ -7,7 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtGuard } from '../../auth/guards/jwt.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { CreateBitacoraSemanalDto } from '../dto/create-bitacora-semanal.dto';
 import { CreateEvaluacionPracticaDto } from '../dto/create-evaluacion-practica.dto';
 import { CreateInformeAprendizajeDto } from '../dto/create-informe-aprendizaje.dto';
@@ -24,6 +28,8 @@ import { UpdateRegistroDiarioDto } from '../dto/update-registro-diario.dto';
 import { UpdateRubricaDto } from '../dto/update-rubrica.dto';
 import { PracticaService } from '../services/practica.service';
 
+@UseGuards(JwtGuard, RolesGuard)
+@Roles('DOCENTE', 'ESTUDIANTE', 'TUTOR_EMPRESARIAL', 'COORDINADOR')
 @Controller('fase-practica')
 export class PracticaController {
   constructor(private readonly practicaService: PracticaService) {}

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { VinculacionService } from '../services/vinculacion.service';
 
 import { VinculacionActividadEstudiante } from '../domain/vinculacion_actividad_estudiante.entity';
@@ -11,7 +11,12 @@ import { CreateVinculacionDto } from '../dto/create-vinculacion.dto';
 import { CreateInformeDto } from '../dto/create-informe.dto';
 import { VinculacionObjetivo } from '../domain/vinculacion-objetivo.entity';
 import { CreateVinculacionObjetivoDto } from '../dto/create-objetivo.dto';
+import { JwtGuard } from '../../auth/guards/jwt.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 
+@UseGuards(JwtGuard, RolesGuard)
+@Roles('DOCENTE', 'ESTUDIANTE', 'TUTOR_EMPRESARIAL', 'COORDINADOR')
 @Controller('vinculacion')
 export class VinculacionController {
   constructor(private readonly vinculacionService: VinculacionService) {}
