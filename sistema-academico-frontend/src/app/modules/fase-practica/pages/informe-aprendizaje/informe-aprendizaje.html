@@ -1,0 +1,168 @@
+<div class="toolbar no-print">
+
+    <button
+        class="btn btn-outline-secondary"
+        (click)="volver()">
+
+        <i class="bi bi-arrow-left"></i>
+
+        Volver
+
+    </button>
+
+    <button
+        class="btn btn-danger"
+        (click)="descargarPDF()">
+
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+
+        Descargar PDF
+
+    </button>
+
+    <button
+        class="btn btn-warning text-white"
+        [disabled]="guardando"
+        (click)="guardarEnBD()">
+
+        <i class="bi bi-save"></i>
+
+        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+
+    </button>
+
+</div>
+
+<div
+    id="documento-f06"
+    class="documento">
+
+    <app-document-header
+        [titulo]="'BITÁCORA DE APRENDIZAJE DE FASE PRÁCTICA'"
+        [codigo]="'DS-010206'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        @if(cargando){
+
+        <p class="text-center text-muted my-4">Cargando datos base...</p>
+
+        } @else {
+
+        <table class="tabla-datos">
+
+            <tr>
+                <td class="label">EMPRESA FORMADORA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.empresaFormadora" name="empresaFormadora"></td>
+                <td class="label">NIVEL:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.nivel" name="nivel"></td>
+            </tr>
+
+            <tr>
+                <td class="label">ESTUDIANTE:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.estudiante.nombre" name="nombre"></td>
+                <td class="label">CICLO ACADÉMICO:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.cicloAcademico" name="cicloAcademico"></td>
+            </tr>
+
+            <tr>
+                <td class="label">CÉDULA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.estudiante.cedula" name="cedula"></td>
+                <td class="label">F. INICIO / F. FIN FASE PRÁCTICA:</td>
+                <td>
+                    <input type="text" class="campo campo-mitad" [(ngModel)]="informe.encabezado.fechaInicioFasePractica" name="fechaInicio" placeholder="Inicio">
+                    <input type="text" class="campo campo-mitad" [(ngModel)]="informe.encabezado.fechaFinFasePractica" name="fechaFin" placeholder="Fin">
+                </td>
+            </tr>
+
+            <tr>
+                <td class="label">TUTOR(A) ACADÉMICO:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.tutorAcademico" name="tutorAcademico"></td>
+                <td class="label">NÚCLEO ESTRUCTURANTE:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.nucleoEstructurante" name="nucleoEstructurante"></td>
+            </tr>
+
+            <tr>
+                <td class="label">TUTOR(A) EMPRESARIAL:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.tutorEmpresarial" name="tutorEmpresarial"></td>
+                <td class="label">CARRERA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.carrera" name="carrera"></td>
+            </tr>
+
+        </table>
+
+        <div class="caja-objetivo">
+
+            <strong>OBJETIVO DEL NÚCLEO ESTRUCTURANTE PARA LA FASE PRÁCTICA</strong>
+
+            <input type="text" class="campo" [(ngModel)]="informe.encabezado.objetivoNucleoEstructurante" name="objetivo">
+
+        </div>
+
+        <table class="tabla-semanas">
+
+            <thead>
+                <tr>
+                    <th style="width:6%">Semana</th>
+                    <th style="width:16%">Fecha</th>
+                    <th style="width:14%">Puesto de Aprendizaje</th>
+                    <th>Actividades Realizadas</th>
+                    <th>Actividades Autónomas</th>
+                    <th class="no-print" style="width:36px"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for(fila of informe.semanas; track $index; let i = $index){
+
+                <tr>
+                    <td class="text-center">{{ fila.semana }}</td>
+                    <td>
+                        <input type="text" class="campo campo-mitad" [(ngModel)]="fila.fechaInicio" name="fi-{{ i }}" placeholder="Inicio">
+                        <input type="text" class="campo campo-mitad" [(ngModel)]="fila.fechaFin" name="ff-{{ i }}" placeholder="Fin">
+                    </td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.puestoAprendizaje" name="pa-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.actividadesRealizadas" name="ar-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.actividadesAutonomas" name="aa-{{ i }}"></td>
+                    <td class="no-print text-center">
+                        <button type="button" class="btn-quitar" (click)="quitarSemana(i)"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarSemana()">
+            <i class="bi bi-plus-circle"></i> Agregar semana
+        </button>
+
+        <div class="row-cajas">
+
+            <div class="caja">
+
+                <strong>Reflexión sobre el aprendizaje alcanzado de las actividades realizadas en la empresa formadora</strong>
+
+                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="informe.reflexionAprendizaje" name="reflexion"></textarea>
+
+            </div>
+
+            <div class="caja">
+
+                <strong>Observaciones de la empresa formadora sobre el desempeño del estudiante</strong>
+
+                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="informe.observacionesEmpresa" name="observaciones"></textarea>
+
+            </div>
+
+        </div>
+
+        }
+
+    </div>
+
+</div>

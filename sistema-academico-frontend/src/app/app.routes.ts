@@ -23,16 +23,20 @@ import {
 // ==============================
 
 import {
-  CatalogoDocumentos
-} from './modules/fase-practica/pages/catalogo-documentos/catalogo-documentos';
-
-import {
   CartaCompromiso
 } from './modules/fase-practica/pages/carta-compromiso/carta-compromiso';
 
 import {
   RegistroAsistencia
 } from './modules/fase-practica/pages/registro-asistencia/registro-asistencia';
+
+import {
+  Curriculum
+} from './modules/fase-practica/pages/curriculum/curriculum';
+
+import {
+  InformeAprendizaje
+} from './modules/fase-practica/pages/informe-aprendizaje/informe-aprendizaje';
 
 
 
@@ -73,14 +77,6 @@ export const routes: Routes = [
 
       {
 
-        path: 'fase-practica',
-
-        component: CatalogoDocumentos
-
-      },
-
-      {
-
         path: 'fase-practica/carta-compromiso',
 
         component: CartaCompromiso
@@ -92,6 +88,22 @@ export const routes: Routes = [
         path: 'fase-practica/registro-asistencia',
 
         component: RegistroAsistencia
+
+      },
+
+      {
+
+        path: 'fase-practica/curriculum',
+
+        component: Curriculum
+
+      },
+
+      {
+
+        path: 'fase-practica/informe-aprendizaje',
+
+        component: InformeAprendizaje
 
       },
 

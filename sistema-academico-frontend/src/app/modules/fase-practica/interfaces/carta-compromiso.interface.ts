@@ -4,6 +4,10 @@ export interface Estudiante{
 
     cedula:string;
 
+    carrera:string;
+
+    curso:string;
+
 }
 
 export interface EspacioFirma{
@@ -18,17 +22,21 @@ export interface CartaCompromiso{
 
     encabezado:string;
 
-    destinatario:string;
-
     cuerpo:string[];
 
-    obligaciones:string[];
+    prohibicionesIntro:string;
 
     prohibiciones:string[];
 
+    compromisosIntro:string;
+
     compromisosConfidencialidad:string[];
 
+    cierre:string[];
+
     estudiante:Estudiante;
+
+    empresaAsignada:string;
 
     espacioFirma:EspacioFirma;
 

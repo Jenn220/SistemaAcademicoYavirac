@@ -109,27 +109,38 @@ li{
   Firma
 ==========================*/
 
-.firma{
+.tabla-firma{
 
-    margin-top:80px;
+    width:100%;
 
-    width:280px;
+    border-collapse:collapse;
 
-    margin-left:auto;
-
-    margin-right:auto;
-
-    text-align:center;
-
-    font-size:13px;
+    margin-top:60px;
 
 }
 
-.linea{
+.tabla-firma th,
+.tabla-firma td{
 
-    border-top:1px solid #000;
+    border:1px solid black;
 
-    margin-bottom:8px;
+    padding:10px;
+
+    text-align:center;
+
+}
+
+.tabla-firma th{
+
+    background:#efefef;
+
+}
+
+.tabla-firma td{
+
+    height:60px;
+
+    vertical-align:bottom;
 
 }
 

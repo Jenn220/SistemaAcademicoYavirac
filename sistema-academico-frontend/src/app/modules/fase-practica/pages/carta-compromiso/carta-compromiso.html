@@ -42,18 +42,6 @@
 
         <br>
 
-        <p>
-
-            <strong>Señores:</strong>
-
-        </p>
-
-        <p>
-
-            {{ carta.destinatario }}
-
-        </p>
-
         @for(parrafo of carta.cuerpo; track parrafo){
 
             <p>
@@ -64,33 +52,13 @@
 
         }
 
-        <h4>
+        <p>
 
-            OBLIGACIONES
+            {{ carta.prohibicionesIntro }}
 
-        </h4>
+        </p>
 
-        <ol>
-
-            @for(item of carta.obligaciones; track item){
-
-                <li>
-
-                    {{ item }}
-
-                </li>
-
-            }
-
-        </ol>
-
-        <h4>
-
-            PROHIBICIONES
-
-        </h4>
-
-        <ol>
+        <ul>
 
             @for(item of carta.prohibiciones; track item){
 
@@ -102,15 +70,15 @@
 
             }
 
-        </ol>
+        </ul>
 
-        <h4>
+        <p>
 
-            COMPROMISOS DE CONFIDENCIALIDAD
+            {{ carta.compromisosIntro }}
 
-        </h4>
+        </p>
 
-        <ol>
+        <ul>
 
             @for(item of carta.compromisosConfidencialidad; track item){
 
@@ -122,23 +90,43 @@
 
             }
 
-        </ol>
+        </ul>
 
-        <div class="firma">
+        @for(parrafo of carta.cierre; track parrafo){
 
-            <div class="linea"></div>
+            <p>
 
-            <strong>
+                {{ parrafo }}
 
-                {{ carta.estudiante.nombre }}
+            </p>
 
-            </strong>
+        }
 
-            <br>
+        <table class="tabla-firma">
 
-            C.C. {{ carta.estudiante.cedula }}
+            <thead>
 
-        </div>
+                <tr>
+
+                    <th>Estudiante</th>
+                    <th>Firma</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <tr>
+
+                    <td>{{ carta.estudiante.nombre }}</td>
+                    <td>&nbsp;</td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
 
     </div>
 

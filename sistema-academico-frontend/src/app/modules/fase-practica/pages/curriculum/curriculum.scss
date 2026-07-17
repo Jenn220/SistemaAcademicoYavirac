@@ -1,0 +1,262 @@
+:host{
+
+    display:block;
+
+    background:#e9ecef;
+
+    min-height:100vh;
+
+    padding:30px 0;
+
+}
+
+/*=========================
+Toolbar
+=========================*/
+
+.toolbar{
+
+    width:210mm;
+
+    margin:0 auto 20px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+}
+
+/*=========================
+Hoja
+=========================*/
+
+.documento{
+
+    width:210mm;
+
+    min-height:297mm;
+
+    margin:auto;
+
+    background:white;
+
+    padding:15mm;
+
+    box-shadow:0 0 15px rgba(0,0,0,.18);
+
+}
+
+.contenido{
+
+    font-family:"Times New Roman", serif;
+
+    font-size:13px;
+
+    margin-top:20px;
+
+    color:#000;
+
+}
+
+h4{
+
+    margin-top:24px;
+
+    margin-bottom:10px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+    background:#dcdcdc;
+
+    padding:4px 8px;
+
+}
+
+/*=========================
+Info superior
+=========================*/
+
+.fila-info{
+
+    display:flex;
+
+    gap:40px;
+
+    margin-bottom:15px;
+
+    font-size:13px;
+
+}
+
+/*=========================
+Tabla datos personales
+=========================*/
+
+.tabla-datos{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-bottom:10px;
+
+}
+
+.tabla-datos td{
+
+    border:1px solid #000;
+
+    padding:5px 8px;
+
+    font-size:12px;
+
+}
+
+.tabla-datos td.label{
+
+    font-weight:bold;
+
+    width:220px;
+
+    background:#f4f4f4;
+
+}
+
+/*=========================
+Tablas de listas (año-based)
+=========================*/
+
+.tabla-lista{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-bottom:8px;
+
+}
+
+.tabla-lista th,
+.tabla-lista td{
+
+    border:1px solid #000;
+
+    padding:5px 6px;
+
+    font-size:12px;
+
+    text-align:left;
+
+}
+
+.tabla-lista th{
+
+    background:#efefef;
+
+    text-align:center;
+
+}
+
+/*=========================
+Campos editables (se ven como texto)
+=========================*/
+
+.campo{
+
+    width:100%;
+
+    border:none;
+
+    background:transparent;
+
+    font-family:inherit;
+
+    font-size:12px;
+
+    padding:2px;
+
+    color:#000;
+
+}
+
+.campo:focus{
+
+    outline:none;
+
+    background:#fffbe6;
+
+}
+
+.btn-quitar{
+
+    border:none;
+
+    background:transparent;
+
+    color:#c0392b;
+
+    cursor:pointer;
+
+}
+
+/*=========================
+Firma
+=========================*/
+
+.firma{
+
+    margin-top:50px;
+
+    width:320px;
+
+    margin-left:auto;
+
+    margin-right:auto;
+
+    text-align:center;
+
+    font-size:13px;
+
+}
+
+.firma p{
+
+    margin-bottom:60px;
+
+}
+
+.linea{
+
+    border-top:1px solid #000;
+
+    margin-bottom:8px;
+
+}
+
+/*=========================
+PDF / impresión
+=========================*/
+
+@media print{
+
+    .toolbar{
+        display:none;
+    }
+
+    .no-print{
+        display:none !important;
+    }
+
+    .documento{
+        margin:0;
+        width:100%;
+        min-height:auto;
+        box-shadow:none;
+        padding:12mm;
+    }
+
+}

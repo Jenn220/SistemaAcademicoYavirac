@@ -41,11 +41,123 @@
 
                 <td>
 
-                    <strong>Estudiante:</strong>
+                    <strong>Empresa Formadora:</strong>
+
+                    {{ registro.empresa }}
+
+                </td>
+
+                <td>
+
+                    <strong>Carrera:</strong>
+
+                    {{ registro.carrera }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Tutor(a) Académico:</strong>
+
+                    {{ registro.tutorAcademico }}
+
+                </td>
+
+                <td>
+
+                    <strong>Período Académico:</strong>
+
+                    {{ registro.periodoAcademico }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Tutor(a) Empresarial:</strong>
+
+                    {{ registro.tutorEmpresarial }}
+
+                </td>
+
+                <td>
+
+                    <strong>Nivel:</strong>
+
+                    {{ registro.curso }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Nombre del Estudiante:</strong>
 
                     {{ registro.estudiante.nombre }}
 
                 </td>
+
+                <td>
+
+                    <strong>Núcleo Estructurante:</strong>
+
+                    {{ registro.nucleoEstructurante }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>E-mail Institucional:</strong>
+
+                    {{ registro.estudiante.email }}
+
+                </td>
+
+                <td>
+
+                    <strong>Teléfono de Emergencia:</strong>
+
+                    {{ registro.contactoEmergenciaTelefono }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Teléfono / Móvil:</strong>
+
+                    {{ registro.estudiante.telefono }}
+
+                </td>
+
+                <td>
+
+                    <strong>Contacto de Emergencia:</strong>
+
+                    {{ registro.contactoEmergenciaNombre }}
+
+                </td>
+
+            </tr>
+
+            <tr>
 
                 <td>
 
@@ -55,15 +167,11 @@
 
                 </td>
 
-            </tr>
+                <td>
 
-            <tr>
+                    <strong>Tipo de Sangre:</strong>
 
-                <td colspan="2">
-
-                    <strong>Empresa:</strong>
-
-                    {{ registro.empresa }}
+                    {{ registro.estudiante.tipoSangre }}
 
                 </td>
 
@@ -78,11 +186,11 @@
                 <tr>
 
                     <th>Fecha</th>
-                    <th>Ingreso</th>
+                    <th>Hora Ingreso</th>
                     <th>Almuerzo</th>
-                    <th>Salida</th>
-                    <th>Horas</th>
-                    <th>Firma</th>
+                    <th>Hora Salida</th>
+                    <th>Horas al día</th>
+                    <th>Firma estudiante</th>
                     <th>Observaciones</th>
 
                 </tr>

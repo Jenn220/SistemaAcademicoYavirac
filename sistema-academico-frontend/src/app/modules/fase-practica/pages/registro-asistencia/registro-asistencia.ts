@@ -10,6 +10,7 @@ import html2pdf from 'html2pdf.js';
 
 import { RegistroAsistencia as Registro } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
+import { MOCK_REGISTRO_ASISTENCIA } from '../../services/mock-documentos.data';
 
 import { DocumentHeader } from '../../../../shared/components/document-header/document-header';
 
@@ -29,7 +30,8 @@ export class RegistroAsistencia implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  registro?: Registro;
+  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
+  registro: Registro = structuredClone(MOCK_REGISTRO_ASISTENCIA);
 
   ngOnInit(): void {
 
@@ -53,7 +55,10 @@ export class RegistroAsistencia implements OnInit {
 
       error: (err) => {
 
-        console.error('❌ Error obteniendo registro:', err);
+        console.error('❌ Error obteniendo registro (usando datos moqueados):', err);
+
+        this.registro = structuredClone(MOCK_REGISTRO_ASISTENCIA);
+        this.cdr.detectChanges();
 
       }
 
