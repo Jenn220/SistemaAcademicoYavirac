@@ -3,8 +3,13 @@
     <section class="detail-card">
       <div class="detail-actions">
         <button type="button" class="btn-export" (click)="descargarExcel()" [disabled]="exportando">
-          {{ exportando ? 'Generando...' : 'Descargar Excel' }}
+          {{ exportando ? 'Generando...' : 'Formato 06' }}
         </button>
+        <button type="button" class="btn-export" (click)="descargarActa()">Acta</button>
+        <button type="button" class="btn-export" (click)="descargarCertificado()">Certificado</button>
+        <button type="button" class="btn-export" (click)="descargarInicioTutor()">Inicio Tutor</button>
+        <button type="button" class="btn-export" (click)="descargarInformeActividades()">Informe Act.</button>
+        <button type="button" class="btn-export" (click)="descargarInformeFinal()">Informe Final</button>
       </div>
       <div class="detail-grid">
         <div class="detail-item">

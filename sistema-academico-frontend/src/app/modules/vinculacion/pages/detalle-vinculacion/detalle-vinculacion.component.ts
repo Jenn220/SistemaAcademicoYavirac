@@ -97,4 +97,30 @@ export class DetalleVinculacionComponent implements OnInit {
     }
   }
 
+  descargarActa(): void {
+    if (!this.proyecto?.id) return;
+    this.svc.exportarActaCompromisoExcel(this.proyecto.id);
+  }
+
+  descargarCertificado(): void {
+    if (!this.proyecto?.id) return;
+    this.svc.exportarCertificadoExcel(this.proyecto.id);
+  }
+
+  descargarInicioTutor(): void {
+    if (!this.proyecto?.id) return;
+    this.svc.exportarInicioTutorExcel(this.proyecto.id);
+  }
+
+  descargarInformeActividades(): void {
+    if (!this.proyecto?.id) return;
+    this.svc.exportarInformeActividadesExcel(this.proyecto.id);
+  }
+
+  descargarInformeFinal(): void {
+    if (!this.proyecto) return;
+    const proyecto = this.proyecto;
+    this.svc.exportarInformeFinalExcel(proyecto);
+  }
+
 }

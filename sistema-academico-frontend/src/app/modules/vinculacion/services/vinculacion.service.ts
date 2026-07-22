@@ -8,7 +8,8 @@
     AsistenciaTutorPayload,
     CrearProyectoVinculacionPayload,
     InformePayload,
-    ProyectoVinculacion
+    ProyectoVinculacion,
+    VinculacionActividad
   } from '../models/proyecto-vinculacion.model';
 
   const BASE_URL = 'http://localhost:3000/api/vinculacion';
@@ -85,6 +86,10 @@
 
     getCertificado(id: number): Observable<any> {
       return this.http.get<any>(`${BASE_URL}/certificado/${id}`);
+    }
+
+    getInicioTutor(id: number): Observable<any> {
+      return this.http.get<any>(`${BASE_URL}/inicio-tutor/${id}`);
     }
 
     getProyectoById(id: number): Observable<ProyectoVinculacion | undefined> {
@@ -678,5 +683,295 @@
       
       const nombreArchivo = `FORMATO_07_ASISTENCIA_TUTOR_${(proyecto.docente_tutor ?? 'TUTOR').replace(/\s+/g, '_')}.xlsx`;
       XLSX.writeFile(workbook, nombreArchivo);
+    }
+
+    exportarActaCompromisoExcel(id: number): void {
+      this.getActaCompromiso(id).subscribe({
+        next: (resp: any) => {
+          const filas: any[][] = [
+            ['', resp.instituto ?? 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC', '', '', '', ''],
+            [],
+            ['', resp.titulo ?? 'ACTA COMPROMISO DE PARTICIPACIÓN EN VINCULACIÓN CON LA COMUNIDAD', '', '', '', ''],
+            [],
+            ['A:', 'Ing. Raúl Páez', '', 'Coordinador de Carrera', '', ''],
+            ['De:', resp.estudiante ?? 'N/A', '', 'Tutor del Proyecto', '', ''],
+            ['Cédula:', resp.cedula ?? 'N/A', '', 'Carrera:', resp.carrera ?? 'N/A', ''],
+            ['Nivel:', resp.nivel ?? 'N/A', '', 'Entidad beneficiaria:', resp.entidad_beneficiaria ?? 'N/A', ''],
+            ['Docente tutor:', resp.docente_tutor ?? 'N/A', '', '', '', ''],
+            [],
+            ['Yo,', resp.estudiante ?? 'N/A', 'con C.I. Nº', resp.cedula ?? 'N/A', '', ''],
+            ['declaro que me comprometo a cumplir con el cronograma de actividades y normas de vinculación al proyecto.', '', '', '', '', ''],
+            ['El presente documento certifica el inicio de las actividades del estudiante en el proyecto asignado.', '', '', '', '', '']
+          ];
+
+          const sheet = XLSX.utils.aoa_to_sheet(filas);
+          sheet['!merges'] = [
+            { s: { r: 0, c: 1 }, e: { r: 0, c: 4 } },
+            { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
+            { s: { r: 4, c: 1 }, e: { r: 4, c: 3 } },
+            { s: { r: 5, c: 1 }, e: { r: 5, c: 3 } },
+            { s: { r: 10, c: 1 }, e: { r: 10, c: 3 } },
+            { s: { r: 11, c: 0 }, e: { r: 11, c: 5 } },
+            { s: { r: 12, c: 0 }, e: { r: 12, c: 5 } }
+          ];
+
+          const border = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          };
+
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:F20');
+          for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+              const ref = XLSX.utils.encode_cell({ r: R, c: C });
+              if (!sheet[ref]) sheet[ref] = { t: 's', v: '' };
+              const cell = sheet[ref];
+              cell.s = cell.s || {};
+              if (R === 2) {
+                cell.s = {
+                  font: { bold: true, sz: 13, name: 'Arial' },
+                  alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+                  border
+                };
+              } else if (R >= 4 && R <= 8) {
+                cell.s = {
+                  font: { bold: C === 0 || C === 3, name: 'Arial', sz: 10 },
+                  alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+                  border
+                };
+              } else {
+                cell.s = {
+                  font: { name: 'Arial', sz: 10 },
+                  alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+                  border
+                };
+              }
+            }
+          }
+
+          sheet['!cols'] = [
+            { wch: 10 },
+            { wch: 28 },
+            { wch: 6 },
+            { wch: 24 },
+            { wch: 8 },
+            { wch: 10 }
+          ];
+          sheet['!rows'] = [{ hpt: 18 }, {}, { hpt: 26 }, {}, { hpt: 22 }, { hpt: 22 }, { hpt: 22 }, { hpt: 22 }, { hpt: 22 }, {}, { hpt: 24 }, { hpt: 26 }, { hpt: 26 }];
+
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, sheet, 'Acta Compromiso');
+          const nombreArchivo = `ACTA_COMPROMISO_${(resp.estudiante ?? 'VINCULACION').replace(/\s+/g, '_')}.xlsx`;
+          XLSX.writeFile(wb, nombreArchivo);
+        },
+        error: (err) => console.error('Error fetching acta compromiso:', err)
+      });
+    }
+
+    exportarCertificadoExcel(id: number): void {
+      this.getCertificado(id).subscribe({
+        next: (resp: any) => {
+          const nombreProyecto = resp.proyecto ?? resp.nombre_proyecto ?? resp.nombre ?? 'N/A';
+          const representante = resp.representante || resp.institucion || 'N/A';
+          const filas: any[][] = [
+            ['', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"', '', '', '', ''],
+            ['', 'MACROPROCESO 04 VINCULACIÓN', '', '', '', ''],
+            ['', 'PROCESO 01 VINCULACIÓN', '', '', '', ''],
+            ['', 'FORMATO 04 CARTA DE COMPROMISO DEL ESTUDIANTE', '', '', '', ''],
+            [],
+            ['', 'CERTIFICADO DE VINCULACIÓN CON LA COMUNIDAD', '', '', '', ''],
+            [],
+            ['Fecha emisión:', resp.fecha_emision ?? 'N/A', '', '', '', ''],
+            ['Estudiante:', resp.estudiante ?? 'N/A', '', 'Cédula:', resp.cedula ?? 'N/A', ''],
+            ['Carrera:', resp.carrera ?? 'N/A', '', 'Proyecto:', nombreProyecto, ''],
+            ['Desde:', resp.fecha_inicio ?? 'N/A', '', 'Hasta:', resp.fecha_fin ?? 'N/A', ''],
+            ['Total horas:', resp.total_horas ?? 0, '', 'Institución beneficiaria:', resp.institucion ?? 'N/A', ''],
+            ['Representante:', representante, '', '', '', ''],
+            [],
+            ['Firma estudiante', '', '', 'Firma representante', '', ''],
+            ['', '', '', '', '', ''],
+            ['', '', '', '', '', '']
+          ];
+
+          const sheet = XLSX.utils.aoa_to_sheet(filas);
+          sheet['!merges'] = [
+            { s: { r: 0, c: 1 }, e: { r: 0, c: 4 } },
+            { s: { r: 1, c: 1 }, e: { r: 1, c: 4 } },
+            { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
+            { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } },
+            { s: { r: 5, c: 1 }, e: { r: 5, c: 4 } },
+            { s: { r: 7, c: 1 }, e: { r: 7, c: 4 } },
+            { s: { r: 8, c: 1 }, e: { r: 8, c: 4 } },
+            { s: { r: 9, c: 1 }, e: { r: 9, c: 4 } },
+            { s: { r: 10, c: 1 }, e: { r: 10, c: 4 } },
+            { s: { r: 11, c: 1 }, e: { r: 11, c: 4 } },
+            { s: { r: 12, c: 1 }, e: { r: 12, c: 4 } },
+            { s: { r: 14, c: 0 }, e: { r: 14, c: 2 } },
+            { s: { r: 14, c: 3 }, e: { r: 14, c: 5 } },
+            { s: { r: 16, c: 0 }, e: { r: 16, c: 2 } },
+            { s: { r: 16, c: 3 }, e: { r: 16, c: 5 } }
+          ];
+
+          const border = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          };
+
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:F20');
+          for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+              const ref = XLSX.utils.encode_cell({ r: R, c: C });
+              if (!sheet[ref]) sheet[ref] = { t: 's', v: '' };
+              const cell = sheet[ref];
+              const isHeader = R <= 5;
+              cell.s = {
+                font: { bold: isHeader || C === 0, name: 'Arial', sz: isHeader ? 10 : 10 },
+                fill: isHeader ? { fgColor: { rgb: 'D9D9D9' } } : undefined,
+                alignment: { horizontal: isHeader ? 'center' : 'left', vertical: 'center', wrapText: true },
+                border
+              };
+            }
+          }
+
+          sheet['!cols'] = [{ wch: 14 }, { wch: 32 }, { wch: 4 }, { wch: 18 }, { wch: 30 }, { wch: 12 }];
+          sheet['!rows'] = [{ hpt: 18 }, { hpt: 18 }, { hpt: 18 }, { hpt: 18 }, {}, { hpt: 26 }, {}, { hpt: 22 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, {}, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }];
+
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, sheet, 'Certificado');
+          const nombreArchivo = `CERTIFICADO_${(resp.estudiante ?? 'VINCULACION').replace(/\s+/g, '_')}.xlsx`;
+          XLSX.writeFile(wb, nombreArchivo);
+        },
+        error: (err) => console.error('Error fetching certificado:', err)
+      });
+    }
+
+    exportarInformeActividadesExcel(id: number): void {
+      this.getInformeActividades(id).subscribe({
+        next: (resp: any) => {
+          const filas: any[][] = [];
+          filas.push(['', 'INFORME DE ACTIVIDADES', '', '', '']);
+          filas.push([]);
+          filas.push(['Fundación/Entidad:', resp.cabecera?.fundacion ?? 'N/A', '', 'Ciclo académico:', resp.cabecera?.ciclo_academico ?? 'N/A']);
+          filas.push(['Estudiante:', resp.cabecera?.estudiante ?? 'N/A', '', 'Cédula:', resp.cabecera?.cedula ?? 'N/A']);
+          filas.push(['Título proyecto:', resp.cabecera?.titulo_proyecto ?? 'N/A']);
+          filas.push([]);
+          filas.push(['Fecha', 'Actividad', 'Resultado de aprendizaje']);
+
+          (resp.informe_actividades ?? []).forEach((a: any) => {
+            filas.push([a.fecha ?? '', a.actividad ?? '', a.resultado_aprendizaje ?? '']);
+          });
+
+          const sheet = XLSX.utils.aoa_to_sheet(filas);
+          // merges for title
+          sheet['!merges'] = [{ s: { r: 0, c: 1 }, e: { r: 0, c: 3 } }];
+          const headerRow = 6; // 0-based index of header 'Fecha, Actividad, Resultado...'
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:E100');
+          const border = { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } };
+          for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+              const ref = XLSX.utils.encode_cell({ r: R, c: C });
+              if (!sheet[ref]) sheet[ref] = { t: 's', v: '' };
+              const cell = sheet[ref];
+              if (R === 0) cell.s = { font: { bold: true, sz: 12 }, alignment: { horizontal: 'center', vertical: 'center' }, border };
+              else if (R === headerRow) cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'D9D9D9' } }, alignment: { horizontal: 'center' }, border };
+              else cell.s = { font: { name: 'Arial', sz: 10 }, alignment: { horizontal: 'left' }, border };
+            }
+          }
+          sheet['!cols'] = [{ wch: 12 }, { wch: 60 }, { wch: 40 }];
+
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, sheet, 'Informe Actividades');
+          const nombreArchivo = `INFORME_ACTIVIDADES_${(resp.cabecera?.estudiante ?? 'VINCULACION').replace(/\s+/g, '_')}.xlsx`;
+          XLSX.writeFile(wb, nombreArchivo);
+        },
+        error: (err) => console.error('Error fetching informe actividades:', err)
+      });
+    }
+
+    exportarInicioTutorExcel(id: number): void {
+      this.getProyectoById(id).subscribe({
+        next: (proyecto) => {
+          // getProyectoById maps reporte; for inicio tutor we have a dedicated endpoint too
+          this.http.get<any>(`${BASE_URL}/inicio-tutor/${id}`).subscribe({
+            next: (resp) => {
+              const filas: any[][] = [];
+              filas.push(['', 'INICIO DE ACTIVIDADES - TUTOR', '', '', '']);
+              filas.push([]);
+              filas.push(['Coordinador:', resp.coordinador ?? 'N/A', '', 'Tutor:', resp.tutor_nombre ?? 'N/A']);
+              filas.push(['Cédula tutor:', resp.tutor_cedula ?? 'N/A', '', 'Proyecto:', resp.proyecto_nombre ?? proyecto?.nombre ?? 'N/A']);
+              filas.push(['Fecha inicio:', resp.fecha_inicio ?? 'N/A', '', 'Carrera:', resp.carrera ?? 'N/A']);
+              filas.push([]);
+              filas.push(['Descripción de actividades:']);
+              filas.push([resp.descripcion_actividades ?? '']);
+
+              const sheet = XLSX.utils.aoa_to_sheet(filas);
+              sheet['!merges'] = [{ s: { r: 0, c: 1 }, e: { r: 0, c: 3 } }, { s: { r: 6, c: 0 }, e: { r: 6, c: 3 } }];
+              const border = { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } };
+              const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:E50');
+              for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                  const ref = XLSX.utils.encode_cell({ r: R, c: C });
+                  if (!sheet[ref]) sheet[ref] = { t: 's', v: '' };
+                  const cell = sheet[ref];
+                  if (R === 0) cell.s = { font: { bold: true, sz: 12 }, alignment: { horizontal: 'center' }, border };
+                  else if (R === 6) cell.s = { font: { name: 'Arial' }, alignment: { horizontal: 'left' }, border };
+                  else cell.s = { font: { name: 'Arial' }, alignment: { horizontal: 'left' }, border };
+                }
+              }
+              sheet['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 4 }, { wch: 20 }, { wch: 12 }];
+
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, sheet, 'Inicio Tutor');
+              const nombreArchivo = `INICIO_TUTOR_${(resp.tutor_nombre ?? 'TUTOR').replace(/\s+/g, '_')}.xlsx`;
+              XLSX.writeFile(wb, nombreArchivo);
+            },
+            error: (err) => console.error('Error fetching inicio tutor:', err)
+          });
+        },
+        error: (err) => console.error('Error fetching proyecto for inicio tutor:', err)
+      });
+    }
+
+    exportarInformeFinalExcel(proyecto: ProyectoVinculacion): void {
+      const filas: any[][] = [];
+      filas.push(['', 'INFORME FINAL DE VINCULACIÓN', '', '', '']);
+      filas.push([]);
+      filas.push(['Estudiante:', proyecto.estudiante ?? 'N/A', '', 'Cédula:', 'N/A']);
+      filas.push(['Carrera:', proyecto.carrera ?? 'N/A', '', 'Proyecto:', proyecto.nombre ?? 'N/A']);
+      filas.push(['Periodo informe:', proyecto.periodo_academico ?? 'N/A']);
+      filas.push([]);
+      filas.push(['Fecha', 'Descripción actividad', 'Horas cumplidas']);
+
+      (proyecto.actividades ?? []).forEach((a: VinculacionActividad) => {
+        filas.push([a.fecha ?? '', a.actividad_realizada ?? '', a.total_horas ?? '']);
+      });
+
+      filas.push([]);
+      filas.push(['Total horas cumplidas:', proyecto.total_horas ?? 0]);
+
+      const sheet = XLSX.utils.aoa_to_sheet(filas);
+      sheet['!merges'] = [{ s: { r: 0, c: 1 }, e: { r: 0, c: 3 } }];
+      const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:C200');
+      const border = { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } };
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const ref = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!sheet[ref]) sheet[ref] = { t: 's', v: '' };
+          const cell = sheet[ref];
+          if (R === 0) cell.s = { font: { bold: true, sz: 12 }, alignment: { horizontal: 'center' }, border };
+          else if (R === 7) cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'D9D9D9' } }, alignment: { horizontal: 'center' }, border };
+          else cell.s = { font: { name: 'Arial' }, alignment: { horizontal: 'left' }, border };
+        }
+      }
+      sheet['!cols'] = [{ wch: 14 }, { wch: 70 }, { wch: 15 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, sheet, 'Informe Final');
+      const nombreArchivo = `INFORME_FINAL_${(proyecto.estudiante ?? 'VINCULACION').replace(/\s+/g, '_')}.xlsx`;
+      XLSX.writeFile(wb, nombreArchivo);
     }
   }
