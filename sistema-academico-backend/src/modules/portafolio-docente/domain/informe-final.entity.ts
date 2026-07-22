@@ -5,17 +5,8 @@ export class PortafolioInformeFinal {
   @PrimaryGeneratedColumn({ name: 'id_informe_final' })
   idInformeFinal: number;
 
-  @Column({ name: 'id_docente' })
-  idDocente: number;
-
-  @Column({ name: 'id_periodo' })
-  idPeriodo: number;
-
-  @Column({ name: 'id_asignatura' })
-  idAsignatura: number;
-
-  @Column({ name: 'id_paralelo' })
-  idParalelo: number;
+  @Column({ name: 'id_oferta_asignatura' })
+  idOfertaAsignatura: number;
 
   @Column({ name: 'horario', length: 100 })
   horario: string;

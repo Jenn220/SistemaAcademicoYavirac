@@ -11,9 +11,9 @@ export class InformeFinalService {
     private readonly informeFinalRepo: IInformeFinalRepository,
   ) {}
 
-  async getInformeFinal(idDocente: number, idPeriodo: number): Promise<InformeFinalResponseDto> {
-    const informe = await this.informeFinalRepo.findByDocenteAndPeriodo(idDocente, idPeriodo);
-    if (!informe) throw new NotFoundException('Informe final no encontrado para este docente y período');
+  async getInformeFinal(idDocente: number, idOfertaAsignatura: number): Promise<InformeFinalResponseDto> {
+    const informe = await this.informeFinalRepo.findByDocenteAndOferta(idDocente, idOfertaAsignatura);
+    if (!informe) throw new NotFoundException('Informe final no encontrado para este docente y oferta académica');
     return informe;
   }
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PortafolioInformeFinal } from '../domain/informe-final.entity';
@@ -14,9 +14,9 @@ export class InformeFinalPg implements IInformeFinalRepository {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findByDocenteAndPeriodo(
+  async findByDocenteAndOferta(
     idDocente: number,
-    idPeriodo: number,
+    idOfertaAsignatura: number,
   ): Promise<InformeFinalResponseDto | null> {
     const result = await this.dataSource.query(
       `
@@ -29,13 +29,15 @@ export class InformeFinalPg implements IInformeFinalRepository {
         pif.fecha_firma_docente,
         pif.fecha_firma_coordinador
       FROM portafolio_informe_final pif
-      JOIN docente           d  ON pif.id_docente    = d.id_docente
-      JOIN asignatura        a  ON pif.id_asignatura = a.id_asignatura
-      JOIN paralelo          p  ON pif.id_paralelo   = p.id_paralelo
-      JOIN periodo_academico pa ON pif.id_periodo    = pa.id_periodo
-      WHERE pif.id_docente = $1 AND pif.id_periodo = $2
+      JOIN oferta_asignatura oa ON pif.id_oferta_asignatura = oa.id_oferta_asignatura
+      JOIN docente           d  ON oa.id_docente         = d.id_docente
+      JOIN asignatura        a  ON oa.id_asignatura       = a.id_asignatura
+      JOIN paralelo          p  ON oa.id_paralelo         = p.id_paralelo
+      JOIN periodo_carrera   pc ON oa.id_periodo_carrera  = pc.id_periodo_carrera
+      JOIN periodo_academico pa ON pc.id_periodo          = pa.id_periodo
+      WHERE pif.id_oferta_asignatura = $1 AND oa.id_docente = $2
       `,
-      [idDocente, idPeriodo],
+      [idOfertaAsignatura, idDocente],
     );
 
     if (!result.length) return null;
@@ -58,12 +60,26 @@ export class InformeFinalPg implements IInformeFinalRepository {
   }
 
   async create(dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal> {
+    const oferta = await this.dataSource.query(
+      `
+      SELECT oa.id_oferta_asignatura
+      FROM oferta_asignatura oa
+      JOIN periodo_carrera pc ON oa.id_periodo_carrera = pc.id_periodo_carrera
+      WHERE oa.id_docente = $1 AND oa.id_asignatura = $2
+        AND oa.id_paralelo = $3 AND pc.id_periodo = $4
+      `,
+      [dto.id_docente, dto.id_asignatura, dto.id_paralelo, dto.id_periodo],
+    );
+
+    if (!oferta.length) {
+      throw new NotFoundException(
+        'No existe una oferta académica para ese docente, asignatura, paralelo y período',
+      );
+    }
+
     const informe = this.repo.create({
-      idDocente:    dto.id_docente,
-      idPeriodo:    dto.id_periodo,
-      idAsignatura: dto.id_asignatura,
-      idParalelo:   dto.id_paralelo,
-      horario:      dto.horario,
+      idOfertaAsignatura: oferta[0].id_oferta_asignatura,
+      horario: dto.horario,
     });
     return this.repo.save(informe);
   }

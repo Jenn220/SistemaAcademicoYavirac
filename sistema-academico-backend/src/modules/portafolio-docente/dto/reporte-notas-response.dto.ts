@@ -1,4 +1,5 @@
 export class ReporteDto {
+  id_reporte_notas: number;
   carrera: string;
   nivel: string;
   asignatura: string;

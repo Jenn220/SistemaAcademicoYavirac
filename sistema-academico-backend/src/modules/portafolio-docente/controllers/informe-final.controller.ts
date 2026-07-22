@@ -12,12 +12,12 @@ import { AuthenticatedRequest } from '../../auth/interfaces/authenticated-reques
 export class InformeFinalController {
   constructor(private readonly informeFinalService: InformeFinalService) {}
 
-  @Get(':id_periodo')
+  @Get(':id_oferta_asignatura')
   getInformeFinal(
     @Req() req: AuthenticatedRequest,
-    @Param('id_periodo', ParseIntPipe) idPeriodo: number,
+    @Param('id_oferta_asignatura', ParseIntPipe) idOfertaAsignatura: number,
   ) {
-    return this.informeFinalService.getInformeFinal(req.user.idDocente!, idPeriodo);
+    return this.informeFinalService.getInformeFinal(req.user.idDocente!, idOfertaAsignatura);
   }
 
   @Post()
