@@ -28,17 +28,24 @@
     }
 
     getProyectos(): Observable<ProyectoVinculacion[]> {
-      return this.http.get<any[]>(`${BASE_URL}/estudiantes`).pipe(
-        map(items => items.map(item => ({
-          id: Number(item.id_vinculacion),
-          nombre: item.nombre_proyecto ?? item.nombre,
-          tutor: item.id_docente ? `Docente ${item.id_docente}` : 'Sin tutor',
-          estado: this.mapEstado(item.estado),
-          estudiantes: Number(item.estudiantes ?? 0),
-          descripcion: item.descripcion ?? ''
-        })))
-      );
-    }
+  return this.http.get<any[]>(`${BASE_URL}/estudiantes`).pipe(
+    map(items => items.map(item => ({
+      id: Number(item.id_vinculacion),
+
+      nombre: item.nombre_proyecto ?? item.nombre,
+
+      tutor: item.id_docente 
+        ? `Docente ${item.id_docente}` 
+        : 'Sin tutor',
+
+      estado: this.mapEstado(item.estado),
+
+      estudiantes: 1,
+
+      descripcion: `Inicio: ${item.fecha_inicio} - Fin: ${item.fecha_fin}`
+    })))
+  );
+}
 
     createProyecto(payload: CrearProyectoVinculacionPayload): Observable<any> {
       return this.http.post(`${BASE_URL}/vinculacion-estudiante`, payload);

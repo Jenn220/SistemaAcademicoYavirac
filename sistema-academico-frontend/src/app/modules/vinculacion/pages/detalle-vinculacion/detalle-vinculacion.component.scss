@@ -1,6 +1,6 @@
 .detail-shell {
-  display: grid;
-  grid-template-columns: 240px 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
   min-height: 100vh;
   padding: 1.5rem;
@@ -92,9 +92,9 @@
 .detail-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .btn-export {
@@ -125,7 +125,7 @@
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
   gap: 1rem;
 }
 
@@ -144,8 +144,10 @@
 
 .detail-item strong {
   display: block;
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: #102a43;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .detail-panel {
@@ -166,20 +168,17 @@
   box-shadow: 0 10px 24px rgba(15, 32, 75, 0.08);
 }
 
-.activity-table {
-  display: grid;
-  gap: 0.75rem;
-}
-
 .activity-row {
   display: grid;
-  grid-template-columns: 1.3fr 0.9fr 0.9fr 0.7fr 2fr;
+  grid-template-columns: 120px 100px 100px 80px minmax(300px, 1fr);
   gap: 1rem;
-  align-items: center;
-  padding: 0.9rem 1rem;
+  align-items: start;
+  padding: 1rem;
   border-radius: 1rem;
   background: #f8fbff;
 }
+
+
 
 .activity-row.activity-header {
   font-weight: 700;
