@@ -1,0 +1,29 @@
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-brand__badge">SA</div>
+      <div>
+        <div class="auth-brand__title">Sistema Académico</div>
+        <div class="auth-brand__subtitle">Instituto Yavirac</div>
+      </div>
+    </div>
+
+    <h1 class="auth-heading">No tienes permiso para ver esto</h1>
+    <p class="auth-subheading">
+      @if (correo) {
+        Tu cuenta ({{ correo }}) no tiene el rol necesario para acceder a esta
+        sección.
+      } @else {
+        No tienes el rol necesario para acceder a esta sección.
+      }
+    </p>
+
+    <a routerLink="/dashboard" class="auth-button" style="display:block; text-align:center; text-decoration:none;">
+      Volver al inicio
+    </a>
+
+    <button type="button" class="auth-button auth-button--ghost" style="margin-top:10px;" (click)="cerrarSesion()">
+      Cerrar sesión
+    </button>
+  </div>
+</div>

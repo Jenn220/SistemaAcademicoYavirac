@@ -1,1 +1,1 @@
-﻿export const placeholder = true;
+export * from './unauthorized';
