@@ -28,6 +28,6 @@ export class RegistroDiarioEntity {
   @Column({ name: 'observaciones', type: 'text', nullable: true })
   observaciones?: string;
 
-  @Column({ name: 'firma_estudiante', type: 'boolean', nullable: true, default: false })
+  @Column({ name: 'firma_estudiante', type: 'boolean', default: false })
   firma_estudiante?: boolean;
 }

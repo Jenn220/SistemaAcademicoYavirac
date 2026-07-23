@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PortafolioInformeFinal } from './modules/portafolio-docente/domain/informe-final.entity';
-import { PortafolioReporteNotas } from './modules/portafolio-docente/domain/reporte-notas.entity';
-import { PortafolioAceptacionEstudiante } from './modules/portafolio-docente/domain/aceptacion-estudiante.entity';
+import { join } from 'node:path';
 import { PortafolioModule } from './modules/portafolio-docente/portafolio.module';
 import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
 import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
+import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   controllers: [AppController],
@@ -23,7 +23,7 @@ import { FasePracticaModule } from './modules/fase-practica/fase-practica.module
         username: config.get<string>('DB_USER') || 'postgres',
         password: String(config.get('DB_PASSWORD') || 'postgres'),
         database: config.get<string>('DB_NAME') || 'postgres',
-        entities: [PortafolioInformeFinal, PortafolioReporteNotas, PortafolioAceptacionEstudiante],
+        entities: [join(__dirname, '**', '*.entity.{ts,js}')],
         autoLoadEntities: true,
         synchronize: false,
       }),
@@ -31,6 +31,8 @@ import { FasePracticaModule } from './modules/fase-practica/fase-practica.module
     PortafolioModule,
     VinculacionModule,
     FasePracticaModule,
+    HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

@@ -19,6 +19,6 @@ export class EvaluacionPracticaEntity {
   @Column({ name: 'nota_final_calculada', type: 'numeric', nullable: true })
   nota_final_calculada?: number;
 
-  @Column({ name: 'fecha_evaluacion', type: 'date', nullable: true })
+  @Column({ name: 'fecha_evaluacion', type: 'date', nullable: true, default: () => 'CURRENT_DATE' })
   fecha_evaluacion?: string;
 }

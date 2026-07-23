@@ -13,18 +13,9 @@ export class EmpresaEntity {
   @Column({ name: 'razon_social', type: 'varchar', length: 200 })
   razon_social!: string;
 
-  @Column({ name: 'nombre', type: 'varchar', length: 200, default: '' })
-  nombre?: string;
-
   @Column({ name: 'direccion', type: 'text', nullable: true })
   direccion?: string;
 
-  @Column({ name: 'telefono', type: 'varchar', length: 50, nullable: true })
-  telefono?: string;
-
-  @Column({ name: 'email', type: 'varchar', length: 150, nullable: true })
-  email?: string;
-
-  @Column({ name: 'estado', type: 'varchar', length: 50, default: 'ACTIVO' })
+  @Column({ name: 'estado', type: 'varchar', length: 20, nullable: true })
   estado?: string;
 }

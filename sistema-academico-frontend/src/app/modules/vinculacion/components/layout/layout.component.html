@@ -1,0 +1,65 @@
+<div class="layout">
+  <header class="topbar">
+    <div class="top-left">
+      <div class="menu-icon">
+        <img src="assets/icons/menu2.png" alt="Menú">
+      </div>
+      <div class="logo">
+        <img src="assets/icons/logo.png" alt="Logo Yavirac">
+      </div>
+    </div>
+
+    <div class="top-right">
+      <div class="notification">
+        <img src="assets/icons/campana.png" alt="Notificaciones">
+      </div>
+      <div class="avatar">
+        <img src="assets/icons/usuario.png" alt="Usuario">
+      </div>
+    </div>
+  </header>
+
+  <div class="body-layout">
+    <aside class="sidebar">
+      <div class="profile-card">
+        <div class="profile-image">
+          <img src="assets/icons/usuario.png" alt="Administrador">
+        </div>
+        <h3>Administrador</h3>
+        <small>admin@yavirac.edu.ec</small>
+      </div>
+
+      <nav>
+        <a routerLink="/vinculacion" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+          <span class="nav-icon"><img src="assets/icons/vinculacion.png" alt=""></span>
+          Vinculación
+        </a>
+        <a routerLink="/vinculacion/actividades" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <span class="nav-icon"><img src="assets/icons/actividad.png" alt=""></span>
+          Actividades
+        </a>
+        <a routerLink="/vinculacion/asistencia" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <span class="nav-icon"><img src="assets/icons/evaluacion.png" alt=""></span>
+          Asistencia tutor
+        </a>
+        <a routerLink="/vinculacion/informes" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <span class="nav-icon"><img src="assets/icons/informe.png" alt=""></span>
+          Informes
+        </a>
+        <a routerLink="/vinculacion/nuevo" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <span class="nav-icon"><img src="assets/icons/proyecto.png" alt=""></span>
+          Nuevo proyecto
+        </a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section class="hero" *ngIf="title || subtitle">
+        <h2>{{ title }}</h2>
+        <p>{{ subtitle }}</p>
+      </section>
+
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

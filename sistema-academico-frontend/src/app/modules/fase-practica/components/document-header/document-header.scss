@@ -1,0 +1,79 @@
+.header-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    table-layout:fixed;
+
+    font-family:Arial, Helvetica, sans-serif;
+
+    font-size:11px;
+
+    margin-bottom:20px;
+
+}
+
+.header-table td{
+
+    border:1px solid #000;
+
+    padding:5px;
+
+    vertical-align:middle;
+
+}
+
+.logo-cell{
+
+    width:90px;
+
+    text-align:center;
+
+}
+
+.logo-cell img{
+
+    width:65px;
+
+    height:auto;
+
+}
+
+.title-cell{
+
+    text-align:center;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+}
+
+.code-cell{
+
+    width:70px;
+
+    text-align:center;
+
+    font-weight:bold;
+
+}
+
+.format-cell{
+
+    text-align:center;
+
+    font-weight:bold;
+
+}
+
+.document-cell{
+
+    text-align:center;
+
+    font-weight:bold;
+
+    background:#f5f5f5;
+
+}

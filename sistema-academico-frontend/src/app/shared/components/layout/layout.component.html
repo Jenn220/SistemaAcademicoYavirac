@@ -1,0 +1,134 @@
+<div class="layout">
+
+  <aside class="sidebar">
+
+    <div class="logo">
+      <img src="assets/images/logo-yavirac.png" alt="Yavirac" class="logo-image">
+    </div>
+
+    <div class="menu">
+
+      <div class="menu-title">
+        Inicio
+      </div>
+
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        🏠 Bienvenida
+      </a>
+
+
+      <div class="menu-title">
+        Portafolio Docente
+      </div>
+
+      <a routerLink="/portafolio-docente"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact:true}">
+
+        📄 Informe Final
+
+      </a>
+
+      <a routerLink="/portafolio-docente/aceptacion-notas"
+         routerLinkActive="active">
+
+        ✅ Aceptación de Notas
+
+      </a>
+
+
+
+      <div class="menu-title">
+        Fase Práctica
+      </div>
+
+      <a routerLink="/fase-practica"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact:true}">
+
+        📁 Catálogo Documentos
+
+      </a>
+
+      <a routerLink="/fase-practica/carta-compromiso"
+         routerLinkActive="active">
+
+        ✍️ Carta Compromiso
+
+      </a>
+
+      <a routerLink="/fase-practica/registro-asistencia"
+         routerLinkActive="active">
+
+        📅 Registro Asistencia
+
+      </a>
+
+
+
+      <!-- Sección Vinculación con la sociedad -->
+<div class="menu-title">Vinculacion con la sociedad</div>
+
+<a routerLink="/vinculacion" 
+   routerLinkActive="active" 
+   [routerLinkActiveOptions]="{exact:true}">
+   🤝 Vinculación
+</a>
+
+<a routerLink="/vinculacion/actividades" 
+   routerLinkActive="active" 
+   [routerLinkActiveOptions]="{exact:true}">
+   📋 Actividades
+</a>
+
+<a routerLink="/vinculacion/asistencia" 
+   routerLinkActive="active" 
+   [routerLinkActiveOptions]="{exact:true}">
+   👨‍🏫 Asistencia Tutor
+</a>
+
+<a routerLink="/vinculacion/informes" 
+   routerLinkActive="active" 
+   [routerLinkActiveOptions]="{exact:true}">
+   📊 Informes
+</a>
+
+<a routerLink="/vinculacion/nuevo" 
+   routerLinkActive="active" 
+   [routerLinkActiveOptions]="{exact:true}">
+   🚀 Nuevo Proyecto
+</a>
+    </div>
+
+  </aside>
+
+
+
+  <main class="main-content">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="brand-icon">📚</span>
+        <h1>Sistema Académico</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn">🔔</button>
+        <button class="icon-btn">⚙️</button>
+        <div class="user">
+          <div class="avatar">
+            <img src="assets/icons/usuario.png" alt="Avatar">
+          </div>
+          <div class="user-info">
+            <span class="name">Juan Pérez</span>
+            <span class="role">Docente</span>
+          </div>
+          <span class="arrow">▼</span>
+        </div>
+      </div>
+    </div>
+
+    <router-outlet></router-outlet>
+
+  </main>
+
+</div>

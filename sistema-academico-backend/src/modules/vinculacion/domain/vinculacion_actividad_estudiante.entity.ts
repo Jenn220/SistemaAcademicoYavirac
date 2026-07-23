@@ -30,4 +30,7 @@ export class VinculacionActividadEstudiante {
   // text
   @Column({ type: 'text' })
   actividades_realizadas: string;
+  // resultado_aprendizaje text
+    @Column({ type: 'text' })
+  resultado_aprendizaje: string;
 }

@@ -1,0 +1,138 @@
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+
+        <h1 class="titulo">
+            Sistema Académico Yavirac
+        </h1>
+
+        <h4 class="subtitulo">
+            Módulo Fase Práctica
+        </h4>
+
+        <p class="descripcion">
+
+            Catálogo de documentos oficiales para la gestión
+            de prácticas preprofesionales.
+
+        </p>
+
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Carta -->
+
+        <div class="col-md-6">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <i class="bi bi-file-earmark-text-fill icono"></i>
+
+                    <h3>
+
+                        Carta de Compromiso
+
+                    </h3>
+
+                    <span class="badge bg-primary">
+
+                        Formato F01
+
+                    </span>
+
+                    <p class="mt-3">
+
+                        Documento donde el estudiante acepta las
+                        obligaciones, prohibiciones y compromisos
+                        establecidos durante la Fase Práctica.
+
+                    </p>
+
+                    <div class="d-grid gap-2">
+
+                        <button
+                            class="btn btn-primary"
+                            (click)="abrirCarta()">
+
+                            Ver Documento
+
+                        </button>
+
+                        <button
+                            class="btn btn-warning text-white"
+                            (click)="guardarCarta()">
+
+                            Guardar en BD
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Registro -->
+
+        <div class="col-md-6">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <i class="bi bi-table icono"></i>
+
+                    <h3>
+
+                        Registro de Asistencia
+
+                    </h3>
+
+                    <span class="badge bg-success">
+
+                        Formato F05
+
+                    </span>
+
+                    <p class="mt-3">
+
+                        Documento donde se registran diariamente
+                        las horas realizadas durante el periodo
+                        de prácticas.
+
+                    </p>
+
+                    <div class="d-grid gap-2">
+
+                        <button
+                            class="btn btn-primary"
+                            (click)="abrirRegistro()">
+
+                            Ver Documento
+
+                        </button>
+
+                        <button
+                            class="btn btn-warning text-white"
+                            (click)="guardarRegistro()">
+
+                            Guardar en BD
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

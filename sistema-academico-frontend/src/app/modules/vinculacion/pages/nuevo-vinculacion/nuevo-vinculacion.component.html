@@ -1,0 +1,70 @@
+
+  <div class="form-shell">
+    <div class="form-card">
+    <div class="form-header">
+      <h1>Nuevo proyecto de vinculación</h1>
+      <a routerLink="/vinculacion" class="btn-link">← Volver</a>
+    </div>
+
+    <form (ngSubmit)="guardarProyecto()" #nuevoProyectoForm="ngForm">
+      <div class="form-grid">
+        <label>
+          <span>Nombre del proyecto</span>
+          <input [(ngModel)]="model.nombre_proyecto" name="nombre_proyecto" required />
+        </label>
+
+        <label>
+          <span>ID periodo</span>
+          <input type="number" [(ngModel)]="model.id_periodo" name="id_periodo" required />
+        </label>
+
+        <label>
+          <span>ID matrícula detalle</span>
+          <input type="number" [(ngModel)]="model.id_matricula_detalle" name="id_matricula_detalle" required />
+        </label>
+
+        <label>
+          <span>ID empresa</span>
+          <input type="number" [(ngModel)]="model.id_empresa" name="id_empresa" required />
+        </label>
+
+        <label>
+          <span>ID docente</span>
+          <input type="number" [(ngModel)]="model.id_docente" name="id_docente" required />
+        </label>
+
+        <label>
+          <span>Fecha inicio</span>
+          <input type="date" [(ngModel)]="model.fecha_inicio" name="fecha_inicio" required />
+        </label>
+
+        <label>
+          <span>Fecha fin</span>
+          <input type="date" [(ngModel)]="model.fecha_fin" name="fecha_fin" required />
+        </label>
+
+        <label>
+          <span>Horas estudiante</span>
+          <input type="number" [(ngModel)]="model.total_horas_estudiante" name="total_horas_estudiante" />
+        </label>
+
+        <label>
+          <span>Horas docente</span>
+          <input type="number" [(ngModel)]="model.total_horas_docente" name="total_horas_docente" />
+        </label>
+
+        <label>
+          <span>Estado</span>
+          <input [(ngModel)]="model.estado" name="estado" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" [disabled]="isSubmitting || nuevoProyectoForm.invalid">{{ isSubmitting ? 'Guardando...' : 'Guardar proyecto' }}</button>
+      </div>
+
+      <p class="feedback success" *ngIf="mensaje">{{ mensaje }}</p>
+      <p class="feedback error" *ngIf="error">{{ error }}</p>
+    </form>
+    </div>
+  </div>

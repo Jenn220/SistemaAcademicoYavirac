@@ -1,7 +1,12 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { AceptacionNotasService } from '../services/aceptacion-notas.service';
 import { CreateReporteNotasDto } from '../dto/create-reporte-notas.dto';
+import { JwtGuard } from '../../auth/guards/jwt.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 
+@UseGuards(JwtGuard, RolesGuard)
+@Roles('DOCENTE')
 @Controller('portafolio/aceptacion-notas')
 export class AceptacionNotasController {
   constructor(private readonly aceptacionNotasService: AceptacionNotasService) {}
