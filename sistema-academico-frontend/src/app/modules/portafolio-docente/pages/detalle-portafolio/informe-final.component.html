@@ -51,13 +51,6 @@
         </svg>
         {{ guardandoManual() ? 'Guardando...' : 'Guardar secciones' }}
       </button>
-      <button type="button" class="btn-toolbar btn-toolbar--outline" (click)="imprimir()">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 9V3h12v6M6 18h12v4H6v-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-          <rect x="4" y="9" width="16" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/>
-        </svg>
-        Imprimir / Exportar PDF
-      </button>
       <button type="button" class="btn-toolbar btn-toolbar--outline" (click)="exportarWord()" [disabled]="exportandoWord()">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
