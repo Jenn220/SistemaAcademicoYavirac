@@ -3,7 +3,7 @@ import { InformeFinalResponseDto } from '../dto/informe-final-response.dto';
 import { PortafolioInformeFinal } from '../domain/informe-final.entity';
 
 export interface IInformeFinalRepository {
-  findByDocenteAndPeriodo(idDocente: number, idPeriodo: number): Promise<InformeFinalResponseDto | null>;
+  findByDocenteAndOferta(idDocente: number, idOfertaAsignatura: number): Promise<InformeFinalResponseDto | null>;
   create(dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal>;
 }
 

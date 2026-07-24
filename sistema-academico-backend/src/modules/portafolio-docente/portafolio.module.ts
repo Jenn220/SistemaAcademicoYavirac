@@ -11,6 +11,10 @@ import { AceptacionNotasPg } from './adapters/aceptacion-notas.pg';
 import { AceptacionNotasService } from './services/aceptacion-notas.service';
 import { AceptacionNotasController } from './controllers/aceptacion-notas.controller';
 import { ACEPTACION_NOTAS_REPOSITORY } from './ports/aceptacion-notas.repository';
+import { PortafolioPg } from './adapters/portafolio.pg';
+import { PortafolioService } from './services/portafolio.service';
+import { PortafolioController } from './controllers/portafolio.controller';
+import { PORTAFOLIO_REPOSITORY } from './ports/portafolio.repository';
 
 @Module({
   imports: [
@@ -31,7 +35,12 @@ import { ACEPTACION_NOTAS_REPOSITORY } from './ports/aceptacion-notas.repository
       provide: ACEPTACION_NOTAS_REPOSITORY,
       useClass: AceptacionNotasPg,
     },
+    PortafolioService,
+    {
+      provide: PORTAFOLIO_REPOSITORY,
+      useClass: PortafolioPg,
+    },
   ],
-  controllers: [InformeFinalController, AceptacionNotasController],
+  controllers: [InformeFinalController, AceptacionNotasController, PortafolioController],
 })
 export class PortafolioModule {}

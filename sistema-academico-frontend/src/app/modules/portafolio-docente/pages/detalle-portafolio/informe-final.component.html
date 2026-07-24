@@ -1,179 +1,201 @@
-<div class="informe-container" *ngIf="informe">
+<div class="documento">
+  <header class="encabezado-institucional">
+    <div class="titulos">
+      <p class="titulo-instituto">INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC</p>
+      <p class="titulo-macro">MACROPROCESO 01 DOCENCIA</p>
+      <p class="titulo-proceso">PROCESO 01 SEGUIMIENTO, CONTROL Y EVALUACIÓN DEL PROCESO DOCENTE</p>
+      <p class="titulo-formato">FORMATO 04 INFORME FINAL PROCESO DOCENTE</p>
+    </div>
+    <div class="codigo">
+      <span>CÓDIGO</span>
+      <strong>010104</strong>
+    </div>
+  </header>
 
-  <!-- Encabezado institucional, igual al PDF -->
-  <table class="header-table">
-    <tr>
-      <td class="logo-cell" rowspan="4">
-        <img src="assets/images/logo.png" alt="Logo Yavirac" />
-      </td>
-      <td class="titulo-cell">INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC</td>
-      <td class="codigo-label">CÓDIGO</td>
-      <td class="codigo-valor" rowspan="4">010104</td>
-    </tr>
-    <tr><td class="titulo-cell">MACROPROCESO 01 DOCENCIA</td><td></td></tr>
-    <tr><td class="titulo-cell rojo">PROCESO 01 SEGUIMIENTO, CONTROL Y EVALUACIÓN DEL PROCESO DOCENTE</td><td></td></tr>
-    <tr><td class="titulo-cell">FORMATO 04 INFORME FINAL PROCESO DOCENTE</td><td></td></tr>
-  </table>
+  <h1 class="titulo-principal">INFORME FINAL DE PROCESO DOCENTE</h1>
 
-  <h1 class="main-title">INFORME FINAL DE PROCESO DOCENTE</h1>
+  <p class="mensaje" *ngIf="cargando">Cargando informe desde el servidor...</p>
+  <p class="mensaje error" *ngIf="errorMsg">{{ errorMsg }}</p>
+  <p class="mensaje ok" *ngIf="okMsg">{{ okMsg }}</p>
 
-  <form [formGroup]="form">
+  <!-- Formulario de creación cuando el informe todavía no existe en la BD -->
+  <div class="crear-informe" *ngIf="noExiste && !cargando">
+    <p>
+      Todavía no existe un informe final para esta oferta-asignatura.
+      Completa estos datos para crearlo en el servidor
+      (id_asignatura / id_paralelo: escríbelos a mano mientras no exista un catálogo).
+    </p>
+    <form [formGroup]="formCreacion" (ngSubmit)="crearInforme()">
+      <label>
+        ID Periodo
+        <input type="number" formControlName="id_periodo" />
+      </label>
+      <label>
+        ID Asignatura
+        <input type="number" formControlName="id_asignatura" />
+      </label>
+      <label>
+        ID Paralelo
+        <input type="number" formControlName="id_paralelo" />
+      </label>
+      <label>
+        Horario
+        <input type="text" placeholder="Ej: JUEVES 13:00 A 15:00" formControlName="horario" />
+      </label>
+      <button type="submit" [disabled]="creando">
+        {{ creando ? 'Creando...' : 'Crear informe final' }}
+      </button>
+    </form>
+  </div>
 
-    <!-- 1. Antecedentes -->
-    <section>
-      <h2>1. Antecedentes</h2>
-      <textarea formControlName="antecedentes" rows="5"></textarea>
-      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
-  Este campo es obligatorio.
-</small>
-    </section>
-
-    <!-- 2. Datos de la asignatura -->
+  <ng-container *ngIf="informe as inf">
+    <!-- 2. Datos de la asignatura (100% real, GET /portafolio/informe-final) -->
     <section>
       <h2>2. Datos de la asignatura</h2>
-      <table class="datos-table">
-        <tr><td class="label">Nombre del Docente</td><td>{{ informe.informe.nombre_docente }}</td></tr>
+      <table class="tabla-datos">
         <tr>
-          <td class="label">Nombre de la Asignatura</td>
-          <td>
-            <select formControlName="idAsignatura">
-              <option *ngFor="let a of asignaturas" [value]="a.id">{{ a.nombre }}</option>
-            </select>
-          </td>
+          <td class="etiqueta">Nombre del Docente</td>
+          <td>{{ inf.informe.nombre_docente }}</td>
         </tr>
         <tr>
-          <td class="label">Paralelo</td>
-          <td>
-            <select formControlName="idParalelo">
-              <option *ngFor="let p of paralelos" [value]="p.id">{{ p.nombre }}</option>
-            </select>
-          </td>
+          <td class="etiqueta">Nombre de la Asignatura</td>
+          <td>{{ inf.informe.nombre_asignatura }}</td>
         </tr>
-        <tr><td class="label">Horario</td><td><input type="text" formControlName="horario" /></td></tr>
-        <tr><td class="label">Periodo</td><td>{{ informe.informe.periodo }}</td></tr>
-        <tr><td class="label">Fecha</td><td>{{ fechaActual | date:'dd-MM-yyyy' }}</td></tr>
+        <tr>
+          <td class="etiqueta">Paralelo</td>
+          <td>{{ inf.informe.paralelo }}</td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Horario</td>
+          <td>{{ inf.informe.horario }}</td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Periodo</td>
+          <td>{{ inf.informe.periodo }}</td>
+        </tr>
       </table>
     </section>
 
-    <!-- 3. Desarrollo general de actividades -->
+    <!-- 1, 3, 4, 5: sin contrato en el backend todavía. Recuadros libres,
+         se guardan solo en este navegador (localStorage). -->
     <section>
-      <h2>3. Desarrollo general de actividades</h2>
-      <textarea formControlName="desarrolloActividades" rows="5" placeholder="Describe cómo se desarrolló la asignatura durante el semestre..."></textarea>
-      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
-  Este campo es obligatorio.
-</small>
+      <h2>1. Antecedentes</h2>
+      <textarea
+        rows="4"
+        placeholder="Escribe los antecedentes del informe..."
+        [(ngModel)]="local.antecedentes"
+        [ngModelOptions]="{ standalone: true }"
+        (change)="guardarLocal()"
+      ></textarea>
     </section>
 
-    <!-- 4. Resultados cualitativos obtenidos -->
+    <section>
+      <h2>3. Desarrollo general de actividades</h2>
+      <textarea
+        rows="5"
+        placeholder="Describe el desarrollo general de actividades..."
+        [(ngModel)]="local.desarrolloActividades"
+        [ngModelOptions]="{ standalone: true }"
+        (change)="guardarLocal()"
+      ></textarea>
+    </section>
+
     <section>
       <h2>4. Resultados cualitativos obtenidos</h2>
 
       <h3>a. Infraestructura y ambiente pedagógico</h3>
-      <textarea formControlName="infraestructuraResultado" rows="3"></textarea>
-      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
-  Este campo es obligatorio.
-</small>
-      <h4>Recomendaciones de mejora en la Infraestructura y ambiente pedagógico</h4>
-      <textarea formControlName="infraestructuraRecomendacion" rows="3"></textarea>
-      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
-  Este campo es obligatorio.
-</small>
+      <textarea
+        rows="4"
+        placeholder="Resultado..."
+        [(ngModel)]="local.cualitativoInfraestructuraResultado"
+        [ngModelOptions]="{ standalone: true }"
+        (change)="guardarLocal()"
+      ></textarea>
+      <textarea
+        rows="3"
+        placeholder="Recomendaciones de mejora en la infraestructura..."
+        [(ngModel)]="local.cualitativoInfraestructuraRecomendacion"
+        [ngModelOptions]="{ standalone: true }"
+        (change)="guardarLocal()"
+      ></textarea>
 
       <h3>b. Desarrollo del Plan de Estudios de la Asignatura</h3>
-      <textarea formControlName="planEstudiosResultado" rows="3"></textarea>
-      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
-  Este campo es obligatorio.
-</small>
-      <h4>Recomendaciones de mejora o actualización del Plan de Estudios de la Asignatura</h4>
-      <textarea formControlName="planEstudiosRecomendacion" rows="3"></textarea>
-      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
-  Este campo es obligatorio.
-</small>
+      <textarea
+        rows="4"
+        placeholder="Resultado..."
+        [(ngModel)]="local.cualitativoPlanEstudiosResultado"
+        [ngModelOptions]="{ standalone: true }"
+        (change)="guardarLocal()"
+      ></textarea>
+      <textarea
+        rows="3"
+        placeholder="Recomendaciones de mejora o actualización del plan de estudios..."
+        [(ngModel)]="local.cualitativoPlanEstudiosRecomendacion"
+        [ngModelOptions]="{ standalone: true }"
+        (change)="guardarLocal()"
+      ></textarea>
     </section>
 
-    <!-- 5. Resultados cuantitativos obtenidos -->
     <section>
       <h2>5. Resultados cuantitativos obtenidos</h2>
-
-      <table class="notas-table">
+      <table class="tabla-cuantitativos">
         <thead>
           <tr>
-            <th>No</th><th>Cédula</th><th>Apellidos</th><th>Nombres</th>
-            <th>Asist.</th><th>P1</th><th>P2</th><th>RC</th><th>NF</th>
-            <th>Evaluación</th><th>Promoción</th>
+            <th>Cédula</th>
+            <th>Nombres y Apellidos</th>
+            <th>Asist.</th>
+            <th>P1</th>
+            <th>P2</th>
+            <th>RC</th>
+            <th>NF</th>
+            <th>Evaluación</th>
+            <th>Promoción</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let e of estudiantes; let i = index">
-            <td>{{ i + 1 }}</td><td>{{ e.cedula }}</td><td>{{ e.apellidos }}</td><td>{{ e.nombres }}</td>
-            <td>{{ e.asistencia }}%</td><td>{{ e.p1 }}</td><td>{{ e.p2 }}</td><td>{{ e.rc ?? '' }}</td>
-            <td>{{ e.nf }}</td><td>{{ e.evaluacion }}</td><td>{{ e.promocion }}</td>
+          <tr *ngFor="let est of local.estudiantes">
+            <td><input type="text" [(ngModel)]="est.cedula" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="text" [(ngModel)]="est.nombresApellidos" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="number" [(ngModel)]="est.asistencia" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="number" step="0.01" [(ngModel)]="est.p1" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="number" step="0.01" [(ngModel)]="est.p2" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="number" step="0.01" [(ngModel)]="est.rc" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="number" step="0.01" [(ngModel)]="est.nf" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="text" [(ngModel)]="est.evaluacion" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td><input type="text" [(ngModel)]="est.promocion" [ngModelOptions]="{ standalone: true }" (change)="guardarLocal()" /></td>
+            <td>
+              <button type="button" class="quitar" (click)="quitarEstudiante(est.id)">✕</button>
+            </td>
           </tr>
         </tbody>
       </table>
+      <button type="button" class="agregar" (click)="agregarEstudiante()">+ Agregar estudiante</button>
 
-      <div class="tablas-resumen">
-        <table class="resumen-table">
-          <thead><tr><th>Calificación</th><th>Equivalencia</th><th>Frecuencia</th><th>Porcentaje</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let r of resumenEquivalencia">
-              <td>{{ r.min }} - {{ r.max }}</td><td>{{ r.label }}</td><td>{{ r.frecuencia }}</td><td>{{ r.porcentaje | number:'1.2-2' }}%</td>
-            </tr>
-            <tr class="total-row"><td colspan="2">TOTAL</td><td>{{ totalEstudiantes }}</td><td>100,00%</td></tr>
-          </tbody>
-        </table>
-
-        <table class="resumen-table">
-          <thead><tr><th>Promoción</th><th>Frecuencia</th><th>Porcentaje</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let p of resumenPromocion">
-              <td>{{ p.label }}</td><td>{{ p.frecuencia }}</td><td>{{ p.porcentaje | number:'1.2-2' }}%</td>
-            </tr>
-            <tr class="total-row"><td>TOTAL</td><td>{{ totalEstudiantes }}</td><td>100,00%</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h4>Recomendaciones para los resultados cuantitativos</h4>
-      <textarea formControlName="recomendacionesFinales" rows="3"></textarea>
-      <small class="campo-error" *ngIf="form.get('desarrolloActividades')?.invalid && form.get('desarrolloActividades')?.touched">
-  Este campo es obligatorio.
-</small>
+      <h3>Recomendaciones para los resultados cuantitativos</h3>
+      <textarea
+        rows="3"
+        placeholder="Recomendaciones finales..."
+        [(ngModel)]="local.recomendacionesFinales"
+        [ngModelOptions]="{ standalone: true }"
+        (change)="guardarLocal()"
+      ></textarea>
     </section>
 
-    <!-- Firmas -->
-    <section class="firmas">
-      <table class="firmas-table">
-        <tr>
-          <td>Docente: {{ informe.firmas.docente }}</td>
-          <td>Coordinador: {{ informe.firmas.fecha_firma_coordinador ? 'Ing. Raúl Páez' : 'Pendiente' }}</td>
-        </tr>
-        <tr>
-  <td>Fecha: {{ fechaActual | date:'dd-MM-yyyy' }}</td>
-  <td>Fecha: {{ fechaActual | date:'dd-MM-yyyy' }}</td>
-</tr>
-      </table>
-    </section>
-
-    <div class="acciones">
-      <button type="button" [disabled]="guardando" (click)="solicitarGuardar()">
-        {{ guardando ? 'Guardando...' : 'Guardar informe' }}
-      </button>
-      <span *ngIf="guardadoOk" class="ok-msg">✅ Guardado (datos de asignatura)</span>
-    </div>
-  </form>
-
-  <!-- Modal de confirmación -->
-  <div class="modal-overlay" *ngIf="mostrarConfirmacion">
-    <div class="modal-box">
-      <h3>¿Guardar informe?</h3>
-      <p>Se van a guardar los datos de la asignatura (asignatura, paralelo y horario). El resto de las secciones aún no se guarda en el sistema.</p>
-      <div class="modal-acciones">
-        <button type="button" class="btn-cancelar" (click)="cancelarGuardar()">Cancelar</button>
-        <button type="button" class="btn-confirmar" (click)="confirmarGuardar()">Sí, guardar</button>
-      </div>
-    </div>
-  </div>
+    <!-- Firmas: nombre real desde el back, fecha autogenerada -->
+    <table class="tabla-firmas">
+      <tr>
+        <td class="etiqueta">Docente:</td>
+        <td>{{ inf.firmas.docente }}</td>
+        <td class="etiqueta">Coordinador:</td>
+        <td><span class="placeholder">(sin campo en el backend)</span></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Fecha:</td>
+        <td>{{ hoy | date: 'dd-MM-yyyy' }}</td>
+        <td class="etiqueta">Fecha:</td>
+        <td>{{ hoy | date: 'dd-MM-yyyy' }}</td>
+      </tr>
+    </table>
+  </ng-container>
 </div>
-
-<div *ngIf="error" class="error-msg">{{ error }}</div>
