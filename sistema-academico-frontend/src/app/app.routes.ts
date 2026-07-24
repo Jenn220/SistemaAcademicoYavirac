@@ -98,6 +98,23 @@ export const routes: Routes = [
 
       // ===========================================
       // Portafolio Docente
+      //
+      // NOTA: ambas vistas necesitan saber SOBRE QUÉ
+      // oferta-asignatura trabajar, así que ahora reciben
+      // parámetros de ruta en vez de estar "sueltas".
+      // Se navega así (por ejemplo desde un futuro listado
+      // de "mis-ofertas"):
+      //
+      //   this.router.navigate([
+      //     '/portafolio-docente/informe-final',
+      //     oferta.id_oferta_asignatura
+      //   ]);
+      //
+      //   this.router.navigate([
+      //     '/portafolio-docente/aceptacion-notas',
+      //     oferta.id_oferta_asignatura,
+      //     oferta.id_periodo
+      //   ]);
       // ===========================================
       {
         path: 'portafolio-docente',
@@ -106,13 +123,22 @@ export const routes: Routes = [
             path: '',
             loadComponent: () =>
               import(
+                './modules/portafolio-docente/pages/lista-portafolio/lista-portafolio.component'
+              ).then(
+                m => m.ListaPortafolioComponent
+              )
+          },
+          {
+            path: 'informe-final/:idOfertaAsignatura',
+            loadComponent: () =>
+              import(
                 './modules/portafolio-docente/pages/detalle-portafolio/informe-final.component'
               ).then(
                 m => m.InformeFinalComponent
               )
           },
           {
-            path: 'aceptacion-notas',
+            path: 'aceptacion-notas/:idOfertaAsignatura/:idPeriodo',
             loadComponent: () =>
               import(
                 './modules/portafolio-docente/pages/aceptacion-notas/aceptacion-notas.component'

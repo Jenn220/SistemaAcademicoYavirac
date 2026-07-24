@@ -1,139 +1,208 @@
-:host {
-  display: block;
-  font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
-  background: #e8e8e8;
-  padding: 2rem 0;
-}
-
-.reporte-container {
-  max-width: 950px;
+.documento {
+  max-width: 1000px;
   margin: 0 auto;
+  padding: 1.5rem;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #222;
   background: #fff;
-  padding: 2rem 2.5rem;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
-  font-size: 12.5px;
 }
 
-.header-table, .datos-generales, .notas-table, .firmas-table {
+.encabezado-institucional {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #333;
+  margin-bottom: 1rem;
+
+  .titulos {
+    flex: 1;
+    text-align: center;
+
+    p {
+      margin: 0;
+      padding: 0.25rem;
+      border-bottom: 1px solid #333;
+    }
+
+    .titulo-instituto {
+      background: #dbe9f5;
+      font-weight: bold;
+    }
+
+    .titulo-macro {
+      font-weight: 600;
+    }
+
+    .titulo-proceso {
+      background: #e57373;
+      color: #fff;
+    }
+
+    .titulo-formato {
+      font-weight: bold;
+      border-bottom: none;
+    }
+  }
+
+  .codigo {
+    width: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #333;
+
+    span {
+      font-size: 0.75rem;
+    }
+
+    strong {
+      font-size: 1rem;
+    }
+  }
+}
+
+.selector-tipo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  .botones-tipo {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  button {
+    padding: 0.4rem 0.9rem;
+    border: 1px solid #1565c0;
+    background: #fff;
+    color: #1565c0;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &.activo {
+      background: #1565c0;
+      color: #fff;
+    }
+  }
+}
+
+.mensaje {
+  padding: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  &.error {
+    color: #b71c1c;
+  }
+
+  &.ok {
+    color: #1b5e20;
+  }
+}
+
+.crear-reporte {
+  border: 1px dashed #999;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+
+  button {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1.2rem;
+    background: #1565c0;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
+
+table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
 
-  td, th {
-    border: 1px solid #000;
-    padding: 5px 8px;
+  td,
+  th {
+    border: 1px solid #333;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.85rem;
   }
 }
 
-.header-table {
-  .logo-cell { width: 80px; text-align: center; img { max-width: 60px; } }
-  .titulo-cell {
-    text-align: center;
+.tabla-encabezado {
+  .etiqueta {
+    background: #f0f0f0;
     font-weight: bold;
-    background: #1f3864;
-    color: #fff;
-    &.rojo { background: #e06666; }
+    width: 15%;
   }
-  .codigo-label { text-align: center; font-weight: bold; background: #f2f2f2; }
-  .codigo-valor { text-align: center; }
 }
 
-.datos-generales {
-  .label { font-weight: bold; background: #f2f2f2; width: 130px; }
-  select { width: 100%; padding: 3px; }
-}
+.tabla-notas {
+  thead {
+    background: #dbe9f5;
+  }
 
-.notas-table {
-  th { background: #1f3864; color: #fff; text-align: center; }
-  td { text-align: center; }
-  .firma-cell { min-width: 60px; }
-}
+  td.izq {
+    text-align: left;
+  }
 
-.nota-limitacion {
-  display: block;
-  color: #888;
-  font-style: italic;
-  margin-bottom: 1.5rem;
-}
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    padding: 0.2rem;
+    text-align: center;
+  }
 
-.firmas-table td {
-  text-align: center;
-  padding-top: 2rem;
-  font-weight: 600;
-}
-
-.cargando-msg, .error-msg {
-  max-width: 950px;
-  margin: 2rem auto;
-  text-align: center;
-}
-
-.error-msg {
-  background: #fce8e8;
-  color: #a12222;
-  padding: 1rem;
-  border-radius: 4px;
+  .firma-vacia {
+    background: repeating-linear-gradient(
+      45deg,
+      #fafafa,
+      #fafafa 4px,
+      #f0f0f0 4px,
+      #f0f0f0 8px
+    );
+  }
 }
 
 .acciones {
-  margin-top: 1.5rem;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  button {
-    background: #1f3864;
-    color: #fff;
-    border: none;
-    padding: 0.7rem 1.6rem;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-
-    &:hover { background: #16294c; }
-    &:disabled { background: #999; cursor: not-allowed; }
-  }
-
-  .ok-msg { color: #1f7a1f; font-weight: 600; }
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-box {
-  background: #fff;
-  border-radius: 6px;
-  padding: 1.5rem 2rem;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-
-  h3 { margin-top: 0; font-size: 16px; }
-  p { font-size: 13px; color: #444; }
-}
-
-.modal-acciones {
-  display: flex;
-  justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
 
   button {
-    padding: 0.5rem 1.2rem;
-    border-radius: 4px;
+    padding: 0.5rem 1.1rem;
     border: none;
-    font-weight: 600;
+    border-radius: 4px;
     cursor: pointer;
+    background: #1565c0;
+    color: #fff;
+
+    &.secundario {
+      background: #607d8b;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
+
+.tabla-firmas {
+  .etiqueta {
+    background: #f0f0f0;
+    font-weight: bold;
+    width: 15%;
   }
 
-  .btn-cancelar { background: #eee; color: #333; &:hover { background: #ddd; } }
-  .btn-confirmar { background: #1f3864; color: #fff; &:hover { background: #16294c; } }
+  input {
+    width: 100%;
+    border: 1px solid #ccc;
+    padding: 0.2rem;
+  }
 }

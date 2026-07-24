@@ -1,346 +1,202 @@
-﻿:host {
-  display: block;
-  font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
-  color: #000;
-  background: #e8e8e8;
-  padding: 2rem 0;
-}
-
-.informe-container {
-  max-width: 850px;
+.documento {
+  max-width: 1000px;
   margin: 0 auto;
+  padding: 1.5rem;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #222;
   background: #fff;
-  padding: 2.5rem 3rem;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
-  font-size: 13px;
-  line-height: 1.5;
 }
 
-// ===== Encabezado institucional =====
-.header-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1.5rem;
-  border: 1.5px solid #000;
+.encabezado-institucional {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #333;
+  margin-bottom: 1rem;
 
-  td {
-    border: 1px solid #000;
-    padding: 4px 8px;
-    vertical-align: middle;
-  }
-
-  .logo-cell {
-    width: 90px;
+  .titulos {
+    flex: 1;
     text-align: center;
-    background: #fff;
 
-    img {
-      max-width: 70px;
-      max-height: 70px;
-      object-fit: contain;
+    p {
+      margin: 0;
+      padding: 0.25rem;
+      border-bottom: 1px solid #333;
     }
-  }
 
-  .titulo-cell {
-    text-align: center;
-    font-weight: bold;
-    font-size: 12px;
-    background: #1f3864; // azul institucional
-    color: #fff;
-    letter-spacing: 0.3px;
+    .titulo-instituto {
+      background: #dbe9f5;
+      font-weight: bold;
+    }
 
-    &.rojo {
-      background: #e06666; // rojo/salmón del PDF
+    .titulo-proceso {
+      background: #e57373;
       color: #fff;
     }
+
+    .titulo-formato {
+      font-weight: bold;
+      border-bottom: none;
+    }
   }
 
-  .codigo-label {
-    text-align: center;
-    font-weight: bold;
-    background: #f2f2f2;
-    width: 70px;
-  }
+  .codigo {
+    width: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #333;
 
-  .codigo-valor {
-    text-align: center;
-    background: #fff;
-    width: 70px;
+    span {
+      font-size: 0.75rem;
+    }
+
+    strong {
+      font-size: 1rem;
+    }
   }
 }
 
-.main-title {
+.titulo-principal {
   text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-  margin: 1.5rem 0 2rem;
-  text-transform: uppercase;
+  margin: 1rem 0;
 }
 
-// ===== Secciones numeradas =====
+.mensaje {
+  padding: 0.5rem;
+
+  &.error {
+    color: #b71c1c;
+  }
+
+  &.ok {
+    color: #1b5e20;
+  }
+}
+
+.crear-informe {
+  border: 1px dashed #999;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    align-items: flex-end;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.85rem;
+      font-weight: 600;
+
+      input {
+        margin-top: 0.25rem;
+        padding: 0.4rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+    }
+
+    button {
+      padding: 0.55rem 1.2rem;
+      background: #1565c0;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+      }
+    }
+  }
+}
+
 section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 
   h2 {
-    font-size: 15px;
-    font-weight: bold;
-    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    border-bottom: 2px solid #1565c0;
+    padding-bottom: 0.25rem;
   }
 
   h3 {
-    font-size: 13.5px;
-    font-weight: bold;
-    margin: 1rem 0 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
   }
 
-  h4 {
-    font-size: 13px;
-    font-weight: bold;
-    font-style: normal;
-    margin: 1rem 0 0.4rem;
-  }
-}
-
-// ===== Textareas =====
-textarea {
-  width: 100%;
-  font-family: inherit;
-  font-size: 13px;
-  padding: 0.6rem;
-  border: 1px solid #999;
-  border-radius: 2px;
-  resize: vertical;
-  box-sizing: border-box;
-
-  &:focus {
-    outline: none;
-    border-color: #1f3864;
-    box-shadow: 0 0 0 2px rgba(31, 56, 100, 0.15);
-  }
-}
-
-// ===== Tabla "Datos de la asignatura" =====
-.datos-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #000;
-
-  td {
-    border: 1px solid #000;
-    padding: 6px 10px;
-  }
-
-  .label {
-    font-weight: bold;
-    width: 220px;
-    background: #f7f7f7;
-  }
-
-  select,
-  input[type='text'] {
+  textarea {
     width: 100%;
-    font-size: 13px;
-    padding: 3px 6px;
-    border: 1px solid #ccc;
-    border-radius: 2px;
     box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-family: inherit;
+    margin-bottom: 0.75rem;
+    resize: vertical;
   }
 }
 
-// ===== Tabla de notas (sección 5) =====
-.notas-table {
+table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11.5px;
-  margin-bottom: 1.5rem;
 
-  th,
-  td {
-    border: 1px solid #999;
-    padding: 4px 6px;
+  td,
+  th {
+    border: 1px solid #333;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+.tabla-datos .etiqueta,
+.tabla-firmas .etiqueta {
+  background: #f0f0f0;
+  font-weight: bold;
+  width: 20%;
+}
+
+.tabla-cuantitativos {
+  margin-bottom: 0.5rem;
+
+  thead {
+    background: #dbe9f5;
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    padding: 0.2rem;
     text-align: center;
   }
 
-  thead th {
-    background: #1f3864;
-    color: #fff;
-    font-weight: bold;
-  }
-
-  tbody tr:nth-child(even) {
-    background: #f2f5fa;
-  }
-
-  td:nth-child(3),
-  td:nth-child(4) {
-    text-align: left;
-  }
-}
-
-// ===== Tablas de resumen (equivalencia / promoción) =====
-.tablas-resumen {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-
-  .resumen-table {
-    flex: 1;
-    min-width: 260px;
-    border-collapse: collapse;
-    font-size: 12px;
-
-    th,
-    td {
-      border: 1px solid #999;
-      padding: 5px 8px;
-      text-align: center;
-    }
-
-    thead th {
-      background: #d9d9d9;
-      font-weight: bold;
-    }
-
-    .total-row {
-      font-weight: bold;
-      background: #f2f2f2;
-    }
-  }
-}
-
-// ===== Firmas =====
-.firmas {
-  margin-top: 3rem;
-
-  .firmas-table {
-    width: 100%;
-    border-collapse: collapse;
-
-    td {
-      border: 1px solid #000;
-      padding: 2.5rem 1rem 0.5rem;
-      text-align: center;
-      width: 50%;
-      font-weight: 600;
-    }
-
-    tr:last-child td {
-      padding-top: 0.5rem;
-      font-weight: normal;
-      font-style: italic;
-    }
-  }
-}
-
-// ===== Acciones =====
-.acciones {
-  margin-top: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  button {
-    background: #1f3864;
+  .quitar {
+    background: #c62828;
     color: #fff;
     border: none;
-    padding: 0.7rem 1.6rem;
     border-radius: 4px;
-    font-size: 14px;
-    font-weight: 600;
     cursor: pointer;
-
-    &:hover {
-      background: #16294c;
-    }
-
-    &:disabled {
-      background: #999;
-      cursor: not-allowed;
-    }
-  }
-
-  .ok-msg {
-    color: #1f7a1f;
-    font-weight: 600;
+    padding: 0.2rem 0.5rem;
   }
 }
 
-.error-msg {
-  max-width: 850px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background: #fce8e8;
-  color: #a12222;
-  border: 1px solid #e0a0a0;
+.agregar {
+  margin-bottom: 1rem;
+  padding: 0.4rem 0.9rem;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
   border-radius: 4px;
-  text-align: center;
+  cursor: pointer;
 }
 
-// ===== Modal de confirmación =====
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-box {
-  background: #fff;
-  border-radius: 6px;
-  padding: 1.5rem 2rem;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-
-  h3 {
-    margin-top: 0;
-    font-size: 16px;
-  }
-
-  p {
-    font-size: 13px;
-    color: #444;
-  }
-}
-
-.modal-acciones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-
-  button {
-    padding: 0.5rem 1.2rem;
-    border-radius: 4px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .btn-cancelar {
-    background: #eee;
-    color: #333;
-    &:hover {
-      background: #ddd;
-    }
-  }
-
-  .btn-confirmar {
-    background: #1f3864;
-    color: #fff;
-    &:hover {
-      background: #16294c;
-    }
-  }
-}
-
-.campo-error {
-  color: #c0392b;
-  font-size: 11.5px;
-  display: block;
-  margin-top: 2px;
+.placeholder {
+  color: #999;
+  font-size: 0.75rem;
+  font-style: italic;
 }

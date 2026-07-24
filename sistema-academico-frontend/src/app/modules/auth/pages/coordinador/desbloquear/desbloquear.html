@@ -1,44 +1,66 @@
 <div class="auth-shell">
+  <!-- Fondo HD con la imagen reset_contra.png -->
+  <div class="auth-background"></div>
+
   <div class="auth-card">
     <div class="auth-brand">
-      <div class="auth-brand__badge">SA</div>
-      <div>
-        <div class="auth-brand__title">Desbloquear cuenta</div>
+      <img src="assets/images/logo-yavirac.png" alt="Logo Yavirac" class="auth-brand__logo" />
+      <div class="auth-brand__text">
+        <h1 class="auth-brand__title">Desbloquear cuenta</h1>
         <div class="auth-brand__subtitle">Panel de coordinador</div>
       </div>
     </div>
 
-    <p class="auth-subheading">
-      Al desbloquear, la contraseña se reinicia a la cédula o RUC de la
-      persona, y deberá cambiarla en su próximo ingreso.
-    </p>
-
-    @if (error()) {
-      <div class="auth-alert auth-alert--error">{{ error() }}</div>
-    }
-
-    @if (resultado(); as r) {
-      <div class="auth-alert auth-alert--success">
-        {{ r.mensaje }}
-        <br />
-        <strong>Nueva contraseña temporal:</strong> {{ r.nuevaClaveTemporal }}
-      </div>
-    }
+    <!-- Enlaces secundarios decorativos opcionales según la imagen -->
+    <div class="auth-links">
+      <span class="auth-link-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Centro de Soporte
+      </span>
+      <span class="auth-link-item auth-link-item--underline">Recuperar Contraseña</span>
+    </div>
 
     <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
       <div class="auth-field">
-        <label for="correo">Correo (o nombre de empresa, si es tutor)</label>
-        <input
-          id="correo"
-          type="text"
-          formControlName="correo"
-          [class.invalid]="correo.invalid && correo.touched"
-          placeholder="nombre@yavirac.edu.ec"
-        />
+        <label for="correo">Identificación o Correo</label>
+        <div class="input-icon-wrapper">
+          <svg class="icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <input
+            id="correo"
+            type="text"
+            formControlName="correo"
+            [class.invalid]="correo.invalid && correo.touched"
+            placeholder="Ingresa tu Cédula, RUC, o Correo Electrónico"
+          />
+        </div>
         @if (correo.invalid && correo.touched) {
           <div class="auth-field__error">Este campo es obligatorio.</div>
         }
       </div>
+
+      <p class="auth-subheading">
+        Al desbloquear, la contraseña se reinicia a la cédula o RUC de la
+        persona, y deberá cambiarla en su próximo ingreso.
+      </p>
+
+      @if (error()) {
+        <div class="auth-alert auth-alert--error">{{ error() }}</div>
+      }
+
+      @if (resultado(); as r) {
+        <div class="auth-alert auth-alert--success">
+          {{ r.mensaje }}
+          <br />
+          <strong>Nueva contraseña temporal:</strong> {{ r.nuevaClaveTemporal }}
+        </div>
+      }
 
       <button type="submit" class="auth-button" [disabled]="cargando()">
         @if (cargando()) {

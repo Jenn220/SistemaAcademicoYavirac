@@ -1,1 +1,245 @@
-@use '../../styles/auth-theme';
+@use '../../styles/auth-theme' as theme;
+
+// Variables de la paleta institucional
+$primary-blue: #003366;
+$primary-hover: #002244;
+$error-red: #d32f2f;
+$text-dark: #1e293b;
+$text-muted: #64748b;
+$border-color: #cbd5e1;
+
+.auth-shell {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 1.5rem;
+  box-sizing: border-box;
+
+  // Imagen de fondo directa (sin opacidad ni filtros)
+  .auth-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/assets/images/loguin.jpeg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+  }
+
+  // Desactivamos la capa oscura para que no tape la foto
+  .auth-overlay {
+    display: none; 
+  }
+
+  // Tarjeta de Login nítida con sombra intensa para destacar sobre el fondo claro
+  .auth-card {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); // Sombra más fuerte para contrastar
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.4s ease-out;
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+
+      &__logo {
+        width: 48px;
+        height: auto;
+        object-fit: contain;
+      }
+
+      &__badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        background-color: $primary-blue;
+        color: #ffffff;
+        font-weight: 700;
+        border-radius: 10px;
+        font-size: 1.1rem;
+      }
+
+      &__title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: $primary-blue;
+        line-height: 1.2;
+      }
+
+      &__subtitle {
+        font-size: 0.8rem;
+        color: $text-muted;
+        font-weight: 500;
+      }
+    }
+
+    .auth-heading {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $text-dark;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .auth-subheading {
+      font-size: 0.875rem;
+      color: $text-muted;
+      margin: 0 0 1.5rem 0;
+      line-height: 1.45;
+    }
+
+    .auth-alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+
+      &--error {
+        background-color: #fef2f2;
+        color: $error-red;
+        border: 1px solid #fecaca;
+      }
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+
+      .auth-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+
+        label {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: $text-dark;
+        }
+
+        &__password-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+
+          input {
+            width: 100%;
+            padding-right: 2.5rem;
+          }
+        }
+
+        &__toggle {
+          position: absolute;
+          right: 10px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 1rem;
+          padding: 4px;
+          opacity: 0.7;
+          transition: opacity 0.2s ease;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
+
+        input {
+          width: 100%;
+          padding: 0.75rem 0.9rem;
+          border: 1px solid $border-color;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          background-color: #ffffff;
+          box-sizing: border-box;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+          &:focus {
+            outline: none;
+            border-color: $primary-blue;
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.15);
+          }
+
+          &.invalid {
+            border-color: $error-red;
+            background-color: #fff8f8;
+          }
+        }
+
+        &__error {
+          font-size: 0.78rem;
+          color: $error-red;
+          margin-top: 0.2rem;
+        }
+      }
+
+      .auth-button {
+        margin-top: 0.5rem;
+        padding: 0.85rem;
+        background-color: $primary-blue;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+
+        &:hover:not(:disabled) {
+          background-color: $primary-hover;
+        }
+
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .auth-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: #ffffff;
+          animation: spin 0.8s linear infinite;
+        }
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
