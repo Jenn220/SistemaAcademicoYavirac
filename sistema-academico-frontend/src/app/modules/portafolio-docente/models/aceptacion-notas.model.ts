@@ -51,12 +51,14 @@ export interface UpdateNotasAceptacionDto {
 
 /**
  * Campos que el PDF (Formato 07) pide pero que el backend NO expone
- * ni persiste (asistencia, firma, observación). Se manejan solo en el
- * frontend para completar la vista/impresión; no se envían al backend
- * porque no existe ningún endpoint/columna para ellos.
+ * ni persiste (firma, observación). Se manejan solo en el frontend
+ * para completar la vista/impresión; no se envían al backend porque
+ * no existe ningún endpoint/columna para ellos.
+ *
+ * NOTA: el campo "asistencia" se quitó de la vista (decisión de
+ * producto), por eso ya no está aquí.
  */
 export interface CamposManualesEstudiante {
   id_aceptacion: number;
-  asistencia: number | null;
   observacion: string;
 }

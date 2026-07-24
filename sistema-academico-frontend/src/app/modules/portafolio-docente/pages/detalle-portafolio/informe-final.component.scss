@@ -3,9 +3,10 @@
 }
 
 .estado {
-  padding: 16px;
-  border-radius: 8px;
+  padding: 16px 18px;
+  border-radius: 10px;
   background: #f1f5f9;
+  color: #334155;
   margin-bottom: 16px;
 
   &--error {
@@ -16,14 +17,16 @@
 
 .crear-informe {
   max-width: 480px;
-  padding: 24px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  padding: 28px;
+  border-radius: 14px;
   background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #eef1f6;
 
   h2 {
     margin-top: 0;
     font-size: 1.15rem;
+    color: #0f172a;
   }
 
   label {
@@ -31,14 +34,22 @@
     margin: 12px 0 4px;
     font-weight: 600;
     font-size: 0.9rem;
+    color: #334155;
   }
 
   input {
     width: 100%;
-    padding: 8px 10px;
-    border-radius: 6px;
+    padding: 9px 12px;
+    border-radius: 8px;
     border: 1px solid #cbd5e1;
     box-sizing: border-box;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
   }
 
   .error-texto {
@@ -49,11 +60,16 @@
   button {
     margin-top: 16px;
     padding: 10px 16px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     background: #2563eb;
     color: #fff;
     cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      background: #1d4ed8;
+    }
 
     &:disabled {
       opacity: 0.6;
@@ -62,78 +78,134 @@
   }
 }
 
+// ---------------------------------------------------------------------
+// Toolbar (acciones fuera del documento, no se imprimen)
+// ---------------------------------------------------------------------
 .informe-final__toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-
-  button {
-    padding: 8px 14px;
-    border-radius: 6px;
-    border: 1px solid #2563eb;
-    background: #2563eb;
-    color: #fff;
-    cursor: pointer;
-
-    &:last-of-type {
-      background: #fff;
-      color: #2563eb;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
 
   .mensaje-guardado {
     color: #166534;
     font-size: 0.85rem;
+    font-weight: 600;
   }
 }
 
+.btn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--outline {
+    background: #fff;
+    color: #2563eb;
+
+    &:hover {
+      background: #eff6ff;
+      box-shadow: none;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Documento (formato-04) — pensado para verse fiel al PDF institucional
+// ---------------------------------------------------------------------
 .formato-04 {
   background: #fff;
-  border: 1px solid #000;
-  padding: 24px;
-  max-width: 900px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #dbe1ea;
+  padding: 0 0 28px;
+  max-width: 960px;
+  overflow: hidden;
 
   h1 {
     text-align: center;
-    font-size: 1.2rem;
-    margin-top: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #0f172a;
+    margin: 22px 24px 20px;
   }
 
   section {
-    margin-bottom: 20px;
+    margin: 0 24px 22px;
 
     h2 {
-      font-size: 1rem;
-      border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      border-left: 4px solid #2563eb;
+      padding: 4px 0 4px 10px;
+      margin: 0 0 10px;
     }
 
     h3 {
-      font-size: 0.95rem;
-      margin-bottom: 4px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #334155;
+      margin: 14px 0 6px;
     }
 
     h4 {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-style: italic;
-      margin: 8px 0 4px;
+      font-weight: 600;
+      color: #64748b;
+      margin: 10px 0 6px;
     }
 
     textarea {
       width: 100%;
       box-sizing: border-box;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #cbd5e1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #dbe1ea;
+      background: #fafbfc;
       font-family: inherit;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
       resize: vertical;
+      color: #1e293b;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      &::placeholder {
+        color: #94a3b8;
+      }
     }
   }
 
@@ -144,63 +216,129 @@
 
   th,
   td {
-    border: 1px solid #000;
-    padding: 4px 8px;
+    border: 1px solid #cbd5e1;
+    padding: 7px 10px;
     font-size: 0.85rem;
   }
 
-  .tabla-datos th {
-    background: #f1f5f9;
-    width: 30%;
-    text-align: left;
-  }
+  .tabla-datos {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
 
-  .tabla-resultados {
     th {
-      background: #f1f5f9;
-      text-align: center;
+      background: #eff6ff;
+      color: #1e3a8a;
+      width: 32%;
+      text-align: left;
+      font-weight: 600;
     }
 
     td {
-      text-align: center;
+      color: #1e293b;
     }
-
-    input {
-      width: 100%;
-      border: none;
-      text-align: center;
-      font-size: 0.85rem;
-
-      &:focus {
-        outline: 1px solid #2563eb;
-      }
-    }
-
-    button {
-      border: none;
-      background: #fee2e2;
-      color: #991b1b;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 2px 6px;
-    }
-  }
-
-  > button {
-    margin-top: 8px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid #2563eb;
-    background: #fff;
-    color: #2563eb;
-    cursor: pointer;
   }
 
   .tabla-firmas {
-    margin-top: 24px;
+    margin: 28px 24px 0;
+    width: calc(100% - 48px);
+
+    th {
+      background: #f8fafc;
+      color: #1e293b;
+      font-weight: 600;
+      text-align: left;
+    }
 
     .col-firma {
-      height: 60px;
+      height: 64px;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Membrete institucional — replica los colores/estructura del PDF
+// ---------------------------------------------------------------------
+.membrete {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px;
+  border-bottom: 2px solid #0f172a;
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-right: 1px solid #cbd5e1;
+
+    img {
+      max-width: 100%;
+      max-height: 64px;
+      object-fit: contain;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__institucion {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__macroproceso {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    background: #bfdbfe;
+    color: #1e3a8a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__proceso {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    background: #fecaca;
+    color: #7f1d1d;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__formato {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+  }
+
+  &__codigo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-left: 1px solid #cbd5e1;
+    padding: 8px;
+
+    span {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    strong {
+      font-size: 0.85rem;
+      color: #0f172a;
     }
   }
 }
@@ -214,5 +352,11 @@
   input {
     border: none !important;
     outline: none !important;
+    background: transparent !important;
+  }
+
+  .formato-04 {
+    box-shadow: none;
+    border: 1px solid #000;
   }
 }

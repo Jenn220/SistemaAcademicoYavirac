@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { InformeFinalService } from '../../services/informe-final.service';
 import { PortafolioService } from '../../services/portafolio.service';
 import { AuthService } from '../../../auth/services/auth.service';
+import { WordExportService } from '../../../../shared/services/word-export.service';
 import { InformeFinalResponseDto, InformeFinalManualData } from '../../models/informe-final.model';
 import { OfertaDocenteDto } from '../../models/oferta-docente.model';
 
@@ -22,6 +23,7 @@ export class InformeFinalComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly guardandoManual = signal(false);
   readonly mensajeGuardado = signal<string | null>(null);
+  readonly exportandoWord = signal(false);
 
   readonly informe = signal<InformeFinalResponseDto | null>(null);
   readonly noExisteInforme = signal(false);
@@ -41,6 +43,7 @@ export class InformeFinalComponent implements OnInit {
     private readonly informeFinalService: InformeFinalService,
     private readonly portafolioService: PortafolioService,
     private readonly authService: AuthService,
+    private readonly wordExportService: WordExportService,
   ) {}
 
   ngOnInit(): void {
@@ -125,17 +128,6 @@ export class InformeFinalComponent implements OnInit {
       });
   }
 
-  agregarFilaResultado(): void {
-    this.datosManuales.resultados = [
-      ...this.datosManuales.resultados,
-      { cedula: '', nombres: '', asistencia: null, p1: null, p2: null, rc: null },
-    ];
-  }
-
-  eliminarFilaResultado(index: number): void {
-    this.datosManuales.resultados = this.datosManuales.resultados.filter((_, i) => i !== index);
-  }
-
   guardarDatosManuales(): void {
     this.guardandoManual.set(true);
     this.datosManuales.fechaElaboracion = new Date().toISOString();
@@ -147,5 +139,19 @@ export class InformeFinalComponent implements OnInit {
 
   imprimir(): void {
     window.print();
+  }
+
+  async exportarWord(): Promise<void> {
+    const inf = this.informe();
+    if (!inf) return;
+
+    this.exportandoWord.set(true);
+    try {
+      await this.wordExportService.exportarInformeFinal(inf, this.datosManuales);
+    } catch {
+      this.error.set('No se pudo generar el documento Word. Intenta de nuevo.');
+    } finally {
+      this.exportandoWord.set(false);
+    }
   }
 }

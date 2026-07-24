@@ -26,19 +26,14 @@ export interface CreateInformeFinalDto {
   horario: string;
 }
 
-export interface ResultadoEstudianteManual {
-  cedula: string;
-  nombres: string;
-  asistencia: number | null;
-  p1: number | null;
-  p2: number | null;
-  rc: number | null;
-}
-
 /**
  * Secciones del Formato 04 que el backend NO persiste (no existen
  * columnas para ellas). Se guardan en localStorage por oferta
  * académica, mientras el backend no soporte estos campos.
+ *
+ * NOTA: la sección "5. Resultados cuantitativos obtenidos" se eliminó
+ * de la vista (decisión de producto), por eso ya no existen los campos
+ * `resultados` ni `recomendacionesCuantitativas` aquí.
  */
 export interface InformeFinalManualData {
   antecedentes: string;
@@ -47,7 +42,5 @@ export interface InformeFinalManualData {
   recomendacionesInfraestructura: string;
   planEstudios: string;
   recomendacionesPlanEstudios: string;
-  resultados: ResultadoEstudianteManual[];
-  recomendacionesCuantitativas: string;
   fechaElaboracion: string;
 }

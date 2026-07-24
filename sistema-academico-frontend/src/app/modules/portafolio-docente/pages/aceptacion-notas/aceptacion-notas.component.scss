@@ -1,60 +1,205 @@
 .aceptacion-notas {
   padding: 24px;
+}
 
-  &__toolbar {
+// ---------------------------------------------------------------------
+// Membrete institucional — mismo tratamiento que Informe Final
+// ---------------------------------------------------------------------
+.membrete {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 0;
+
+  &__logo {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    justify-content: center;
+    padding: 8px;
+    border-right: 1px solid #cbd5e1;
 
-    h1 {
-      font-size: 1.3rem;
-      margin: 0;
+    img {
+      max-width: 100%;
+      max-height: 64px;
+      object-fit: contain;
     }
   }
 
-  &__selector {
+  &__info {
     display: flex;
-    align-items: center;
-    gap: 8px;
-
-    select {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #cbd5e1;
-    }
+    flex-direction: column;
   }
 
-  &__acciones {
-    margin-top: 16px;
+  &__institucion {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__macroproceso {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    background: #bfdbfe;
+    color: #1e3a8a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__proceso {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    background: #fecaca;
+    color: #7f1d1d;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__formato {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+  }
+
+  &__codigo {
     display: flex;
-    gap: 12px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-left: 1px solid #cbd5e1;
+    padding: 8px;
 
-    button {
-      padding: 10px 16px;
-      border-radius: 6px;
-      border: 1px solid #2563eb;
-      background: #2563eb;
-      color: #fff;
-      cursor: pointer;
+    span {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+    }
 
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      &:last-child {
-        background: #fff;
-        color: #2563eb;
-      }
+    strong {
+      font-size: 0.85rem;
+      color: #0f172a;
     }
   }
 }
 
-.estado {
-  padding: 16px;
+// ---------------------------------------------------------------------
+// Toolbar
+// ---------------------------------------------------------------------
+.aceptacion-notas__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+}
+
+.aceptacion-notas__selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.88rem;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+  }
+}
+
+.aceptacion-notas__acciones {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
   border-radius: 8px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--outline {
+    background: #fff;
+    color: #2563eb;
+
+    &:hover {
+      background: #eff6ff;
+      box-shadow: none;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Estados (cargando / error / éxito)
+// ---------------------------------------------------------------------
+.estado {
+  padding: 16px 18px;
+  border-radius: 10px;
   background: #f1f5f9;
+  color: #334155;
   margin-bottom: 16px;
 
   &--error {
@@ -70,17 +215,28 @@
   button {
     margin-top: 8px;
     padding: 8px 14px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     background: #2563eb;
     color: #fff;
     cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      background: #1d4ed8;
+    }
   }
 }
 
+// ---------------------------------------------------------------------
+// Documento (formato-07) — fiel al PDF: cabecera de datos + tabla
+// ---------------------------------------------------------------------
 .formato-07 {
   background: #fff;
-  border: 1px solid #000;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #dbe1ea;
+  padding: 24px;
   font-size: 0.85rem;
 
   table {
@@ -90,50 +246,87 @@
 
   th,
   td {
-    border: 1px solid #000;
-    padding: 4px 8px;
+    border: 1px solid #cbd5e1;
+    padding: 7px 10px;
     text-align: left;
   }
 
-  &__cabecera th {
-    background: #dbeafe;
-    width: 15%;
+  &__cabecera {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+
+    th {
+      background: #eff6ff;
+      color: #1e3a8a;
+      width: 15%;
+      font-weight: 600;
+    }
+
+    td {
+      color: #1e293b;
+    }
   }
 
   &__estudiantes {
     th {
-      background: #f1f5f9;
+      background: #eff6ff;
+      color: #1e3a8a;
       text-align: center;
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafbfc;
     }
 
     td {
       text-align: center;
+      color: #1e293b;
     }
 
     .col-nombre {
       text-align: left;
+      font-weight: 500;
     }
 
     .col-firma {
-      min-width: 80px;
-      height: 32px;
+      min-width: 90px;
+      height: 34px;
     }
 
     input {
       width: 100%;
       border: none;
+      background: transparent;
       text-align: center;
       font-size: 0.85rem;
+      color: #1e293b;
+      border-radius: 4px;
+      padding: 4px 2px;
 
       &:focus {
-        outline: 1px solid #2563eb;
+        outline: none;
+        background: #eff6ff;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
       }
     }
   }
 
   &__firmas {
+    margin-top: 24px;
+
+    th {
+      background: #f8fafc;
+      color: #1e293b;
+      font-weight: 600;
+    }
+
     .col-firma-final {
-      height: 60px;
+      height: 64px;
     }
   }
 }
@@ -143,8 +336,14 @@
     display: none !important;
   }
 
+  .formato-07 {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
   input.no-print-border {
     border: none !important;
     outline: none !important;
+    background: transparent !important;
   }
 }

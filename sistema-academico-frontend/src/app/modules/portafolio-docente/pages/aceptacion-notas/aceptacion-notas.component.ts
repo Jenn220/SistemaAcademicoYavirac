@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AceptacionNotasService } from '../../services/aceptacion-notas.service';
+import { WordExportService } from '../../../../shared/services/word-export.service';
 import {
   CamposManualesEstudiante,
   EstudianteAceptacionDto,
@@ -29,6 +30,7 @@ export class AceptacionNotasComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly noExisteReporte = signal(false);
   readonly mensajeExito = signal<string | null>(null);
+  readonly exportandoWord = signal(false);
 
   readonly reporte = signal<ReporteNotasResponseDto | null>(null);
 
@@ -46,6 +48,7 @@ export class AceptacionNotasComponent implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly aceptacionNotasService: AceptacionNotasService,
+    private readonly wordExportService: WordExportService,
   ) {}
 
   ngOnInit(): void {
@@ -109,7 +112,6 @@ export class AceptacionNotasComponent implements OnInit {
     for (const est of estudiantes) {
       mapa.set(est.id_aceptacion, {
         id_aceptacion: est.id_aceptacion,
-        asistencia: null,
         observacion: '',
       });
     }
@@ -120,17 +122,9 @@ export class AceptacionNotasComponent implements OnInit {
     return (
       this.camposManuales().get(idAceptacion) ?? {
         id_aceptacion: idAceptacion,
-        asistencia: null,
         observacion: '',
       }
     );
-  }
-
-  actualizarAsistencia(idAceptacion: number, valor: number | null): void {
-    const mapa = new Map(this.camposManuales());
-    const actual = this.obtenerCampoManual(idAceptacion);
-    mapa.set(idAceptacion, { ...actual, asistencia: valor });
-    this.camposManuales.set(mapa);
   }
 
   actualizarObservacion(idAceptacion: number, valor: string): void {
@@ -183,5 +177,19 @@ export class AceptacionNotasComponent implements OnInit {
 
   imprimir(): void {
     window.print();
+  }
+
+  async exportarWord(): Promise<void> {
+    const reporteActual = this.reporte();
+    if (!reporteActual) return;
+
+    this.exportandoWord.set(true);
+    try {
+      await this.wordExportService.exportarAceptacionNotas(reporteActual, this.camposManuales());
+    } catch {
+      this.error.set('No se pudo generar el documento Word. Intenta de nuevo.');
+    } finally {
+      this.exportandoWord.set(false);
+    }
   }
 }

@@ -53,8 +53,6 @@ export class InformeFinalService {
       recomendacionesInfraestructura: '',
       planEstudios: '',
       recomendacionesPlanEstudios: '',
-      resultados: [],
-      recomendacionesCuantitativas: '',
       fechaElaboracion: new Date().toISOString(),
     };
   }

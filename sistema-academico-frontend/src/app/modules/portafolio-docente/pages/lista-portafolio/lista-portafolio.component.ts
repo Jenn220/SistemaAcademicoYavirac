@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { PortafolioService } from '../../services/portafolio.service';
 import { OfertaDocenteDto } from '../../models/oferta-docente.model';
 
@@ -22,7 +23,21 @@ export class ListaPortafolioComponent implements OnInit {
   // esta pantalla actúa como si fuera la de destino (título y botón único),
   // manteniendo igual el paso obligatorio de elegir la materia (los IDs
   // solo se conocen después de elegir).
-  readonly modo = signal<ModoPortafolio>(null);
+  //
+  // OJO: se lee de forma REACTIVA (toSignal sobre queryParamMap), no con
+  // route.snapshot. Como el sidebar navega dentro de la MISMA ruta
+  // ('/portafolio-docente') y solo cambia el query param, Angular reutiliza
+  // la instancia del componente y NO vuelve a llamar a ngOnInit. Si se leía
+  // el modo solo una vez en ngOnInit (snapshot), al cambiar de pestaña
+  // quedaba "pegado" el modo anterior hasta refrescar manualmente.
+  private readonly modoParam = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+
+  readonly modo = computed<ModoPortafolio>(() => {
+    const valor = this.modoParam().get('modo');
+    return valor === 'informe-final' || valor === 'aceptacion-notas' ? valor : null;
+  });
 
   readonly titulo = computed(() => {
     switch (this.modo()) {
@@ -49,10 +64,6 @@ export class ListaPortafolioComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const modoParam = this.route.snapshot.queryParamMap.get('modo');
-    if (modoParam === 'informe-final' || modoParam === 'aceptacion-notas') {
-      this.modo.set(modoParam);
-    }
     this.cargarOfertas();
   }
 
