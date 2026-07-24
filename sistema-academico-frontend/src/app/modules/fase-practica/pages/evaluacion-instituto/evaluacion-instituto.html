@@ -1,0 +1,256 @@
+<div class="toolbar no-print">
+
+    <button
+        class="btn btn-outline-secondary"
+        (click)="volver()">
+
+        <i class="bi bi-arrow-left"></i>
+
+        Volver
+
+    </button>
+
+    <button
+        class="btn btn-primary"
+        (click)="descargarWord()">
+
+        <i class="bi bi-file-earmark-word-fill"></i>
+
+        Descargar Word
+
+    </button>
+
+    <button
+        class="btn btn-warning text-white"
+        [disabled]="guardando"
+        (click)="guardarEnBD()">
+
+        <i class="bi bi-save"></i>
+
+        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+
+    </button>
+
+</div>
+
+<div
+    id="documento-f08"
+    class="documento">
+
+    <app-document-header
+        [titulo]="'FORMATO 08 INFORME DE EVALUACIÓN POR PARTE DEL INSTITUTO'"
+        [codigo]="'010208'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        @if(cargando){
+
+        <p class="text-center text-muted my-4">Cargando datos base...</p>
+
+        } @else {
+
+        <table class="tabla-datos">
+
+            <tr>
+                <td class="label">EMPRESA FORMADORA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.empresaFormadora" name="empresaFormadora"></td>
+                <td class="label">NIVEL:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.nivel" name="nivel"></td>
+            </tr>
+
+            <tr>
+                <td class="label">ESTUDIANTE:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.estudiante.nombre" name="nombre"></td>
+                <td class="label">CICLO ACADÉMICO:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.cicloAcademico" name="cicloAcademico"></td>
+            </tr>
+
+            <tr>
+                <td class="label">CÉDULA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.estudiante.cedula" name="cedula"></td>
+                <td class="label">F. INICIO / F. FIN FASE PRÁCTICA:</td>
+                <td>
+                    <input type="text" class="campo campo-mitad" [(ngModel)]="evaluacion.encabezado.fechaInicioFasePractica" name="fechaInicio" placeholder="Inicio">
+                    <input type="text" class="campo campo-mitad" [(ngModel)]="evaluacion.encabezado.fechaFinFasePractica" name="fechaFin" placeholder="Fin">
+                </td>
+            </tr>
+
+            <tr>
+                <td class="label">TUTOR(A) ACADÉMICO:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.tutorAcademico" name="tutorAcademico"></td>
+                <td class="label">N. ESTRUCTURANTE:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.nucleoEstructurante" name="nucleoEstructurante"></td>
+            </tr>
+
+            <tr>
+                <td class="label">TUTOR(A) EMPRESARIAL:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.tutorEmpresarial" name="tutorEmpresarial"></td>
+                <td class="label">CARRERA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.carrera" name="carrera"></td>
+            </tr>
+
+        </table>
+
+        <div class="caja-objetivo">
+
+            <strong>OBJETIVO DEL NÚCLEO ESTRUCTURANTE PARA LA FASE PRÁCTICA</strong>
+
+            <input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.objetivoNucleoEstructurante" name="objetivo">
+
+        </div>
+
+        <div class="fila-evaluacion">
+
+            <table class="tabla-defensa">
+
+                <thead>
+                    <tr>
+                        <th rowspan="2">Defensa Proyecto Tutor Académico</th>
+                        <th colspan="4">Criterios</th>
+                        <th rowspan="2" style="width:70px">Nota Parcial</th>
+                    </tr>
+                    <tr>
+                        @for(nivel of niveles; track nivel.nota){
+                        <th style="width:60px">{{ nivel.etiqueta }} ({{ nivel.nota }})</th>
+                        }
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @for(fila of evaluacion.defensaProyecto; track $index){
+
+                    <tr>
+                        <td>{{ fila.criterio }}</td>
+
+                        @for(nivel of niveles; track nivel.nota){
+                        <td
+                            class="celda-nivel no-print"
+                            [class.seleccionada]="fila.nota === nivel.nota"
+                            (click)="seleccionarNivel(fila, nivel.nota)">
+
+                            @if(fila.nota === nivel.nota){ {{ nivel.nota }} }
+
+                        </td>
+                        }
+
+                        <td class="text-center solo-print" [attr.colspan]="niveles.length">{{ fila.nota || '' }}</td>
+
+                        <td class="text-center">{{ fila.nota || 0 }}</td>
+                    </tr>
+
+                    }
+
+                </tbody>
+
+                <tfoot>
+                    <tr class="fila-resumen">
+                        <td colspan="5">Nota Parcial de la Defensa del Proyecto</td>
+                        <td class="text-center">{{ notaParcialDefensa }}</td>
+                    </tr>
+                    <tr class="fila-resumen">
+                        <td colspan="5">Nota Final de la Defensa del Proyecto</td>
+                        <td class="text-center">{{ notaFinalDefensa }}</td>
+                    </tr>
+                    <tr class="fila-resumen">
+                        <td colspan="5">Nota ponderada sobre 3 puntos</td>
+                        <td class="text-center">{{ notaPonderadaDefensa }}</td>
+                    </tr>
+                </tfoot>
+
+            </table>
+
+            <table class="tabla-parametros">
+
+                <thead>
+                    <tr>
+                        <th style="width:22%">Tema</th>
+                        <th>Parámetros Proyecto Empresarial</th>
+                        <th style="width:60px">Nota</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @for(fila of evaluacion.parametrosProyecto; track $index; let i = $index){
+
+                    <tr>
+
+                        @if(i === 0){
+                        <td [attr.rowspan]="evaluacion.parametrosProyecto.length" class="celda-tema">
+                            <input type="text" class="campo" [(ngModel)]="evaluacion.tema" name="tema">
+                        </td>
+                        }
+
+                        <td>{{ fila.criterio }}</td>
+
+                        <td class="text-center">
+                            <input type="number" min="0" max="10" step="0.1" class="campo campo-nota" [(ngModel)]="fila.nota" name="parametro-{{ i }}">
+                        </td>
+
+                    </tr>
+
+                    }
+
+                </tbody>
+
+                <tfoot>
+                    <tr class="fila-resumen">
+                        <td colspan="2">Promedio Parcial del Proyecto Empresarial</td>
+                        <td class="text-center">{{ promedioParametros }}</td>
+                    </tr>
+                    <tr class="fila-resumen">
+                        <td colspan="2">Nota ponderada sobre 7 puntos</td>
+                        <td class="text-center">{{ notaPonderadaParametros }}</td>
+                    </tr>
+                </tfoot>
+
+            </table>
+
+        </div>
+
+        <div class="fila-consolidado">
+
+            <table class="tabla-consolidado">
+
+                <thead>
+                    <tr>
+                        <th colspan="2">Evaluación Final Consolidado Empresa - Instituto</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td class="label">Evaluación Empresa</td>
+                        <td class="text-center">
+                            <input type="number" min="0" max="10" step="0.01" class="campo campo-nota" [(ngModel)]="evaluacion.notaFinalEmpresa" name="notaFinalEmpresa">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Evaluación Instituto</td>
+                        <td class="text-center">{{ notaFinalInstituto }}</td>
+                    </tr>
+                    <tr class="fila-resumen">
+                        <td class="label">Promedio Final Fase Práctica</td>
+                        <td class="text-center">{{ promedioFinalFasePractica }}</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+            <div class="caja-objetivo caja-observaciones">
+
+                <strong>COMENTARIOS / OBSERVACIÓN</strong>
+
+                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="evaluacion.observaciones" name="observaciones"></textarea>
+
+            </div>
+
+        </div>
+
+        }
+
+    </div>
+
+</div>

@@ -13,12 +13,12 @@
     </button>
 
     <button
-        class="btn btn-danger"
-        (click)="descargarPDF()">
+        class="btn btn-primary"
+        (click)="descargarWord()">
 
-        <i class="bi bi-file-earmark-pdf-fill"></i>
+        <i class="bi bi-file-earmark-word-fill"></i>
 
-        Descargar PDF
+        Descargar Word
 
     </button>
 
@@ -29,7 +29,7 @@
     class="documento">
 
     <app-document-header
-        [titulo]="'REGISTRO DE ASISTENCIA'"
+        [titulo]="'FORMATO 05 ACTA DE ASISTENCIA'"
         [codigo]="'010205'">
     </app-document-header>
 
@@ -41,11 +41,123 @@
 
                 <td>
 
-                    <strong>Estudiante:</strong>
+                    <strong>Empresa Formadora:</strong>
+
+                    {{ registro.empresa }}
+
+                </td>
+
+                <td>
+
+                    <strong>Carrera:</strong>
+
+                    {{ registro.carrera }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Tutor(a) Académico:</strong>
+
+                    {{ registro.tutorAcademico }}
+
+                </td>
+
+                <td>
+
+                    <strong>Período Académico:</strong>
+
+                    {{ registro.periodoAcademico }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Tutor(a) Empresarial:</strong>
+
+                    {{ registro.tutorEmpresarial }}
+
+                </td>
+
+                <td>
+
+                    <strong>Nivel:</strong>
+
+                    {{ registro.curso }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Nombre del Estudiante:</strong>
 
                     {{ registro.estudiante.nombre }}
 
                 </td>
+
+                <td>
+
+                    <strong>Núcleo Estructurante:</strong>
+
+                    {{ registro.nucleoEstructurante }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>E-mail Institucional:</strong>
+
+                    {{ registro.estudiante.email }}
+
+                </td>
+
+                <td>
+
+                    <strong>Teléfono de Emergencia:</strong>
+
+                    {{ registro.contactoEmergenciaTelefono }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <td>
+
+                    <strong>Teléfono / Móvil:</strong>
+
+                    {{ registro.estudiante.telefono }}
+
+                </td>
+
+                <td>
+
+                    <strong>Contacto de Emergencia:</strong>
+
+                    {{ registro.contactoEmergenciaNombre }}
+
+                </td>
+
+            </tr>
+
+            <tr>
 
                 <td>
 
@@ -55,15 +167,11 @@
 
                 </td>
 
-            </tr>
+                <td>
 
-            <tr>
+                    <strong>Tipo de Sangre:</strong>
 
-                <td colspan="2">
-
-                    <strong>Empresa:</strong>
-
-                    {{ registro.empresa }}
+                    {{ registro.estudiante.tipoSangre }}
 
                 </td>
 
@@ -77,12 +185,13 @@
 
                 <tr>
 
+                    <th>N°</th>
                     <th>Fecha</th>
-                    <th>Ingreso</th>
+                    <th>Hora Ingreso</th>
                     <th>Almuerzo</th>
-                    <th>Salida</th>
-                    <th>Horas</th>
-                    <th>Firma</th>
+                    <th>Hora Salida</th>
+                    <th>Horas al día</th>
+                    <th>Firma estudiante</th>
                     <th>Observaciones</th>
 
                 </tr>
@@ -91,10 +200,11 @@
 
             <tbody>
 
-                @for(item of registro.registros; track item){
+                @for(item of registro.registros; track item; let i = $index){
 
                 <tr>
 
+                    <td>{{ i + 1 }}</td>
                     <td>{{item.fecha}}</td>
                     <td>{{item.horaIngreso}}</td>
                     <td>{{item.almuerzo}}</td>
@@ -107,35 +217,32 @@
 
                 }
 
+                <tr class="fila-autonomas">
+
+                    <td>{{ registro.registros.length + 1 }}</td>
+                    <td>{{ registro.registros[0]?.fecha }} - {{ registro.registros[registro.registros.length - 1]?.fecha }}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>{{ registro.horasAutonomas }}</td>
+                    <td></td>
+                    <td>HORAS AUTÓNOMAS</td>
+
+                </tr>
+
             </tbody>
 
         </table>
 
         <div class="totales">
 
-            <div>
+            <strong>
 
-                <strong>
+                TOTAL HORAS FASE PRÁCTICA:
 
-                    Horas Autónomas:
+            </strong>
 
-                </strong>
-
-                {{ registro.horasAutonomas }}
-
-            </div>
-
-            <div>
-
-                <strong>
-
-                    Subtotal Horas:
-
-                </strong>
-
-                {{ registro.subtotalHorasPractica }}
-
-            </div>
+            {{ registro.subtotalHorasPractica }}
 
         </div>
 

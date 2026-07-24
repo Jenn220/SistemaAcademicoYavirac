@@ -6,12 +6,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import html2pdf from 'html2pdf.js';
 
 import { RegistroAsistencia as Registro } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
+import { MOCK_REGISTRO_ASISTENCIA } from '../../services/mock-documentos.data';
+import { exportarDocumentoWord } from '../../utils/exportar-word';
 
-import { DocumentHeader } from '../../../../shared/components/document-header/document-header';
+import { DocumentHeader } from '../../components/document-header/document-header';
 
 @Component({
   selector: 'app-registro-asistencia',
@@ -29,7 +30,8 @@ export class RegistroAsistencia implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  registro?: Registro;
+  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
+  registro: Registro = structuredClone(MOCK_REGISTRO_ASISTENCIA);
 
   ngOnInit(): void {
 
@@ -53,7 +55,10 @@ export class RegistroAsistencia implements OnInit {
 
       error: (err) => {
 
-        console.error('❌ Error obteniendo registro:', err);
+        console.error('❌ Error obteniendo registro (usando datos moqueados):', err);
+
+        this.registro = structuredClone(MOCK_REGISTRO_ASISTENCIA);
+        this.cdr.detectChanges();
 
       }
 
@@ -67,37 +72,9 @@ export class RegistroAsistencia implements OnInit {
 
   }
 
-  descargarPDF(): void {
+  descargarWord(): void {
 
-    const elemento = document.getElementById('documento-f05');
-
-    if (!elemento) return;
-
-    html2pdf()
-      .set({
-
-        margin: 0,
-
-        filename: 'Registro_Asistencia.pdf',
-
-        image: {
-          type: 'jpeg',
-          quality: 1
-        },
-
-        html2canvas: {
-          scale: 2
-        },
-
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait'
-        }
-
-      })
-      .from(elemento)
-      .save();
+    exportarDocumentoWord('documento-f05', 'Registro_Asistencia', 'portrait');
 
   }
 

@@ -24,9 +24,31 @@ export interface RegistroAsistencia{
 
         cedula:string;
 
+        email:string;
+
+        telefono:string;
+
+        tipoSangre:string;
+
     };
 
     empresa:string;
+
+    carrera:string;
+
+    curso:string;
+
+    periodoAcademico:string;
+
+    nucleoEstructurante:string;
+
+    tutorAcademico:string;
+
+    tutorEmpresarial:string;
+
+    contactoEmergenciaNombre:string;
+
+    contactoEmergenciaTelefono:string;
 
     registros:Registro[];
 
