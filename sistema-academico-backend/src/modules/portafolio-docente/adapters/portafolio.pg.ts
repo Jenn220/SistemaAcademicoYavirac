@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PortafolioRepository } from '../ports/portafolio.repository';
 import { OfertaDocenteDto } from '../dto/oferta-docente.dto';
+import { EstudianteOfertaDto } from '../dto/estudiante-oferta.dto';
 
 @Injectable()
 export class PortafolioPg implements PortafolioRepository {
@@ -26,6 +27,25 @@ export class PortafolioPg implements PortafolioRepository {
       ORDER BY pa.fecha_inicio DESC
       `,
       [idDocente],
+    );
+  }
+
+  async findEstudiantesByOferta(idOfertaAsignatura: number): Promise<EstudianteOfertaDto[]> {
+    return this.dataSource.query(
+      `
+      SELECT
+        e.id_estudiante,
+        e.cedula,
+        e.nombres || ' ' || e.apellidos AS nombre,
+        e.telefono,
+        e.correo AS email
+      FROM matricula_detalle md
+      JOIN matricula  m ON md.id_matricula = m.id_matricula
+      JOIN estudiante e ON m.id_estudiante = e.id_estudiante
+      WHERE md.id_oferta_asignatura = $1
+      ORDER BY e.apellidos, e.nombres
+      `,
+      [idOfertaAsignatura],
     );
   }
 }
