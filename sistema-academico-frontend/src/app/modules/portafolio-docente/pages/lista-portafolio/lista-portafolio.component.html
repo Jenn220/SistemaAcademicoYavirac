@@ -1,37 +1,57 @@
 <div class="lista-portafolio">
-  <h1>Mi Portafolio Docente</h1>
-  <p class="subtitulo">Selecciona una oferta-asignatura para trabajar su Informe Final o Aceptación de Notas.</p>
+  <header class="lista-portafolio__header">
+    <h1>{{ titulo() }}</h1>
+    <p>{{ subtitulo() }}</p>
+  </header>
 
-  <p class="mensaje" *ngIf="cargando">Cargando tus ofertas...</p>
-  <p class="mensaje error" *ngIf="errorMsg">{{ errorMsg }}</p>
+  @if (cargando()) {
+    <div class="lista-portafolio__estado">Cargando tus materias...</div>
+  }
 
-  <table class="tabla-ofertas" *ngIf="!cargando && ofertas.length">
-    <thead>
-      <tr>
-        <th>Asignatura</th>
-        <th>Paralelo</th>
-        <th>Periodo</th>
-        <th>Estado</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let oferta of ofertas">
-        <td>{{ oferta.asignatura }}</td>
-        <td>{{ oferta.paralelo }}</td>
-        <td>{{ oferta.periodo }}</td>
-        <td>
-          <span class="badge" [class.activo]="oferta.estado === 'ACTIVO'">{{ oferta.estado }}</span>
-        </td>
-        <td class="acciones">
-          <button type="button" (click)="irAInformeFinal(oferta)">Informe Final</button>
-          <button type="button" class="secundario" (click)="irAAceptacionNotas(oferta)">Aceptación de Notas</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  @if (error()) {
+    <div class="lista-portafolio__estado lista-portafolio__estado--error">
+      {{ error() }}
+      <button type="button" (click)="cargarOfertas()">Reintentar</button>
+    </div>
+  }
 
-  <p class="vacio" *ngIf="!cargando && !errorMsg && !ofertas.length">
-    No se encontraron ofertas académicas para tu usuario.
-  </p>
+  @if (!cargando() && !error() && ofertas().length === 0) {
+    <div class="lista-portafolio__estado">
+      No tienes materias asignadas en este periodo.
+    </div>
+  }
+
+  @if (!cargando() && ofertas().length > 0) {
+    <div class="lista-portafolio__grid">
+      @for (oferta of ofertas(); track oferta.id_oferta_asignatura) {
+        <article class="oferta-card">
+          <div class="oferta-card__info">
+            <h2>{{ oferta.asignatura }}</h2>
+            <p><strong>Paralelo:</strong> {{ oferta.paralelo }}</p>
+            <p><strong>Periodo:</strong> {{ oferta.periodo }}</p>
+            <span class="oferta-card__estado">{{ oferta.estado }}</span>
+          </div>
+
+          <div class="oferta-card__acciones">
+            @if (modo() === 'informe-final') {
+              <button type="button" (click)="seleccionarOferta(oferta)">
+                Ver Informe Final
+              </button>
+            } @else if (modo() === 'aceptacion-notas') {
+              <button type="button" (click)="seleccionarOferta(oferta)">
+                Ver Aceptación de Notas
+              </button>
+            } @else {
+              <button type="button" (click)="irAInformeFinal(oferta)">
+                Informe Final
+              </button>
+              <button type="button" (click)="irAAceptacionNotas(oferta)">
+                Aceptación de Notas
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
 </div>

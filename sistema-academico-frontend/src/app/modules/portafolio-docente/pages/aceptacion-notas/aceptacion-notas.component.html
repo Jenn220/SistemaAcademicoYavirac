@@ -1,70 +1,68 @@
-<div class="documento">
-  <header class="encabezado-institucional">
-    <div class="titulos">
-      <p class="titulo-instituto">INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC</p>
-      <p class="titulo-macro">MACROPROCESO 01 DOCENCIA</p>
-      <p class="titulo-proceso">PROCESO 01 SEGUIMIENTO, CONTROL Y EVALUACIÓN DEL PROCESO DOCENTE</p>
-      <p class="titulo-formato">FORMATO 07 FORMATO DE ACEPTACIÓN DE NOTA</p>
-    </div>
-    <div class="codigo">
-      <span>CÓDIGO</span>
-      <strong>010107</strong>
+<div class="aceptacion-notas">
+  <header class="aceptacion-notas__toolbar no-print">
+    <h1>Formato 07 · Aceptación de Nota</h1>
+
+    <div class="aceptacion-notas__selector">
+      <label for="tipoReporte">Tipo de nota</label>
+      <select
+        id="tipoReporte"
+        [(ngModel)]="tipoReporteSeleccionado"
+        (ngModelChange)="cargarReporte()"
+      >
+        @for (tipo of tiposReporte; track tipo.valor) {
+          <option [value]="tipo.valor">{{ tipo.etiqueta }}</option>
+        }
+      </select>
     </div>
   </header>
 
-  <section class="selector-tipo">
-    <label>Tipo de nota:</label>
-    <div class="botones-tipo">
-      <button
-        *ngFor="let op of opciones"
-        type="button"
-        [class.activo]="tipoSeleccionado === op.valor"
-        (click)="seleccionarTipo(op)"
-      >
-        {{ op.label }}
-      </button>
+  @if (cargando()) {
+    <div class="estado no-print">Cargando...</div>
+  }
+
+  @if (error()) {
+    <div class="estado estado--error no-print">{{ error() }}</div>
+  }
+
+  @if (mensajeExito()) {
+    <div class="estado estado--exito no-print">{{ mensajeExito() }}</div>
+  }
+
+  @if (noExisteReporte() && !cargando()) {
+    <div class="estado no-print">
+      <p>Todavía no se ha generado el reporte de "{{ tipoReporteSeleccionado }}" para esta materia.</p>
+      <button type="button" (click)="generarReporte()">Generar reporte</button>
     </div>
-  </section>
+  }
 
-  <p class="mensaje" *ngIf="cargando">Cargando reporte desde el servidor...</p>
-  <p class="mensaje error" *ngIf="errorMsg">{{ errorMsg }}</p>
-  <p class="mensaje ok" *ngIf="okMsg">{{ okMsg }}</p>
+  @if (reporte(); as r) {
+    <div class="formato-07">
+      <table class="formato-07__cabecera">
+        <tr>
+          <th>CARRERA</th>
+          <td>{{ r.reporte.carrera }}</td>
+          <th>DOCENTE</th>
+          <td>{{ r.reporte.docente }}</td>
+        </tr>
+        <tr>
+          <th>ASIGNATURA</th>
+          <td>{{ r.reporte.asignatura }}</td>
+          <th>TIPO DE NOTA</th>
+          <td>{{ r.reporte.tipo_reporte }}</td>
+        </tr>
+        <tr>
+          <th>PARALELO</th>
+          <td>{{ r.reporte.paralelo }} · {{ r.reporte.jornada }}</td>
+          <th>PER. ACADÉMICO</th>
+          <td>{{ r.reporte.periodo }}</td>
+        </tr>
+      </table>
 
-  <div class="crear-reporte" *ngIf="noExiste && !cargando">
-    <p>Todavía no existe un reporte generado para este tipo de nota.</p>
-    <button type="button" (click)="generarReporte()" [disabled]="generando">
-      {{ generando ? 'Generando en el servidor...' : 'Generar reporte' }}
-    </button>
-  </div>
-
-  <ng-container *ngIf="reporte as r">
-    <table class="tabla-encabezado">
-      <tr>
-        <td class="etiqueta">CARRERA</td>
-        <td>{{ r.reporte.carrera }}</td>
-        <td class="etiqueta">DOCENTE</td>
-        <td>{{ r.reporte.docente }}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">ASIGNATURA</td>
-        <td>{{ r.reporte.asignatura }}</td>
-        <td class="etiqueta">TIPO DE NOTA</td>
-        <td>{{ r.reporte.tipo_reporte }}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">PARALELO</td>
-        <td>{{ r.reporte.paralelo }}</td>
-        <td class="etiqueta">PER. ACADÉMICO</td>
-        <td>{{ r.reporte.periodo }}</td>
-      </tr>
-    </table>
-
-    <form [formGroup]="form">
-      <table class="tabla-notas" formArrayName="estudiantes">
+      <table class="formato-07__estudiantes">
         <thead>
           <tr>
             <th>N°</th>
-            <th>NOMBRE Y APELLIDO</th>
+            <th>ESTUDIANTE</th>
             <th>CÉDULA</th>
             <th>NOTA</th>
             <th>ASISTENCIA</th>
@@ -73,55 +71,68 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let est of estudiantesForm.controls; let i = index" [formGroupName]="i">
-            <td>{{ i + 1 }}</td>
-            <td class="izq">{{ est.get('estudiante')?.value }}</td>
-            <td>{{ est.get('cedula')?.value }}</td>
-            <td>
-              <input type="number" step="0.01" min="0" max="10" formControlName="nota" />
-            </td>
-            <td>
-              <input type="number" step="0.1" min="0" max="100" placeholder="%" formControlName="asistencia" />
-            </td>
-            <td class="firma-vacia" title="Sin campo en el backend todavía"></td>
-            <td>
-              <input type="text" placeholder="S/N" formControlName="observacion" />
-            </td>
-          </tr>
+          @for (est of r.estudiantes; track est.id_aceptacion; let i = $index) {
+            <tr>
+              <td>{{ i + 1 }}</td>
+              <td class="col-nombre">{{ est.estudiante }}</td>
+              <td>{{ est.cedula }}</td>
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.01"
+                  class="no-print-border"
+                  [value]="est.nota_registrada ?? ''"
+                  (change)="actualizarNota(est, $any($event.target).value)"
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="no-print-border"
+                  placeholder="%"
+                  [value]="obtenerCampoManual(est.id_aceptacion).asistencia ?? ''"
+                  (change)="actualizarAsistencia(est.id_aceptacion, $any($event.target).value ? +$any($event.target).value : null)"
+                />
+              </td>
+              <td class="col-firma"></td>
+              <td>
+                <input
+                  type="text"
+                  class="no-print-border"
+                  [value]="obtenerCampoManual(est.id_aceptacion).observacion"
+                  (change)="actualizarObservacion(est.id_aceptacion, $any($event.target).value)"
+                />
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
 
-      <div class="acciones">
-        <button type="button" (click)="guardarNotas()" [disabled]="guardando">
-          {{ guardando ? 'Guardando...' : 'Guardar notas en el servidor' }}
-        </button>
-        <button type="button" class="secundario" (click)="guardarCamposLocalesManual()">
-          Guardar asistencia / observación (solo este navegador)
-        </button>
-      </div>
-    </form>
+      <table class="formato-07__firmas">
+        <tr>
+          <th>DOCENTE:</th>
+          <td class="col-firma-final"></td>
+          <th>COORDINADOR:</th>
+          <td class="col-firma-final"></td>
+        </tr>
+        <tr>
+          <th>FECHA:</th>
+          <td>{{ fechaHoy | date: 'EEEE, d \'de\' MMMM \'de\' y' }}</td>
+          <th>FECHA:</th>
+          <td>{{ fechaHoy | date: 'EEEE, d \'de\' MMMM \'de\' y' }}</td>
+        </tr>
+      </table>
+    </div>
 
-    <table class="tabla-firmas">
-      <tr>
-        <td class="etiqueta">DOCENTE:</td>
-        <td>{{ r.reporte.docente }}</td>
-        <td class="etiqueta">COORDINADOR:</td>
-        <td>
-          <input
-            type="text"
-            placeholder="Nombre del coordinador"
-            [(ngModel)]="nombreCoordinador"
-            [ngModelOptions]="{ standalone: true }"
-            (change)="guardarCamposLocalesManual()"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td class="etiqueta">FECHA:</td>
-        <td>{{ hoy | date: 'fullDate' }}</td>
-        <td class="etiqueta">FECHA:</td>
-        <td>{{ hoy | date: 'fullDate' }}</td>
-      </tr>
-    </table>
-  </ng-container>
+    <div class="aceptacion-notas__acciones no-print">
+      <button type="button" (click)="guardarNotas()" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando...' : 'Guardar notas' }}
+      </button>
+      <button type="button" (click)="imprimir()">Imprimir / Exportar PDF</button>
+    </div>
+  }
 </div>

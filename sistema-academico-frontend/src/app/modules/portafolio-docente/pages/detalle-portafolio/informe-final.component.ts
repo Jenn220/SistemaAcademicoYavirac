@@ -1,168 +1,151 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { InformeFinalService } from '../../services/informe-final.service';
+import { PortafolioService } from '../../services/portafolio.service';
 import { AuthService } from '../../../auth/services/auth.service';
-import {
-  CreateInformeFinalDto,
-  EstudianteNotaLocal,
-  InformeFinalCamposLocales,
-  InformeFinalResponseDto,
-} from '../../models/informe-final.model';
+import { InformeFinalResponseDto, InformeFinalManualData } from '../../models/informe-final.model';
+import { OfertaDocenteDto } from '../../models/oferta-docente.model';
 
 @Component({
   selector: 'app-informe-final',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './informe-final.component.html',
   styleUrl: './informe-final.component.scss',
 })
 export class InformeFinalComponent implements OnInit {
-  readonly hoy = new Date();
-
   idOfertaAsignatura!: number;
-  informe: InformeFinalResponseDto | null = null;
 
-  cargando = false;
+  readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly guardandoManual = signal(false);
+  readonly mensajeGuardado = signal<string | null>(null);
+
+  readonly informe = signal<InformeFinalResponseDto | null>(null);
+  readonly noExisteInforme = signal(false);
+  readonly ofertaRelacionada = signal<OfertaDocenteDto | null>(null);
+
+  // Formulario de creación
+  horario = '';
   creando = false;
-  noExiste = false;
-  errorMsg: string | null = null;
-  okMsg: string | null = null;
+  errorCreacion: string | null = null;
 
-  // Formulario de creación manual: el backend exige id_asignatura / id_paralelo
-  // como números, pero "mis-ofertas" solo entrega los nombres en texto.
-  // Hasta que exista un catálogo, el docente los escribe a mano aquí.
-  formCreacion: FormGroup = this.fb.group({
-    id_periodo: [null, Validators.required],
-    id_asignatura: [null, Validators.required],
-    id_paralelo: [null, Validators.required],
-    horario: ['', Validators.required],
-  });
+  datosManuales!: InformeFinalManualData;
 
-  local: InformeFinalCamposLocales = this.localVacio();
+  readonly fechaHoy = new Date();
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly service: InformeFinalService,
-    private readonly auth: AuthService,
-    private readonly fb: FormBuilder,
+    private readonly informeFinalService: InformeFinalService,
+    private readonly portafolioService: PortafolioService,
+    private readonly authService: AuthService,
   ) {}
 
   ngOnInit(): void {
-    // Se espera navegar aquí como: /informe-final/:idOfertaAsignatura
     this.idOfertaAsignatura = Number(this.route.snapshot.paramMap.get('idOfertaAsignatura'));
+    this.datosManuales = this.informeFinalService.datosManualesVacios();
     this.cargarInforme();
   }
 
   cargarInforme(): void {
-    this.cargando = true;
-    this.errorMsg = null;
-    this.noExiste = false;
+    this.cargando.set(true);
+    this.error.set(null);
+    this.noExisteInforme.set(false);
 
-    this.service.getInformeFinal(this.idOfertaAsignatura).subscribe({
-      next: (resp) => {
-        this.informe = resp;
-        this.local = this.leerLocal();
-        this.cargando = false;
+    this.informeFinalService.getInformeFinal(this.idOfertaAsignatura).subscribe({
+      next: (respuesta) => {
+        this.informe.set(respuesta);
+        this.cargarDatosManuales();
+        this.cargando.set(false);
       },
-      error: (err: HttpErrorResponse) => {
-        this.cargando = false;
+      error: (err) => {
+        this.cargando.set(false);
         if (err.status === 404) {
-          this.noExiste = true;
+          this.noExisteInforme.set(true);
+          this.cargarOfertaRelacionada();
         } else {
-          this.errorMsg = 'No se pudo cargar el informe final desde el servidor.';
+          this.error.set('Ocurrió un error al buscar el informe final.');
         }
       },
     });
   }
 
-  crearInforme(): void {
-    if (this.formCreacion.invalid) {
-      this.formCreacion.markAllAsTouched();
-      return;
-    }
-    const idDocente = this.auth.usuario()?.idDocente;
-    if (!idDocente) {
-      this.errorMsg = 'No se encontró el id del docente en la sesión actual.';
-      return;
-    }
-
-    this.creando = true;
-    this.errorMsg = null;
-
-    const dto: CreateInformeFinalDto = {
-      id_docente: idDocente,
-      id_periodo: this.formCreacion.value.id_periodo,
-      id_asignatura: this.formCreacion.value.id_asignatura,
-      id_paralelo: this.formCreacion.value.id_paralelo,
-      horario: this.formCreacion.value.horario,
-    };
-
-    this.service.createInformeFinal(dto).subscribe({
-      next: () => {
-        this.creando = false;
-        this.cargarInforme();
-      },
-      error: () => {
-        this.creando = false;
-        this.errorMsg = 'No se pudo crear el informe final en el servidor.';
+  private cargarOfertaRelacionada(): void {
+    // Necesitamos el id_periodo (no viene en la ruta) y los nombres de
+    // asignatura/paralelo para mostrarlos en el formulario de creación.
+    this.portafolioService.getMisOfertas().subscribe({
+      next: (ofertas) => {
+        const oferta = ofertas.find((o) => o.id_oferta_asignatura === this.idOfertaAsignatura);
+        this.ofertaRelacionada.set(oferta ?? null);
       },
     });
   }
 
-  agregarEstudiante(): void {
-    const nuevo: EstudianteNotaLocal = {
-      id: crypto.randomUUID(),
-      cedula: '',
-      nombresApellidos: '',
-      asistencia: null,
-      p1: null,
-      p2: null,
-      rc: null,
-      nf: null,
-      evaluacion: '',
-      promocion: '',
-    };
-    this.local.estudiantes = [...this.local.estudiantes, nuevo];
-    this.guardarLocal();
+  private cargarDatosManuales(): void {
+    const guardado = this.informeFinalService.obtenerDatosManuales(this.idOfertaAsignatura);
+    this.datosManuales = guardado ?? this.informeFinalService.datosManualesVacios();
   }
 
-  quitarEstudiante(id: string): void {
-    this.local.estudiantes = this.local.estudiantes.filter((e) => e.id !== id);
-    this.guardarLocal();
-  }
+  crearInforme(): void {
+    const oferta = this.ofertaRelacionada();
+    const idDocente = this.authService.usuario()?.idDocente;
 
-  guardarLocal(): void {
-    localStorage.setItem(this.claveLocal(), JSON.stringify(this.local));
-    this.okMsg = 'Cambios guardados en este navegador.';
-  }
-
-  private claveLocal(): string {
-    return `informe-final-local-${this.idOfertaAsignatura}`;
-  }
-
-  private leerLocal(): InformeFinalCamposLocales {
-    const raw = localStorage.getItem(this.claveLocal());
-    if (!raw) return this.localVacio();
-    try {
-      return JSON.parse(raw) as InformeFinalCamposLocales;
-    } catch {
-      return this.localVacio();
+    if (!oferta || !idDocente) {
+      this.errorCreacion = 'No se pudo determinar el docente o la oferta académica.';
+      return;
     }
+    if (!this.horario.trim()) {
+      this.errorCreacion = 'Ingresa el horario.';
+      return;
+    }
+
+    this.creando = true;
+    this.errorCreacion = null;
+
+    this.informeFinalService
+      .crearInformeFinal({
+        id_docente: idDocente,
+        id_periodo: oferta.id_periodo,
+        id_asignatura: oferta.id_asignatura,
+        id_paralelo: oferta.id_paralelo,
+        horario: this.horario.trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.creando = false;
+          this.cargarInforme();
+        },
+        error: () => {
+          this.creando = false;
+          this.errorCreacion =
+            'No se pudo crear el informe. Verifica que los IDs de asignatura/paralelo sean correctos.';
+        },
+      });
   }
 
-  private localVacio(): InformeFinalCamposLocales {
-    return {
-      antecedentes: '',
-      desarrolloActividades: '',
-      cualitativoInfraestructuraResultado: '',
-      cualitativoInfraestructuraRecomendacion: '',
-      cualitativoPlanEstudiosResultado: '',
-      cualitativoPlanEstudiosRecomendacion: '',
-      recomendacionesFinales: '',
-      estudiantes: [],
-    };
+  agregarFilaResultado(): void {
+    this.datosManuales.resultados = [
+      ...this.datosManuales.resultados,
+      { cedula: '', nombres: '', asistencia: null, p1: null, p2: null, rc: null },
+    ];
+  }
+
+  eliminarFilaResultado(index: number): void {
+    this.datosManuales.resultados = this.datosManuales.resultados.filter((_, i) => i !== index);
+  }
+
+  guardarDatosManuales(): void {
+    this.guardandoManual.set(true);
+    this.datosManuales.fechaElaboracion = new Date().toISOString();
+    this.informeFinalService.guardarDatosManuales(this.idOfertaAsignatura, this.datosManuales);
+    this.guardandoManual.set(false);
+    this.mensajeGuardado.set('Guardado localmente en este navegador.');
+    setTimeout(() => this.mensajeGuardado.set(null), 3000);
+  }
+
+  imprimir(): void {
+    window.print();
   }
 }

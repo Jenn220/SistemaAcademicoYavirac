@@ -1,10 +1,7 @@
-// ============================================================
-// Mis Ofertas — punto de entrada al Portafolio Docente
-// Contrato REAL: GET /portafolio/mis-ofertas (oferta-docente.dto.ts backend)
-// ============================================================
-
 export interface OfertaDocenteDto {
   id_oferta_asignatura: number;
+  id_asignatura: number;
+  id_paralelo: number;
   asignatura: string;
   paralelo: string;
   id_periodo: number;

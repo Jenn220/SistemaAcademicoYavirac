@@ -22,14 +22,15 @@
       </div>
 
       <a routerLink="/portafolio-docente"
-         routerLinkActive="active"
-         [routerLinkActiveOptions]="{exact:true}">
+         [queryParams]="{modo: 'informe-final'}"
+         routerLinkActive="active">
 
         📄 Informe Final
 
       </a>
 
-      <a routerLink="/portafolio-docente/aceptacion-notas"
+      <a routerLink="/portafolio-docente"
+         [queryParams]="{modo: 'aceptacion-notas'}"
          routerLinkActive="active">
 
         ✅ Aceptación de Notas
