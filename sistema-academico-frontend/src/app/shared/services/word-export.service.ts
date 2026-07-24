@@ -5,6 +5,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  HeightRule,
   ImageRun,
   Packer,
   Paragraph,
@@ -25,10 +26,13 @@ import {
   CamposManualesEstudiante,
   ReporteNotasResponseDto,
 } from '../../modules/portafolio-docente/models/aceptacion-notas.model';
+import {
+  SeguimientoPeaManualData,
+  SeguimientoPeaResponseDto,
+} from '../../modules/portafolio-docente/models/seguimiento-pea.model';
 
 // ---------------------------------------------------------------------
-// Paleta institucional (misma que en los .scss de cada documento), sin
-// el "#" porque así la pide la librería docx.
+// Paleta institucional
 // ---------------------------------------------------------------------
 const COLOR_AZUL_TEXTO = '1E3A8A';
 const COLOR_AZUL_FONDO = 'EFF6FF';
@@ -42,13 +46,28 @@ const COLOR_NEGRO = '0F172A';
 
 const BORDE_FINO = { style: BorderStyle.SINGLE, size: 4, color: COLOR_BORDE };
 
-/** Bordes completos de celda, reutilizados en casi todas las tablas. */
+/** Bordes completos de celda */
 const bordesCelda = () => ({
   top: BORDE_FINO,
   bottom: BORDE_FINO,
   left: BORDE_FINO,
   right: BORDE_FINO,
 });
+
+// Márgenes de hoja estrechos (aprox 1cm a los lados) para máximo aprovechamiento del ancho
+const MARGENES_PAGINA_ESTRECHOS = {
+  top: 720,    // 1.27 cm
+  bottom: 720, // 1.27 cm
+  left: 567,   // 1 cm
+  right: 567,  // 1 cm
+};
+
+const MARGENES_CELDA = {
+  top: 100,
+  bottom: 100,
+  left: 140,
+  right: 140,
+};
 
 @Injectable({ providedIn: 'root' })
 export class WordExportService {
@@ -66,25 +85,27 @@ export class WordExportService {
     const doc = new Document({
       sections: [
         {
-          properties: {},
+          properties: {
+            page: { margin: MARGENES_PAGINA_ESTRECHOS },
+          },
           children: [
             this.tablaMembrete(logo, 'FORMATO 04 INFORME FINAL PROCESO DOCENTE', '010104'),
             this.espacio(),
             new Paragraph({
               alignment: AlignmentType.CENTER,
-              spacing: { after: 240 },
+              spacing: { after: 180 },
               children: [
                 new TextRun({
                   text: 'INFORME FINAL DE PROCESO DOCENTE',
                   bold: true,
-                  size: 26,
+                  size: 24,
                   color: COLOR_NEGRO,
                 }),
               ],
             }),
 
             this.tituloSeccion('1. Antecedentes'),
-            ...this.parrafosTexto(datos.antecedentes),
+            this.bloqueCuadroTexto(datos.antecedentes, 800),
             this.espacio(),
 
             this.tituloSeccion('2. Datos de la asignatura'),
@@ -98,21 +119,21 @@ export class WordExportService {
             this.espacio(),
 
             this.tituloSeccion('3. Desarrollo general de actividades'),
-            ...this.parrafosTexto(datos.desarrolloActividades),
+            this.bloqueCuadroTexto(datos.desarrolloActividades, 800),
             this.espacio(),
 
             this.tituloSeccion('4. Resultados cualitativos obtenidos'),
             this.subtitulo('a. Infraestructura y ambiente pedagógico'),
-            ...this.parrafosTexto(datos.infraestructura),
+            this.bloqueCuadroTexto(datos.infraestructura, 600),
             this.subtituloItalica('Recomendaciones de mejora en la Infraestructura y ambiente pedagógico'),
-            ...this.parrafosTexto(datos.recomendacionesInfraestructura),
+            this.bloqueCuadroTexto(datos.recomendacionesInfraestructura, 600),
 
             this.subtitulo('b. Desarrollo del Plan de Estudios de la Asignatura'),
-            ...this.parrafosTexto(datos.planEstudios),
+            this.bloqueCuadroTexto(datos.planEstudios, 600),
             this.subtituloItalica(
               'Recomendaciones de mejora o actualización del Plan de Estudios de la Asignatura',
             ),
-            ...this.parrafosTexto(datos.recomendacionesPlanEstudios),
+            this.bloqueCuadroTexto(datos.recomendacionesPlanEstudios, 600),
             this.espacio(),
 
             this.tablaFirmas(informe.firmas.docente, informe.firmas.coordinador ?? '—'),
@@ -158,7 +179,9 @@ export class WordExportService {
     const doc = new Document({
       sections: [
         {
-          properties: {},
+          properties: {
+            page: { margin: MARGENES_PAGINA_ESTRECHOS },
+          },
           children: [
             this.tablaMembrete(logo, 'FORMATO 07 FORMATO DE ACEPTACIÓN DE NOTA', '010107'),
             this.espacio(),
@@ -203,8 +226,239 @@ export class WordExportService {
   }
 
   // =====================================================================
-  // Helpers de construcción de contenido
+  // SEGUIMIENTO PEA (Formato 02)
   // =====================================================================
+  async exportarSeguimientoPea(
+    seguimiento: SeguimientoPeaResponseDto,
+    datos: SeguimientoPeaManualData,
+  ): Promise<void> {
+    const logo = await this.obtenerLogo();
+
+    const filasSemanas = datos.semanas.map(
+      (sem) =>
+        new TableRow({
+          children: [
+            this.celdaTextoAPA(String(sem.semana), AlignmentType.CENTER, 8),
+            this.celdaTextoAPA(sem.fecha, AlignmentType.CENTER, 14),
+            this.celdaTextoAPA(sem.temas, AlignmentType.LEFT, 48),
+            this.celdaTextoAPA(sem.observaciones, AlignmentType.LEFT, 18),
+            this.celdaTextoAPA('', AlignmentType.CENTER, 12),
+          ],
+        }),
+    );
+
+    const doc = new Document({
+      styles: {
+        default: {
+          document: {
+            run: {
+              font: 'Times New Roman',
+              size: 20,
+              color: COLOR_TEXTO,
+            },
+          },
+        },
+      },
+      sections: [
+        {
+          properties: {
+            page: { margin: MARGENES_PAGINA_ESTRECHOS },
+          },
+          children: [
+            this.tablaMembrete(logo, 'FORMATO 02 FORMATO DE SEGUIMIENTO DE PEA', '010102'),
+            this.espacio(),
+
+            this.tablaClaveValor([
+              ['CARRERA', seguimiento.informe.carrera, 'REPRESENTANTE', seguimiento.representante.nombre],
+              ['ASIGNATURA', seguimiento.informe.asignatura, 'TELÉFONO', seguimiento.representante.telefono ?? ''],
+              ['PARALELO', seguimiento.informe.paralelo, 'E-MAIL', seguimiento.representante.email ?? ''],
+              ['PER. ACADÉMICO', seguimiento.informe.periodo, 'DOCENTE', seguimiento.informe.docente],
+            ]),
+            this.espacio(),
+
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: [
+                new TableRow({
+                  tableHeader: true,
+                  children: [
+                    this.celdaEncabezadoAPA('SEMANA', 8),
+                    this.celdaEncabezadoAPA('FECHA', 14),
+                    this.celdaEncabezadoAPA('TEMAS TRATADOS EN CLASE, TRABAJOS, TALLERES, APRENDIZAJE AUTÓNOMO', 48),
+                    this.celdaEncabezadoAPA('OBSERVACIONES', 18),
+                    this.celdaEncabezadoAPA('FIRMA', 12),
+                  ],
+                }),
+                ...filasSemanas,
+              ],
+            }),
+            this.espacio(),
+
+            this.bloqueObservacionEditable(
+              'OBSERVACIONES Y ASPECTOS GENERALES A MEJORAR DE LA ASIGNATURA (REPRESENTANTE ESTUDIANTIL)',
+              datos.observacionesRepresentante,
+            ),
+            this.espacio(),
+
+            this.bloqueObservacionEditable(
+              'OBSERVACIONES Y ASPECTOS GENERALES A MEJORAR DE LA ASIGNATURA (DOCENTE)',
+              datos.observacionesDocente,
+            ),
+            this.espacio(),
+
+            this.bloqueObservacionEditable(
+              'OBSERVACIONES Y ASPECTOS GENERALES A MEJORAR DE LA ASIGNATURA (COORDINADOR)',
+              datos.observacionesCoordinador,
+            ),
+          ],
+        },
+      ],
+    });
+
+    await this.descargar(doc, `SeguimientoPEA_${seguimiento.informe.asignatura}`);
+  }
+
+  // =====================================================================
+  // Helpers Auxiliares
+  // =====================================================================
+
+  private bloqueCuadroTexto(contenido: string | undefined | null, altoMinimo = 600): Table {
+    const val = contenido && contenido.trim() !== '' ? contenido : '—';
+
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          height: { value: altoMinimo, rule: HeightRule.ATLEAST },
+          children: [
+            new TableCell({
+              borders: bordesCelda(),
+              margins: MARGENES_CELDA,
+              verticalAlign: VerticalAlign.TOP,
+              children: val.split('\n').map(
+                (linea) =>
+                  new Paragraph({
+                    spacing: { before: 40, after: 40 },
+                    children: [
+                      new TextRun({
+                        text: linea,
+                        size: 20,
+                        color: COLOR_TEXTO,
+                      }),
+                    ],
+                  }),
+              ),
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  private celdaTextoAPA(
+    texto: string | undefined | null,
+    alineacion: (typeof AlignmentType)[keyof typeof AlignmentType],
+    anchoPorcentaje: number,
+  ): TableCell {
+    const contenido = texto && texto.trim() !== '' ? texto : '';
+    return new TableCell({
+      borders: bordesCelda(),
+      margins: MARGENES_CELDA,
+      width: { size: anchoPorcentaje, type: WidthType.PERCENTAGE },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [
+        new Paragraph({
+          alignment: alineacion,
+          children: [
+            new TextRun({
+              text: contenido,
+              size: 18,
+              font: 'Times New Roman',
+              color: COLOR_TEXTO,
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  private celdaEncabezadoAPA(texto: string, width?: number): TableCell {
+    return new TableCell({
+      borders: bordesCelda(),
+      margins: MARGENES_CELDA,
+      width: width ? { size: width, type: WidthType.PERCENTAGE } : undefined,
+      shading: { type: ShadingType.CLEAR, fill: COLOR_AZUL_FONDO },
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({
+              text: texto,
+              bold: true,
+              size: 17,
+              font: 'Times New Roman',
+              color: COLOR_AZUL_TEXTO,
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  private bloqueObservacionEditable(titulo: string, contenido: string | undefined | null): Table {
+    const val = contenido && contenido.trim() !== '' ? contenido : '—';
+
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              borders: bordesCelda(),
+              margins: MARGENES_CELDA,
+              shading: { type: ShadingType.CLEAR, fill: COLOR_AZUL_FONDO },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: titulo,
+                      bold: true,
+                      size: 17,
+                      font: 'Times New Roman',
+                      color: COLOR_AZUL_TEXTO,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+        new TableRow({
+          height: { value: 500, rule: HeightRule.ATLEAST },
+          children: [
+            new TableCell({
+              borders: bordesCelda(),
+              margins: MARGENES_CELDA,
+              verticalAlign: VerticalAlign.TOP,
+              children: [
+                new Paragraph({
+                  spacing: { before: 40, after: 40 },
+                  children: [
+                    new TextRun({
+                      text: val,
+                      size: 20,
+                      font: 'Times New Roman',
+                      color: COLOR_TEXTO,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+  }
 
   private async obtenerLogo(): Promise<ArrayBuffer | null> {
     try {
@@ -212,12 +466,10 @@ export class WordExportService {
         this.http.get('assets/logo/logo.png', { responseType: 'arraybuffer' }),
       );
     } catch {
-      // Si el logo no carga, se exporta igual el documento sin imagen.
       return null;
     }
   }
 
-  /** Membrete institucional: logo + institución/macroproceso/proceso/formato + código. */
   private tablaMembrete(logo: ArrayBuffer | null, formato: string, codigo: string): Table {
     const celdaLogo = new TableCell({
       rowSpan: 4,
@@ -228,7 +480,7 @@ export class WordExportService {
         new Paragraph({
           alignment: AlignmentType.CENTER,
           children: logo
-            ? [new ImageRun({ data: logo, transformation: { width: 60, height: 60 }, type: 'png' })]
+            ? [new ImageRun({ data: logo, transformation: { width: 55, height: 55 }, type: 'png' })]
             : [],
         }),
       ],
@@ -242,11 +494,11 @@ export class WordExportService {
       children: [
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          children: [new TextRun({ text: 'CÓDIGO', bold: true, size: 14, color: COLOR_GRIS_TEXTO })],
+          children: [new TextRun({ text: 'CÓDIGO', bold: true, size: 13, color: COLOR_GRIS_TEXTO })],
         }),
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          children: [new TextRun({ text: codigo, bold: true, size: 18, color: COLOR_NEGRO })],
+          children: [new TextRun({ text: codigo, bold: true, size: 17, color: COLOR_NEGRO })],
         }),
       ],
     });
@@ -258,7 +510,7 @@ export class WordExportService {
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: texto, bold: true, size: 16, color })],
+            children: [new TextRun({ text: texto, bold: true, size: 15, color })],
           }),
         ],
       });
@@ -292,41 +544,28 @@ export class WordExportService {
 
   private tituloSeccion(texto: string): Paragraph {
     return new Paragraph({
-      spacing: { before: 200, after: 120 },
+      spacing: { before: 160, after: 80 },
       border: {
         left: { style: BorderStyle.SINGLE, size: 24, color: '2563EB', space: 6 },
       },
-      children: [new TextRun({ text: texto, bold: true, size: 22, color: COLOR_AZUL_TEXTO })],
+      children: [new TextRun({ text: texto, bold: true, size: 20, color: COLOR_AZUL_TEXTO })],
     });
   }
 
   private subtitulo(texto: string): Paragraph {
     return new Paragraph({
-      spacing: { before: 160, after: 60 },
-      children: [new TextRun({ text: texto, bold: true, size: 20, color: COLOR_TEXTO })],
+      spacing: { before: 120, after: 40 },
+      children: [new TextRun({ text: texto, bold: true, size: 18, color: COLOR_TEXTO })],
     });
   }
 
   private subtituloItalica(texto: string): Paragraph {
     return new Paragraph({
-      spacing: { before: 120, after: 60 },
-      children: [new TextRun({ text: texto, italics: true, bold: true, size: 18, color: COLOR_GRIS_TEXTO })],
+      spacing: { before: 100, after: 40 },
+      children: [new TextRun({ text: texto, italics: true, bold: true, size: 16, color: COLOR_GRIS_TEXTO })],
     });
   }
 
-  /** Convierte texto libre (textarea) en párrafos, uno por línea. */
-  private parrafosTexto(texto: string): Paragraph[] {
-    const contenido = texto?.trim() ? texto : '—';
-    return contenido.split('\n').map(
-      (linea) =>
-        new Paragraph({
-          spacing: { after: 80 },
-          children: [new TextRun({ text: linea || ' ', size: 20, color: COLOR_TEXTO })],
-        }),
-    );
-  }
-
-  /** Tabla simple de 2 o 4 columnas alternando etiqueta/valor. */
   private tablaClaveValor(filas: string[][]): Table {
     return new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
@@ -337,6 +576,8 @@ export class WordExportService {
               const esEtiqueta = idx % 2 === 0;
               return new TableCell({
                 borders: bordesCelda(),
+                margins: MARGENES_CELDA,
+                verticalAlign: VerticalAlign.CENTER,
                 width: { size: esEtiqueta ? 20 : 30, type: WidthType.PERCENTAGE },
                 shading: esEtiqueta ? { type: ShadingType.CLEAR, fill: COLOR_AZUL_FONDO } : undefined,
                 children: [
@@ -345,7 +586,7 @@ export class WordExportService {
                       new TextRun({
                         text: texto,
                         bold: esEtiqueta,
-                        size: 18,
+                        size: 17,
                         color: esEtiqueta ? COLOR_AZUL_TEXTO : COLOR_TEXTO,
                       }),
                     ],
@@ -361,10 +602,12 @@ export class WordExportService {
   private celdaTexto(texto: string, opts: { align: (typeof AlignmentType)[keyof typeof AlignmentType] }): TableCell {
     return new TableCell({
       borders: bordesCelda(),
+      margins: MARGENES_CELDA,
+      verticalAlign: VerticalAlign.CENTER,
       children: [
         new Paragraph({
           alignment: opts.align,
-          children: [new TextRun({ text: texto, size: 18, color: COLOR_TEXTO })],
+          children: [new TextRun({ text: texto, size: 17, color: COLOR_TEXTO })],
         }),
       ],
     });
@@ -373,11 +616,12 @@ export class WordExportService {
   private celdaEncabezado(texto: string): TableCell {
     return new TableCell({
       borders: bordesCelda(),
+      margins: MARGENES_CELDA,
       shading: { type: ShadingType.CLEAR, fill: COLOR_AZUL_FONDO },
       children: [
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          children: [new TextRun({ text: texto, bold: true, size: 16, color: COLOR_AZUL_TEXTO })],
+          children: [new TextRun({ text: texto, bold: true, size: 15, color: COLOR_AZUL_TEXTO })],
         }),
       ],
     });
@@ -395,14 +639,15 @@ export class WordExportService {
           ],
         }),
         new TableRow({
+          height: { value: 1000, rule: HeightRule.ATLEAST },
           children: [
             new TableCell({
               borders: bordesCelda(),
-              children: [new Paragraph({ children: [new TextRun({ text: ' ' })], spacing: { before: 400 } })],
+              children: [new Paragraph({ children: [] })],
             }),
             new TableCell({
               borders: bordesCelda(),
-              children: [new Paragraph({ children: [new TextRun({ text: ' ' })], spacing: { before: 400 } })],
+              children: [new Paragraph({ children: [] })],
             }),
           ],
         }),
@@ -425,12 +670,37 @@ export class WordExportService {
             this.celdaEncabezado('DOCENTE:'),
             new TableCell({
               borders: bordesCelda(),
-              children: [new Paragraph({ children: [new TextRun({ text: ' ' })], spacing: { before: 400 } })],
+              margins: MARGENES_CELDA,
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: docente, size: 17, bold: true, color: COLOR_TEXTO })],
+                }),
+              ],
             }),
             this.celdaEncabezado('COORDINADOR:'),
             new TableCell({
               borders: bordesCelda(),
-              children: [new Paragraph({ children: [new TextRun({ text: ' ' })], spacing: { before: 400 } })],
+              margins: MARGENES_CELDA,
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: coordinador, size: 17, bold: true, color: COLOR_TEXTO })],
+                }),
+              ],
+            }),
+          ],
+        }),
+        new TableRow({
+          height: { value: 1000, rule: HeightRule.ATLEAST },
+          children: [
+            this.celdaEncabezado('FIRMA:'),
+            new TableCell({
+              borders: bordesCelda(),
+              children: [new Paragraph({ children: [] })],
+            }),
+            this.celdaEncabezado('FIRMA:'),
+            new TableCell({
+              borders: bordesCelda(),
+              children: [new Paragraph({ children: [] })],
             }),
           ],
         }),
@@ -447,7 +717,7 @@ export class WordExportService {
   }
 
   private espacio(): Paragraph {
-    return new Paragraph({ text: '', spacing: { after: 100 } });
+    return new Paragraph({ text: '', spacing: { after: 80 } });
   }
 
   private async descargar(doc: Document, nombreBase: string): Promise<void> {

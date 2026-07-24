@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { OfertaDocenteDto } from '../models/oferta-docente.model';
+import { EstudianteOfertaDto } from '../models/estudiante-oferta.model'; // NUEVO
 
 @Injectable({ providedIn: 'root' })
 export class PortafolioService {
@@ -12,5 +13,12 @@ export class PortafolioService {
 
   getMisOfertas(): Observable<OfertaDocenteDto[]> {
     return this.http.get<OfertaDocenteDto[]>(`${this.apiUrl}/mis-ofertas`);
+  }
+
+  // NUEVO — para el selector de representante estudiantil
+  getEstudiantesDeOferta(idOfertaAsignatura: number): Observable<EstudianteOfertaDto[]> {
+    return this.http.get<EstudianteOfertaDto[]>(
+      `${this.apiUrl}/oferta/${idOfertaAsignatura}/estudiantes`,
+    );
   }
 }

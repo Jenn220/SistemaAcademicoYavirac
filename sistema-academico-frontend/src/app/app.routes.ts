@@ -138,6 +138,15 @@ export const routes: Routes = [
               )
           },
           {
+  path: 'seguimiento-pea/:idOfertaAsignatura',
+  loadComponent: () =>
+    import(
+      './modules/portafolio-docente/pages/seguimiento-pea/seguimiento-pea.component'
+    ).then(
+      m => m.SeguimientoPeaComponent
+    )
+},
+          {
             path: 'aceptacion-notas/:idOfertaAsignatura/:idPeriodo',
             loadComponent: () =>
               import(

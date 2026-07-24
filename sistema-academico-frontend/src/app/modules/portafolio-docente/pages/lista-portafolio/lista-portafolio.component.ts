@@ -5,7 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { PortafolioService } from '../../services/portafolio.service';
 import { OfertaDocenteDto } from '../../models/oferta-docente.model';
 
-type ModoPortafolio = 'informe-final' | 'aceptacion-notas' | null;
+type ModoPortafolio = 'informe-final' | 'aceptacion-notas' | 'seguimiento-pea' | null;
 
 @Component({
   selector: 'app-lista-portafolio',
@@ -35,20 +35,24 @@ export class ListaPortafolioComponent implements OnInit {
   });
 
   readonly modo = computed<ModoPortafolio>(() => {
-    const valor = this.modoParam().get('modo');
-    return valor === 'informe-final' || valor === 'aceptacion-notas' ? valor : null;
-  });
+  const valor = this.modoParam().get('modo');
+  return valor === 'informe-final' || valor === 'aceptacion-notas' || valor === 'seguimiento-pea'
+    ? valor
+    : null;
+});
 
   readonly titulo = computed(() => {
-    switch (this.modo()) {
-      case 'informe-final':
-        return 'Informe Final';
-      case 'aceptacion-notas':
-        return 'Aceptación de Notas';
-      default:
-        return 'Mi Portafolio Docente';
-    }
-  });
+  switch (this.modo()) {
+    case 'informe-final':
+      return 'Informe Final';
+    case 'aceptacion-notas':
+      return 'Aceptación de Notas';
+    case 'seguimiento-pea':
+      return 'Seguimiento PEA';
+    default:
+      return 'Mi Portafolio Docente';
+  }
+});
 
   readonly subtitulo = computed(() => {
     if (this.modo()) {
@@ -84,12 +88,18 @@ export class ListaPortafolioComponent implements OnInit {
 
   /** Al elegir materia: si venías con un modo fijo, va directo a esa pantalla. */
   seleccionarOferta(oferta: OfertaDocenteDto): void {
-    if (this.modo() === 'informe-final') {
-      this.irAInformeFinal(oferta);
-    } else if (this.modo() === 'aceptacion-notas') {
-      this.irAAceptacionNotas(oferta);
-    }
+  if (this.modo() === 'informe-final') {
+    this.irAInformeFinal(oferta);
+  } else if (this.modo() === 'aceptacion-notas') {
+    this.irAAceptacionNotas(oferta);
+  } else if (this.modo() === 'seguimiento-pea') {
+    this.irASeguimientoPea(oferta);
   }
+}
+
+irASeguimientoPea(oferta: OfertaDocenteDto): void {
+  this.router.navigate(['/portafolio-docente/seguimiento-pea', oferta.id_oferta_asignatura]);
+}
 
   irAInformeFinal(oferta: OfertaDocenteDto): void {
     this.router.navigate(['/portafolio-docente/informe-final', oferta.id_oferta_asignatura]);

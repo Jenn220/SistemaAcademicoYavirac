@@ -1,0 +1,436 @@
+.seguimiento-pea {
+  padding: 24px;
+}
+
+// ---------------------------------------------------------------------
+// Estados (cargando / error)
+// ---------------------------------------------------------------------
+.estado {
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #334155;
+  margin-bottom: 16px;
+
+  &--error {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Formulario de creación (representante estudiantil)
+// ---------------------------------------------------------------------
+.crear-seguimiento {
+  max-width: 480px;
+  padding: 28px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #eef1f6;
+
+  h2 {
+    margin-top: 0;
+    font-size: 1.15rem;
+    color: #0f172a;
+  }
+
+  label {
+    display: block;
+    margin: 12px 0 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #334155;
+  }
+
+  select {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+  }
+
+  .aviso-texto {
+    color: #92400e;
+    background: #fef3c7;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    margin-top: 10px;
+  }
+
+  .error-texto {
+    color: #991b1b;
+    font-size: 0.85rem;
+  }
+
+  button {
+    margin-top: 16px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      background: #1d4ed8;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Toolbar
+// ---------------------------------------------------------------------
+.seguimiento-pea__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+
+  .mensaje-guardado {
+    color: #166534;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+}
+
+.btn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--outline {
+    background: #fff;
+    color: #2563eb;
+
+    &:hover {
+      background: #eff6ff;
+      box-shadow: none;
+    }
+  }
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.btn-icono {
+  background: none;
+  border: none;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 6px;
+
+  &:hover {
+    background: #fee2e2;
+    border-radius: 4px;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Documento (formato-02) — mismo tratamiento que formato-04 / formato-07
+// ---------------------------------------------------------------------
+.formato-02 {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #dbe1ea;
+  padding: 0 0 28px;
+  width: 100%;
+  overflow: hidden;
+  font-size: 0.85rem;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #cbd5e1;
+    padding: 7px 10px;
+    text-align: left;
+  }
+
+  .tabla-datos {
+    th {
+      background: #eff6ff;
+      color: #1e3a8a;
+      width: 15%;
+      font-weight: 600;
+    }
+
+    td {
+      color: #1e293b;
+
+      select {
+        width: 100%;
+        padding: 4px 6px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .acciones-representante {
+    padding: 10px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .tabla-semanas {
+    margin: 20px 24px 0;
+    width: calc(100% - 48px);
+
+    th {
+      background: #eff6ff;
+      color: #1e3a8a;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    td {
+      vertical-align: top;
+      color: #1e293b;
+    }
+
+    .col-firma {
+      min-width: 70px;
+      height: 44px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.82rem;
+      color: #1e293b;
+      resize: vertical;
+      padding: 4px 2px;
+
+      &:focus {
+        outline: none;
+        background: #eff6ff;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        border-radius: 4px;
+      }
+    }
+  }
+
+  > .btn-toolbar {
+    margin: 14px 24px 0;
+  }
+
+  .observaciones-finales {
+    margin: 22px 24px 0;
+
+    h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      border-left: 4px solid #2563eb;
+      padding: 4px 0 4px 10px;
+      margin: 0 0 8px;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #dbe1ea;
+      background: #fafbfc;
+      font-family: inherit;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: #1e293b;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+    }
+
+    .col-firma--ancha {
+      margin-top: 8px;
+      height: 50px;
+      border-bottom: 1px solid #cbd5e1;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Membrete institucional — idéntico a informe-final / aceptacion-notas
+// ---------------------------------------------------------------------
+.membrete {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px;
+  border-bottom: 2px solid #0f172a;
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-right: 1px solid #cbd5e1;
+
+    img {
+      max-width: 100%;
+      max-height: 64px;
+      object-fit: contain;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__institucion {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__macroproceso {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    background: #bfdbfe;
+    color: #1e3a8a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__proceso {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    background: #fecaca;
+    color: #7f1d1d;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__formato {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+  }
+
+  &__codigo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-left: 1px solid #cbd5e1;
+    padding: 8px;
+
+    span {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    strong {
+      font-size: 0.85rem;
+      color: #0f172a;
+    }
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  textarea,
+  input,
+  select {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+  }
+
+  .formato-02 {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}
