@@ -1,5 +1,4 @@
 <div class="auth-shell">
-  <!-- Fondo HD con la imagen reset_contra.png -->
   <div class="auth-background"></div>
 
   <div class="auth-card">
@@ -11,7 +10,6 @@
       </div>
     </div>
 
-    <!-- Enlaces secundarios decorativos opcionales según la imagen -->
     <div class="auth-links">
       <span class="auth-link-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -62,12 +60,18 @@
         </div>
       }
 
-      <button type="submit" class="auth-button" [disabled]="cargando()">
-        @if (cargando()) {
-          <span class="auth-spinner"></span>
-        }
-        {{ cargando() ? 'Desbloqueando…' : 'Desbloquear cuenta' }}
-      </button>
+      <div class="auth-actions">
+        <button type="submit" class="auth-button" [disabled]="cargando()">
+          @if (cargando()) {
+            <span class="auth-spinner"></span>
+          }
+          {{ cargando() ? 'Desbloqueando…' : 'Desbloquear cuenta' }}
+        </button>
+
+        <a routerLink="/dashboard" class="auth-button-secondary">
+          ← Volver al Dashboard
+        </a>
+      </div>
     </form>
   </div>
 </div>

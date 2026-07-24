@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router'; // <--- Importamos RouterLink
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../services/auth.service';
 import { DesbloquearResponse } from '../../../models';
@@ -8,7 +9,7 @@ import { DesbloquearResponse } from '../../../models';
 @Component({
   selector: 'app-desbloquear',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink], // <--- Agregado aquí
   templateUrl: './desbloquear.html',
   styleUrl: './desbloquear.scss',
 })
