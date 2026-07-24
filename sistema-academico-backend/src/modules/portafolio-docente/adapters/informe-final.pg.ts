@@ -27,7 +27,8 @@ export class InformeFinalPg implements IInformeFinalRepository {
         pif.horario,
         pa.nombre                       AS periodo,
         pif.fecha_firma_docente,
-        pif.fecha_firma_coordinador
+        pif.fecha_firma_coordinador,
+        co.nombres || ' ' || co.apellidos AS nombre_coordinador
       FROM portafolio_informe_final pif
       JOIN oferta_asignatura oa ON pif.id_oferta_asignatura = oa.id_oferta_asignatura
       JOIN docente           d  ON oa.id_docente         = d.id_docente
@@ -35,6 +36,7 @@ export class InformeFinalPg implements IInformeFinalRepository {
       JOIN paralelo          p  ON oa.id_paralelo         = p.id_paralelo
       JOIN periodo_carrera   pc ON oa.id_periodo_carrera  = pc.id_periodo_carrera
       JOIN periodo_academico pa ON pc.id_periodo          = pa.id_periodo
+      LEFT JOIN docente      co ON pc.id_coordinador      = co.id_docente
       WHERE pif.id_oferta_asignatura = $1 AND oa.id_docente = $2
       `,
       [idOfertaAsignatura, idDocente],
@@ -53,6 +55,7 @@ export class InformeFinalPg implements IInformeFinalRepository {
       },
       firmas: {
         docente:                  row.nombre_docente,
+        coordinador:              row.nombre_coordinador,
         fecha_firma_docente:      row.fecha_firma_docente,
         fecha_firma_coordinador:  row.fecha_firma_coordinador,
       },

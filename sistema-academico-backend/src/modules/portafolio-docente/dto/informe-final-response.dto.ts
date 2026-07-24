@@ -8,6 +8,7 @@ export class InformeDto {
 
 export class FirmasDto {
   docente: string;
+  coordinador: string | null;
   fecha_firma_docente: Date | null;
   fecha_firma_coordinador: Date | null;
 }
