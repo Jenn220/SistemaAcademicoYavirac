@@ -14,10 +14,13 @@ export class CreateVinculacionDatosPrueba1784218100000 implements MigrationInter
                    'Alfabetizacion Digital', '2026-05-01', '2026-06-30', 8.0, 2.0, 'EN_CURSO';
         `);
         await queryRunner.query(`
-            INSERT INTO public.vinculacion_actividad_estudiante (id_vinculacion, fecha, hora_inicio, hora_fin, horas_total, actividades_realizadas)
-            SELECT (SELECT id_vinculacion FROM public.vinculacion_estudiante LIMIT 1),
-                   '2026-05-05', '10:00', '12:00', 2.0, 'Charla a la comunidad sobre herramientas ofimaticas';
-        `);
+         INSERT INTO public.vinculacion_actividad_estudiante (id_vinculacion, fecha, hora_inicio, hora_fin, horas_total, actividades_realizadas, resultado_aprendizaje)
+    SELECT (SELECT id_vinculacion FROM public.vinculacion_estudiante LIMIT 1),
+           '2026-05-05', '10:00', '12:00', 2.0, 'Charla a la comunidad sobre herramientas ofimaticas', 'Los asistentes comprendieron el uso basico de Word y Excel'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM public.vinculacion_actividad_estudiante WHERE fecha = '2026-05-05' AND actividades_realizadas = 'Charla a la comunidad sobre herramientas ofimaticas'
+    );
+`);
         await queryRunner.query(`
             INSERT INTO public.vinculacion_asistencia_tutor (id_vinculacion, fecha, hora_inicio, hora_fin, horas_total, observaciones)
             SELECT (SELECT id_vinculacion FROM public.vinculacion_estudiante LIMIT 1),
