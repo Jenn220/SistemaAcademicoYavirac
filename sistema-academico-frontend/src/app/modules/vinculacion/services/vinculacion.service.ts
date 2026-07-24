@@ -1,4 +1,4 @@
-  import { HttpClient } from '@angular/common/http';
+    import { HttpClient } from '@angular/common/http';
   import { Injectable } from '@angular/core';
   import { Observable, map, catchError, of } from 'rxjs';
   import * as XLSX from 'xlsx-js-style';
@@ -981,4 +981,4 @@
       const nombreArchivo = `INFORME_FINAL_${(proyecto.estudiante ?? 'VINCULACION').replace(/\s+/g, '_')}.xlsx`;
       XLSX.writeFile(wb, nombreArchivo);
     }
-  }
+  } 

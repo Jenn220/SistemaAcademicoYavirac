@@ -14,6 +14,7 @@ import { ActividadEstudiantePayload } from '../../models/proyecto-vinculacion.mo
 })
 export class ActividadesVinculacionComponent implements OnInit {
   actividades: any[] = [];
+  proyectos: Array<{ id: number; nombre: string }> = [];
   form: ActividadEstudiantePayload = {
     id_vinculacion: 1,
     fecha: '',
@@ -28,14 +29,41 @@ export class ActividadesVinculacionComponent implements OnInit {
   constructor(private readonly svc: VinculacionService,private cd: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.svc.getActividadesEstudiante().subscribe({
-      next: (data) => { this.actividades = data,
-       this.cd.detectChanges()
-       },
-      error: () =>{ this.error = 'No se pudieron cargar actividades.',
+    this.cargarProyectos();
+    this.cargarActividades();
+  }
+
+  cargarProyectos(): void {
+    this.svc.getProyectos().subscribe({
+      next: (data) => {
+        this.proyectos = data.map(proyecto => ({ id: proyecto.id, nombre: proyecto.nombre }));
+        if (!this.form.id_vinculacion && this.proyectos.length) {
+          this.form.id_vinculacion = this.proyectos[0].id;
+        }
         this.cd.detectChanges();
-       }      
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar los proyectos disponibles.';
+        this.cd.detectChanges();
+      }
     });
+  }
+
+  cargarActividades(): void {
+    this.svc.getActividadesEstudiante().subscribe({
+      next: (data) => {
+        this.actividades = data;
+        this.cd.detectChanges();
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar actividades.';
+        this.cd.detectChanges();
+      }
+    });
+  }
+
+  getProyectoNombre(id?: number): string {
+    return this.proyectos.find(proyecto => proyecto.id === id)?.nombre ?? 'Proyecto seleccionado';
   }
 
   guardar(): void {
@@ -44,7 +72,7 @@ export class ActividadesVinculacionComponent implements OnInit {
     this.svc.createActividad(this.form).subscribe({
       next: () => {
         this.mensaje = 'Actividad registrada correctamente.';
-        this.ngOnInit();
+        this.cargarActividades();
       },
       error: (err) => {
         this.error = err?.error?.message || 'No se pudo guardar la actividad.';

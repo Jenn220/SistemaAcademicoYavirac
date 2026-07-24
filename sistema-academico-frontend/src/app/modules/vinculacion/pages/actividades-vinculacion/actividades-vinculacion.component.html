@@ -6,7 +6,12 @@
     <h3>Registrar actividad</h3>
     <form (ngSubmit)="guardar()" #actividadForm="ngForm">
       <div class="form-grid">
-        <label>ID vinculación<input type="number" [(ngModel)]="form.id_vinculacion" name="id_vinculacion" required></label>
+        <label>
+          Proyecto
+          <select [(ngModel)]="form.id_vinculacion" name="id_vinculacion" required>
+            <option *ngFor="let proyecto of proyectos" [ngValue]="proyecto.id">{{ proyecto.nombre }}</option>
+          </select>
+        </label>
         <label>Fecha<input type="date" [(ngModel)]="form.fecha" name="fecha" required></label>
         <label>Hora inicio<input [(ngModel)]="form.hora_inicio" name="hora_inicio" required></label>
         <label>Hora fin<input [(ngModel)]="form.hora_fin" name="hora_fin" required></label>
@@ -22,9 +27,10 @@
   <div class="page-card">
     <h3>Actividades registradas</h3>
     <table>
-      <thead><tr><th>Fecha</th><th>Hora inicio</th><th>Hora fin</th><th>Horas</th><th>Descripción</th></tr></thead>
+      <thead><tr><th>Proyecto</th><th>Fecha</th><th>Hora inicio</th><th>Hora fin</th><th>Horas</th><th>Descripción</th></tr></thead>
       <tbody>
         <tr *ngFor="let item of actividades">
+          <td>{{ getProyectoNombre(item.id_vinculacion) }}</td>
           <td>{{ item.fecha }}</td>
           <td>{{ item.hora_inicio }}</td>
           <td>{{ item.hora_fin }}</td>

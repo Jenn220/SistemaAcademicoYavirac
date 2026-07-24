@@ -13,6 +13,25 @@ import { CrearProyectoVinculacionPayload } from '../../models/proyecto-vinculaci
   styleUrls: ['./nuevo-vinculacion.component.scss']
 })
 export class NuevoVinculacionComponent {
+  periodos = [
+    { id: 1, nombre: 'Periodo 2025 - 1' },
+    { id: 2, nombre: 'Periodo 2025 - 2' },
+    { id: 3, nombre: 'Periodo 2026 - 1' }
+  ];
+  matriculas = [
+    { id: 1, nombre: 'Matrícula 001 - Estudiante Demo' },
+    { id: 2, nombre: 'Matrícula 002 - Estudiante Demo 2' }
+  ];
+  empresas = [
+    { id: 1, nombre: 'Empresa Demo Yavirac' },
+    { id: 2, nombre: 'Fundación Comunitaria' }
+  ];
+  docentes = [
+    { id: 1, nombre: 'Docente Demo' },
+    { id: 2, nombre: 'Docente Coordinador' }
+  ];
+  estados = ['ACTIVO', 'EN CURSO', 'FINALIZADO'];
+
   model: CrearProyectoVinculacionPayload = {
     id_periodo: 1,
     id_matricula_detalle: 1,

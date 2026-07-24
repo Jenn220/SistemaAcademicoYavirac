@@ -14,23 +14,31 @@
         </label>
 
         <label>
-          <span>ID periodo</span>
-          <input type="number" [(ngModel)]="model.id_periodo" name="id_periodo" required />
+          <span>Periodo</span>
+          <select [(ngModel)]="model.id_periodo" name="id_periodo" required>
+            <option *ngFor="let periodo of periodos" [ngValue]="periodo.id">{{ periodo.nombre }}</option>
+          </select>
         </label>
 
         <label>
-          <span>ID matrícula detalle</span>
-          <input type="number" [(ngModel)]="model.id_matricula_detalle" name="id_matricula_detalle" required />
+          <span>Matrícula</span>
+          <select [(ngModel)]="model.id_matricula_detalle" name="id_matricula_detalle" required>
+            <option *ngFor="let matricula of matriculas" [ngValue]="matricula.id">{{ matricula.nombre }}</option>
+          </select>
         </label>
 
         <label>
-          <span>ID empresa</span>
-          <input type="number" [(ngModel)]="model.id_empresa" name="id_empresa" required />
+          <span>Empresa</span>
+          <select [(ngModel)]="model.id_empresa" name="id_empresa" required>
+            <option *ngFor="let empresa of empresas" [ngValue]="empresa.id">{{ empresa.nombre }}</option>
+          </select>
         </label>
 
         <label>
-          <span>ID docente</span>
-          <input type="number" [(ngModel)]="model.id_docente" name="id_docente" required />
+          <span>Docente</span>
+          <select [(ngModel)]="model.id_docente" name="id_docente" required>
+            <option *ngFor="let docente of docentes" [ngValue]="docente.id">{{ docente.nombre }}</option>
+          </select>
         </label>
 
         <label>
@@ -55,7 +63,9 @@
 
         <label>
           <span>Estado</span>
-          <input [(ngModel)]="model.estado" name="estado" />
+          <select [(ngModel)]="model.estado" name="estado">
+            <option *ngFor="let estado of estados" [value]="estado">{{ estado }}</option>
+          </select>
         </label>
       </div>
 
