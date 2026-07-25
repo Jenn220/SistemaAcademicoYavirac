@@ -7,6 +7,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { Documentos } from '../../services/documentos';
@@ -56,14 +58,19 @@ export class EvaluacionEmpresarial implements OnInit {
   /**
    * El backend (GET /evaluacion-empresarial) solo envía una lista plana de
    * criterios (id, criterio, puntaje, maximo) y no incluye el desglose por
-   * rúbrica de la defensa ni los datos de encabezado (fechas, tutor, núcleo,
-   * etc.). Esos campos quedan en blanco para completarlos a mano hasta que
-   * el backend los entregue.
+   * rúbrica de la defensa. Los datos de encabezado (nivel, ciclo, fechas,
+   * tutor académico, núcleo, carrera, objetivo) tampoco vienen en este
+   * endpoint, así que se completan con /documentos/datos.
    */
-  private mapearBase(res: Record<string, any>): EvaluacionEmpresarialModel {
+  private mapearBase(res: Record<string, any>, datos: Record<string, any>): EvaluacionEmpresarialModel {
 
     const estudiante = res?.['estudiante'] ?? {};
     const criterios = (res?.['criterios'] ?? []) as any[];
+
+    const datosEstudiante = datos?.['estudiante'] ?? {};
+    const datosCarrera = datos?.['carrera'] ?? {};
+    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+    const datosProyecto = datos?.['proyectoEmpresarial'] ?? {};
 
     return {
 
@@ -74,15 +81,15 @@ export class EvaluacionEmpresarial implements OnInit {
 
       encabezado: {
         empresaFormadora: res?.['empresa'] ?? '',
-        nivel: '',
-        cicloAcademico: '',
-        fechaInicioFasePractica: '',
-        fechaFinFasePractica: '',
-        tutorAcademico: '',
-        nucleoEstructurante: '',
+        nivel: datosEstudiante.nivel ?? '',
+        cicloAcademico: datosPeriodo.nombre ?? '',
+        fechaInicioFasePractica: datosProyecto.fechaInicio ?? '',
+        fechaFinFasePractica: datosProyecto.fechaFin ?? '',
+        tutorAcademico: datosCarrera.tutorAcademico ?? '',
+        nucleoEstructurante: datosCarrera.nucleoEstructurante ?? '',
         tutorEmpresarial: res?.['tutorEmpresarial'] ?? '',
-        carrera: '',
-        objetivoNucleoEstructurante: ''
+        carrera: datosEstudiante.carrera ?? '',
+        objetivoNucleoEstructurante: datosCarrera.objetivoNucleoEstructurante ?? ''
       },
 
       desempeno: criterios.length
@@ -105,11 +112,14 @@ export class EvaluacionEmpresarial implements OnInit {
 
     this.cargando = true;
 
-    this.documentos.obtenerEvaluacionEmpresarialBase().subscribe({
+    forkJoin({
+      evaluacion: this.documentos.obtenerEvaluacionEmpresarialBase(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res) => {
+      next: ({ evaluacion, datos }) => {
 
-        this.evaluacion = this.mapearBase(res);
+        this.evaluacion = this.mapearBase(evaluacion, datos);
         this.cargando = false;
         this.cdr.detectChanges();
 

@@ -7,6 +7,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { Documentos } from '../../services/documentos';
@@ -57,14 +59,21 @@ export class EvaluacionInstituto implements OnInit {
    * El backend (GET /evaluacion-instituto) solo envía una lista plana de
    * criterios (id, criterio, puntaje, maximo), el tutor académico, el
    * instituto y notaFinalEmpresa; no incluye el desglose por rúbrica de la
-   * defensa, el tema del proyecto ni los datos de encabezado (fechas,
-   * ciclo, núcleo, etc.). Esos campos quedan en blanco para completarlos a
-   * mano hasta que el backend los entregue.
+   * defensa. El resto del encabezado (empresa, nivel, ciclo, fechas, núcleo,
+   * carrera, objetivo) y el tema del proyecto se completan con
+   * /documentos/datos (el "tema" se toma del nombre del proyecto
+   * empresarial, que es lo más parecido que expone el backend hoy).
    */
-  private mapearBase(res: Record<string, any>): EvaluacionInstitutoModel {
+  private mapearBase(res: Record<string, any>, datos: Record<string, any>): EvaluacionInstitutoModel {
 
     const estudiante = res?.['estudiante'] ?? {};
     const criteriosProyecto = (res?.['criteriosProyecto'] ?? []) as any[];
+
+    const datosEstudiante = datos?.['estudiante'] ?? {};
+    const datosCarrera = datos?.['carrera'] ?? {};
+    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+    const datosProyecto = datos?.['proyectoEmpresarial'] ?? {};
+    const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
 
     return {
 
@@ -74,22 +83,22 @@ export class EvaluacionInstituto implements OnInit {
       },
 
       encabezado: {
-        empresaFormadora: '',
-        nivel: '',
-        cicloAcademico: '',
-        fechaInicioFasePractica: '',
-        fechaFinFasePractica: '',
+        empresaFormadora: datosEmpresa.razonSocial ?? '',
+        nivel: datosEstudiante.nivel ?? '',
+        cicloAcademico: datosPeriodo.nombre ?? '',
+        fechaInicioFasePractica: datosProyecto.fechaInicio ?? '',
+        fechaFinFasePractica: datosProyecto.fechaFin ?? '',
         tutorAcademico: res?.['tutorAcademico'] ?? '',
-        nucleoEstructurante: '',
-        tutorEmpresarial: '',
-        carrera: '',
-        objetivoNucleoEstructurante: ''
+        nucleoEstructurante: datosCarrera.nucleoEstructurante ?? '',
+        tutorEmpresarial: datosEmpresa.tutorEmpresarial ?? '',
+        carrera: datosEstudiante.carrera ?? '',
+        objetivoNucleoEstructurante: datosCarrera.objetivoNucleoEstructurante ?? ''
       },
 
       defensaProyecto: structuredClone(MOCK_EVALUACION_INSTITUTO.defensaProyecto)
         .map((c: CriterioDefensaProyecto) => ({ ...c, nota: 0 })),
 
-      tema: '',
+      tema: datosProyecto.nombre ?? '',
 
       parametrosProyecto: criteriosProyecto.length
         ? criteriosProyecto.map((c) => ({
@@ -110,11 +119,14 @@ export class EvaluacionInstituto implements OnInit {
 
     this.cargando = true;
 
-    this.documentos.obtenerEvaluacionInstitutoBase().subscribe({
+    forkJoin({
+      evaluacion: this.documentos.obtenerEvaluacionInstitutoBase(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res) => {
+      next: ({ evaluacion, datos }) => {
 
-        this.evaluacion = this.mapearBase(res);
+        this.evaluacion = this.mapearBase(evaluacion, datos);
         this.cargando = false;
         this.cdr.detectChanges();
 

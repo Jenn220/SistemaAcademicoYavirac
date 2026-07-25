@@ -7,6 +7,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { Documentos } from '../../services/documentos';
@@ -41,11 +43,22 @@ export class InformeAprendizaje implements OnInit {
 
   }
 
-  private mapearBase(res: Record<string, any>): InformeAprendizajeDocumento {
+  /**
+   * El backend anida al estudiante DENTRO de encabezado (no en la raíz), y
+   * usa otros nombres de campo: "empresa" (no empresaFormadora),
+   * "periodoAcademico" (no cicloAcademico), "fechaInicio"/"fechaFin" (no
+   * fechaInicioFasePractica/fechaFinFasePractica). No manda nivel, núcleo
+   * estructurante, carrera ni el objetivo en este endpoint — se completan
+   * con /documentos/datos, que sí los tiene.
+   */
+  private mapearBase(res: Record<string, any>, datos: Record<string, any>): InformeAprendizajeDocumento {
 
-    const estudiante = res?.['estudiante'] ?? {};
     const encabezado = res?.['encabezado'] ?? {};
+    const estudiante = encabezado?.['estudiante'] ?? {};
     const semanas = (res?.['semanas'] ?? []) as any[];
+
+    const datosEstudiante = datos?.['estudiante'] ?? {};
+    const datosCarrera = datos?.['carrera'] ?? {};
 
     return {
       estudiante: {
@@ -53,16 +66,16 @@ export class InformeAprendizaje implements OnInit {
         cedula: estudiante.cedula ?? ''
       },
       encabezado: {
-        empresaFormadora: encabezado.empresaFormadora ?? '',
-        nivel: encabezado.nivel ?? '',
-        cicloAcademico: encabezado.cicloAcademico ?? '',
-        fechaInicioFasePractica: encabezado.fechaInicioFasePractica ?? '',
-        fechaFinFasePractica: encabezado.fechaFinFasePractica ?? '',
+        empresaFormadora: encabezado.empresa ?? '',
+        nivel: encabezado.nivel ?? datosEstudiante.nivel ?? '',
+        cicloAcademico: encabezado.periodoAcademico ?? '',
+        fechaInicioFasePractica: encabezado.fechaInicio ?? '',
+        fechaFinFasePractica: encabezado.fechaFin ?? '',
         tutorAcademico: encabezado.tutorAcademico ?? '',
-        nucleoEstructurante: encabezado.nucleoEstructurante ?? '',
+        nucleoEstructurante: encabezado.nucleoEstructurante ?? datosCarrera.nucleoEstructurante ?? '',
         tutorEmpresarial: encabezado.tutorEmpresarial ?? '',
-        carrera: encabezado.carrera ?? '',
-        objetivoNucleoEstructurante: encabezado.objetivoNucleoEstructurante ?? ''
+        carrera: encabezado.carrera ?? datosEstudiante.carrera ?? '',
+        objetivoNucleoEstructurante: encabezado.objetivoNucleoEstructurante ?? datosCarrera.objetivoNucleoEstructurante ?? ''
       },
       semanas: semanas.map((s) => ({
         semana: s.semana ?? 0,
@@ -82,11 +95,14 @@ export class InformeAprendizaje implements OnInit {
 
     this.cargando = true;
 
-    this.documentos.obtenerInformeAprendizajeBase().subscribe({
+    forkJoin({
+      informe: this.documentos.obtenerInformeAprendizajeBase(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res) => {
+      next: ({ informe, datos }) => {
 
-        this.informe = this.mapearBase(res);
+        this.informe = this.mapearBase(informe, datos);
         this.cargando = false;
         this.cdr.detectChanges();
 

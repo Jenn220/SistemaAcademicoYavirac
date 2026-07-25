@@ -6,6 +6,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { StudentPresentation } from '../../components/student-presentation/student-presentation';
 import { DocumentHeader } from '../../components/document-header/document-header';
@@ -41,14 +43,27 @@ export class CartaCompromiso implements OnInit {
 
   }
 
+  /**
+   * El endpoint propio de carta-compromiso no manda estudiante.carrera,
+   * estudiante.curso ni empresaAsignada, aunque el backend sí los tiene
+   * (los usa para armar el texto de cuerpo[0]). Se completan con
+   * /documentos/datos, que sí expone esos campos.
+   */
   cargarCarta(): void {
 
-    this.documentos.obtenerCartaCompromiso().subscribe({
+    forkJoin({
+      carta: this.documentos.obtenerCartaCompromiso(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res: Record<string, any>) => {
+      next: ({ carta, datos }) => {
 
+        const res = carta as unknown as Record<string, any>;
         const estudiante = res?.['estudiante'] ?? {};
         const espacioFirma = res?.['espacioFirma'] ?? {};
+
+        const datosEstudiante = datos?.['estudiante'] ?? {};
+        const proyectoEmpresarial = datos?.['proyectoEmpresarial'] ?? {};
 
         this.carta = {
           encabezado: res?.['encabezado'] ?? '',
@@ -61,10 +76,10 @@ export class CartaCompromiso implements OnInit {
           estudiante: {
             nombre: estudiante.nombre ?? '',
             cedula: estudiante.cedula ?? '',
-            carrera: estudiante.carrera ?? '',
-            curso: estudiante.curso ?? ''
+            carrera: estudiante.carrera ?? datosEstudiante.carrera ?? '',
+            curso: estudiante.curso ?? datosEstudiante.curso ?? ''
           },
-          empresaAsignada: res?.['empresaAsignada'] ?? '',
+          empresaAsignada: res?.['empresaAsignada'] ?? proyectoEmpresarial.empresaAsignada ?? '',
           espacioFirma: {
             lugar: espacioFirma.lugar ?? '',
             fecha: espacioFirma.fecha ?? ''

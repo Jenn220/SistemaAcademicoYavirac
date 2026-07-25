@@ -7,6 +7,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { Documentos } from '../../services/documentos';
@@ -41,7 +43,12 @@ export class Curriculum implements OnInit {
 
   }
 
-  private mapearBase(res: Record<string, any>): CurriculumModel {
+  /**
+   * El endpoint propio de curriculum no manda un "periodoAcademico" a nivel
+   * raíz (el formato F02 lo pide como campo del encabezado, aparte de los
+   * datos académicos). Se completa con /documentos/datos.
+   */
+  private mapearBase(res: Record<string, any>, datos: Record<string, any>): CurriculumModel {
 
     const dp = res?.['datosPersonales'] ?? {};
     const da = res?.['datosAcademicos'] ?? {};
@@ -53,8 +60,10 @@ export class Curriculum implements OnInit {
     const idiomas: string[] = infoAdicional?.['idiomas'] ?? [];
     const habilidades: string[] = infoAdicional?.['habilidades'] ?? [];
 
+    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+
     return {
-      periodoAcademico: res?.['periodoAcademico'] ?? '',
+      periodoAcademico: res?.['periodoAcademico'] ?? datosPeriodo.nombre ?? '',
       datosPersonales: {
         nombre: dp.nombre ?? '',
         cedula: dp.cedula ?? '',
@@ -94,11 +103,14 @@ export class Curriculum implements OnInit {
 
     this.cargando = true;
 
-    this.documentos.obtenerCurriculumBase().subscribe({
+    forkJoin({
+      curriculum: this.documentos.obtenerCurriculumBase(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res) => {
+      next: ({ curriculum, datos }) => {
 
-        this.curriculum = this.mapearBase(res);
+        this.curriculum = this.mapearBase(curriculum, datos);
         this.cargando = false;
         this.cdr.detectChanges();
 

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -23,46 +23,41 @@ export class Documentos {
   private readonly API = `${environment.apiUrl}/api/fase-practica/documentos`;
 
   /**
-   * El backend exige JWT (@UseGuards JwtGuard). Todavía no existe login
-   * en el frontend, así que hoy este token nunca está presente y las
-   * peticiones responden 401 (de ahí que las páginas caigan al mock).
-   * En cuanto el módulo de auth guarde el token con esta misma clave,
-   * estas peticiones empiezan a autenticarse sin tocar nada más aquí.
+   * Plantilla maestra completa (estudiante, carrera, proyecto empresarial,
+   * empresa beneficiaria, periodo académico, cronograma). Varios endpoints
+   * de documentos (registro-asistencia, informe-aprendizaje, evaluaciones)
+   * no incluyen todos estos campos en su propia respuesta aunque el backend
+   * sí los tiene — cada página completa los que le faltan con esta fuente.
    */
-  private authHeaders(): HttpHeaders {
-    const token = localStorage.getItem('accessToken');
-    return token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : new HttpHeaders();
+  obtenerDatosMaestra(): Observable<Record<string, any>> {
+    return this.http.get<Record<string, any>>(
+      `${this.API}/datos`
+    );
   }
 
   obtenerCartaCompromiso(): Observable<CartaCompromiso> {
     return this.http.get<CartaCompromiso>(
-      `${this.API}/carta-compromiso`,
-      { headers: this.authHeaders() }
+      `${this.API}/carta-compromiso`
     );
   }
 
   obtenerRegistroAsistencia(): Observable<RegistroAsistencia> {
     return this.http.get<RegistroAsistencia>(
-      `${this.API}/registro-asistencia`,
-      { headers: this.authHeaders() }
+      `${this.API}/registro-asistencia`
     );
   }
 
   guardarCartaCompromiso(contenido: CartaCompromiso): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
      `${this.API}/carta-compromiso`,
-    { contenido },
-    { headers: this.authHeaders() }
+    { contenido }
   );
   }
 
   guardarRegistroAsistencia(contenido: RegistroAsistencia): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
      `${this.API}/registro-asistencia`,
-    { contenido },
-    { headers: this.authHeaders() }
+    { contenido }
   );
   }
 
@@ -73,16 +68,14 @@ export class Documentos {
    */
   obtenerCurriculumBase(): Observable<Record<string, any>> {
     return this.http.get<Record<string, any>>(
-      `${this.API}/curriculum`,
-      { headers: this.authHeaders() }
+      `${this.API}/curriculum`
     );
   }
 
   guardarCurriculum(contenido: Curriculum): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
       `${this.API}/curriculum`,
-      { contenido },
-      { headers: this.authHeaders() }
+      { contenido }
     );
   }
 
@@ -91,16 +84,14 @@ export class Documentos {
    */
   obtenerInformeAprendizajeBase(): Observable<Record<string, any>> {
     return this.http.get<Record<string, any>>(
-      `${this.API}/informe-aprendizaje`,
-      { headers: this.authHeaders() }
+      `${this.API}/informe-aprendizaje`
     );
   }
 
   guardarInformeAprendizaje(contenido: InformeAprendizajeDocumento): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
       `${this.API}/informe-aprendizaje`,
-      { contenido },
-      { headers: this.authHeaders() }
+      { contenido }
     );
   }
 
@@ -112,16 +103,14 @@ export class Documentos {
    */
   obtenerEvaluacionEmpresarialBase(): Observable<Record<string, any>> {
     return this.http.get<Record<string, any>>(
-      `${this.API}/evaluacion-empresarial`,
-      { headers: this.authHeaders() }
+      `${this.API}/evaluacion-empresarial`
     );
   }
 
   guardarEvaluacionEmpresarial(contenido: EvaluacionEmpresarial): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
       `${this.API}/evaluacion-empresarial`,
-      { contenido },
-      { headers: this.authHeaders() }
+      { contenido }
     );
   }
 
@@ -132,16 +121,14 @@ export class Documentos {
    */
   obtenerEvaluacionInstitutoBase(): Observable<Record<string, any>> {
     return this.http.get<Record<string, any>>(
-      `${this.API}/evaluacion-instituto`,
-      { headers: this.authHeaders() }
+      `${this.API}/evaluacion-instituto`
     );
   }
 
   guardarEvaluacionInstituto(contenido: EvaluacionInstituto): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
       `${this.API}/evaluacion-instituto`,
-      { contenido },
-      { headers: this.authHeaders() }
+      { contenido }
     );
   }
 }

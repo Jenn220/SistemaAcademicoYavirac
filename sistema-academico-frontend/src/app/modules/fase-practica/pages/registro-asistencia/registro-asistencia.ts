@@ -6,6 +6,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { RegistroAsistencia as Registro } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
@@ -39,16 +41,55 @@ export class RegistroAsistencia implements OnInit {
 
   }
 
+  /**
+   * El endpoint propio de registro-asistencia no manda carrera, curso,
+   * período académico, núcleo estructurante, tutores, ni el teléfono/email/
+   * tipo de sangre del estudiante, aunque el backend sí los tiene (los usa
+   * en /documentos/datos y en el endpoint de Currículo). Se completan desde
+   * ahí en vez de dejarlos en blanco.
+   */
+  private mapearRegistro(res: Record<string, any>, datos: Record<string, any>): Registro {
+
+    const estudiante = res?.['estudiante'] ?? {};
+    const datosEstudiante = datos?.['estudiante'] ?? {};
+    const datosCarrera = datos?.['carrera'] ?? {};
+    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+    const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
+
+    return {
+      estudiante: {
+        nombre: estudiante.nombre ?? '',
+        cedula: estudiante.cedula ?? '',
+        email: estudiante.email ?? datosEstudiante.email ?? '',
+        telefono: estudiante.telefono ?? datosEstudiante.telefono ?? '',
+        tipoSangre: estudiante.tipoSangre ?? datosEstudiante.tipoSangre ?? ''
+      },
+      empresa: res?.['empresa'] ?? '',
+      carrera: res?.['carrera'] ?? datosEstudiante.carrera ?? '',
+      curso: res?.['curso'] ?? datosEstudiante.curso ?? '',
+      periodoAcademico: res?.['periodoAcademico'] ?? datosPeriodo.nombre ?? '',
+      nucleoEstructurante: res?.['nucleoEstructurante'] ?? datosCarrera.nucleoEstructurante ?? '',
+      tutorAcademico: res?.['tutorAcademico'] ?? datosCarrera.tutorAcademico ?? '',
+      tutorEmpresarial: res?.['tutorEmpresarial'] ?? datosEmpresa.tutorEmpresarial ?? '',
+      contactoEmergenciaNombre: res?.['contactoEmergenciaNombre'] ?? datosEstudiante.contactoEmergenciaNombre ?? '',
+      contactoEmergenciaTelefono: res?.['contactoEmergenciaTelefono'] ?? datosEstudiante.contactoEmergenciaTelefono ?? '',
+      registros: res?.['registros'] ?? [],
+      horasAutonomas: res?.['horasAutonomas'] ?? 0,
+      subtotalHorasPractica: res?.['subtotalHorasPractica'] ?? 0
+    };
+
+  }
+
   cargarRegistro(): void {
 
-    this.documentos.obtenerRegistroAsistencia().subscribe({
+    forkJoin({
+      registro: this.documentos.obtenerRegistroAsistencia(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res) => {
+      next: ({ registro, datos }) => {
 
-        console.log('✅ Registro recibido:', res);
-
-        this.registro = { ...res };
-
+        this.registro = this.mapearRegistro(registro as unknown as Record<string, any>, datos);
         this.cdr.detectChanges();
 
       },
