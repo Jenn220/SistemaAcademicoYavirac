@@ -3,29 +3,25 @@ import { Routes } from '@angular/router';
 // ==============================
 // Layout General
 // ==============================
-
 import {
   LayoutShellComponent
 } from './shared/components/layout/layout.component';
 
+// ==============================
+// Auth
+// ==============================
+import { authGuard } from './modules/auth/guards/auth.guard';
 
 // ==============================
 // Dashboard
 // ==============================
-
 import {
   Dashboard
 } from './modules/dashboard';
 
-
 // ==============================
 // Fase Práctica
 // ==============================
-
-import {
-  CatalogoDocumentos
-} from './modules/fase-practica/pages/catalogo-documentos/catalogo-documentos';
-
 import {
   CartaCompromiso
 } from './modules/fase-practica/pages/carta-compromiso/carta-compromiso';
@@ -34,124 +30,155 @@ import {
   RegistroAsistencia
 } from './modules/fase-practica/pages/registro-asistencia/registro-asistencia';
 
+import {
+  Curriculum
+} from './modules/fase-practica/pages/curriculum/curriculum';
 
+import {
+  InformeAprendizaje
+} from './modules/fase-practica/pages/informe-aprendizaje/informe-aprendizaje';
 
+import {
+  EvaluacionEmpresarial
+} from './modules/fase-practica/pages/evaluacion-empresarial/evaluacion-empresarial';
 
+import {
+  EvaluacionInstituto
+} from './modules/fase-practica/pages/evaluacion-instituto/evaluacion-instituto';
 
 export const routes: Routes = [
 
   // =====================================================
-  // LAYOUT GENERAL
-  // Dashboard + Portafolio + Fase Práctica
+  // REDIRECCIÓN INICIAL
+  // Si entra a la raíz pura sin estar logueado, pasa por
+  // el guard del Layout que lo manda a /auth/login.
   // =====================================================
 
+  // =====================================================
+  // AUTH
+  // Login, perfil, cambiar contraseña, panel de coordinador
+  // Fuera del LayoutShell a propósito: el login no debe
+  // mostrar navbar/sidebar.
+  // =====================================================
   {
+    path: 'auth',
+    loadChildren: () =>
+      import('./modules/auth/auth.routes').then(
+        m => m.AUTH_ROUTES
+      )
+  },
 
+  // =====================================================
+  // LAYOUT GENERAL
+  // Dashboard + Portafolio + Fase Práctica
+  // Protegido por authGuard
+  // =====================================================
+  {
     path: '',
-
     component: LayoutShellComponent,
-
+    canActivate: [authGuard],
     children: [
 
       // ===========================================
-      // Dashboard
+      // Dashboard (Ruta por defecto)
       // ===========================================
-
       {
-
         path: '',
-
         component: Dashboard
-
       },
 
-
+      {
+        path: 'dashboard',
+        component: Dashboard
+      },
 
       // ===========================================
       // Fase Práctica
       // ===========================================
-
       {
-
-        path: 'fase-practica',
-
-        component: CatalogoDocumentos
-
-      },
-
-      {
-
         path: 'fase-practica/carta-compromiso',
-
         component: CartaCompromiso
-
       },
-
       {
-
         path: 'fase-practica/registro-asistencia',
-
         component: RegistroAsistencia
-
       },
-
-
+      {
+        path: 'fase-practica/curriculum',
+        component: Curriculum
+      },
+      {
+        path: 'fase-practica/informe-aprendizaje',
+        component: InformeAprendizaje
+      },
+      {
+        path: 'fase-practica/evaluacion-empresarial',
+        component: EvaluacionEmpresarial
+      },
+      {
+        path: 'fase-practica/evaluacion-instituto',
+        component: EvaluacionInstituto
+      },
 
       // ===========================================
       // Portafolio Docente
+      //
+      // NOTA: ambas vistas necesitan saber SOBRE QUÉ
+      // oferta-asignatura trabajar, así que ahora reciben
+      // parámetros de ruta en vez de estar "sueltas".
+      // Se navega así (por ejemplo desde un futuro listado
+      // de "mis-ofertas"):
+      //
+      //   this.router.navigate([
+      //     '/portafolio-docente/informe-final',
+      //     oferta.id_oferta_asignatura
+      //   ]);
+      //
+      //   this.router.navigate([
+      //     '/portafolio-docente/aceptacion-notas',
+      //     oferta.id_oferta_asignatura,
+      //     oferta.id_periodo
+      //   ]);
       // ===========================================
-
       {
-
         path: 'portafolio-docente',
-
         children: [
-
           {
-
             path: '',
-
             loadComponent: () =>
-
+              import(
+                './modules/portafolio-docente/pages/lista-portafolio/lista-portafolio.component'
+              ).then(
+                m => m.ListaPortafolioComponent
+              )
+          },
+          {
+            path: 'informe-final/:idOfertaAsignatura',
+            loadComponent: () =>
               import(
                 './modules/portafolio-docente/pages/detalle-portafolio/informe-final.component'
-              )
-
-              .then(
+              ).then(
                 m => m.InformeFinalComponent
               )
-
           },
-
-
-
           {
-
-            path: 'aceptacion-notas',
-
+            path: 'aceptacion-notas/:idOfertaAsignatura/:idPeriodo',
             loadComponent: () =>
-
               import(
                 './modules/portafolio-docente/pages/aceptacion-notas/aceptacion-notas.component'
-              )
-
-              .then(
+              ).then(
                 m => m.AceptacionNotasComponent
               )
-
           }
-
         ]
-
       },
-        // =====================================================
-  // VINCULACIÓN
 
+      // ===========================================
+      // VINCULACIÓN
+      // ===========================================
       {
         path: 'vinculacion',
-
         children: [
-
           {
             path: '',
             loadComponent: () =>
@@ -161,7 +188,6 @@ export const routes: Routes = [
                 m => m.ListaVinculacionComponent
               )
           },
-
           {
             path: 'nuevo',
             loadComponent: () =>
@@ -171,7 +197,6 @@ export const routes: Routes = [
                 m => m.NuevoVinculacionComponent
               )
           },
-
           {
             path: 'actividades',
             loadComponent: () =>
@@ -181,7 +206,6 @@ export const routes: Routes = [
                 m => m.ActividadesVinculacionComponent
               )
           },
-
           {
             path: 'asistencia',
             loadComponent: () =>
@@ -191,7 +215,6 @@ export const routes: Routes = [
                 m => m.AsistenciaTutorComponent
               )
           },
-
           {
             path: 'informes',
             loadComponent: () =>
@@ -201,7 +224,6 @@ export const routes: Routes = [
                 m => m.InformesVinculacionComponent
               )
           },
-
           {
             path: ':id',
             loadComponent: () =>
@@ -211,31 +233,16 @@ export const routes: Routes = [
                 m => m.DetalleVinculacionComponent
               )
           }
-
         ]
-      },
-
-      
-
+      }
     ]
-
   },
-
-
-
-
-
 
   // =====================================================
   // 404
   // =====================================================
-
   {
-
     path: '**',
-
-    redirectTo: ''
-
+    redirectTo: 'auth/login'
   }
-
 ];

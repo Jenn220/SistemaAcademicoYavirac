@@ -18,6 +18,6 @@ export class UpdateEmpresaDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(50)
+  @MaxLength(20)
   estado?: string;
 }
