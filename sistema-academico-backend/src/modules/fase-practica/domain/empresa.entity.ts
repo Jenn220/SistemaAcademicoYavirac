@@ -16,6 +16,6 @@ export class EmpresaEntity {
   @Column({ name: 'direccion', type: 'text', nullable: true })
   direccion?: string;
 
-  @Column({ name: 'estado', type: 'varchar', length: 50, nullable: true })
+  @Column({ name: 'estado', type: 'varchar', length: 20, nullable: true })
   estado?: string;
 }
