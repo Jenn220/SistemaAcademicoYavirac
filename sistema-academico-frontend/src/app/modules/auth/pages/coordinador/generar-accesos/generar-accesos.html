@@ -1,9 +1,12 @@
 <div class="auth-shell">
+  <div class="auth-background"></div>
+
   <div class="auth-card auth-card--wide">
     <div class="auth-brand">
-      <div class="auth-brand__badge">SA</div>
-      <div>
-        <div class="auth-brand__title">Generar accesos</div>
+      <!-- Cambiado el div.auth-brand__badge por la imagen del logo -->
+      <img src="assets/images/logo-yavirac.png" alt="Logo Yavirac" class="auth-brand__logo" />
+      <div class="auth-brand__text">
+        <h1 class="auth-brand__title">Generar accesos</h1>
         <div class="auth-brand__subtitle">Panel de coordinador</div>
       </div>
     </div>
@@ -43,12 +46,18 @@
         </div>
       }
 
-      <button type="submit" class="auth-button" [disabled]="cargando()">
-        @if (cargando()) {
-          <span class="auth-spinner"></span>
-        }
-        {{ cargando() ? 'Generando…' : 'Generar accesos' }}
-      </button>
+      <div class="auth-actions">
+        <button type="submit" class="auth-button" [disabled]="cargando()">
+          @if (cargando()) {
+            <span class="auth-spinner"></span>
+          }
+          {{ cargando() ? 'Generando…' : 'Generar accesos' }}
+        </button>
+
+        <a routerLink="/dashboard" class="auth-button-secondary">
+          ← Volver al Dashboard
+        </a>
+      </div>
     </form>
 
     @if (resultado(); as r) {
