@@ -34,6 +34,8 @@ Hoja (horizontal, la tabla de semanas es ancha)
 
 .documento{
 
+    box-sizing:border-box;
+
     width:297mm;
 
     min-height:210mm;

@@ -7,6 +7,7 @@ import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
 import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   controllers: [AppController],
@@ -31,6 +32,7 @@ import { HealthModule } from './health/health.module';
     VinculacionModule,
     FasePracticaModule,
     HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

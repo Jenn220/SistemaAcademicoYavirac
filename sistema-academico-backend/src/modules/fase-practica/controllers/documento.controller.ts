@@ -1,7 +1,12 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { DocumentoService } from '../services/documento.service';
 import { CreateDocumentoDto } from '../dto/create-documento.dto';
+import { JwtGuard } from '../../auth/guards/jwt.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 
+@UseGuards(JwtGuard, RolesGuard)
+@Roles('DOCENTE', 'ESTUDIANTE', 'TUTOR_EMPRESARIAL', 'COORDINADOR')
 @Controller('fase-practica/documentos')
 export class DocumentoController {
   constructor(private readonly documentoService: DocumentoService) {}

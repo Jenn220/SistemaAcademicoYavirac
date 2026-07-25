@@ -6,14 +6,16 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import html2pdf from 'html2pdf.js';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { StudentPresentation } from '../../components/student-presentation/student-presentation';
-import { DocumentHeader } from '../../../../shared/components/document-header/document-header';
+import { DocumentHeader } from '../../components/document-header/document-header';
 
 import { CartaCompromiso as Carta } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
 import { MOCK_CARTA_COMPROMISO } from '../../services/mock-documentos.data';
+import { exportarDocumentoWord } from '../../utils/exportar-word';
 
 @Component({
   selector: 'app-carta-compromiso',
@@ -41,14 +43,27 @@ export class CartaCompromiso implements OnInit {
 
   }
 
+  /**
+   * El endpoint propio de carta-compromiso no manda estudiante.carrera,
+   * estudiante.curso ni empresaAsignada, aunque el backend sí los tiene
+   * (los usa para armar el texto de cuerpo[0]). Se completan con
+   * /documentos/datos, que sí expone esos campos.
+   */
   cargarCarta(): void {
 
-    this.documentos.obtenerCartaCompromiso().subscribe({
+    forkJoin({
+      carta: this.documentos.obtenerCartaCompromiso(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res: Record<string, any>) => {
+      next: ({ carta, datos }) => {
 
+        const res = carta as unknown as Record<string, any>;
         const estudiante = res?.['estudiante'] ?? {};
         const espacioFirma = res?.['espacioFirma'] ?? {};
+
+        const datosEstudiante = datos?.['estudiante'] ?? {};
+        const proyectoEmpresarial = datos?.['proyectoEmpresarial'] ?? {};
 
         this.carta = {
           encabezado: res?.['encabezado'] ?? '',
@@ -61,10 +76,10 @@ export class CartaCompromiso implements OnInit {
           estudiante: {
             nombre: estudiante.nombre ?? '',
             cedula: estudiante.cedula ?? '',
-            carrera: estudiante.carrera ?? '',
-            curso: estudiante.curso ?? ''
+            carrera: estudiante.carrera ?? datosEstudiante.carrera ?? '',
+            curso: estudiante.curso ?? datosEstudiante.curso ?? ''
           },
-          empresaAsignada: res?.['empresaAsignada'] ?? '',
+          empresaAsignada: res?.['empresaAsignada'] ?? proyectoEmpresarial.empresaAsignada ?? '',
           espacioFirma: {
             lugar: espacioFirma.lugar ?? '',
             fecha: espacioFirma.fecha ?? ''
@@ -100,37 +115,9 @@ export class CartaCompromiso implements OnInit {
 
   }
 
-  descargarPDF(): void {
+  descargarWord(): void {
 
-    const elemento = document.getElementById('documento-f01');
-
-    if (!elemento) return;
-
-    html2pdf()
-      .set({
-
-        margin: 0,
-
-        filename: 'Carta_Compromiso.pdf',
-
-        image: {
-          type: 'jpeg',
-          quality: 1
-        },
-
-        html2canvas: {
-          scale: 2
-        },
-
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait'
-        }
-
-      })
-      .from(elemento)
-      .save();
+    exportarDocumentoWord('documento-f01', 'Carta_Compromiso', 'portrait');
 
   }
 

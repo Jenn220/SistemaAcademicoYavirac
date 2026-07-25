@@ -7,13 +7,15 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import html2pdf from 'html2pdf.js';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { Documentos } from '../../services/documentos';
-import { DocumentHeader } from '../../../../shared/components/document-header/document-header';
+import { DocumentHeader } from '../../components/document-header/document-header';
 import { Curriculum as CurriculumModel } from '../../interfaces';
 import { MOCK_CURRICULUM } from '../../services/mock-documentos.data';
+import { exportarDocumentoWord } from '../../utils/exportar-word';
 
 @Component({
   selector: 'app-curriculum',
@@ -41,7 +43,12 @@ export class Curriculum implements OnInit {
 
   }
 
-  private mapearBase(res: Record<string, any>): CurriculumModel {
+  /**
+   * El endpoint propio de curriculum no manda un "periodoAcademico" a nivel
+   * raíz (el formato F02 lo pide como campo del encabezado, aparte de los
+   * datos académicos). Se completa con /documentos/datos.
+   */
+  private mapearBase(res: Record<string, any>, datos: Record<string, any>): CurriculumModel {
 
     const dp = res?.['datosPersonales'] ?? {};
     const da = res?.['datosAcademicos'] ?? {};
@@ -53,8 +60,10 @@ export class Curriculum implements OnInit {
     const idiomas: string[] = infoAdicional?.['idiomas'] ?? [];
     const habilidades: string[] = infoAdicional?.['habilidades'] ?? [];
 
+    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+
     return {
-      periodoAcademico: res?.['periodoAcademico'] ?? '',
+      periodoAcademico: res?.['periodoAcademico'] ?? datosPeriodo.nombre ?? '',
       datosPersonales: {
         nombre: dp.nombre ?? '',
         cedula: dp.cedula ?? '',
@@ -94,11 +103,14 @@ export class Curriculum implements OnInit {
 
     this.cargando = true;
 
-    this.documentos.obtenerCurriculumBase().subscribe({
+    forkJoin({
+      curriculum: this.documentos.obtenerCurriculumBase(),
+      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+    }).subscribe({
 
-      next: (res) => {
+      next: ({ curriculum, datos }) => {
 
-        this.curriculum = this.mapearBase(res);
+        this.curriculum = this.mapearBase(curriculum, datos);
         this.cargando = false;
         this.cdr.detectChanges();
 
@@ -212,41 +224,9 @@ export class Curriculum implements OnInit {
 
   }
 
-  descargarPDF(): void {
+  descargarWord(): void {
 
-    const elemento = document.getElementById('documento-f02');
-
-    if (!elemento) return;
-
-    html2pdf()
-      .set({
-
-        margin: 0,
-
-        filename: 'Curriculum_Estandarizado.pdf',
-
-        image: { type: 'jpeg', quality: 1 },
-
-        html2canvas: {
-          scale: 2,
-          onclone: (clonedDoc: Document) => {
-
-            clonedDoc.querySelectorAll<HTMLElement>('.no-print').forEach((el) => {
-              el.style.display = 'none';
-            });
-
-            clonedDoc.querySelectorAll<HTMLElement>('.solo-print').forEach((el) => {
-              el.style.display = 'inline';
-            });
-
-          }
-        },
-
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-
-      })
-      .from(elemento)
-      .save();
+    exportarDocumentoWord('documento-f02', 'Curriculum_Estandarizado', 'portrait');
 
   }
 

@@ -4,8 +4,9 @@
  * Motivo: el login/JWT del frontend todavía no está implementado, por lo que
  * los endpoints /api/fase-practica/documentos/* responden 401 y no hay forma
  * de ver las vistas con datos reales. Mientras tanto se usan estos mocks
- * (basados en los formatos oficiales F01, F02, F05 y F06 del estudiante
- * NIVESELA ARMIJOS KEVIN SMITH) como fallback cuando la petición falla.
+ * (basados en los formatos oficiales F01, F02, F05, F06, F07 y F08 del
+ * estudiante NIVESELA ARMIJOS KEVIN SMITH) como fallback cuando la petición
+ * falla.
  *
  * QUITAR este archivo y sus usos en las páginas una vez que el login esté
  * conectado y los endpoints devuelvan datos reales del usuario autenticado.
@@ -15,15 +16,17 @@ import {
   CartaCompromiso,
   RegistroAsistencia,
   Curriculum,
-  InformeAprendizajeDocumento
+  InformeAprendizajeDocumento,
+  EvaluacionEmpresarial,
+  EvaluacionInstituto,
+  InformeAprendizajeEncabezado
 } from '../interfaces';
 
 export const MOCK_CARTA_COMPROMISO: CartaCompromiso = {
 
-  encabezado: 'D.M. Quito, Lunes, junio 09, 2025',
+  encabezado: 'D.M. Quito, lunes, 9 de junio de 2025',
 
   cuerpo: [
-    'Yo, NIVESELA ARMIJOS KEVIN SMITH con C.C. 2250022114 estudiante de 3ro de la carrera DESARROLLO DE SOFTWARE en modalidad dual, DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC, asignado/a a INSTITUTO DE CAPACITACIÓN Y ESPECIALIZACIÓN AMAUTA-TECH S.A.S. B.I.C.',
     'De acuerdo con el proyecto de carrera aprobado y vigente, en cumplimiento del currículo de la carrera, y en el marco del convenio firmado, me presento y, expreso mi interés y predisposición de realizar prácticas de formación dual, con el fin de cumplir con la planificación, ejecución, control y evaluación del proceso de desarrollo de las competencias laborales como estudiante de la carrera.',
     'Soy una persona que cumple con el perfil de ingreso de la carrera, y busco aprender y desarrollar los conocimientos, habilidades-destrezas y actitudes del perfil de egreso, y lograr las competencias como profesional de mi carrera.',
     'Por lo cual, solicito su aceptación para realizar mi proceso de formación práctica en el entorno laboral real en modalidad dual.',
@@ -49,7 +52,6 @@ export const MOCK_CARTA_COMPROMISO: CartaCompromiso = {
   cierre: [
     'Y así mismo, me comprometo en elaborar y presentar todos los documentos necesarios para validar el proceso de formación en modalidad dual, de acuerdo con lo establecido por la entidad receptora formadora y/o el Instituto, los cuáles deberán estar correctamente llenados y firmados.',
     'El incumplimiento a lo comprometido con la entidad receptora formadora y/o del Instituto, será causal para la toma de medidas disciplinarias conforme a las responsabilidades del proceso de formación en modalidad dual.',
-    'De no dar cumplimiento con lo antes citado, puede conllevar bajo el debido proceso a la pérdida de la fase práctica.',
     'De manera libre y voluntaria acepto lo expresado y firmo como esta acta compromiso como constancia.'
   ],
 
@@ -64,20 +66,20 @@ export const MOCK_CARTA_COMPROMISO: CartaCompromiso = {
 
   espacioFirma: {
     lugar: 'D.M. Quito',
-    fecha: 'Lunes, junio 09, 2025'
+    fecha: 'lunes, 9 de junio de 2025'
   }
 
 };
 
 const FECHAS_ASISTENCIA: string[] = [
-  'lun 9/6/2025', 'mar 10/6/2025', 'mié 11/6/2025', 'jue 12/6/2025', 'vie 13/6/2025',
-  'lun 16/6/2025', 'mar 17/6/2025', 'mié 18/6/2025', 'jue 19/6/2025', 'vie 20/6/2025',
-  'lun 23/6/2025', 'mar 24/6/2025', 'mié 25/6/2025', 'jue 26/6/2025', 'vie 27/6/2025',
-  'lun 30/6/2025', 'mar 1/7/2025', 'mié 2/7/2025', 'jue 3/7/2025', 'vie 4/7/2025',
-  'lun 7/7/2025', 'mar 8/7/2025', 'mié 9/7/2025', 'jue 10/7/2025', 'vie 11/7/2025',
-  'lun 14/7/2025', 'mar 15/7/2025', 'mié 16/7/2025', 'jue 17/7/2025', 'vie 18/7/2025',
-  'lun 21/7/2025', 'mar 22/7/2025', 'mié 23/7/2025', 'jue 24/7/2025', 'vie 26/7/2025',
-  'lun 28/7/2025', 'mar 29/7/2025', 'mié 30/7/2025', 'jue 31/7/2025', 'vie 1/8/2025'
+  '09/06/2025', '10/06/2025', '11/06/2025', '12/06/2025', '13/06/2025',
+  '16/06/2025', '17/06/2025', '18/06/2025', '19/06/2025', '20/06/2025',
+  '23/06/2025', '24/06/2025', '25/06/2025', '26/06/2025', '27/06/2025',
+  '30/06/2025', '01/07/2025', '02/07/2025', '03/07/2025', '04/07/2025',
+  '07/07/2025', '08/07/2025', '09/07/2025', '10/07/2025', '11/07/2025',
+  '14/07/2025', '15/07/2025', '16/07/2025', '17/07/2025', '18/07/2025',
+  '21/07/2025', '22/07/2025', '23/07/2025', '24/07/2025', '25/07/2025',
+  '28/07/2025', '29/07/2025', '30/07/2025', '31/07/2025', '01/08/2025'
 ];
 
 export const MOCK_REGISTRO_ASISTENCIA: RegistroAsistencia = {
@@ -86,7 +88,7 @@ export const MOCK_REGISTRO_ASISTENCIA: RegistroAsistencia = {
     nombre: 'NIVESELA ARMIJOS KEVIN SMITH',
     cedula: '2250022114',
     email: 'ksa.nivesela@yavirac.edu.ec',
-    telefono: '994618520',
+    telefono: '0994618520',
     tipoSangre: 'O+'
   },
 
@@ -102,9 +104,9 @@ export const MOCK_REGISTRO_ASISTENCIA: RegistroAsistencia = {
 
   registros: FECHAS_ASISTENCIA.map((fecha) => ({
     fecha,
-    horaIngreso: '8:00',
-    almuerzo: '12:00:00-13:00',
-    horaSalida: '17:00',
+    horaIngreso: '09H00',
+    almuerzo: '12H30 - 13H30',
+    horaSalida: '18H00',
     horasDia: 8,
     firma: '',
     observaciones: 'S/N'
@@ -152,6 +154,19 @@ export const MOCK_CURRICULUM: Curriculum = {
 
 };
 
+const ENCABEZADO_FASE_PRACTICA: InformeAprendizajeEncabezado = {
+  empresaFormadora: 'INSTITUTO DE CAPACITACIÓN Y ESPECIALIZACIÓN AMAUTA-TECH S.A.S. B.I.C.',
+  nivel: 'TERCERO',
+  cicloAcademico: '2025-I',
+  fechaInicioFasePractica: '09/06/2025',
+  fechaFinFasePractica: '01/08/2025',
+  tutorAcademico: 'Ing. Byron Moreno',
+  nucleoEstructurante: 'DESARROLLO WEB FRONT-END',
+  tutorEmpresarial: 'Ing. Mauricio Tamayo',
+  carrera: 'DESARROLLO DE SOFTWARE',
+  objetivoNucleoEstructurante: 'Desarrollar aplicaciones complejas aplicando el paradigma de la programación orientada a objetos.'
+};
+
 export const MOCK_INFORME_APRENDIZAJE: InformeAprendizajeDocumento = {
 
   estudiante: {
@@ -159,18 +174,7 @@ export const MOCK_INFORME_APRENDIZAJE: InformeAprendizajeDocumento = {
     cedula: '2250022114'
   },
 
-  encabezado: {
-    empresaFormadora: 'INSTITUTO DE CAPACITACIÓN Y ESPECIALIZACIÓN AMAUTA-TECH S.A.S. B.I.C.',
-    nivel: 'TERCERO',
-    cicloAcademico: '2025-I',
-    fechaInicioFasePractica: '9/6/2025',
-    fechaFinFasePractica: '1/8/2025',
-    tutorAcademico: 'Ing. Byron Moreno',
-    nucleoEstructurante: 'DESARROLLO WEB FRONT-END',
-    tutorEmpresarial: 'Ing. Mauricio Tamayo',
-    carrera: 'DESARROLLO DE SOFTWARE',
-    objetivoNucleoEstructurante: 'Desarrollar aplicaciones complejas aplicando el paradigma de la programación orientada a objetos.'
-  },
+  encabezado: ENCABEZADO_FASE_PRACTICA,
 
   semanas: [
     { semana: 1, fechaInicio: '09/06/2025', fechaFin: '13/06/2025', puestoAprendizaje: 'TICS', actividadesRealizadas: 'Configuración del entorno y proyecto.', actividadesAutonomas: 'Revisión de documentación de Angular y Firebase.' },
@@ -186,5 +190,70 @@ export const MOCK_INFORME_APRENDIZAJE: InformeAprendizajeDocumento = {
   reflexionAprendizaje: 'La práctica me permitió mejorar en Angular, Firebase y Git, aplicar buenas prácticas y trabajar con un sistema real, fortaleciendo mi capacidad técnica y de resolución de problemas.',
 
   observacionesEmpresa: 'El estudiante mostró buen desempeño técnico, uso adecuado de Angular, Firebase y Git, y realizó sus tareas con responsabilidad y eficiencia.'
+
+};
+
+const CRITERIOS_DEFENSA_PROYECTO = [
+  'Presentación en tiempo y forma (formato, normas APA, cronograma)',
+  'Calidad de la presentación (uso ayudas técnicas y audiovisuales, etc.)',
+  'Dominio del contenido',
+  'Claridad y precisión en la exposición',
+  'Satisfacción de la Empresa Formadora'
+];
+
+export const MOCK_EVALUACION_EMPRESARIAL: EvaluacionEmpresarial = {
+
+  estudiante: {
+    nombre: 'NIVESELA ARMIJOS KEVIN SMITH',
+    cedula: '2250022114'
+  },
+
+  encabezado: ENCABEZADO_FASE_PRACTICA,
+
+  desempeno: [
+    { criterio: 'Logro de Objetivos de Aprendizaje', nota: 8 },
+    { criterio: 'Desempeño en los puestos de trabajo y actividades asignadas (Plan de rotación)', nota: 8 },
+    { criterio: 'Capacidad de aplicar los conocimientos en la práctica.', nota: 8 },
+    { criterio: 'Capacidad de comunicación oral y escrita.', nota: 8 },
+    { criterio: 'Capacidad de investigación, aprender y actualizarse permanentemente', nota: 8 },
+    { criterio: 'Capacidad creativa.', nota: 8 },
+    { criterio: 'Capacidad para identificar, plantear y resolver problemas.', nota: 8 },
+    { criterio: 'Capacidad de trabajo en equipo y capacidades interpersonales', nota: 8 },
+    { criterio: 'Valoración y respeto por la diversidad y multiculturalidad.', nota: 8 },
+    { criterio: 'Habilidad para trabajar en forma autónoma.', nota: 8 }
+  ],
+
+  defensaProyecto: CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 4 })),
+
+  observaciones: ''
+
+};
+
+export const MOCK_EVALUACION_INSTITUTO: EvaluacionInstituto = {
+
+  estudiante: {
+    nombre: 'NIVESELA ARMIJOS KEVIN SMITH',
+    cedula: '2250022114'
+  },
+
+  encabezado: ENCABEZADO_FASE_PRACTICA,
+
+  defensaProyecto: CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 4 })),
+
+  tema: 'Sistema de Gestión Académica Yavirac',
+
+  parametrosProyecto: [
+    { criterio: 'Proactividad, independencia y compromiso demostrado en la elaboración del proyecto', nota: 9 },
+    { criterio: 'Plazo y calidad en la entrega de documentos', nota: 9 },
+    { criterio: 'Cumplimiento de parámetros en el proyecto empresarial escrito', nota: 9 },
+    { criterio: 'Desarrollo del proyecto en profundidad y aporte a la solución del problema', nota: 9 },
+    { criterio: 'Cumplimiento de requerimientos / objetivos planteados al inicio del proyecto', nota: 9 },
+    { criterio: 'Uso de metodología científica y aplicación de normas bibliográficas', nota: 9 },
+    { criterio: 'Aporte al proyecto acorde al nivel académico', nota: 9 }
+  ],
+
+  notaFinalEmpresa: 8.58,
+
+  observaciones: ''
 
 };

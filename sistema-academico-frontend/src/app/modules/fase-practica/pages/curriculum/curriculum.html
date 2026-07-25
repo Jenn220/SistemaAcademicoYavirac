@@ -11,12 +11,12 @@
     </button>
 
     <button
-        class="btn btn-danger"
-        (click)="descargarPDF()">
+        class="btn btn-primary"
+        (click)="descargarWord()">
 
-        <i class="bi bi-file-earmark-pdf-fill"></i>
+        <i class="bi bi-file-earmark-word-fill"></i>
 
-        Descargar PDF
+        Descargar Word
 
     </button>
 
@@ -38,7 +38,7 @@
     class="documento">
 
     <app-document-header
-        [titulo]="'CURRÍCULO ESTANDARIZADO'"
+        [titulo]="'FORMATO 02 CURRÍCULO ESTANDARIZADO'"
         [codigo]="'010202'">
     </app-document-header>
 
@@ -223,7 +223,7 @@
                     <th style="width:10%">Año</th>
                     <th>Institución</th>
                     <th>Logro o hecho relevante</th>
-                    <th>Detalle</th>
+                    <th>Detalle del logro o hecho relevante</th>
                     <th class="no-print" style="width:40px"></th>
                 </tr>
             </thead>

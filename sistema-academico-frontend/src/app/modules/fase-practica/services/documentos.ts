@@ -8,7 +8,9 @@ import {
   RegistroAsistencia,
   DocumentoGuardado,
   Curriculum,
-  InformeAprendizajeDocumento
+  InformeAprendizajeDocumento,
+  EvaluacionEmpresarial,
+  EvaluacionInstituto
 } from '../interfaces';
 
 @Injectable({
@@ -19,6 +21,19 @@ export class Documentos {
   private http = inject(HttpClient);
 
   private readonly API = `${environment.apiUrl}/api/fase-practica/documentos`;
+
+  /**
+   * Plantilla maestra completa (estudiante, carrera, proyecto empresarial,
+   * empresa beneficiaria, periodo académico, cronograma). Varios endpoints
+   * de documentos (registro-asistencia, informe-aprendizaje, evaluaciones)
+   * no incluyen todos estos campos en su propia respuesta aunque el backend
+   * sí los tiene — cada página completa los que le faltan con esta fuente.
+   */
+  obtenerDatosMaestra(): Observable<Record<string, any>> {
+    return this.http.get<Record<string, any>>(
+      `${this.API}/datos`
+    );
+  }
 
   obtenerCartaCompromiso(): Observable<CartaCompromiso> {
     return this.http.get<CartaCompromiso>(
@@ -76,6 +91,43 @@ export class Documentos {
   guardarInformeAprendizaje(contenido: InformeAprendizajeDocumento): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
       `${this.API}/informe-aprendizaje`,
+      { contenido }
+    );
+  }
+
+  /**
+   * El backend devuelve una lista plana de criterios (id, criterio, puntaje,
+   * maximo) sin el desglose por rúbrica (Excelente/Bueno/Regular/Deficiente)
+   * ni los datos de encabezado (fechas, tutor, núcleo, etc.). Se usa solo
+   * como base para precargar la evaluación; el resto se completa a mano.
+   */
+  obtenerEvaluacionEmpresarialBase(): Observable<Record<string, any>> {
+    return this.http.get<Record<string, any>>(
+      `${this.API}/evaluacion-empresarial`
+    );
+  }
+
+  guardarEvaluacionEmpresarial(contenido: EvaluacionEmpresarial): Observable<DocumentoGuardado> {
+    return this.http.post<DocumentoGuardado>(
+      `${this.API}/evaluacion-empresarial`,
+      { contenido }
+    );
+  }
+
+  /**
+   * Igual que evaluación empresarial: el backend solo da una lista plana de
+   * criterios y las notas finales consolidadas, sin encabezado ni desglose
+   * por rúbrica. Se usa solo como base para precargar el formulario.
+   */
+  obtenerEvaluacionInstitutoBase(): Observable<Record<string, any>> {
+    return this.http.get<Record<string, any>>(
+      `${this.API}/evaluacion-instituto`
+    );
+  }
+
+  guardarEvaluacionInstituto(contenido: EvaluacionInstituto): Observable<DocumentoGuardado> {
+    return this.http.post<DocumentoGuardado>(
+      `${this.API}/evaluacion-instituto`,
       { contenido }
     );
   }
