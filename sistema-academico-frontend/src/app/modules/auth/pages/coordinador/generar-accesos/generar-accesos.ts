@@ -1,13 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { GenerarAccesosResponse, TipoGenerarAccesos } from '../../../models';
 
 @Component({
   selector: 'app-generar-accesos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './generar-accesos.html',
   styleUrl: './generar-accesos.scss',
 })
@@ -27,8 +28,6 @@ export class GenerarAccesos {
   readonly requierePeriodo = computed(() => this.form.controls.tipo.value === 'ESTUDIANTE');
 
   constructor() {
-    // Mantiene la validación condicional de id_periodo sincronizada
-    // con el DTO del backend (GenerarAccesosDto usa @ValidateIf tipo === 'ESTUDIANTE')
     this.form.controls.tipo.valueChanges.subscribe((tipo) => {
       const idPeriodo = this.form.controls.id_periodo;
       if (tipo === 'ESTUDIANTE') {
