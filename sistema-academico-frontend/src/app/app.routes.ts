@@ -23,16 +23,28 @@ import {
 // Fase Práctica
 // ==============================
 import {
-  CatalogoDocumentos
-} from './modules/fase-practica/pages/catalogo-documentos/catalogo-documentos';
-
-import {
   CartaCompromiso
 } from './modules/fase-practica/pages/carta-compromiso/carta-compromiso';
 
 import {
   RegistroAsistencia
 } from './modules/fase-practica/pages/registro-asistencia/registro-asistencia';
+
+import {
+  Curriculum
+} from './modules/fase-practica/pages/curriculum/curriculum';
+
+import {
+  InformeAprendizaje
+} from './modules/fase-practica/pages/informe-aprendizaje/informe-aprendizaje';
+
+import {
+  EvaluacionEmpresarial
+} from './modules/fase-practica/pages/evaluacion-empresarial/evaluacion-empresarial';
+
+import {
+  EvaluacionInstituto
+} from './modules/fase-practica/pages/evaluacion-instituto/evaluacion-instituto';
 
 export const routes: Routes = [
 
@@ -84,16 +96,28 @@ export const routes: Routes = [
       // Fase Práctica
       // ===========================================
       {
-        path: 'fase-practica',
-        component: CatalogoDocumentos
-      },
-      {
         path: 'fase-practica/carta-compromiso',
         component: CartaCompromiso
       },
       {
         path: 'fase-practica/registro-asistencia',
         component: RegistroAsistencia
+      },
+      {
+        path: 'fase-practica/curriculum',
+        component: Curriculum
+      },
+      {
+        path: 'fase-practica/informe-aprendizaje',
+        component: InformeAprendizaje
+      },
+      {
+        path: 'fase-practica/evaluacion-empresarial',
+        component: EvaluacionEmpresarial
+      },
+      {
+        path: 'fase-practica/evaluacion-instituto',
+        component: EvaluacionInstituto
       },
 
       // ===========================================

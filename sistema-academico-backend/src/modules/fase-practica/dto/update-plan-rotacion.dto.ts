@@ -11,6 +11,6 @@ export class UpdatePlanRotacionDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(200)
+  @MaxLength(150)
   puesto_aprendizaje?: string;
 }

@@ -13,6 +13,6 @@ export class PlanRotacionEntity {
   @Column({ name: 'id_item_pm', type: 'bigint' })
   id_item_pm!: number;
 
-  @Column({ name: 'puesto_aprendizaje', type: 'varchar', length: 200 })
+  @Column({ name: 'puesto_aprendizaje', type: 'varchar', length: 150 })
   puesto_aprendizaje!: string;
 }
