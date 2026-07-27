@@ -1,5 +1,6 @@
-import { Column, Entity, Generated, PrimaryColumn } from 'typeorm';
+import { Column, Entity, Generated, ManyToOne, PrimaryColumn, JoinColumn } from 'typeorm';
 import { bigintTransformer } from '../../../config/bigint-transformer';
+import { RubricaEntity } from './rubrica.entity';
 
 @Entity({ name: 'item_rubrica' })
 export class ItemRubricaEntity {
@@ -18,4 +19,8 @@ export class ItemRubricaEntity {
 
   @Column({ name: 'ponderacion', type: 'numeric', precision: 5, scale: 2, nullable: true })
   ponderacion?: number;
+
+  @ManyToOne(() => RubricaEntity, { eager: false })
+  @JoinColumn({ name: 'id_rubrica' })
+  rubrica?: RubricaEntity;
 }

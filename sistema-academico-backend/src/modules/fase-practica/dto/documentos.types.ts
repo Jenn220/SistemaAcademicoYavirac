@@ -70,12 +70,47 @@ export interface CartaCompromiso {
   espacioFirma: { lugar: string; fecha: string };
 }
 
+export interface DatosAcademicos {
+  anio: string;
+  institucion: string;
+  tituloMencion: string;
+  notaFinal?: string;
+}
+
+export interface ExperienciaLaboral {
+  anio: string;
+  institucion: string;
+  cargo: string;
+  actividades: string;
+}
+
+export interface PracticaDual {
+  anio: string;
+  institucion: string;
+  cargo: string;
+  actividadesRealizadas: string;
+}
+
+export interface InformacionAdicional {
+  anio: string;
+  institucion: string;
+  logro: string;
+  detalle: string;
+}
+
 export interface Curriculum {
-  datosPersonales: DatosEstudiante;
-  datosAcademicos: { carrera: string; nivel: string; institucion: string; promedio: string };
-  experienciaLaboral: { empresa: string; cargo: string; periodo: string; funciones: string }[];
-  practicasDualesPrevias: { empresa: string; periodo: string; horas: number }[];
-  informacionAdicional: { logros: string[]; idiomas: string[]; habilidades: string[] };
+  datosPersonales: {
+    nombre: string;
+    cedula: string;
+    estadoCivil: string;
+    telefono: string;
+    domicilio: string;
+    emailInstitucional: string;
+  };
+  datosAcademicos: DatosAcademicos[];
+  experienciaLaboral: ExperienciaLaboral[];
+  practicasDualesPrevias: PracticaDual[];
+  informacionAdicional: InformacionAdicional[];
 }
 
 export interface RegistroAsistenciaDia {
@@ -89,21 +124,39 @@ export interface RegistroAsistenciaDia {
 }
 
 export interface RegistroAsistencia {
-  estudiante: { nombre: string; cedula: string };
   empresa: string;
+  carrera: string;
+  tutorAcademico: string;
+  periodoAcademico: string;
+  tutorEmpresarial: string;
+  nivel: string;
+  nucleoEstructurante: string;
+  estudiante: {
+    nombre: string;
+    cedula: string;
+    email: string;
+    telefono: string;
+    contactoEmergenciaNombre: string;
+    contactoEmergenciaTelefono: string;
+    tipoSangre: string;
+    domicilio: string;
+  };
   registros: RegistroAsistenciaDia[];
   horasAutonomas: number;
   subtotalHorasPractica: number;
 }
 
 export interface InformeAprendizajeEncabezado {
-  estudiante: { nombre: string; cedula: string };
   empresa: string;
-  periodoAcademico: string;
-  tutorAcademico: string;
-  tutorEmpresarial: string;
+  nivel: string;
+  cicloAcademico: string;
   fechaInicio: string;
   fechaFin: string;
+  tutorAcademico: string;
+  tutorEmpresarial: string;
+  nucleoEstructurante: string;
+  carrera: string;
+  objetivoNucleoEstructurante: string;
   totalSemanas: number;
 }
 
@@ -122,6 +175,8 @@ export interface InformeSemana {
 export interface InformeAprendizaje {
   encabezado: InformeAprendizajeEncabezado;
   semanas: InformeSemana[];
+  reflexionAprendizaje: string;
+  observacionesEmpresa: string;
 }
 
 export interface CriterioEmpresarial {
@@ -131,14 +186,31 @@ export interface CriterioEmpresarial {
   maximo: number;
 }
 
+export interface DefensaProyectoItem {
+  criterio: string;
+  puntaje: number;
+  maximo: number;
+}
+
 export interface EvaluacionEmpresarial {
   estudiante: { nombre: string; cedula: string };
   empresa: string;
   tutorEmpresarial: string;
+  nivel: string;
+  cicloAcademico: string;
+  nucleoEstructurante: string;
+  carrera: string;
+  fechaInicio: string;
+  fechaFin: string;
   criterios: CriterioEmpresarial[];
-  defensaProyecto: { notaParcial: number; notaFinal: number };
+  defensaProyecto: DefensaProyectoItem[];
   promedioCriterios: number;
+  notaPonderadaSobre7: number;
+  notaParcialDefensa: number;
+  notaFinalDefensa: number;
+  notaPonderadaDefensa: number;
   notaFinalEmpresa: number;
+  observaciones: string;
 }
 
 export interface CriterioInstituto {
@@ -150,11 +222,24 @@ export interface CriterioInstituto {
 
 export interface EvaluacionInstituto {
   estudiante: { nombre: string; cedula: string };
-  instituto: string;
+  empresa: string;
+  tutorEmpresarial: string;
   tutorAcademico: string;
-  defensaProyecto: { nota: number };
+  nivel: string;
+  cicloAcademico: string;
+  nucleoEstructurante: string;
+  carrera: string;
+  fechaInicio: string;
+  fechaFin: string;
+  defensaProyecto: DefensaProyectoItem[];
+  notaParcialDefensa: number;
+  notaFinalDefensa: number;
+  notaPonderadaDefensa: number;
   criteriosProyecto: CriterioInstituto[];
+  promedioProyecto: number;
+  notaPonderadaProyecto: number;
   notaFinalEmpresa: number;
   notaFinalInstituto: number;
   notaFinalConsolidada: number;
+  observaciones: string;
 }

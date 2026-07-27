@@ -20,35 +20,35 @@ export class DocumentoService {
     return this.documentoRepository.guardarDocumento(codigo, titulo, contenido);
   }
 
-  getDatosMaestra() {
-    return this.plantillaService.getDatosMaestra();
+  getDatosMaestra(usuario: any) {
+    return this.plantillaService.getDatosMaestra(usuario);
   }
 
-  getCartaCompromiso() {
-    return this.plantillaService.getCartaCompromiso();
+  getCartaCompromiso(usuario: any) {
+    return this.plantillaService.getCartaCompromiso(usuario);
   }
 
-  getCurriculum() {
-    return this.plantillaService.getCurriculum();
+  getCurriculum(usuario: any) {
+    return this.plantillaService.getCurriculum(usuario);
   }
 
-  getRegistroAsistencia() {
-    return this.plantillaService.getRegistroAsistencia();
+  getRegistroAsistencia(usuario: any) {
+    return this.plantillaService.getRegistroAsistencia(usuario);
   }
 
-  getInformeAprendizaje() {
-    return this.plantillaService.getInformeAprendizaje();
+  getInformeAprendizaje(usuario: any) {
+    return this.plantillaService.getInformeAprendizaje(usuario);
   }
 
-  getEvaluacionEmpresarial() {
-    return this.plantillaService.getEvaluacionEmpresarial();
+  getEvaluacionEmpresarial(usuario: any) {
+    return this.plantillaService.getEvaluacionEmpresarial(usuario);
   }
 
-  getEvaluacionInstituto() {
-    return this.plantillaService.getEvaluacionInstituto();
+  getEvaluacionInstituto(usuario: any) {
+    return this.plantillaService.getEvaluacionInstituto(usuario);
   }
 
-  getTodosLosDocumentos() {
-    return this.plantillaService.getTodosLosDocumentos();
+  getTodosLosDocumentos(usuario: any) {
+    return this.plantillaService.getTodosLosDocumentos(usuario);
   }
 }

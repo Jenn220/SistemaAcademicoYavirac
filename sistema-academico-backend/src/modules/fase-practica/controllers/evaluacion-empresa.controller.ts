@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { EvaluacionEmpresaService } from '../services/evaluacion-empresa.service';
+import { EvaluacionCalculoService } from '../services/evaluacion-calculo.service';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -10,7 +11,7 @@ import { UpdateEvaluacionEmpresaDto } from '../dto/update-evaluacion-empresa.dto
 @Roles('DOCENTE', 'COORDINADOR')
 @Controller('fase-practica')
 export class EvaluacionEmpresaController {
-  constructor(private readonly service: EvaluacionEmpresaService) {}
+  constructor(private readonly service: EvaluacionEmpresaService, private readonly calculoService: EvaluacionCalculoService) {}
 
   @Post('evaluaciones-empresa')
   create(@Body() dto: CreateEvaluacionEmpresaDto) {
@@ -35,5 +36,11 @@ export class EvaluacionEmpresaController {
   @Delete('evaluaciones-empresa/:id')
   remove(@Param('id') id: string) {
     return this.service.remove(Number(id)).then(() => ({ deleted: true, id: Number(id) }));
+  }
+
+  @Post('evaluaciones-empresa/:id/calcular')
+  async calcular(@Param('id') id: string) {
+    const resultado = await this.calculoService.calcularEvaluacionEmpresarial(Number(id));
+    return resultado;
   }
 }

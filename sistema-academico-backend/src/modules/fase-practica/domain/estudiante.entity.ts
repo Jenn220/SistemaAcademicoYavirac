@@ -24,4 +24,19 @@ export class EstudianteEntity {
 
   @Column({ name: 'estado', type: 'varchar', length: 20, nullable: true })
   estado?: string;
+
+  @Column({ name: 'estado_civil', type: 'varchar', length: 20, nullable: true })
+  estado_civil?: string;
+
+  @Column({ name: 'tipo_sangre', type: 'varchar', length: 10, nullable: true })
+  tipo_sangre?: string;
+
+  @Column({ name: 'domicilio', type: 'text', nullable: true })
+  domicilio?: string;
+
+  @Column({ name: 'contacto_emergencia_nombre', type: 'varchar', length: 200, nullable: true })
+  contacto_emergencia_nombre?: string;
+
+  @Column({ name: 'contacto_emergencia_telefono', type: 'varchar', length: 50, nullable: true })
+  contacto_emergencia_telefono?: string;
 }

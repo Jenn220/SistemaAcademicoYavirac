@@ -1,6 +1,7 @@
 export class RubricaResponseDto {
   id_rubrica!: number;
   nombre!: string;
-  descripcion?: string;
+  tipo!: string;
+  categoria?: string;
   estado?: string;
 }

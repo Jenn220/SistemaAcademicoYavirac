@@ -18,4 +18,13 @@ export class EmpresaEntity {
 
   @Column({ name: 'estado', type: 'varchar', length: 20, nullable: true })
   estado?: string;
+
+  @Column({ name: 'telefono', type: 'varchar', length: 50, nullable: true })
+  telefono?: string;
+
+  @Column({ name: 'correo', type: 'varchar', length: 150, nullable: true })
+  correo?: string;
+
+  @Column({ name: 'representante_legal', type: 'varchar', length: 200, nullable: true })
+  representante_legal?: string;
 }

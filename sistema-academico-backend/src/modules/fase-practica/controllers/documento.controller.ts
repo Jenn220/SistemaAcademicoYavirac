@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Req, Controller, Get, Post, UseGuards, Body } from '@nestjs/common';
 import { DocumentoService } from '../services/documento.service';
 import { CreateDocumentoDto } from '../dto/create-documento.dto';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
@@ -12,78 +12,92 @@ export class DocumentoController {
   constructor(private readonly documentoService: DocumentoService) {}
 
   @Get('datos')
-  getDatos() {
-    return this.documentoService.getDatosMaestra();
+  getDatos(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getDatosMaestra(usuario);
   }
 
   @Get('carta-compromiso')
-  getCartaCompromiso() {
-    return this.documentoService.getCartaCompromiso();
+  getCartaCompromiso(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getCartaCompromiso(usuario);
   }
 
   @Get('curriculum')
-  getCurriculum() {
-    return this.documentoService.getCurriculum();
+  getCurriculum(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getCurriculum(usuario);
   }
 
   @Get('registro-asistencia')
-  getRegistroAsistencia() {
-    return this.documentoService.getRegistroAsistencia();
+  getRegistroAsistencia(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getRegistroAsistencia(usuario);
   }
 
   @Get('informe-aprendizaje')
-  getInformeAprendizaje() {
-    return this.documentoService.getInformeAprendizaje();
+  getInformeAprendizaje(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getInformeAprendizaje(usuario);
   }
 
   @Get('evaluacion-empresarial')
-  getEvaluacionEmpresarial() {
-    return this.documentoService.getEvaluacionEmpresarial();
+  getEvaluacionEmpresarial(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getEvaluacionEmpresarial(usuario);
   }
 
   @Get('evaluacion-instituto')
-  getEvaluacionInstituto() {
-    return this.documentoService.getEvaluacionInstituto();
+  getEvaluacionInstituto(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getEvaluacionInstituto(usuario);
   }
 
   @Get('todos')
-  getTodos() {
-    return this.documentoService.getTodosLosDocumentos();
+  getTodos(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getTodosLosDocumentos(usuario);
   }
 
   @Post('carta-compromiso')
-  createCartaCompromiso(@Body() dto: CreateDocumentoDto) {
-    const contenido = dto?.contenido ?? this.documentoService.getCartaCompromiso();
+  createCartaCompromiso(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getCartaCompromiso(usuario);
     return this.documentoService.guardarDocumento('F01', 'Carta Compromiso', contenido);
   }
 
   @Post('curriculum')
-  createCurriculum(@Body() dto: CreateDocumentoDto) {
-    const contenido = dto?.contenido ?? this.documentoService.getCurriculum();
+  createCurriculum(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getCurriculum(usuario);
     return this.documentoService.guardarDocumento('F02', 'Curriculum Estandarizado', contenido);
   }
 
   @Post('registro-asistencia')
-  createRegistroAsistencia(@Body() dto: CreateDocumentoDto) {
-    const contenido = dto?.contenido ?? this.documentoService.getRegistroAsistencia();
+  createRegistroAsistencia(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getRegistroAsistencia(usuario);
     return this.documentoService.guardarDocumento('F05', 'Registro de Asistencia', contenido);
   }
 
   @Post('informe-aprendizaje')
-  createInformeAprendizaje(@Body() dto: CreateDocumentoDto) {
-    const contenido = dto?.contenido ?? this.documentoService.getInformeAprendizaje();
+  createInformeAprendizaje(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getInformeAprendizaje(usuario);
     return this.documentoService.guardarDocumento('F06', 'Informe de Aprendizaje', contenido);
   }
 
   @Post('evaluacion-empresarial')
-  createEvaluacionEmpresarial(@Body() dto: CreateDocumentoDto) {
-    const contenido = dto?.contenido ?? this.documentoService.getEvaluacionEmpresarial();
+  createEvaluacionEmpresarial(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getEvaluacionEmpresarial(usuario);
     return this.documentoService.guardarDocumento('F07', 'Evaluación Empresarial', contenido);
   }
 
   @Post('evaluacion-instituto')
-  createEvaluacionInstituto(@Body() dto: CreateDocumentoDto) {
-    const contenido = dto?.contenido ?? this.documentoService.getEvaluacionInstituto();
+  createEvaluacionInstituto(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getEvaluacionInstituto(usuario);
     return this.documentoService.guardarDocumento('F08', 'Evaluación Instituto', contenido);
   }
 }

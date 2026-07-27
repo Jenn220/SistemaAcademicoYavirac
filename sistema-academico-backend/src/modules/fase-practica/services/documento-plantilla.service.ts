@@ -1,4 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { EstudianteEntity } from '../domain/estudiante.entity';
+import { EmpresaEntity } from '../domain/empresa.entity';
+import { PracticaEntity } from '../domain/practica.entity';
+import { RegistroDiarioEntity } from '../domain/registro-diario.entity';
+import { InformeAprendizajeEntity } from '../domain/informe-aprendizaje.entity';
+import { BitacoraSemanalEntity } from '../domain/bitacora-semanal.entity';
+import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
+import { CvDatoAcademicoEntity } from '../domain/cv-dato-academico.entity';
+import { CvExperienciaLaboralEntity } from '../domain/cv-experiencia-laboral.entity';
+import { CvPracticaDualEntity } from '../domain/cv-practica-dual.entity';
+import { NucleoEstructuranteEntity } from '../domain/nucleo-estructurante.entity';
 import {
   DatosEstudiante,
   DatosCarrera,
@@ -22,275 +36,497 @@ import {
 
 @Injectable()
 export class DocumentoPlantillaService {
-  private readonly datosMaestra: DatosMaestra = {
-    estudiante: {
-      nombre: 'MARÍA FERNANDA QUISPE ÑAUPARI',
-      cedula: '1750123456',
-      carrera: 'Tecnología Superior en Desarrollo de Software',
-      curso: 'Sexto Nivel',
-      nivel: 'Sexto Nivel - Fase Práctica',
-      email: 'maria.quispe@estudiante.yavirac.edu.ec',
-      telefono: '0987654321',
-      estadoCivil: 'Soltera',
-      tipoSangre: 'O+',
-      domicilio: 'Calle Los Capulíes N23-45 y Av. Amazonas, Quito',
-      contactoEmergenciaNombre: 'LUZ MARÍA ÑAUPARI',
-      contactoEmergenciaTelefono: '0991234567',
-    },
-    carrera: {
-      coordinador: 'ING. PATRICIO RAMÍREZ',
-      tutorAcademico: 'ING. CARLOS MONTENEGRO',
-      nucleoEstructurante: 'Núcleo de Desarrollo Tecnológico',
-      objetivoNucleoEstructurante: 'Formar profesionales capaces de diseñar, implementar y gestionar soluciones tecnológicas innovadoras.',
-    },
-    proyectoEmpresarial: {
-      nombre: 'Sistema de Gestión Académica Yavirac',
-      cobertura: 'Institucional - Campus Matriz',
-      plazo: '6 meses',
-      empresaAsignada: 'INSTITUTO TECNOLÓGICO SUPERIOR YAVIRAC',
-      fechaInicio: '2025-12-01',
-      fechaFin: '2026-05-29',
-    },
-    empresaBeneficiaria: {
-      razonSocial: 'INSTITUTO TECNOLÓGICO SUPERIOR YAVIRAC',
-      representanteLegal: 'LIC. ANA BELÉN TORRES',
-      tutorEmpresarial: 'ING. DIANA VÁSQUEZ',
-      direccion: 'Av. 12 de Octubre N12-10 y Wilson, Quito',
-      ubicacion: 'Quito - Ecuador',
-    },
-    periodoAcademico: {
-      codigo: '2026-1P',
-      nombre: 'Periodo 2026-1P',
-      fechaInicio: '2026-04-01',
-      fechaFin: '2026-08-30',
-    },
-    cronograma: [
-      { fecha: '2025-12-01', descripcion: 'Inicio de fase práctica' },
-      { fecha: '2025-12-08', descripcion: 'Inducción y plan de rotación' },
-      { fecha: '2026-02-15', descripcion: 'Seguimiento intermedio' },
-      { fecha: '2026-04-30', descripcion: 'Entrega de informe final' },
-      { fecha: '2026-05-29', descripcion: 'Defensa de proyecto' },
-    ],
-  };
+  constructor(
+    @InjectRepository(EstudianteEntity)
+    private readonly estudianteRepository: Repository<EstudianteEntity>,
+    @InjectRepository(EmpresaEntity)
+    private readonly empresaRepository: Repository<EmpresaEntity>,
+    @InjectRepository(PracticaEntity)
+    private readonly practicaRepository: Repository<PracticaEntity>,
+    @InjectRepository(RegistroDiarioEntity)
+    private readonly registroDiarioRepository: Repository<RegistroDiarioEntity>,
+    @InjectRepository(InformeAprendizajeEntity)
+    private readonly informeRepository: Repository<InformeAprendizajeEntity>,
+    @InjectRepository(BitacoraSemanalEntity)
+    private readonly bitacoraRepository: Repository<BitacoraSemanalEntity>,
+    @InjectRepository(EvaluacionPracticaEntity)
+    private readonly evaluacionRepository: Repository<EvaluacionPracticaEntity>,
+    @InjectRepository(CvDatoAcademicoEntity)
+    private readonly cvDatoAcademicoRepository: Repository<CvDatoAcademicoEntity>,
+    @InjectRepository(CvExperienciaLaboralEntity)
+    private readonly cvExperienciaLaboralRepository: Repository<CvExperienciaLaboralEntity>,
+    @InjectRepository(CvPracticaDualEntity)
+    private readonly cvPracticaDualRepository: Repository<CvPracticaDualEntity>,
+    @InjectRepository(NucleoEstructuranteEntity)
+    private readonly nucleoRepository: Repository<NucleoEstructuranteEntity>,
+    private readonly dataSource: DataSource,
+  ) {}
 
-  getDatosMaestra(): DatosMaestra {
-    return this.datosMaestra;
+  private async obtenerIdPractica(usuario: any): Promise<number> {
+    const practica = await this.practicaRepository.findOne({
+      where: { id_empresa: usuario.idEmpresa ?? 1 },
+    });
+
+    if (!practica) {
+      const primera = await this.practicaRepository.find({
+        order: { id_practica: 'ASC' },
+        take: 1,
+      });
+      return primera[0]?.id_practica ?? 1;
+    }
+
+    return practica.id_practica;
   }
 
-  getCartaCompromiso(): CartaCompromiso {
-    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
+  async getDatosMaestra(usuario: any): Promise<DatosMaestra> {
+    const estudiante = await this.estudianteRepository.findOne({
+      where: { id_estudiante: usuario.idEstudiante },
+    });
+
+    if (!estudiante) {
+      throw new Error('Estudiante no encontrado');
+    }
+
+    const practica = await this.practicaRepository.findOne({
+      where: { id_empresa: usuario.idEmpresa ?? 1 },
+    });
+
+    const empresa = practica
+      ? await this.empresaRepository.findOne({ where: { id_empresa: practica.id_empresa } })
+      : await this.empresaRepository.findOne({ where: { id_empresa: 1 } });
+
+    const tutorEmpresarial = practica?.tutor_empresarial;
+
+    let carreraNombre = '';
+    let nivelNombre = '';
+    let periodoCodigo = '';
+    let periodoNombre = '';
+    let periodoInicio = '';
+    let periodoFin = '';
+    let coordinadorNombre = '';
+    let tutorAcademicoNombre = '';
+    let fechaInicioFase = '';
+    let fechaFinFase = '';
+
+    const matricula = await this.dataSource.query(
+      `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, c.codigo as carrera_codigo
+       FROM matricula m
+       JOIN carrera c ON c.id_carrera = m.id_carrera
+       WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVO'
+       LIMIT 1`,
+      [usuario.idEstudiante],
+    );
+
+    if (matricula.length > 0) {
+      const m = matricula[0];
+      carreraNombre = m.carrera_nombre ?? '';
+
+      const periodo = await this.dataSource.query(
+        `SELECT codigo, nombre, fecha_inicio, fecha_fin FROM periodo_academico WHERE id_periodo = $1 LIMIT 1`,
+        [m.id_periodo],
+      );
+      if (periodo.length > 0) {
+        periodoCodigo = periodo[0].codigo ?? '';
+        periodoNombre = periodo[0].nombre ?? '';
+        periodoInicio = periodo[0].fecha_inicio ?? '';
+        periodoFin = periodo[0].fecha_fin ?? '';
+      }
+
+      const periodoCarrera = await this.dataSource.query(
+        `SELECT pc.fecha_inicio_fase_practica, pc.fecha_fin_fase_practica, pc.id_coordinador,
+                doc.nombres as coordinador_nombres, doc.apellidos as coordinador_apellidos
+         FROM periodo_carrera pc
+         LEFT JOIN docente doc ON doc.id_docente = pc.id_coordinador
+         WHERE pc.id_periodo = $1 AND pc.id_carrera = $2
+         LIMIT 1`,
+        [m.id_periodo, m.id_carrera],
+      );
+
+      if (periodoCarrera.length > 0) {
+        fechaInicioFase = periodoCarrera[0].fecha_inicio_fase_practica ?? '';
+        fechaFinFase = periodoCarrera[0].fecha_fin_fase_practica ?? '';
+        coordinadorNombre = periodoCarrera[0].coordinador_nombres && periodoCarrera[0].coordinador_apellidos
+          ? `${periodoCarrera[0].coordinador_nombres} ${periodoCarrera[0].coordinador_apellidos}`
+          : '';
+      }
+
+      const nivel = await this.dataSource.query(
+        `SELECT n.nombre as nivel_nombre
+         FROM matricula_detalle md
+         JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+         JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+         JOIN nivel n ON n.id_nivel = a.id_nivel
+         WHERE md.id_matricula = $1
+         LIMIT 1`,
+        [m.id_matricula],
+      );
+
+      if (nivel.length > 0) {
+        nivelNombre = nivel[0].nivel_nombre ?? '';
+      }
+    }
+
+    if (practica) {
+      const tutor = await this.dataSource.query(
+        `SELECT nombres, apellidos FROM docente WHERE id_docente = $1 LIMIT 1`,
+        [practica.id_docente],
+      );
+
+      if (tutor.length > 0) {
+        tutorAcademicoNombre = `${tutor[0].nombres} ${tutor[0].apellidos}`;
+      }
+    }
+
+    const nucleo = await this.nucleoRepository.findOne({
+      where: { id_carrera: matricula.length > 0 ? matricula[0].id_carrera : 1 },
+    });
+
+    const carrera: DatosCarrera = {
+      coordinador: coordinadorNombre,
+      tutorAcademico: tutorAcademicoNombre,
+      nucleoEstructurante: nucleo?.nombre ?? '',
+      objetivoNucleoEstructurante: nucleo?.objetivo ?? '',
+    };
+
+    const proyectoEmpresarial: DatosProyectoEmpresarial = {
+      nombre: practica?.nombre_proyecto ?? '',
+      cobertura: practica?.cobertura_localizacion ?? '',
+      plazo: practica?.plazo_ejecucion ?? '',
+      empresaAsignada: empresa?.razon_social ?? '',
+      fechaInicio: fechaInicioFase || (practica?.fecha_inicio ?? ''),
+      fechaFin: fechaFinFase || (practica?.fecha_fin ?? ''),
+    };
+
+    const empresaBeneficiaria: DatosEmpresaBeneficiaria = {
+      razonSocial: empresa?.razon_social ?? '',
+      representanteLegal: empresa?.representante_legal ?? '',
+      tutorEmpresarial: tutorEmpresarial ? `${tutorEmpresarial.nombres} ${tutorEmpresarial.apellidos}` : '',
+      direccion: empresa?.direccion ?? '',
+      ubicacion: '',
+    };
+
+    const periodoAcademico: PeriodoAcademico = {
+      codigo: periodoCodigo,
+      nombre: periodoNombre,
+      fechaInicio: periodoInicio,
+      fechaFin: periodoFin,
+    };
+
+    const cronograma: CronogramaFecha[] = [];
+    if (fechaInicioFase) {
+      cronograma.push({ fecha: fechaInicioFase, descripcion: 'Inicio de fase práctica' });
+    }
+    if (fechaFinFase) {
+      cronograma.push({ fecha: fechaFinFase, descripcion: 'Fin de fase práctica' });
+    }
+
     return {
-      encabezado: 'CARTA DE COMPROMISO (Formato 01)',
+      estudiante: {
+        nombre: `${estudiante.nombres} ${estudiante.apellidos}`,
+        cedula: estudiante.cedula,
+        carrera: carreraNombre,
+        curso: nivelNombre,
+        nivel: nivelNombre,
+        email: estudiante.correo ?? '',
+        telefono: estudiante.telefono ?? '',
+        estadoCivil: estudiante.estado_civil ?? '',
+        tipoSangre: estudiante.tipo_sangre ?? '',
+        domicilio: estudiante.domicilio ?? '',
+        contactoEmergenciaNombre: estudiante.contacto_emergencia_nombre ?? '',
+        contactoEmergenciaTelefono: estudiante.contacto_emergencia_telefono ?? '',
+      },
+      carrera,
+      proyectoEmpresarial,
+      empresaBeneficiaria,
+      periodoAcademico,
+      cronograma,
+    };
+  }
+
+  async getCartaCompromiso(usuario: any): Promise<CartaCompromiso> {
+    const datos = await this.getDatosMaestra(usuario);
+    const { estudiante, empresaBeneficiaria } = datos;
+
+    return {
+      encabezado: `D.M. Quito, ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
       cuerpo: [
-        `Yo, ${estudiante.nombre}, con cédula ${estudiante.cedula}, estudiante de la carrera ${estudiante.carrera}, curso ${estudiante.curso}, me presento para cumplir mi fase práctica pre profesional en la empresa beneficiaria ${empresaBeneficiaria.razonSocial}.`,
-        'Me comprometo a cumplir el horario establecido y las normativas de la institución y la empresa beneficiaria.',
-        'Entiendo que esta práctica es parte de mi formación académica y que debo cumplir con los objetivos establecidos en el plan de rotación.',
-        'Autorizo a la empresa beneficiaria a evaluar mi desempeño y a emitir los informes correspondientes para la institución educativa.',
+        `Yo, ${estudiante.nombre} con C.C. ${estudiante.cedula} estudiante de ${estudiante.curso} de la carrera ${estudiante.carrera} en modalidad dual, DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC, asignado/a a ${empresaBeneficiaria.razonSocial}`,
+        'De acuerdo con el proyecto de carrera aprobado y vigente, en cumplimiento del currículo de la carrera, y en el marco del convenio firmado, me presento y, expreso mi interés y predisposición de realizar prácticas de formación dual, con el fin de cumplir con la planificación, ejecución, control y evaluación del proceso de desarrollo de las competencias laborales como estudiante de la carrera.',
+        'Soy una persona que cumple con el perfil de ingreso de la carrera, y busco aprender y desarrollar los conocimientos, habilidades-destrezas y actitudes del perfil de egreso, y lograr las competencias como profesional de mi carrera.',
+        'Por lo cual, solicito su aceptación para realizar mi proceso de formación práctica en el entorno laboral real en modalidad dual.',
+        'A la vez que, me comprometo con acatar la normativa general vigente con las obligaciones establecidas en el Artículo 16 (Obligaciones generales del estudiante en modalidad dual) del Reglamento para Carreras y Programas en Modalidad de Formación Dual vigente, así como también, la normativa interna de la entidad formadora y, la normativa del Instituto.',
+        'Reconociendo y aceptando entre otras prohibiciones expresas durante la Fase Práctica, las que se determinan a continuación:',
+        'También me comprometo en:',
+        'Y así mismo, me comprometo en elaborar y presentar todos los documentos necesarios para validar el proceso de formación en modalidad dual, de acuerdo con lo establecido por la entidad receptora formadora y/o el Instituto, los cuáles deberán estar correctamente llenados y firmados.',
+        'El incumplimiento a lo comprometido con la entidad receptora formadora y/o del Instituto, será causal para la toma de medidas disciplinarias conforme a las responsabilidades del proceso de formación en modalidad dual .',
+        'De no dar cumplimiento con lo antes citado, puede conllevar bajo el debido proceso a la pérdida de la fase práctica.',
+        'De manera libre y voluntaria acepto lo expresado y firmo como esta acta compromiso como constancia.',
       ],
-      prohibicionesIntro: 'Queda estrictamente prohibido:',
+      prohibicionesIntro: 'Reconociendo y aceptando entre otras prohibiciones expresas durante la Fase Práctica, las que se determinan a continuación:',
       prohibiciones: [
-        'Consumo de bebidas alcohólicas dentro de la jornada y las instalaciones.',
-        'Consumo o porte de sustancias estupefacientes o psicotrópicas.',
-        'Malos tratos, acoso o cualquier forma de violencia hacia el personal.',
-        'Abandono del puesto de trabajo sin autorización.',
+        'Prohibición de consumo de alcohol.',
+        'Prohibición de consumo de sustancias estupefacientes, psicotrópicos y estimulantes.',
+        'Prohibición de tratos groseros e irrespetuosos a compañeros y del entorno (compañeros y demás personas involucradas)',
+        'Prohibición de desacatar las directrices de tutores empresariales y también de tutores académicos del instituto.',
       ],
-      compromisosIntro: 'Asumo los siguientes compromisos:',
+      compromisosIntro: 'También me comprometo en:',
       compromisosConfidencialidad: [
-        'Mantener reserva de la información confidencial a la que tenga acceso.',
-        'No divulgar datos de la empresa beneficiaria ni de terceros.',
-        'Devolver toda la documentación y activos al finalizar la práctica.',
+        'Garantizar la confidencialidad, reserva y protección de los datos e información proporcionados por la entidad receptora formadora, durante y después de mi fase práctica.',
+        'Y, promover un entorno social armónico, precautelar y salvaguardar la propiedad ajena y los bienes que pertenecen al sitio.',
       ],
       cierre: [
-        'En señal de conformidad, firmo en la ciudad de Quito a la fecha indicada.',
-        'Declaro que he leído y aceptado todas las condiciones establecidas en el presente documento.',
-        'Me comprometo a cumplir con las políticas de seguridad y salud ocupacional de la empresa.',
-        'Entiendo que el incumplimiento de estos compromisos puede dar lugar a la terminación anticipada de la práctica.',
+        'Y así mismo, me comprometo en elaborar y presentar todos los documentos necesarios para validar el proceso de formación en modalidad dual, de acuerdo con lo establecido por la entidad receptora formadora y/o el Instituto, los cuáles deberán estar correctamente llenados y firmados.',
+        'El incumplimiento a lo comprometido con la entidad receptora formadora y/o del Instituto, será causal para la toma de medidas disciplinarias conforme a las responsabilidades del proceso de formación en modalidad dual.',
+        'De manera libre y voluntaria acepto lo expresado y firmo como esta acta compromiso como constancia.',
       ],
       estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      espacioFirma: { lugar: 'Quito', fecha: '2025-12-01' },
+      espacioFirma: { lugar: 'D.M. Quito', fecha: new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
     };
   }
 
-  getCurriculum(): Curriculum {
-    const { estudiante } = this.datosMaestra;
+  async getCurriculum(usuario: any): Promise<Curriculum> {
+    const datos = await this.getDatosMaestra(usuario);
+    const { estudiante } = datos;
+
+    const datosAcademicos = await this.cvDatoAcademicoRepository.find({
+      where: { id_estudiante: usuario.idEstudiante },
+    });
+
+    const experienciaLaboral = await this.cvExperienciaLaboralRepository.find({
+      where: { id_estudiante: usuario.idEstudiante },
+    });
+
+    const practicasDuales = await this.cvPracticaDualRepository.find({
+      where: { id_estudiante: usuario.idEstudiante },
+    });
+
     return {
-      datosPersonales: estudiante,
-      datosAcademicos: {
-        carrera: estudiante.carrera,
-        nivel: estudiante.nivel,
-        institucion: 'Instituto Tecnológico Superior Yavirac',
-        promedio: '8.92',
+      datosPersonales: {
+        nombre: estudiante.nombre,
+        cedula: estudiante.cedula,
+        estadoCivil: estudiante.estadoCivil,
+        telefono: estudiante.telefono,
+        domicilio: estudiante.domicilio,
+        emailInstitucional: estudiante.email,
       },
-      experienciaLaboral: [
-        {
-          empresa: 'Empresa Demo S.A.',
-          cargo: 'Practicante de Soporte Técnico',
-          periodo: '2024-06 a 2024-08',
-          funciones: 'Soporte a usuarios, mantenimiento de equipos y redes.',
-        },
-      ],
-      practicasDualesPrevias: [
-        { empresa: 'Tech Solutions', periodo: '2024', horas: 120 },
-      ],
-      informacionAdicional: {
-        logros: [
-          'Primer puesto en feria de proyectos 2024.',
-          'Certificación en Scrum Foundation.',
-        ],
-        idiomas: ['Español (nativo)', 'Inglés (B1)'],
-        habilidades: ['JavaScript', 'TypeScript', 'NestJS', 'PostgreSQL', 'Git'],
-      },
+      datosAcademicos: datosAcademicos.map(item => ({
+        anio: item.anio,
+        institucion: item.institucion,
+        tituloMencion: item.titulo_mencion,
+        notaFinal: item.nota_final?.toString() ?? '',
+      })),
+      experienciaLaboral: experienciaLaboral.map(item => ({
+        anio: item.anio,
+        institucion: item.institucion,
+        cargo: item.cargo,
+        actividades: item.actividades,
+      })),
+      practicasDualesPrevias: practicasDuales.map(item => ({
+        anio: item.anio_periodo,
+        institucion: item.institucion,
+        cargo: item.cargo,
+        actividadesRealizadas: item.actividades_realizadas,
+      })),
+      informacionAdicional: [],
     };
   }
 
-  getRegistroAsistencia(): RegistroAsistencia {
-    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
-    const registros: RegistroAsistenciaDia[] = [];
-    const inicio = new Date('2025-12-01T00:00:00');
-    let agregados = 0;
-    while (agregados < 36) {
-      const dia = inicio.getDay();
-      if (dia !== 0 && dia !== 6) {
-        const fecha = inicio.toISOString().slice(0, 10);
-        registros.push({
-          fecha,
-          horaIngreso: '08:00',
-          almuerzo: '13:00 - 14:00',
-          horaSalida: '18:00',
-          horasDia: 10,
-          firma: '',
-          observaciones: '',
-        });
-        agregados++;
-      }
-      inicio.setDate(inicio.getDate() + 1);
-    }
+  async getRegistroAsistencia(usuario: any): Promise<RegistroAsistencia> {
+    const datos = await this.getDatosMaestra(usuario);
+    const { estudiante, empresaBeneficiaria, carrera, periodoAcademico } = datos;
+
+    const registros = await this.registroDiarioRepository.find({
+      where: { id_practica: await this.obtenerIdPractica(usuario) },
+      order: { fecha: 'ASC' },
+    });
+
+    const registrosFormateados: RegistroAsistenciaDia[] = registros.map(registro => ({
+      fecha: registro.fecha,
+      horaIngreso: registro.hora_ingreso ?? '',
+      almuerzo: registro.hora_salida_almuerzo && registro.hora_regreso_almuerzo
+        ? `${this.formatearHora(registro.hora_salida_almuerzo)} - ${this.formatearHora(registro.hora_regreso_almuerzo)}`
+        : '',
+      horaSalida: this.formatearHora(registro.hora_salida ?? ''),
+      horasDia: 8,
+      firma: registro.firma_estudiante ? 'S' : 'N',
+      observaciones: registro.observaciones ?? '',
+    }));
+
     return {
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
       empresa: empresaBeneficiaria.razonSocial,
-      registros,
-      horasAutonomas: 0,
-      subtotalHorasPractica: 36 * 10,
-    };
-  }
-
-  getInformeAprendizaje(): InformeAprendizaje {
-    const { estudiante, empresaBeneficiaria, periodoAcademico } = this.datosMaestra;
-    const encabezado: InformeAprendizajeEncabezado = {
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      empresa: empresaBeneficiaria.razonSocial,
+      carrera: estudiante.carrera,
+      tutorAcademico: carrera.tutorAcademico,
       periodoAcademico: periodoAcademico.nombre,
-      tutorAcademico: this.datosMaestra.carrera.tutorAcademico,
       tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
-      fechaInicio: this.datosMaestra.proyectoEmpresarial.fechaInicio,
-      fechaFin: this.datosMaestra.proyectoEmpresarial.fechaFin,
+      nivel: estudiante.nivel,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      estudiante: {
+        nombre: estudiante.nombre,
+        cedula: estudiante.cedula,
+        email: estudiante.email,
+        telefono: estudiante.telefono,
+        contactoEmergenciaNombre: estudiante.contactoEmergenciaNombre,
+        contactoEmergenciaTelefono: estudiante.contactoEmergenciaTelefono,
+        tipoSangre: estudiante.tipoSangre,
+        domicilio: estudiante.domicilio,
+      },
+      registros: registrosFormateados,
+      horasAutonomas: 0,
+      subtotalHorasPractica: registrosFormateados.length * 8,
+    };
+  }
+
+  async getInformeAprendizaje(usuario: any): Promise<InformeAprendizaje> {
+    const datos = await this.getDatosMaestra(usuario);
+    const { empresaBeneficiaria, periodoAcademico, carrera } = datos;
+
+    const encabezado: InformeAprendizajeEncabezado = {
+      empresa: empresaBeneficiaria.razonSocial,
+      nivel: datos.estudiante.nivel,
+      cicloAcademico: periodoAcademico.nombre,
+      fechaInicio: datos.proyectoEmpresarial.fechaInicio,
+      fechaFin: datos.proyectoEmpresarial.fechaFin,
+      tutorAcademico: carrera.tutorAcademico,
+      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      carrera: datos.estudiante.carrera,
+      objetivoNucleoEstructurante: carrera.objetivoNucleoEstructurante,
       totalSemanas: 8,
     };
-    const puestos = [
-      'Desarrollo de Backend',
-      'Desarrollo de Frontend',
-      'Análisis de Requisitos',
-      'Pruebas de Software',
-      'Base de Datos',
-      'Documentación Técnica',
-      'Soporte e Integración',
-      'Despliegue y DevOps',
-    ];
-    const semanas: InformeSemana[] = puestos.map((puesto, i) => {
-      const fechaInicio = new Date(2025, 11, 1 + i * 7);
-      const fechaFin = new Date(2025, 11, 1 + i * 7 + 6);
-      const rangoFechas = `${fechaInicio.toISOString().slice(0, 10)} al ${fechaFin.toISOString().slice(0, 10)}`;
-      return {
-        semana: i + 1,
-        fechaInicio: fechaInicio.toISOString().slice(0, 10),
-        fechaFin: fechaFin.toISOString().slice(0, 10),
-        rangoFechas,
-        puestoAprendizaje: puesto,
-        actividadesRealizadas: `Apoyo en tareas de ${puesto.toLowerCase()} dentro del proyecto institucional.`,
-        actividadesAutonomas: 'Estudio de documentación y cursos complementarios.',
-        reflexion: 'He reforzado mis conocimientos prácticos y el trabajo en equipo.',
-        observacionesEmpresa: 'Buen desempeño y compromiso.',
-      };
+
+    const idPractica = await this.obtenerIdPractica(usuario);
+    const informe = await this.informeRepository.findOne({
+      where: { id_practica: idPractica },
     });
+
+    const bitacoras = await this.bitacoraRepository.find({
+      where: { id_informe: informe?.id_informe ?? 1 },
+      order: { semana: 'ASC' },
+    });
+
+    const semanas: InformeSemana[] = bitacoras.map(bitacora => ({
+      semana: bitacora.semana,
+      fechaInicio: bitacora.fecha_inicio_semana ?? '',
+      fechaFin: bitacora.fecha_fin_semana ?? '',
+      rangoFechas: `${bitacora.fecha_inicio_semana ?? ''} - ${bitacora.fecha_fin_semana ?? ''}`,
+      puestoAprendizaje: bitacora.puesto_aprendizaje ?? '',
+      actividadesRealizadas: bitacora.actividades_realizadas ?? '',
+      actividadesAutonomas: bitacora.actividades_autonomas ?? '',
+      reflexion: '',
+      observacionesEmpresa: '',
+    }));
+
     return {
       encabezado,
       semanas,
+      reflexionAprendizaje: '',
+      observacionesEmpresa: '',
     };
   }
 
-  getEvaluacionEmpresarial(): EvaluacionEmpresarial {
-    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
-    const criteriosBase = [
-      'Puntualidad y asistencia',
-      'Responsabilidad',
-      'Trabajo en equipo',
-      'Capacidad técnica',
-      'Iniciativa',
-      'Comunicación',
-      'Resolución de problemas',
-      'Ética profesional',
-      'Adaptabilidad',
-      'Calidad del trabajo',
-    ];
-    const puntajes = [6, 6, 5.5, 6, 5.5, 6, 5.5, 6, 6, 5.5];
-    const criterios: CriterioEmpresarial[] = criteriosBase.map((criterio, i) => ({
-      id: i + 1,
-      criterio,
-      puntaje: puntajes[i],
-      maximo: 6,
-    }));
-    const suma = puntajes.reduce((a, b) => a + b, 0);
-    const promedioCriterios = Number((suma / criterios.length).toFixed(2));
+  async getEvaluacionEmpresarial(usuario: any): Promise<EvaluacionEmpresarial> {
+    const datos = await this.getDatosMaestra(usuario);
+    const { estudiante, empresaBeneficiaria, carrera } = datos;
+
+    const evaluaciones = await this.evaluacionRepository.find({
+      where: { id_practica: await this.obtenerIdPractica(usuario), tipo_evaluador: 'EMPRESA' },
+    });
+
+    const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
+
+    const evaluacionPrincipal = evaluaciones[0];
+
     return {
       estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
       empresa: empresaBeneficiaria.razonSocial,
       tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
-      criterios,
-      defensaProyecto: { notaParcial: 6.2, notaFinal: 6.5 },
-      promedioCriterios,
-      notaFinalEmpresa: 6.45,
+      nivel: estudiante.nivel,
+      cicloAcademico: datos.periodoAcademico.nombre,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      carrera: estudiante.carrera,
+      fechaInicio: datos.proyectoEmpresarial.fechaInicio,
+      fechaFin: datos.proyectoEmpresarial.fechaFin,
+      criterios: [],
+      defensaProyecto: [],
+      promedioCriterios: evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios,
+      notaPonderadaSobre7: Number(((evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios) * 7 / 6).toFixed(2)),
+      notaParcialDefensa: evaluacionPrincipal?.nota_parcial_defensa ?? 0,
+      notaFinalDefensa: evaluacionPrincipal?.nota_final_defensa ?? 0,
+      notaPonderadaDefensa: evaluacionPrincipal?.nota_ponderada_defensa ?? 0,
+      notaFinalEmpresa: evaluacionPrincipal?.nota_final_empresa ?? promedioCriterios,
+      observaciones: 'Sin novedad',
     };
   }
 
-  getEvaluacionInstituto(): EvaluacionInstituto {
-    const { estudiante, carrera } = this.datosMaestra;
-    const criteriosBase = [
-      'Alcance del proyecto',
-      'Metodología',
-      'Innovación',
-      'Documentación',
-      'Sostenibilidad',
-      'Impacto institucional',
-      'Presentación y defensa',
-    ];
-    const puntajes = [7.5, 7, 7, 7.5, 6.5, 7, 7.5];
-    const criterios: CriterioInstituto[] = criteriosBase.map((criterio, i) => ({
-      id: i + 1,
-      criterio,
-      puntaje: puntajes[i],
-      maximo: 10,
-    }));
+  async getEvaluacionInstituto(usuario: any): Promise<EvaluacionInstituto> {
+    const datos = await this.getDatosMaestra(usuario);
+    const { estudiante, empresaBeneficiaria, carrera } = datos;
+
+    const evaluaciones = await this.evaluacionRepository.find({
+      where: { id_practica: await this.obtenerIdPractica(usuario), tipo_evaluador: 'INSTITUTO' },
+    });
+
+    const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
+
+    const evaluacionPrincipal = evaluaciones[0];
+
     return {
       estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      instituto: 'Instituto Tecnológico Superior Yavirac',
+      empresa: empresaBeneficiaria.razonSocial,
+      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
       tutorAcademico: carrera.tutorAcademico,
-      defensaProyecto: { nota: 7.2 },
-      criteriosProyecto: criterios,
-      notaFinalEmpresa: 6.45,
-      notaFinalInstituto: 7.2,
-      notaFinalConsolidada: 7.175,
+      nivel: estudiante.nivel,
+      cicloAcademico: datos.periodoAcademico.nombre,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      carrera: estudiante.carrera,
+      fechaInicio: datos.proyectoEmpresarial.fechaInicio,
+      fechaFin: datos.proyectoEmpresarial.fechaFin,
+      defensaProyecto: [],
+      notaParcialDefensa: evaluacionPrincipal?.nota_parcial_defensa ?? 0,
+      notaFinalDefensa: evaluacionPrincipal?.nota_final_defensa ?? 0,
+      notaPonderadaDefensa: evaluacionPrincipal?.nota_ponderada_defensa ?? 0,
+      criteriosProyecto: [],
+      promedioProyecto: evaluacionPrincipal?.promedio_proyecto_empresarial ?? promedioCriterios,
+      notaPonderadaProyecto: evaluacionPrincipal?.nota_ponderada_proyecto ?? Number((promedioCriterios * 7 / 10).toFixed(2)),
+      notaFinalEmpresa: promedioCriterios,
+      notaFinalInstituto: evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios,
+      notaFinalConsolidada: Number(((evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios) / 2).toFixed(2)),
+      observaciones: 'Sin novedad',
     };
   }
 
-  getTodosLosDocumentos() {
+  async getTodosLosDocumentos(usuario: any) {
+    const datosMaestra = await this.getDatosMaestra(usuario);
+    const cartaCompromiso = await this.getCartaCompromiso(usuario);
+    const curriculum = await this.getCurriculum(usuario);
+    const registroAsistencia = await this.getRegistroAsistencia(usuario);
+    const informeAprendizaje = await this.getInformeAprendizaje(usuario);
+    const evaluacionEmpresarial = await this.getEvaluacionEmpresarial(usuario);
+    const evaluacionInstituto = await this.getEvaluacionInstituto(usuario);
+
     return {
-      datos: this.getDatosMaestra(),
-      cartaCompromiso: this.getCartaCompromiso(),
-      curriculum: this.getCurriculum(),
-      registroAsistencia: this.getRegistroAsistencia(),
-      informeAprendizaje: this.getInformeAprendizaje(),
-      evaluacionEmpresarial: this.getEvaluacionEmpresarial(),
-      evaluacionInstituto: this.getEvaluacionInstituto(),
+      datos: datosMaestra,
+      cartaCompromiso,
+      curriculum,
+      registroAsistencia,
+      informeAprendizaje,
+      evaluacionEmpresarial,
+      evaluacionInstituto,
     };
+  }
+
+  private formatearFecha(fecha: string): string {
+    if (!fecha) return '';
+    const [y, m, d] = fecha.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  private formatearHora(hora: string): string {
+    if (!hora) return '';
+    if (hora.includes(':')) {
+      const [h, m] = hora.split(':');
+      return `${h}:${m}`;
+    }
+    return hora;
   }
 }

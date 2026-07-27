@@ -7,5 +7,6 @@ export class EmpresaResponseDto {
   direccion?: string;
   telefono?: string;
   correo?: string;
+  representante_legal?: string;
   estado?: string;
 }
