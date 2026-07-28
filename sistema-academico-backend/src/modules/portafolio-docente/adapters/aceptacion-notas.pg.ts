@@ -95,7 +95,8 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
         p.nombre  AS paralelo,
         j.nombre  AS jornada,
         d.nombres || ' ' || d.apellidos AS docente,
-        pa.nombre AS periodo
+        pa.nombre AS periodo,
+        co.nombres || ' ' || co.apellidos AS coordinador
       FROM portafolio_reporte_notas prn
       JOIN oferta_asignatura oa ON prn.id_oferta_asignatura = oa.id_oferta_asignatura
       JOIN asignatura a         ON oa.id_asignatura = a.id_asignatura
@@ -105,6 +106,8 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
       JOIN jornada j            ON oa.id_jornada = j.id_jornada
       JOIN docente d            ON oa.id_docente = d.id_docente
       JOIN periodo_academico pa ON prn.id_periodo = pa.id_periodo
+      LEFT JOIN periodo_carrera pc ON pc.id_periodo = prn.id_periodo AND pc.id_carrera = c.id_carrera
+      LEFT JOIN docente co         ON pc.id_coordinador = co.id_docente
       WHERE prn.id_oferta_asignatura = $1 AND prn.tipo_reporte = $2
       `,
       [idOfertaAsignatura, tipoReporte],
@@ -142,6 +145,7 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
         paralelo: row.paralelo,
         jornada: row.jornada,
         docente: row.docente,
+        coordinador: row.coordinador,
         periodo: row.periodo,
         tipo_reporte: row.tipo_reporte,
         fecha_generacion: row.fecha_generacion,

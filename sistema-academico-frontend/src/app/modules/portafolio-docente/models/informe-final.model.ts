@@ -1,4 +1,23 @@
-// Lo que el backend realmente acepta/devuelve (contrato real, no tocar)
+export interface InformeDto {
+  nombre_docente: string;
+  nombre_asignatura: string;
+  paralelo: string;
+  horario: string;
+  periodo: string;
+}
+
+export interface FirmasDto {
+  docente: string;
+  coordinador: string | null;
+  fecha_firma_docente: string | null;
+  fecha_firma_coordinador: string | null;
+}
+
+export interface InformeFinalResponseDto {
+  informe: InformeDto;
+  firmas: FirmasDto;
+}
+
 export interface CreateInformeFinalDto {
   id_docente: number;
   id_periodo: number;
@@ -7,46 +26,21 @@ export interface CreateInformeFinalDto {
   horario: string;
 }
 
-export interface InformeFinalResponse {
-  informe: {
-    nombre_docente: string;
-    nombre_asignatura: string;
-    paralelo: string;
-    horario: string;
-    periodo: string;
-  };
-  firmas: {
-    docente: string;
-    fecha_firma_docente: string | null;
-    fecha_firma_coordinador: string | null;
-  };
-}
-
-// Extensión SOLO de frontend (no la acepta el backend todavía) — secciones 1, 3, 4 y 5 del PDF
-export interface EstudianteNota {
-  cedula: string;
-  apellidos: string;
-  nombres: string;
-  asistencia: number;
-  p1: number;
-  p2: number;
-  rc: number | null;
-  nf: number;
-  evaluacion: string;
-  promocion: string;
-}
-
-export interface InformeFinalCompleto {
+/**
+ * Secciones del Formato 04 que el backend NO persiste (no existen
+ * columnas para ellas). Se guardan en localStorage por oferta
+ * académica, mientras el backend no soporte estos campos.
+ *
+ * NOTA: la sección "5. Resultados cuantitativos obtenidos" se eliminó
+ * de la vista (decisión de producto), por eso ya no existen los campos
+ * `resultados` ni `recomendacionesCuantitativas` aquí.
+ */
+export interface InformeFinalManualData {
   antecedentes: string;
   desarrolloActividades: string;
-  cualitativos: {
-    infraestructuraResultado: string;
-    infraestructuraRecomendacion: string;
-    planEstudiosResultado: string;
-    planEstudiosRecomendacion: string;
-  };
-  cuantitativos: {
-    estudiantes: EstudianteNota[];
-  };
-  recomendacionesFinales: string;
+  infraestructura: string;
+  recomendacionesInfraestructura: string;
+  planEstudios: string;
+  recomendacionesPlanEstudios: string;
+  fechaElaboracion: string;
 }

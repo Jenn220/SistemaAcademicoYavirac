@@ -6,6 +6,7 @@ export class ReporteDto {
   paralelo: string;
   jornada: string;
   docente: string;
+  coordinador: string | null;
   periodo: string;
   tipo_reporte: string;
   fecha_generacion: Date;

@@ -15,4 +15,13 @@ export class DetalleEvaluacionEntity {
 
   @Column({ name: 'puntaje_asignado', type: 'numeric', precision: 5, scale: 2 })
   puntaje_asignado!: number;
+
+  @Column({ name: 'tipo_criterio', type: 'varchar', length: 20, default: 'DESEMPENO' })
+  tipo_criterio?: string;
+
+  @Column({ name: 'nivel_calificacion', type: 'varchar', length: 20, nullable: true })
+  nivel_calificacion?: string;
+
+  @Column({ name: 'observacion', type: 'text', nullable: true })
+  observacion?: string;
 }

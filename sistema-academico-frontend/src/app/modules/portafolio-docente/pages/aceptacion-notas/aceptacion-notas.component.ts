@@ -1,104 +1,195 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AceptacionNotasService, OPCIONES_TIPO_REPORTE } from '../../services/aceptacion-notas.service';
-import { ReporteNotasResponse, EstudianteAceptacionVista, TipoReporteCanonico } from '../../models/aceptacion-notas.model';
+import { ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AceptacionNotasService } from '../../services/aceptacion-notas.service';
+import { WordExportService } from '../../../../shared/services/word-export.service';
+import {
+  CamposManualesEstudiante,
+  EstudianteAceptacionDto,
+  ReporteNotasResponseDto,
+  TIPOS_REPORTE,
+} from '../../models/aceptacion-notas.model';
 
 @Component({
   selector: 'app-aceptacion-notas',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './aceptacion-notas.component.html',
   styleUrl: './aceptacion-notas.component.scss',
 })
 export class AceptacionNotasComponent implements OnInit {
-  reporte: ReporteNotasResponse | null = null;
-  estudiantes: EstudianteAceptacionVista[] = [];
-  error: string | null = null;
-  cargando = false;
-  guardando = false;
-  guardadoOk = false;
-  mostrarConfirmacion = false;
-  fechaActual = new Date();
+  readonly tiposReporte = TIPOS_REPORTE;
 
-  opcionesTipoReporte = OPCIONES_TIPO_REPORTE;
-  form: FormGroup;
+  idOfertaAsignatura!: number;
+  idPeriodo!: number;
+  tipoReporteSeleccionado: string = TIPOS_REPORTE[0].valor;
 
-  constructor(private fb: FormBuilder, private aceptacionNotasService: AceptacionNotasService) {
-    this.form = this.fb.group({
-      tipoReporte: ['PARCIAL UNO', Validators.required],
-    });
+  readonly cargando = signal(false);
+  readonly guardando = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly noExisteReporte = signal(false);
+  readonly mensajeExito = signal<string | null>(null);
+  readonly exportandoWord = signal(false);
+
+  readonly reporte = signal<ReporteNotasResponseDto | null>(null);
+
+  /**
+   * Campos manuales por estudiante (asistencia, observación). El PDF
+   * los pide pero el backend no los guarda: viven solo en memoria de
+   * esta pantalla, para completar la vista/impresión.
+   */
+  readonly camposManuales = signal<Map<number, CamposManualesEstudiante>>(new Map());
+
+  readonly fechaHoy = new Date();
+
+  readonly totalEstudiantes = computed(() => this.reporte()?.estudiantes.length ?? 0);
+
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly aceptacionNotasService: AceptacionNotasService,
+    private readonly wordExportService: WordExportService,
+  ) {}
+
+  ngOnInit(): void {
+    this.idOfertaAsignatura = Number(this.route.snapshot.paramMap.get('idOfertaAsignatura'));
+    this.idPeriodo = Number(this.route.snapshot.paramMap.get('idPeriodo'));
+    this.cargarReporte();
   }
 
-  ngOnInit() {
-  this.cargarReporte();
-}
+  cargarReporte(): void {
+    this.cargando.set(true);
+    this.error.set(null);
+    this.noExisteReporte.set(false);
+    this.mensajeExito.set(null);
 
-onTipoReporteChange() {
-  this.guardadoOk = false;
-  this.cargarReporte();
-}
-
-  get labelTipoActual(): string {
-    const opcion = this.opcionesTipoReporte.find((o) => o.valorPost === this.form.value.tipoReporte);
-    return opcion ? opcion.label : '';
+    this.aceptacionNotasService
+      .getReporte(this.idOfertaAsignatura, this.tipoReporteSeleccionado)
+      .subscribe({
+        next: (respuesta) => {
+          this.reporte.set(respuesta);
+          this.inicializarCamposManuales(respuesta.estudiantes);
+          this.cargando.set(false);
+        },
+        error: (err) => {
+          this.cargando.set(false);
+          if (err.status === 404) {
+            this.noExisteReporte.set(true);
+            this.reporte.set(null);
+          } else {
+            this.error.set('Ocurrió un error al buscar el reporte. Intenta de nuevo.');
+          }
+        },
+      });
   }
 
-  private canonicoDesdeAlias(alias: string): TipoReporteCanonico {
-    const opcion = this.opcionesTipoReporte.find((o) => o.valorPost === alias);
-    return opcion ? opcion.canonico : 'APORTE_1';
+  generarReporte(): void {
+    this.cargando.set(true);
+    this.error.set(null);
+
+    this.aceptacionNotasService
+      .generarReporte({
+        id_periodo: this.idPeriodo,
+        id_oferta_asignatura: this.idOfertaAsignatura,
+        tipo_reporte: this.tipoReporteSeleccionado,
+      })
+      .subscribe({
+        next: (respuesta) => {
+          this.reporte.set(respuesta);
+          this.inicializarCamposManuales(respuesta.estudiantes);
+          this.noExisteReporte.set(false);
+          this.cargando.set(false);
+        },
+        error: () => {
+          this.cargando.set(false);
+          this.error.set('No se pudo generar el reporte. Verifica que existan estudiantes matriculados.');
+        },
+      });
   }
 
-  cargarReporte() {
-    this.cargando = true;
-    this.error = null;
-    const canonico = this.canonicoDesdeAlias(this.form.value.tipoReporte);
-
-    this.aceptacionNotasService.getReporte(1, canonico).subscribe({
-      next: (data) => {
-        this.reporte = data;
-        this.estudiantes = data.estudiantes as EstudianteAceptacionVista[];
-        this.cargando = false;
-      },
-      error: (err) => {
-        this.error = 'No se pudo cargar el reporte: ' + err.message;
-        this.cargando = false;
-      },
-    });
+  private inicializarCamposManuales(estudiantes: EstudianteAceptacionDto[]): void {
+    const mapa = new Map<number, CamposManualesEstudiante>();
+    for (const est of estudiantes) {
+      mapa.set(est.id_aceptacion, {
+        id_aceptacion: est.id_aceptacion,
+        observacion: '',
+      });
+    }
+    this.camposManuales.set(mapa);
   }
 
-  solicitarGuardar() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  obtenerCampoManual(idAceptacion: number): CamposManualesEstudiante {
+    return (
+      this.camposManuales().get(idAceptacion) ?? {
+        id_aceptacion: idAceptacion,
+        observacion: '',
+      }
+    );
+  }
+
+  actualizarObservacion(idAceptacion: number, valor: string): void {
+    const mapa = new Map(this.camposManuales());
+    const actual = this.obtenerCampoManual(idAceptacion);
+    mapa.set(idAceptacion, { ...actual, observacion: valor });
+    this.camposManuales.set(mapa);
+  }
+
+  actualizarNota(estudiante: EstudianteAceptacionDto, valor: string): void {
+    const nota = valor === '' ? null : Number(valor);
+    estudiante.nota_registrada = nota;
+  }
+
+  guardarNotas(): void {
+    const reporteActual = this.reporte();
+    if (!reporteActual) return;
+
+    const estudiantesConNota = reporteActual.estudiantes.filter(
+      (est) => est.nota_registrada !== null && est.nota_registrada !== undefined,
+    );
+
+    if (estudiantesConNota.length === 0) {
+      this.error.set('Ingresa al menos una nota antes de guardar.');
       return;
     }
-    this.mostrarConfirmacion = true;
+
+    this.guardando.set(true);
+    this.error.set(null);
+    this.mensajeExito.set(null);
+
+    this.aceptacionNotasService
+      .actualizarNotas(reporteActual.reporte.id_reporte_notas, {
+        estudiantes: estudiantesConNota.map((est) => ({
+          id_aceptacion: est.id_aceptacion,
+          nota: est.nota_registrada as number,
+        })),
+      })
+      .subscribe({
+        next: () => {
+          this.guardando.set(false);
+          this.mensajeExito.set('Notas guardadas correctamente.');
+        },
+        error: () => {
+          this.guardando.set(false);
+          this.error.set('No se pudieron guardar las notas. Intenta de nuevo.');
+        },
+      });
   }
 
-  cancelarGuardar() {
-    this.mostrarConfirmacion = false;
+  imprimir(): void {
+    window.print();
   }
 
-  confirmarGuardar() {
-    this.mostrarConfirmacion = false;
-    this.guardando = true;
-    this.guardadoOk = false;
+  async exportarWord(): Promise<void> {
+    const reporteActual = this.reporte();
+    if (!reporteActual) return;
 
-    const dto = {
-      id_periodo: 1,
-      id_oferta_asignatura: 1,
-      tipo_reporte: this.form.value.tipoReporte, // el POST sí acepta el alias tal cual
-    };
-
-    this.aceptacionNotasService.generarReporte(dto).subscribe({
-      next: () => {
-        this.guardando = false;
-        this.guardadoOk = true;
-      },
-      error: (err) => {
-        this.guardando = false;
-        this.error = 'Error al generar: ' + err.message;
-      },
-    });
+    this.exportandoWord.set(true);
+    try {
+      await this.wordExportService.exportarAceptacionNotas(reporteActual, this.camposManuales());
+    } catch {
+      this.error.set('No se pudo generar el documento Word. Intenta de nuevo.');
+    } finally {
+      this.exportandoWord.set(false);
+    }
   }
 }

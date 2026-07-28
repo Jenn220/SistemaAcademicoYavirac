@@ -32,6 +32,8 @@ Hoja
 
 .documento{
 
+    box-sizing:border-box;
+
     width:210mm;
 
     min-height:297mm;
@@ -111,6 +113,14 @@ Tabla
 .tabla-asistencia th{
 
     background:#efefef;
+
+}
+
+.fila-autonomas{
+
+    font-weight:bold;
+
+    background:#f4f4f4;
 
 }
 

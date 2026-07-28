@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Req, UseGuards } from '@nestjs/common';
 import { PortafolioService } from '../services/portafolio.service';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -14,5 +14,10 @@ export class PortafolioController {
   @Get('mis-ofertas')
   getMisOfertas(@Req() req: AuthenticatedRequest) {
     return this.portafolioService.getMisOfertas(req.user.idDocente!);
+  }
+
+  @Get('oferta/:id_oferta_asignatura/estudiantes')
+  getEstudiantesDeOferta(@Param('id_oferta_asignatura', ParseIntPipe) idOfertaAsignatura: number) {
+    return this.portafolioService.getEstudiantesDeOferta(idOfertaAsignatura);
   }
 }

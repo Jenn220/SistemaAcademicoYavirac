@@ -1,117 +1,157 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { InformeFinalService, MOCK_ASIGNATURAS, MOCK_PARALELOS, MOCK_ESTUDIANTES } from '../../services/informe-final.service';
-import { InformeFinalResponse } from '../../models/informe-final.model';
+import { ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { InformeFinalService } from '../../services/informe-final.service';
+import { PortafolioService } from '../../services/portafolio.service';
+import { AuthService } from '../../../auth/services/auth.service';
+import { WordExportService } from '../../../../shared/services/word-export.service';
+import { InformeFinalResponseDto, InformeFinalManualData } from '../../models/informe-final.model';
+import { OfertaDocenteDto } from '../../models/oferta-docente.model';
 
 @Component({
   selector: 'app-informe-final',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './informe-final.component.html',
   styleUrl: './informe-final.component.scss',
 })
 export class InformeFinalComponent implements OnInit {
-  informe: InformeFinalResponse | null = null;
-  error: string | null = null;
-  guardando = false;
-  guardadoOk = false;
-  mostrarConfirmacion = false;
+  idOfertaAsignatura!: number;
 
-  fechaActual = new Date();
+  readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly guardandoManual = signal(false);
+  readonly mensajeGuardado = signal<string | null>(null);
+  readonly exportandoWord = signal(false);
 
-  asignaturas = MOCK_ASIGNATURAS;
-  paralelos = MOCK_PARALELOS;
-  estudiantes = MOCK_ESTUDIANTES;
+  readonly informe = signal<InformeFinalResponseDto | null>(null);
+  readonly noExisteInforme = signal(false);
+  readonly ofertaRelacionada = signal<OfertaDocenteDto | null>(null);
 
-  form: FormGroup;
+  // Formulario de creación
+  horario = '';
+  creando = false;
+  errorCreacion: string | null = null;
 
-  constructor(private fb: FormBuilder, private informeFinalService: InformeFinalService) {
-    this.form = this.fb.group({
-      idAsignatura: [1, Validators.required],
-      idParalelo: [1, Validators.required],
-      horario: ['', Validators.required],
-      antecedentes: ['Con el fin de realizar una evaluación del proceso docente del periodo que termina, se realiza el presente informe, el mismo que tiene por objetivo garantizar la calidad académica en el INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC y dotar de insumos para ser analizados para procurar una mejora constante en el desarrollo formativo que mantiene la institución', Validators.required],
-      desarrolloActividades: ['', Validators.required],
-      infraestructuraResultado: ['', Validators.required],
-      infraestructuraRecomendacion: [''],
-      planEstudiosResultado: ['', Validators.required],
-      planEstudiosRecomendacion: [''],
-      recomendacionesFinales: [''],
-    });
+  datosManuales!: InformeFinalManualData;
+
+  readonly fechaHoy = new Date();
+
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly informeFinalService: InformeFinalService,
+    private readonly portafolioService: PortafolioService,
+    private readonly authService: AuthService,
+    private readonly wordExportService: WordExportService,
+  ) {}
+
+  ngOnInit(): void {
+    this.idOfertaAsignatura = Number(this.route.snapshot.paramMap.get('idOfertaAsignatura'));
+    this.datosManuales = this.informeFinalService.datosManualesVacios();
+    this.cargarInforme();
   }
 
-  ngOnInit() {
-    this.informeFinalService.getInformeFinal(1, 1).subscribe({
-      next: (data) => {
-        this.informe = data;
-        this.form.patchValue({ horario: data.informe.horario });
-      },
-      error: (err) => (this.error = 'No se pudo cargar el informe: ' + err.message),
-    });
-  }
+  cargarInforme(): void {
+    this.cargando.set(true);
+    this.error.set(null);
+    this.noExisteInforme.set(false);
 
-  // --- Cálculos de las tablas de resumen (sección 5 del PDF), derivados de `estudiantes` ---
-  get totalEstudiantes(): number {
-    return this.estudiantes.length;
-  }
-
-  get resumenEquivalencia() {
-    const rangos = [
-      { label: 'EXCELENTE', min: 9.5, max: 10 },
-      { label: 'MUY BUENO', min: 8.5, max: 9.49 },
-      { label: 'BUENO', min: 7.0, max: 8.49 },
-      { label: 'REGULAR', min: 4.0, max: 6.99 },
-      { label: 'DEFICIENTE', min: 0, max: 3.99 },
-    ];
-    return rangos.map((r) => {
-      const count = this.estudiantes.filter((e) => e.nf >= r.min && e.nf <= r.max).length;
-      return { ...r, frecuencia: count, porcentaje: this.totalEstudiantes ? (count / this.totalEstudiantes) * 100 : 0 };
-    });
-  }
-
-  get resumenPromocion() {
-    const estados = ['PROMOVIDO', 'NO PROMOVIDO', 'NO PROMOVIDO POR FALTAS'];
-    return estados.map((label) => {
-      const count = this.estudiantes.filter((e) => e.promocion === label).length;
-      return { label, frecuencia: count, porcentaje: this.totalEstudiantes ? (count / this.totalEstudiantes) * 100 : 0 };
-    });
-  }
-
-  solicitarGuardar() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.mostrarConfirmacion = true;
-  }
-
-  cancelarGuardar() {
-    this.mostrarConfirmacion = false;
-  }
-
-  confirmarGuardar() {
-    this.mostrarConfirmacion = false;
-    this.guardando = true;
-    this.guardadoOk = false;
-
-    const dto = {
-      id_docente: 1,
-      id_periodo: 1,
-      id_asignatura: Number(this.form.value.idAsignatura),
-      id_paralelo: Number(this.form.value.idParalelo), 
-      horario: this.form.value.horario,
-    };
-
-    this.informeFinalService.createInformeFinal(dto).subscribe({
-      next: () => {
-        this.guardando = false;
-        this.guardadoOk = true;
+    this.informeFinalService.getInformeFinal(this.idOfertaAsignatura).subscribe({
+      next: (respuesta) => {
+        this.informe.set(respuesta);
+        this.cargarDatosManuales();
+        this.cargando.set(false);
       },
       error: (err) => {
-        this.guardando = false;
-        this.error = 'Error al guardar: ' + err.message;
+        this.cargando.set(false);
+        if (err.status === 404) {
+          this.noExisteInforme.set(true);
+          this.cargarOfertaRelacionada();
+        } else {
+          this.error.set('Ocurrió un error al buscar el informe final.');
+        }
       },
     });
+  }
+
+  private cargarOfertaRelacionada(): void {
+    // Necesitamos el id_periodo (no viene en la ruta) y los nombres de
+    // asignatura/paralelo para mostrarlos en el formulario de creación.
+    this.portafolioService.getMisOfertas().subscribe({
+      next: (ofertas) => {
+        const oferta = ofertas.find((o) => o.id_oferta_asignatura === this.idOfertaAsignatura);
+        this.ofertaRelacionada.set(oferta ?? null);
+      },
+    });
+  }
+
+  private cargarDatosManuales(): void {
+    const guardado = this.informeFinalService.obtenerDatosManuales(this.idOfertaAsignatura);
+    this.datosManuales = guardado ?? this.informeFinalService.datosManualesVacios();
+  }
+
+  crearInforme(): void {
+    const oferta = this.ofertaRelacionada();
+    const idDocente = this.authService.usuario()?.idDocente;
+
+    if (!oferta || !idDocente) {
+      this.errorCreacion = 'No se pudo determinar el docente o la oferta académica.';
+      return;
+    }
+    if (!this.horario.trim()) {
+      this.errorCreacion = 'Ingresa el horario.';
+      return;
+    }
+
+    this.creando = true;
+    this.errorCreacion = null;
+
+    this.informeFinalService
+      .crearInformeFinal({
+        id_docente: idDocente,
+        id_periodo: oferta.id_periodo,
+        id_asignatura: oferta.id_asignatura,
+        id_paralelo: oferta.id_paralelo,
+        horario: this.horario.trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.creando = false;
+          this.cargarInforme();
+        },
+        error: () => {
+          this.creando = false;
+          this.errorCreacion =
+            'No se pudo crear el informe. Verifica que los IDs de asignatura/paralelo sean correctos.';
+        },
+      });
+  }
+
+  guardarDatosManuales(): void {
+    this.guardandoManual.set(true);
+    this.datosManuales.fechaElaboracion = new Date().toISOString();
+    this.informeFinalService.guardarDatosManuales(this.idOfertaAsignatura, this.datosManuales);
+    this.guardandoManual.set(false);
+    this.mensajeGuardado.set('Guardado localmente en este navegador.');
+    setTimeout(() => this.mensajeGuardado.set(null), 3000);
+  }
+
+  imprimir(): void {
+    window.print();
+  }
+
+  async exportarWord(): Promise<void> {
+    const inf = this.informe();
+    if (!inf) return;
+
+    this.exportandoWord.set(true);
+    try {
+      await this.wordExportService.exportarInformeFinal(inf, this.datosManuales);
+    } catch {
+      this.error.set('No se pudo generar el documento Word. Intenta de nuevo.');
+    } finally {
+      this.exportandoWord.set(false);
+    }
   }
 }
