@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
@@ -23,7 +24,7 @@ function passwordsCoinciden(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-cambiar-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './cambiar-password.html',
   styleUrl: './cambiar-password.scss',
 })

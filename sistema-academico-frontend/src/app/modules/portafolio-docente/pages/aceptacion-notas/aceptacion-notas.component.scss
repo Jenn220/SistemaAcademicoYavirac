@@ -1,208 +1,349 @@
-.documento {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #222;
-  background: #fff;
+.aceptacion-notas {
+  padding: 24px;
 }
 
-.encabezado-institucional {
-  display: flex;
-  align-items: stretch;
-  border: 1px solid #333;
-  margin-bottom: 1rem;
+// ---------------------------------------------------------------------
+// Membrete institucional — mismo tratamiento que Informe Final
+// ---------------------------------------------------------------------
+.membrete {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 0;
 
-  .titulos {
-    flex: 1;
-    text-align: center;
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-right: 1px solid #cbd5e1;
 
-    p {
-      margin: 0;
-      padding: 0.25rem;
-      border-bottom: 1px solid #333;
-    }
-
-    .titulo-instituto {
-      background: #dbe9f5;
-      font-weight: bold;
-    }
-
-    .titulo-macro {
-      font-weight: 600;
-    }
-
-    .titulo-proceso {
-      background: #e57373;
-      color: #fff;
-    }
-
-    .titulo-formato {
-      font-weight: bold;
-      border-bottom: none;
+    img {
+      max-width: 100%;
+      max-height: 64px;
+      object-fit: contain;
     }
   }
 
-  .codigo {
-    width: 110px;
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__institucion {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__macroproceso {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    background: #bfdbfe;
+    color: #1e3a8a;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__proceso {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    background: #fecaca;
+    color: #7f1d1d;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  &__formato {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    color: #0f172a;
+  }
+
+  &__codigo {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-left: 1px solid #333;
+    gap: 4px;
+    border-left: 1px solid #cbd5e1;
+    padding: 8px;
 
     span {
-      font-size: 0.75rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
     }
 
     strong {
-      font-size: 1rem;
+      font-size: 0.85rem;
+      color: #0f172a;
     }
   }
 }
 
-.selector-tipo {
+// ---------------------------------------------------------------------
+// Toolbar
+// ---------------------------------------------------------------------
+.aceptacion-notas__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+}
+
+.aceptacion-notas__selector {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 8px;
 
-  .botones-tipo {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  button {
-    padding: 0.4rem 0.9rem;
-    border: 1px solid #1565c0;
-    background: #fff;
-    color: #1565c0;
-    border-radius: 4px;
-    cursor: pointer;
-
-    &.activo {
-      background: #1565c0;
-      color: #fff;
-    }
-  }
-}
-
-.mensaje {
-  padding: 0.5rem;
-  margin-bottom: 0.75rem;
-
-  &.error {
-    color: #b71c1c;
-  }
-
-  &.ok {
-    color: #1b5e20;
-  }
-}
-
-.crear-reporte {
-  border: 1px dashed #999;
-  padding: 1rem;
-  text-align: center;
-  margin-bottom: 1rem;
-
-  button {
-    margin-top: 0.5rem;
-    padding: 0.5rem 1.2rem;
-    background: #1565c0;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.6;
-    }
-  }
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-
-  td,
-  th {
-    border: 1px solid #333;
-    padding: 0.4rem 0.5rem;
+  label {
     font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.88rem;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
   }
 }
 
-.tabla-encabezado {
-  .etiqueta {
-    background: #f0f0f0;
-    font-weight: bold;
-    width: 15%;
+.aceptacion-notas__acciones {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--outline {
+    background: #fff;
+    color: #2563eb;
+
+    &:hover {
+      background: #eff6ff;
+      box-shadow: none;
+    }
   }
 }
 
-.tabla-notas {
-  thead {
-    background: #dbe9f5;
+// ---------------------------------------------------------------------
+// Estados (cargando / error / éxito)
+// ---------------------------------------------------------------------
+.estado {
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #334155;
+  margin-bottom: 16px;
+
+  &--error {
+    background: #fee2e2;
+    color: #991b1b;
   }
 
-  td.izq {
+  &--exito {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  button {
+    margin-top: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      background: #1d4ed8;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Documento (formato-07) — fiel al PDF: cabecera de datos + tabla
+// ---------------------------------------------------------------------
+.formato-07 {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #dbe1ea;
+  padding: 24px;
+  font-size: 0.85rem;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #cbd5e1;
+    padding: 7px 10px;
     text-align: left;
   }
 
-  input {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    padding: 0.2rem;
-    text-align: center;
+  &__cabecera {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+
+    th {
+      background: #eff6ff;
+      color: #1e3a8a;
+      width: 15%;
+      font-weight: 600;
+    }
+
+    td {
+      color: #1e293b;
+    }
   }
 
-  .firma-vacia {
-    background: repeating-linear-gradient(
-      45deg,
-      #fafafa,
-      #fafafa 4px,
-      #f0f0f0 4px,
-      #f0f0f0 8px
-    );
+  &__estudiantes {
+    th {
+      background: #eff6ff;
+      color: #1e3a8a;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    td {
+      text-align: center;
+      color: #1e293b;
+    }
+
+    .col-nombre {
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .col-firma {
+      min-width: 90px;
+      height: 34px;
+    }
+
+    input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #1e293b;
+      border-radius: 4px;
+      padding: 4px 2px;
+
+      &:focus {
+        outline: none;
+        background: #eff6ff;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+      }
+    }
+  }
+
+  &__firmas {
+    margin-top: 24px;
+
+    th {
+      background: #f8fafc;
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    .col-firma-final {
+      height: 64px;
+    }
   }
 }
 
-.acciones {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-
-  button {
-    padding: 0.5rem 1.1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background: #1565c0;
-    color: #fff;
-
-    &.secundario {
-      background: #607d8b;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-    }
-  }
-}
-
-.tabla-firmas {
-  .etiqueta {
-    background: #f0f0f0;
-    font-weight: bold;
-    width: 15%;
+@media print {
+  .no-print {
+    display: none !important;
   }
 
-  input {
-    width: 100%;
-    border: 1px solid #ccc;
-    padding: 0.2rem;
+  .formato-07 {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  input.no-print-border {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
   }
 }

@@ -22,70 +22,59 @@
       </div>
 
       <a routerLink="/portafolio-docente"
-         routerLinkActive="active"
-         [routerLinkActiveOptions]="{exact:true}">
-
-        📄 Informe Final
-
-      </a>
-
-      <a routerLink="/portafolio-docente/aceptacion-notas"
+         [queryParams]="{modo: 'informe-final'}"
          routerLinkActive="active">
-
-        ✅ Aceptación de Notas
-
+        💼 Informe Final
       </a>
 
+      <a routerLink="/portafolio-docente"
+         [queryParams]="{modo: 'aceptacion-notas'}"
+         routerLinkActive="active">
+        ✅ Aceptación de Notas
+      </a>
 
+      <a routerLink="/portafolio-docente"
+         [queryParams]="{modo: 'seguimiento-pea'}"
+         routerLinkActive="active">
+        🗂️ Seguimiento PEA
+      </a>
 
-      <div class="menu-title">
+            <div class="menu-title">
         Fase Práctica
       </div>
 
       <a routerLink="/fase-practica/carta-compromiso"
          routerLinkActive="active">
-
         ✍️ Carta Compromiso
-
       </a>
 
       <a routerLink="/fase-practica/registro-asistencia"
          routerLinkActive="active">
-
         📅 Registro Asistencia
-
       </a>
 
       <a routerLink="/fase-practica/curriculum"
          routerLinkActive="active">
-
         🧾 Currículo
-
       </a>
 
       <a routerLink="/fase-practica/informe-aprendizaje"
          routerLinkActive="active">
-
         📝 Informe Aprendizaje
-
       </a>
 
       <a routerLink="/fase-practica/evaluacion-empresarial"
          routerLinkActive="active">
-
         🏢 Evaluación Empresarial
-
       </a>
 
       <a routerLink="/fase-practica/evaluacion-instituto"
          routerLinkActive="active">
-
         🏫 Evaluación Instituto
-
       </a>
 
       <!-- Sección Vinculación con la sociedad -->
-      <div class="menu-title">Vinculacion con la sociedad</div>
+      <div class="menu-title">Vinculación con la sociedad</div>
 
       <a routerLink="/vinculacion" 
          routerLinkActive="active" 
@@ -116,6 +105,20 @@
          [routerLinkActiveOptions]="{exact:true}">
          🚀 Nuevo Proyecto
       </a>
+
+      <!-- Nueva Sección: Gestión de Accesos -->
+      <div class="menu-title">Gestión de Accesos</div>
+
+      <a routerLink="/auth/coordinador/desbloquear" 
+         routerLinkActive="active">
+         🔄 Resetear Contraseña
+      </a>
+
+      <a routerLink="/auth/coordinador/generar-accesos" 
+         routerLinkActive="active">
+         👤 Ingresar
+      </a>
+
     </div>
 
   </aside>
@@ -148,9 +151,6 @@
             <div class="user-dropdown">
               <a routerLink="/auth/cambiar-password" (click)="cerrarMenuUsuario()" class="dropdown-item">
                 🔑 Cambiar Contraseña
-              </a>
-              <a routerLink="/auth/coordinador/desbloquear" (click)="cerrarMenuUsuario()" class="dropdown-item">
-                🔄 Resetear Contraseña
               </a>
               <hr class="dropdown-divider" />
               <button (click)="cerrarSesion()" class="dropdown-item dropdown-item--danger">

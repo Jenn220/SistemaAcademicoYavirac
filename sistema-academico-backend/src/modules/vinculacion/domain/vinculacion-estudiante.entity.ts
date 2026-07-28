@@ -1,5 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, Unique, OneToMany } from 'typeorm';
-
+import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 @Entity('vinculacion_estudiante')
 @Unique(['id_matricula_detalle'])
@@ -19,6 +18,10 @@ export class VinculacionEstudianteEntity {
   @Column({ type: 'bigint' })
   id_docente: string;
 
+  // 👇 AGREGAR ESTA COLUMNA
+  @Column({ type: 'bigint', nullable: true })
+  id_entidad_receptora: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   nombre_proyecto: string;
 
@@ -36,5 +39,4 @@ export class VinculacionEstudianteEntity {
 
   @Column({ type: 'varchar', length: 30, default: 'EN_CURSO' })
   estado: string;
-
 }

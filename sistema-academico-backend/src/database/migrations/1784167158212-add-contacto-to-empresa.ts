@@ -1,26 +1,14 @@
-import { MigrationInterface, QueryRunner, TableColumn } from "typeorm";
+import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AddContactoToEmpresa1784167158212 implements MigrationInterface { // <- Usa el nombre de clase autogenerado en tu archivo
+export class AddContactoToEmpresa1784167158212 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.addColumns("empresa", [
-            new TableColumn({
-                name: "telefono",
-                type: "varchar",
-                length: "20",
-                isNullable: true
-            }),
-            new TableColumn({
-                name: "correo",
-                type: "varchar",
-                length: "100",
-                isNullable: true
-            })
-        ]);
+        await queryRunner.query(`ALTER TABLE "empresa" ADD COLUMN IF NOT EXISTS "telefono" varchar(20)`);
+        await queryRunner.query(`ALTER TABLE "empresa" ADD COLUMN IF NOT EXISTS "correo" varchar(100)`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropColumn("empresa", "telefono");
-        await queryRunner.dropColumn("empresa", "correo");
+        await queryRunner.query(`ALTER TABLE "empresa" DROP COLUMN IF EXISTS "telefono"`);
+        await queryRunner.query(`ALTER TABLE "empresa" DROP COLUMN IF EXISTS "correo"`);
     }
 }
