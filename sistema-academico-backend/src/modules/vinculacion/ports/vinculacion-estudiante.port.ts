@@ -1,4 +1,5 @@
 import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
+import { CreateObservacionDto } from '../dto/create-observacion.dto';
 import { CreateVinculacionDto } from '../dto/create-vinculacion.dto';
 import { UpdateVinculacionEstudianteDto } from '../dto/update-vinculacion-estudiante.dto';
 
@@ -15,4 +16,6 @@ export interface IVinculacionEstudiantePort {
   obtenerInformeFinal(idVinculacion: number): Promise<any>;
   obtenerActaCompromiso(idVinculacion: number): Promise<any>;
   obtenerReporteAsistenciaTutor(idVinculacion: number): Promise<any>;
+  obtenerObservacionesPorVinculacion(idVinculacion: number): Promise<any[]>;
+  crearObservacion(datos: CreateObservacionDto): Promise<any>;
 }

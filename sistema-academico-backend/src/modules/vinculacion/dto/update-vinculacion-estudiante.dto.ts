@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsNumber, IsInt } from 'class-validator';
 
 export class UpdateVinculacionEstudianteDto {
   @IsOptional()
@@ -40,4 +40,8 @@ export class UpdateVinculacionEstudianteDto {
   @IsOptional()
   @IsString()
   estado?: string;
+  
+  @IsInt()
+  @IsOptional()
+  id_entidad_receptora?: number;
 }

@@ -6,6 +6,7 @@ import { VinculacionEstudianteService } from '../services/vinculacion-estudiante
 import { CreateVinculacionDto } from '../dto/create-vinculacion.dto';
 import { UpdateVinculacionEstudianteDto } from '../dto/update-vinculacion-estudiante.dto';
 import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
+import { CreateObservacionDto } from '../dto/create-observacion.dto';
 
 @UseGuards(JwtGuard, RolesGuard)
 @Roles('DOCENTE', 'ESTUDIANTE', 'TUTOR_EMPRESARIAL', 'COORDINADOR')
@@ -18,10 +19,10 @@ export class VinculacionEstudianteController {
     return await this.estudianteService.crearVinculacion(createVinculacionDto);
   }
 
-@Get('estudiantes')
-async obtenerVinculacionesEstudiantes() {
-  return await this.estudianteService.obtenerVinculacionesEstudiantes();
-}
+  @Get('estudiantes')
+  async obtenerVinculacionesEstudiantes() {
+    return await this.estudianteService.obtenerVinculacionesEstudiantes();
+  }
 
   @Get('verificar-acceso/:idEstudiante')
   async verificarAcceso(@Param('idEstudiante', ParseIntPipe) idEstudiante: number) {
@@ -31,6 +32,16 @@ async obtenerVinculacionesEstudiantes() {
   @Get(':id/verificar-cierre')
   async verificarCierre(@Param('id', ParseIntPipe) idVinculacion: number) {
     return await this.estudianteService.verificarRequisitosCierre(idVinculacion);
+  }
+
+  // 👇 AQUÍ ESTÁ EL NUEVO ENDPOINT PARA LAS OBSERVACIONES
+  @Get('observaciones/:idVinculacion')
+  async obtenerObservaciones(@Param('idVinculacion', ParseIntPipe) idVinculacion: number) {
+    return await this.estudianteService.obtenerObservacionesPorVinculacion(idVinculacion);
+  }
+  @Post('observaciones')
+  async crearObservacion(@Body() createObservacionDto: CreateObservacionDto) {
+    return await this.estudianteService.crearObservacion(createObservacionDto);
   }
 
   @Patch('vinculacion-estudiante/:id')

@@ -15,6 +15,7 @@ import {
 
 import { CreateVinculacionDto } from '../dto/create-vinculacion.dto';
 import { UpdateVinculacionDto } from '../dto/update-actividad-estudiante.dto';
+import { CreateObservacionDto } from '../dto/create-observacion.dto';
 
 @Injectable()
 export class VinculacionEstudianteService {
@@ -73,6 +74,23 @@ export class VinculacionEstudianteService {
     } catch (error) {
       const mensaje = error instanceof Error ? error.message : String(error);
       throw new InternalServerErrorException(`Error al obtener vinculaciones: ${mensaje}`);
+    }
+  }
+
+  // 🟢 NUEVO MÉTODO: Obtener observaciones de una vinculación
+  async obtenerObservacionesPorVinculacion(idVinculacion: number) {
+    try {
+      // Delegamos la consulta a la base de datos a través del puerto
+      const observaciones = await this.repository.obtenerObservacionesPorVinculacion(idVinculacion);
+      
+      return {
+        statusCode: 200,
+        message: observaciones.length > 0 ? 'Observaciones recuperadas exitosamente' : 'No hay observaciones registradas',
+        data: observaciones,
+      };
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : String(error);
+      throw new InternalServerErrorException(`Error al obtener las observaciones: ${mensaje}`);
     }
   }
 
@@ -189,6 +207,21 @@ export class VinculacionEstudianteService {
       }
 
       throw new InternalServerErrorException(`Error al actualizar la vinculación: ${mensaje}`);
+    }
+  }
+
+  // 🟢 NUEVO MÉTODO: Crear observación
+  async crearObservacion(datos: CreateObservacionDto) {
+    try {
+      const resultado = await this.repository.crearObservacion(datos);
+      return { 
+        statusCode: 201, 
+        message: 'Observación registrada exitosamente', 
+        data: resultado 
+      };
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : String(error);
+      throw new InternalServerErrorException(`Error al guardar la observación: ${mensaje}`);
     }
   }
 }

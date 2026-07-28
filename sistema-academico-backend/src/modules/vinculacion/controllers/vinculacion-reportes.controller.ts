@@ -10,9 +10,9 @@ import { VinculacionReportesService } from '../services/vinculacion-reportes.ser
 export class VinculacionReportesController {
   constructor(private readonly reportesService: VinculacionReportesService) {}
 
-  @Get(':id')
-  async obtenerReporteConsolidado(@Param('id', ParseIntPipe) id: number) {
-    return await this.reportesService.obtenerReporteConsolidado(id);
+  @Get('asistencia-estudiante/:id')
+  async obtenerAsistenciaEstudiante(@Param('id', ParseIntPipe) id: number) {
+    return await this.reportesService.obtenerAsistenciaEstudiante(id);
   }
 
   @Get('acta-compromiso/:id')

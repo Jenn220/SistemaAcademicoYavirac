@@ -43,6 +43,13 @@ import { VinculacionReportesAdapter } from './adapters/vinculacion-reportes.adap
 import { VinculacionObjetivosAdapter } from './adapters/vinculacion-objetivos.adapter';
 import { VinculacionInformeAdapter } from './adapters/vinculacion-informe.adapter';
 import { VinculacionEvaluacionAdapter } from './adapters/vinculacion-evaluacion.adapter';
+import { VinculacionReporteObservacionEntity } from './domain/vinculacion_reporte_observacion';
+import { EntidadReceptoraEntity } from './domain/entidad-receptora.entity';
+import { EntidadReceptoraService } from './services/entidad-receptora.service';
+
+import { EntidadReceptoraAdapter } from './adapters/entidad-receptora.adapter';
+import { ENTIDAD_RECEPTORA_PORT } from './ports/entidad-receptora.port';
+import { EntidadReceptoraController } from './controllers/entidad-receptora.controller';
 
 @Module({
   imports: [
@@ -54,6 +61,8 @@ import { VinculacionEvaluacionAdapter } from './adapters/vinculacion-evaluacion.
       VinculacionObjetivo,
       EvaluacionVinculacion,
       DetalleEvaluacionVinculacion,
+      VinculacionReporteObservacionEntity,
+      EntidadReceptoraEntity
     ]),
   ],
   controllers: [
@@ -62,6 +71,7 @@ import { VinculacionEvaluacionAdapter } from './adapters/vinculacion-evaluacion.
     VinculacionReportesController,
     VinculacionEvaluacionController,
     VinculacionActividadesController,
+    EntidadReceptoraController
   ],
   providers: [
     // 1. Servicios Granulares (Capa de Aplicación)
@@ -72,6 +82,7 @@ import { VinculacionEvaluacionAdapter } from './adapters/vinculacion-evaluacion.
     VinculacionInformeService,
     VinculacionEvaluacionService,
     VinculacionReportesService,
+    EntidadReceptoraService,
 
     // 2. Inyección de Dependencias Puerto -> Adaptador (Capa de Infraestructura)
     {
@@ -102,6 +113,10 @@ import { VinculacionEvaluacionAdapter } from './adapters/vinculacion-evaluacion.
       provide: VINCULACION_REPORTES_PORT,
       useClass: VinculacionReportesAdapter,
     },
+    {
+    provide: ENTIDAD_RECEPTORA_PORT, // 👈 Usas el nuevo nombre
+    useClass: EntidadReceptoraAdapter,
+  },
   ],
   // SOLO se exportan Servicios/Providers que otros módulos puedan necesitar (NUNCA Controladores)
   exports: [
@@ -112,6 +127,7 @@ import { VinculacionEvaluacionAdapter } from './adapters/vinculacion-evaluacion.
     VinculacionInformeService,
     VinculacionEvaluacionService,
     VinculacionReportesService,
+    
   ],
 })
 export class VinculacionModule {}

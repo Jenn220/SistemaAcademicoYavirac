@@ -17,6 +17,7 @@ export class EntidadReceptoraController {
     return this.entidadService.obtenerTodas();
   }
 
+  // 📍 GET http://localhost:3000/api/entidades-receptoras/1 (Obtiene una por su ID)
   @Get(':id')
   async obtenerPorId(@Param('id', ParseIntPipe) id: number) {
     return this.entidadService.obtenerPorId(id);

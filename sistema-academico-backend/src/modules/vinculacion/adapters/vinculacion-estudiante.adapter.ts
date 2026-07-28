@@ -4,26 +4,36 @@ import { Repository } from 'typeorm';
 import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
 import { CreateVinculacionDto } from '../dto/create-vinculacion.dto';
 import { UpdateVinculacionEstudianteDto } from '../dto/update-vinculacion-estudiante.dto';
+import { VinculacionReporteObservacionEntity } from '../domain/vinculacion_reporte_observacion';
+import { CreateObservacionDto } from '../dto/create-observacion.dto';
+
 
 @Injectable()
 export class VinculacionEstudianteAdapter {
   constructor(
     @InjectRepository(VinculacionEstudianteEntity)
     private readonly repo: Repository<VinculacionEstudianteEntity>,
+    
+    // 👇 2. INYECTAR EL REPOSITORIO DE OBSERVACIONES
+    @InjectRepository(VinculacionReporteObservacionEntity)
+    private readonly observacionRepo: Repository<VinculacionReporteObservacionEntity>,
   ) {}
 
-  async crearVinculacion(datos: CreateVinculacionDto): Promise<VinculacionEstudianteEntity> {
-    const datosParaGuardar = {
-      ...datos,
-      id_periodo: datos.id_periodo.toString(),
-      id_matricula_detalle: datos.id_matricula_detalle.toString(),
-      id_empresa: datos.id_empresa.toString(),
-      id_docente: datos.id_docente.toString(),
-    };
-    const nueva = this.repo.create(datosParaGuardar as any);
-    const resultado = await this.repo.save(nueva as any);
-    return resultado as VinculacionEstudianteEntity;
-  }
+async crearVinculacion(datos: CreateVinculacionDto): Promise<VinculacionEstudianteEntity> {
+  const datosParaGuardar = {
+    ...datos,
+    id_periodo: datos.id_periodo.toString(),
+    id_matricula_detalle: datos.id_matricula_detalle.toString(),
+    id_empresa: datos.id_empresa.toString(),
+    id_docente: datos.id_docente.toString(),
+    // 👇 Mapeamos id_entidad_receptora si viene en el DTO (o undefined/null si no)
+    id_entidad_receptora: datos.id_entidad_receptora ? datos.id_entidad_receptora.toString() : null,
+  };
+
+  const nueva = this.repo.create(datosParaGuardar as any);
+  const resultado = await this.repo.save(nueva as any);
+  return resultado as VinculacionEstudianteEntity;
+}
 
   async obtenerVinculacionesEstudiantes(): Promise<VinculacionEstudianteEntity[]> {
     return await this.repo.find();
@@ -48,16 +58,25 @@ export class VinculacionEstudianteAdapter {
     return resultados.length > 0 ? resultados[0] : null;
   }
 
-  async actualizarVinculacionEstudiante(id: number, datos: UpdateVinculacionEstudianteDto): Promise<VinculacionEstudianteEntity | null> {
-    const resultadoUpdate = await this.repo.update(id, datos as any);
-    if (resultadoUpdate.affected === 0) return null;
-    return await this.repo.findOne({ where: { id_vinculacion: id as any } });
+ async actualizarVinculacionEstudiante(id: number, datos: UpdateVinculacionEstudianteDto): Promise<VinculacionEstudianteEntity | null> {
+  const datosParaGuardar = { ...datos };
+
+  // Convertir a string si viene el ID para compatibilidad con bigint de PostgreSQL
+  if (datos.id_entidad_receptora !== undefined) {
+    (datosParaGuardar as any).id_entidad_receptora = datos.id_entidad_receptora ? datos.id_entidad_receptora.toString() : null;
   }
+
+  const resultadoUpdate = await this.repo.update(id, datosParaGuardar as any);
+  if (resultadoUpdate.affected === 0) return null;
+  
+  return await this.repo.findOne({ where: { id_vinculacion: id as any } });
+}
 
   async eliminarVinculacionEstudiante(id: number): Promise<boolean> {
     const resultado = await this.repo.delete(id);
     return (resultado.affected ?? 0) > 0;
   }
+  
   async verificarRequisitosCierre(idVinculacion: number): Promise<any> {
     const query = `
       SELECT 
@@ -73,5 +92,23 @@ export class VinculacionEstudianteAdapter {
 
     const resultados = await this.repo.query(query, [idVinculacion]);
     return resultados.length > 0 ? resultados[0] : null;
+  }
+  
+  // AHORA ESTE MÉTODO SÍ FUNCIONARÁ CORRECTAMENTE
+  async obtenerObservacionesPorVinculacion(idVinculacion: number) {
+    return await this.observacionRepo.find({
+      where: { id_vinculacion: idVinculacion.toString() },
+      order: { id_observacion: 'ASC' },
+    });
+  }
+
+  async crearObservacion(datos: CreateObservacionDto) {
+    const nuevaObservacion = this.observacionRepo.create({
+      id_vinculacion: datos.id_vinculacion.toString(),
+      tipo_reporte: datos.tipo_reporte,
+      observacion: datos.observacion,
+    } as any);
+    
+    return await this.observacionRepo.save(nuevaObservacion);
   }
 }
