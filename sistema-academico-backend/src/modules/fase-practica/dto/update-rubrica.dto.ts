@@ -13,11 +13,6 @@ export class UpdateRubricaDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  categoria?: string;
-
-  @IsOptional()
-  @IsString()
   @MaxLength(20)
   estado?: string;
 }

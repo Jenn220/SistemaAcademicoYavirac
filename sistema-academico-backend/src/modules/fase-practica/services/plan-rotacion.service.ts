@@ -4,16 +4,30 @@ import { PLAN_ROTACION_REPOSITORY, IPlanRotacionRepository } from '../ports/plan
 import { CreatePlanRotacionDto } from '../dto/create-plan-rotacion.dto';
 import { UpdatePlanRotacionDto } from '../dto/update-plan-rotacion.dto';
 import { PlanRotacionEntity } from '../domain/plan-rotacion.entity';
+import { ITEM_PLAN_MARCO_REPOSITORY, IItemPlanMarcoRepository } from '../ports/item-plan-marco.repository.port';
 
 @Injectable()
 export class PlanRotacionService {
   constructor(
     @Inject(PLAN_ROTACION_REPOSITORY)
     private readonly planRotacionRepository: IPlanRotacionRepository,
+    @Inject(ITEM_PLAN_MARCO_REPOSITORY)
+    private readonly itemPlanMarcoRepository: IItemPlanMarcoRepository,
   ) {}
 
   async create(dto: CreatePlanRotacionDto): Promise<PlanRotacionEntity> {
-    return this.planRotacionRepository.create(dto);
+    const itemPlanMarco = await this.itemPlanMarcoRepository.findById(dto.id_item_pm);
+    if (!itemPlanMarco) {
+      throw new NotFoundException(`Item plan marco con id ${dto.id_item_pm} no encontrado`);
+    }
+
+    const data = {
+      id_practica: dto.id_practica,
+      id_item_pm: dto.id_item_pm,
+      puesto_aprendizaje: dto.puesto_aprendizaje != null ? dto.puesto_aprendizaje : itemPlanMarco.puesto_aprendizaje,
+    };
+
+    return this.planRotacionRepository.create(data);
   }
 
   async findByPractica(idPractica: number, skip?: number, take?: number): Promise<PlanRotacionEntity[]> {

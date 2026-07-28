@@ -8,7 +8,7 @@ import { CreateEvaluacionEmpresaDto } from '../dto/create-evaluacion-empresa.dto
 import { UpdateEvaluacionEmpresaDto } from '../dto/update-evaluacion-empresa.dto';
 
 @UseGuards(JwtGuard, RolesGuard)
-@Roles('DOCENTE', 'COORDINADOR')
+@Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
 @Controller('fase-practica')
 export class EvaluacionEmpresaController {
   constructor(private readonly service: EvaluacionEmpresaService, private readonly calculoService: EvaluacionCalculoService) {}

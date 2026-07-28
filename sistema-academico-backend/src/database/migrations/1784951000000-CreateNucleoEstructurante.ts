@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class CreateNucleoEstructurante20260727122000 implements MigrationInterface {
+export class CreateNucleoEstructurante1784951000000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE TABLE IF NOT EXISTS public.nucleo_estructurante (

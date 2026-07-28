@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class SeedDatosPruebaBase20260727122003 implements MigrationInterface {
+export class SeedDatosPruebaBase1784954000000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             INSERT INTO public.nucleo_estructurante (id_carrera, nombre, objetivo) VALUES

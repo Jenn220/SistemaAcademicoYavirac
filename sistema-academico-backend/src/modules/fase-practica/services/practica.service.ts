@@ -16,6 +16,7 @@ import { BITACORA_SEMANAL_REPOSITORY } from '../ports/bitacora-semanal.repositor
 import { IBitacoraSemanalRepository } from '../ports/bitacora-semanal.repository.port';
 import { RUBRICA_REPOSITORY } from '../ports/rubrica.repository.port';
 import { IRubricaRepository } from '../ports/rubrica.repository.port';
+import { ITEM_PLAN_MARCO_REPOSITORY, IItemPlanMarcoRepository } from '../ports/item-plan-marco.repository.port';
 import { CreateBitacoraSemanalDto } from '../dto/create-bitacora-semanal.dto';
 import { CreateEvaluacionPracticaDto } from '../dto/create-evaluacion-practica.dto';
 import { CreateInformeAprendizajeDto } from '../dto/create-informe-aprendizaje.dto';
@@ -34,6 +35,7 @@ import { InformeAprendizajeEntity } from '../domain/informe-aprendizaje.entity';
 import { PlanRotacionEntity } from '../domain/plan-rotacion.entity';
 import { RegistroDiarioEntity } from '../domain/registro-diario.entity';
 import { RubricaEntity } from '../domain/rubrica.entity';
+import { PlanRotacionService } from './plan-rotacion.service';
 
 @Injectable()
 export class PracticaService {
@@ -52,6 +54,8 @@ export class PracticaService {
     private readonly bitacoraSemanalRepository: IBitacoraSemanalRepository,
     @Inject(RUBRICA_REPOSITORY)
     private readonly rubricaRepository: IRubricaRepository,
+    @Inject(ITEM_PLAN_MARCO_REPOSITORY)
+    private readonly itemPlanMarcoRepository: IItemPlanMarcoRepository,
   ) {}
 
   async createPractica(dto: CreatePracticaDto): Promise<PracticaEntity> {
@@ -104,7 +108,17 @@ export class PracticaService {
 
   async createPlanRotacion(dto: CreatePlanRotacionDto): Promise<PlanRotacionEntity> {
     await this.findPracticaById(dto.id_practica);
-    return this.planRotacionRepository.create(dto);
+    const itemPlanMarco = await this.itemPlanMarcoRepository.findById(dto.id_item_pm);
+    if (!itemPlanMarco) {
+      throw new NotFoundException(`Item plan marco con id ${dto.id_item_pm} no encontrado`);
+    }
+
+    const data = {
+      ...dto,
+      puesto_aprendizaje: dto.puesto_aprendizaje != null ? dto.puesto_aprendizaje : itemPlanMarco.puesto_aprendizaje,
+    };
+
+    return this.planRotacionRepository.create(data);
   }
 
   async findPlanRotacionByPractica(idPractica: number, skip?: number, take?: number): Promise<PlanRotacionEntity[]> {

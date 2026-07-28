@@ -13,6 +13,8 @@ import { RubricaController } from './controllers/rubrica.controller';
 import { ItemRubricaController } from './controllers/item-rubrica.controller';
 import { DetalleEvaluacionController } from './controllers/detalle-evaluacion.controller';
 import { PlanRotacionSemanaController } from './controllers/plan-rotacion-semana.controller';
+import { PlanMarcoController } from './controllers/plan-marco.controller';
+import { ItemPlanMarcoController } from './controllers/item-plan-marco.controller';
 import { PerfilEstudianteController } from './controllers/perfil-estudiante.controller';
 import { BitacoraSemanalEntity } from './domain/bitacora-semanal.entity';
 import { CvDatoAcademicoEntity } from './domain/cv-dato-academico.entity';
@@ -28,13 +30,13 @@ import { InformeAprendizajeEntity } from './domain/informe-aprendizaje.entity';
 import { ItemRubricaEntity } from './domain/item-rubrica.entity';
 import { PlanRotacionEntity } from './domain/plan-rotacion.entity';
 import { PlanRotacionSemanaEntity } from './domain/plan-rotacion-semana.entity';
+import { PlanMarcoFormacionEntity } from './domain/plan-marco-formacion.entity';
+import { ItemPlanMarcoEntity } from './domain/item-plan-marco.entity';
 import { PracticaEntity } from './domain/practica.entity';
 import { RegistroDiarioEntity } from './domain/registro-diario.entity';
 import { RubricaEntity } from './domain/rubrica.entity';
 import { BitacoraSemanalService } from './services/bitacora-semanal.service';
 import { CvService } from './services/cv.service';
-import { ContextoFasePracticaService } from './services/contexto-fase-practica.service';
-import { DatosGeneralesService } from './services/datos-generales.service';
 import { DocumentoPlantillaService } from './services/documento-plantilla.service';
 import { DocumentoService } from './services/documento.service';
 import { EmpresaService } from './services/empresa.service';
@@ -42,7 +44,6 @@ import { EvaluacionCalculoService } from './services/evaluacion-calculo.service'
 import { EvaluacionEmpresaService } from './services/evaluacion-empresa.service';
 import { EvaluacionInstitutoService } from './services/evaluacion-instituto.service';
 import { EvaluacionPracticaService } from './services/evaluacion-practica.service';
-import { FichaGeneralService } from './services/ficha-general.service';
 import { InformeAprendizajeService } from './services/informe-aprendizaje.service';
 import { InformeFasePracticaService } from './services/informe-fase-practica.service';
 import { PlanRotacionService } from './services/plan-rotacion.service';
@@ -52,7 +53,8 @@ import { RubricaService } from './services/rubrica.service';
 import { ItemRubricaService } from './services/item-rubrica.service';
 import { DetalleEvaluacionService } from './services/detalle-evaluacion.service';
 import { PlanRotacionSemanaService } from './services/plan-rotacion-semana.service';
-import { ValidacionPertenenciaService } from './services/validacion-pertenencia.service';
+import { PlanMarcoService } from './services/plan-marco.service';
+import { ItemPlanMarcoService } from './services/item-plan-marco.service';
 import { InformeFasePracticaPg } from './adapters/informe-fase-practica.pg';
 import {
   INFORME_FASE_PRACTICA_REPOSITORY,
@@ -70,6 +72,10 @@ import { PLAN_ROTACION_REPOSITORY } from './ports/plan-rotacion.repository.port'
 import { PlanRotacionPg } from './adapters/plan-rotacion.pg';
 import { PLAN_ROTACION_SEMANA_REPOSITORY } from './ports/plan-rotacion-semana.repository.port';
 import { PlanRotacionSemanaPg } from './adapters/plan-rotacion-semana.pg';
+import { PLAN_MARCO_REPOSITORY } from './ports/plan-marco.repository.port';
+import { PlanMarcoPg } from './adapters/plan-marco.pg';
+import { ITEM_PLAN_MARCO_REPOSITORY } from './ports/item-plan-marco.repository.port';
+import { ItemPlanMarcoPg } from './adapters/item-plan-marco.pg';
 import { INFORME_APRENDIZAJE_REPOSITORY } from './ports/informe-aprendizaje.repository.port';
 import { InformeAprendizajePg } from './adapters/informe-aprendizaje.pg';
 import { EVALUACION_PRACTICA_REPOSITORY } from './ports/evaluacion-practica.repository.port';
@@ -88,8 +94,6 @@ import { DETALLE_EVALUACION_REPOSITORY } from './ports/detalle-evaluacion.reposi
 import { DetalleEvaluacionPg } from './adapters/detalle-evaluacion.pg';
 import { ITEM_RUBRICA_REPOSITORY } from './ports/item-rubrica.repository.port';
 import { ItemRubricaPg } from './adapters/item-rubrica.pg';
-import { CONTEXTO_FASE_PRACTICA_REPOSITORY } from './ports/contexto-fase-practica.port';
-import { ContextoFasePracticaPg } from './adapters/contexto-fase-practica.pg';
 
 @Module({
   imports: [
@@ -98,6 +102,8 @@ import { ContextoFasePracticaPg } from './adapters/contexto-fase-practica.pg';
       RegistroDiarioEntity,
       PlanRotacionEntity,
       PlanRotacionSemanaEntity,
+      PlanMarcoFormacionEntity,
+      ItemPlanMarcoEntity,
       InformeAprendizajeEntity,
       EvaluacionPracticaEntity,
       EvaluacionPlanMarcoEntity,
@@ -125,9 +131,11 @@ import { ContextoFasePracticaPg } from './adapters/contexto-fase-practica.pg';
     EvaluacionInstitutoController,
     RubricaController,
     ItemRubricaController,
-    DetalleEvaluacionController,
-    PlanRotacionSemanaController,
-    PerfilEstudianteController,
+      DetalleEvaluacionController,
+      PlanRotacionSemanaController,
+      PlanMarcoController,
+      ItemPlanMarcoController,
+      PerfilEstudianteController,
   ],
   providers: [
     PracticaService,
@@ -186,12 +194,22 @@ import { ContextoFasePracticaPg } from './adapters/contexto-fase-practica.pg';
       provide: DETALLE_EVALUACION_REPOSITORY,
       useClass: DetalleEvaluacionPg,
     },
-    PlanRotacionSemanaService,
-    {
-      provide: PLAN_ROTACION_SEMANA_REPOSITORY,
-      useClass: PlanRotacionSemanaPg,
-    },
-    InformeFasePracticaService,
+      PlanRotacionSemanaService,
+      {
+        provide: PLAN_ROTACION_SEMANA_REPOSITORY,
+        useClass: PlanRotacionSemanaPg,
+      },
+      PlanMarcoService,
+      {
+        provide: PLAN_MARCO_REPOSITORY,
+        useClass: PlanMarcoPg,
+      },
+      ItemPlanMarcoService,
+      {
+        provide: ITEM_PLAN_MARCO_REPOSITORY,
+        useClass: ItemPlanMarcoPg,
+      },
+      InformeFasePracticaService,
     {
       provide: INFORME_FASE_PRACTICA_REPOSITORY,
       useClass: InformeFasePracticaPg,
@@ -217,16 +235,9 @@ import { ContextoFasePracticaPg } from './adapters/contexto-fase-practica.pg';
       provide: ITEM_RUBRICA_REPOSITORY,
       useClass: ItemRubricaPg,
     },
-    ContextoFasePracticaService,
-    {
-      provide: CONTEXTO_FASE_PRACTICA_REPOSITORY,
-      useClass: ContextoFasePracticaPg,
-    },
-    DatosGeneralesService,
     EvaluacionCalculoService,
     EvaluacionEmpresaService,
     EvaluacionInstitutoService,
-    FichaGeneralService,
   ],
 })
 export class FasePracticaModule {}
