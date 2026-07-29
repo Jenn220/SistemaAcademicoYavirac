@@ -139,9 +139,9 @@ export class AuthService {
     if (dto.tipo === 'ESTUDIANTE') {
       candidatos = await this.usuarioRepo.findEstudiantesSinUsuarioPorPeriodo(dto.id_periodo);
     } else if (dto.tipo === 'DOCENTE') {
-      candidatos = await this.usuarioRepo.findDocentesSinUsuario();
+      candidatos = await this.usuarioRepo.findDocentesSinUsuarioPorPeriodo(dto.id_periodo);
     } else {
-      candidatos = await this.usuarioRepo.findEmpresasSinUsuario();
+      candidatos = await this.usuarioRepo.findEmpresasSinUsuarioPorPeriodo(dto.id_periodo);
     }
 
     const correosCreados: string[] = [];
@@ -158,6 +158,15 @@ export class AuthService {
           errores.push({
             correo: candidato.correo,
             motivo: 'Sin cédula o RUC registrado para generar la contraseña inicial',
+          });
+          continue;
+        }
+
+        const usuarioExistente = await this.usuarioRepo.findByCorreoConRoles(candidato.correo);
+        if (usuarioExistente) {
+          errores.push({
+            correo: candidato.correo,
+            motivo: 'Ese correo ya está en uso por otro usuario, se omitió',
           });
           continue;
         }

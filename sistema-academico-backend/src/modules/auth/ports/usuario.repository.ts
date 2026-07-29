@@ -49,11 +49,9 @@ export interface IUsuarioRepository {
   resetearPasswordYDesbloquear(idUsuario: number, passwordHash: string): Promise<void>;
   actualizarPassword(idUsuario: number, passwordHash: string): Promise<void>;
   findEstudiantesSinUsuarioPorPeriodo(idPeriodo: number): Promise<PersonaSinUsuario[]>;
-  findDocentesSinUsuario(): Promise<PersonaSinUsuario[]>;
-  findEmpresasSinUsuario(): Promise<PersonaSinUsuario[]>;
+  findDocentesSinUsuarioPorPeriodo(idPeriodo: number): Promise<PersonaSinUsuario[]>;
+  findEmpresasSinUsuarioPorPeriodo(idPeriodo: number): Promise<PersonaSinUsuario[]>;
   crearUsuarioConRol(input: CrearUsuarioConRolInput): Promise<UsuarioEntity>;
-  
-  //  AGREGAR ESTA LÍNEA AL FINAL DE LA INTERFAZ:
   findPeriodosActivos(): Promise<PeriodoAcademicoResponse[]>;
 }
 
