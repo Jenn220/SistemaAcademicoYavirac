@@ -43,4 +43,11 @@ export class AuthController {
   desbloquear(@Body() dto: DesbloquearDto) {
     return this.authService.desbloquear(dto);
   }
+
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles('COORDINADOR')
+  @Get('periodos-activos')
+  obtenerPeriodosActivos() {
+  return this.authService.obtenerPeriodosActivos();
+}
 }

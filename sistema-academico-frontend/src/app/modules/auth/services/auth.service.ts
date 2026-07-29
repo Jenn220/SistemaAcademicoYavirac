@@ -48,6 +48,12 @@ private readonly apiUrl = 'http://localhost:3000/api/auth';
     );
   }
 
+  obtenerPeriodosActivos(): Observable<{ id_periodo: number; nombre: string; codigo: string }[]> {
+  return this.http.get<{ id_periodo: number; nombre: string; codigo: string }[]>(
+    `${this.apiUrl}/periodos-activos`
+  );
+}
+
   me(): Observable<MeResponse> {
     return this.http.get<MeResponse>(`${this.apiUrl}/me`);
   }

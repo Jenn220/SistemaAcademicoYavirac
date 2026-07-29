@@ -34,6 +34,12 @@ export interface ClaveTemporalUsuario {
   claveTemporal: string | null;
 }
 
+export interface PeriodoAcademicoResponse {
+  id_periodo: number;
+  nombre: string;
+  codigo: string;
+}
+
 export interface IUsuarioRepository {
   findByCorreoConRoles(correo: string): Promise<UsuarioConRoles | null>;
   findByIdConRoles(idUsuario: number): Promise<UsuarioConRoles | null>;
@@ -46,6 +52,11 @@ export interface IUsuarioRepository {
   findDocentesSinUsuario(): Promise<PersonaSinUsuario[]>;
   findEmpresasSinUsuario(): Promise<PersonaSinUsuario[]>;
   crearUsuarioConRol(input: CrearUsuarioConRolInput): Promise<UsuarioEntity>;
+  
+  //  AGREGAR ESTA LÍNEA AL FINAL DE LA INTERFAZ:
+  findPeriodosActivos(): Promise<PeriodoAcademicoResponse[]>;
 }
+
+
 
 export const USUARIO_REPOSITORY = 'USUARIO_REPOSITORY';
