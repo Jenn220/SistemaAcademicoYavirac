@@ -53,6 +53,18 @@ export class DocumentoController {
     return this.documentoService.getEvaluacionInstituto(usuario);
   }
 
+  @Get('acta-induccion-seguridad')
+  getActaInduccionSeguridad(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getActaInduccionSeguridad(usuario);
+  }
+
+  @Get('acta-entorno-laboral')
+  getActaEntornoLaboral(@Req() req: any) {
+    const usuario = req.user;
+    return this.documentoService.getActaEntornoLaboral(usuario);
+  }
+
   @Get('todos')
   getTodos(@Req() req: any) {
     const usuario = req.user;
@@ -99,5 +111,19 @@ export class DocumentoController {
     const usuario = req.user;
     const contenido = dto?.contenido ?? this.documentoService.getEvaluacionInstituto(usuario);
     return this.documentoService.guardarDocumento('F08', 'Evaluación Instituto', contenido);
+  }
+
+  @Post('acta-induccion-seguridad')
+  createActaInduccionSeguridad(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getActaInduccionSeguridad(usuario);
+    return this.documentoService.guardarDocumento('F10', 'Acta de Inducción de Seguridad', contenido);
+  }
+
+  @Post('acta-entorno-laboral')
+  createActaEntornoLaboral(@Body() dto: CreateDocumentoDto, @Req() req: any) {
+    const usuario = req.user;
+    const contenido = dto?.contenido ?? this.documentoService.getActaEntornoLaboral(usuario);
+    return this.documentoService.guardarDocumento('F11', 'Acta del Entorno Laboral Real', contenido);
   }
 }

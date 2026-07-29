@@ -14,6 +14,10 @@ export class AddStudentFields1784973000000 implements MigrationInterface {
     `);
     await queryRunner.query(`
       ALTER TABLE public.estudiante
+      ADD COLUMN IF NOT EXISTS domicilio text NULL
+    `);
+    await queryRunner.query(`
+      ALTER TABLE public.estudiante
       ADD COLUMN IF NOT EXISTS contacto_emergencia_nombre varchar(200) NULL
     `);
     await queryRunner.query(`
@@ -25,6 +29,7 @@ export class AddStudentFields1784973000000 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`ALTER TABLE public.estudiante DROP COLUMN IF EXISTS contacto_emergencia_telefono`);
     await queryRunner.query(`ALTER TABLE public.estudiante DROP COLUMN IF EXISTS contacto_emergencia_nombre`);
+    await queryRunner.query(`ALTER TABLE public.estudiante DROP COLUMN IF EXISTS domicilio`);
     await queryRunner.query(`ALTER TABLE public.estudiante DROP COLUMN IF EXISTS tipo_sangre`);
     await queryRunner.query(`ALTER TABLE public.estudiante DROP COLUMN IF EXISTS estado_civil`);
   }

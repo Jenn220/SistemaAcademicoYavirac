@@ -15,7 +15,7 @@ export class DocumentoService {
   async guardarDocumento(
     codigo: string,
     titulo: string,
-    contenido: Record<string, any>,
+    contenido: any,
   ): Promise<DocumentoEntity> {
     return this.documentoRepository.guardarDocumento(codigo, titulo, contenido);
   }
@@ -46,6 +46,14 @@ export class DocumentoService {
 
   getEvaluacionInstituto(usuario: any) {
     return this.plantillaService.getEvaluacionInstituto(usuario);
+  }
+
+  getActaInduccionSeguridad(usuario: any) {
+    return this.plantillaService.getActaInduccionSeguridad(usuario);
+  }
+
+  getActaEntornoLaboral(usuario: any) {
+    return this.plantillaService.getActaEntornoLaboral(usuario);
   }
 
   getTodosLosDocumentos(usuario: any) {

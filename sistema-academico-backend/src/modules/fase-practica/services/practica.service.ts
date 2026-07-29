@@ -171,6 +171,12 @@ export class PracticaService {
     return this.evaluacionPracticaRepository.findByPractica(idPractica, skip, take);
   }
 
+  async findEvaluacionById(id: number): Promise<EvaluacionPracticaEntity> {
+    const evaluacion = await this.evaluacionPracticaRepository.findById(id);
+    if (!evaluacion) throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
+    return evaluacion;
+  }
+
   async updateEvaluacionPractica(id: number, dto: UpdateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
     await this.evaluacionPracticaRepository.findById(id).then(evaluacion => {
       if (!evaluacion) throw new NotFoundException(`No se encontró la evaluación con id ${id}`);

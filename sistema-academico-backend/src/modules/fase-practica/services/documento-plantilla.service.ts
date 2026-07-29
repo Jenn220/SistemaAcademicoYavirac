@@ -32,6 +32,8 @@ import {
   EvaluacionEmpresarial,
   CriterioInstituto,
   EvaluacionInstituto,
+  ActaInduccionSeguridad,
+  ActaEntornoLaboral,
 } from '../dto/documentos.types';
 
 @Injectable()
@@ -79,23 +81,58 @@ export class DocumentoPlantillaService {
   }
 
   async getDatosMaestra(usuario: any): Promise<DatosMaestra> {
-    const estudiante = await this.estudianteRepository.findOne({
-      where: { id_estudiante: usuario.idEstudiante },
-    });
+    let idPractica: number | undefined;
+    let practica: any = null;
 
-    if (!estudiante) {
-      throw new Error('Estudiante no encontrado');
+    try {
+      idPractica = await this.obtenerIdPractica(usuario);
+      practica = await this.practicaRepository.findOne({
+        where: { id_practica: idPractica },
+        relations: ['empresa', 'tutor_empresarial'],
+      });
+    } catch (error) {
+      practica = null;
     }
 
-    const practica = await this.practicaRepository.findOne({
-      where: { id_empresa: usuario.idEmpresa ?? 1 },
+    if (!practica) {
+      return this.getDatosMaestraVacia();
+    }
+
+    let estudiante: any = null;
+
+    if (usuario.idEstudiante) {
+      estudiante = await this.estudianteRepository.findOne({
+        where: { id_estudiante: usuario.idEstudiante },
+      });
+    } else if (practica.id_matricula_detalle) {
+      const matriculaDetalle = await this.dataSource.query(
+        `SELECT md.id_matricula FROM matricula_detalle md WHERE md.id_matricula_detalle = $1 LIMIT 1`,
+        [practica.id_matricula_detalle],
+      );
+
+      if (matriculaDetalle.length > 0) {
+        const matricula = await this.dataSource.query(
+          `SELECT id_estudiante FROM matricula WHERE id_matricula = $1 LIMIT 1`,
+          [matriculaDetalle[0].id_matricula],
+        );
+
+        if (matricula.length > 0) {
+          estudiante = await this.estudianteRepository.findOne({
+            where: { id_estudiante: matricula[0].id_estudiante },
+          });
+        }
+      }
+    }
+
+    if (!estudiante) {
+      return this.getDatosMaestraVacia();
+    }
+
+    const empresa = await this.empresaRepository.findOne({
+      where: { id_empresa: practica.id_empresa },
     });
 
-    const empresa = practica
-      ? await this.empresaRepository.findOne({ where: { id_empresa: practica.id_empresa } })
-      : await this.empresaRepository.findOne({ where: { id_empresa: 1 } });
-
-    const tutorEmpresarial = practica?.tutor_empresarial;
+    const tutorEmpresarial = practica.tutor_empresarial;
 
     let carreraNombre = '';
     let nivelNombre = '';
@@ -114,7 +151,7 @@ export class DocumentoPlantillaService {
        JOIN carrera c ON c.id_carrera = m.id_carrera
        WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVO'
        LIMIT 1`,
-      [usuario.idEstudiante],
+      [estudiante.id_estudiante],
     );
 
     if (matricula.length > 0) {
@@ -177,9 +214,9 @@ export class DocumentoPlantillaService {
       }
     }
 
-    const nucleo = await this.nucleoRepository.findOne({
-      where: { id_carrera: matricula.length > 0 ? matricula[0].id_carrera : 1 },
-    });
+    const nucleo = matricula.length > 0
+      ? await this.nucleoRepository.findOne({ where: { id_carrera: matricula[0].id_carrera } })
+      : null;
 
     const carrera: DatosCarrera = {
       coordinador: coordinadorNombre,
@@ -222,24 +259,71 @@ export class DocumentoPlantillaService {
 
     return {
       estudiante: {
-        nombre: `${estudiante.nombres} ${estudiante.apellidos}`,
-        cedula: estudiante.cedula,
+        nombre: estudiante ? `${estudiante.nombres} ${estudiante.apellidos}` : '',
+        cedula: estudiante?.cedula ?? '',
         carrera: carreraNombre,
         curso: nivelNombre,
         nivel: nivelNombre,
-        email: estudiante.correo ?? '',
-        telefono: estudiante.telefono ?? '',
-        estadoCivil: estudiante.estado_civil ?? '',
-        tipoSangre: estudiante.tipo_sangre ?? '',
-        domicilio: estudiante.domicilio ?? '',
-        contactoEmergenciaNombre: estudiante.contacto_emergencia_nombre ?? '',
-        contactoEmergenciaTelefono: estudiante.contacto_emergencia_telefono ?? '',
+        email: estudiante?.correo ?? '',
+        telefono: estudiante?.telefono ?? '',
+        estadoCivil: estudiante?.estado_civil ?? '',
+        tipoSangre: estudiante?.tipo_sangre ?? '',
+        domicilio: estudiante?.domicilio ?? '',
+        contactoEmergenciaNombre: estudiante?.contacto_emergencia_nombre ?? '',
+        contactoEmergenciaTelefono: estudiante?.contacto_emergencia_telefono ?? '',
       },
       carrera,
       proyectoEmpresarial,
       empresaBeneficiaria,
       periodoAcademico,
       cronograma,
+    };
+  }
+
+  private getDatosMaestraVacia(): DatosMaestra {
+    return {
+      estudiante: {
+        nombre: '',
+        cedula: '',
+        carrera: '',
+        curso: '',
+        nivel: '',
+        email: '',
+        telefono: '',
+        estadoCivil: '',
+        tipoSangre: '',
+        domicilio: '',
+        contactoEmergenciaNombre: '',
+        contactoEmergenciaTelefono: '',
+      },
+      carrera: {
+        coordinador: '',
+        tutorAcademico: '',
+        nucleoEstructurante: '',
+        objetivoNucleoEstructurante: '',
+      },
+      proyectoEmpresarial: {
+        nombre: '',
+        cobertura: '',
+        plazo: '',
+        empresaAsignada: '',
+        fechaInicio: '',
+        fechaFin: '',
+      },
+      empresaBeneficiaria: {
+        razonSocial: '',
+        representanteLegal: '',
+        tutorEmpresarial: '',
+        direccion: '',
+        ubicacion: '',
+      },
+      periodoAcademico: {
+        codigo: '',
+        nombre: '',
+        fechaInicio: '',
+        fechaFin: '',
+      },
+      cronograma: [],
     };
   }
 
@@ -503,6 +587,8 @@ export class DocumentoPlantillaService {
     const informeAprendizaje = await this.getInformeAprendizaje(usuario);
     const evaluacionEmpresarial = await this.getEvaluacionEmpresarial(usuario);
     const evaluacionInstituto = await this.getEvaluacionInstituto(usuario);
+    const actaInduccionSeguridad = await this.getActaInduccionSeguridad(usuario);
+    const actaEntornoLaboral = await this.getActaEntornoLaboral(usuario);
 
     return {
       datos: datosMaestra,
@@ -512,7 +598,322 @@ export class DocumentoPlantillaService {
       informeAprendizaje,
       evaluacionEmpresarial,
       evaluacionInstituto,
+      actaInduccionSeguridad,
+      actaEntornoLaboral,
     };
+  }
+
+  async getActaInduccionSeguridad(usuario: any): Promise<ActaInduccionSeguridad> {
+    try {
+      const idPractica = await this.obtenerIdPractica(usuario);
+      const practica = await this.practicaRepository.findOne({
+        where: { id_practica: idPractica },
+        relations: ['empresa', 'tutor_empresarial'],
+      });
+
+      if (!practica) {
+        return this.getActaInduccionSeguridadVacia();
+      }
+
+      let estudiante: any = null;
+
+      if (usuario.idEstudiante) {
+        estudiante = await this.estudianteRepository.findOne({
+          where: { id_estudiante: usuario.idEstudiante },
+        });
+      } else if (practica.id_matricula_detalle) {
+        const matriculaDetalle = await this.dataSource.query(
+          `SELECT md.id_matricula FROM matricula_detalle md WHERE md.id_matricula_detalle = $1 LIMIT 1`,
+          [practica.id_matricula_detalle],
+        );
+
+        if (matriculaDetalle.length > 0) {
+          const matricula = await this.dataSource.query(
+            `SELECT id_estudiante FROM matricula WHERE id_matricula = $1 LIMIT 1`,
+            [matriculaDetalle[0].id_matricula],
+          );
+
+          if (matricula.length > 0) {
+            estudiante = await this.estudianteRepository.findOne({
+              where: { id_estudiante: matricula[0].id_estudiante },
+            });
+          }
+        }
+      }
+
+      if (!estudiante) {
+        return this.getActaInduccionSeguridadVacia();
+      }
+
+      const nivel = await this.dataSource.query(
+        `SELECT n.nombre as nivel_nombre
+         FROM matricula_detalle md
+         JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+         JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+         JOIN nivel n ON n.id_nivel = a.id_nivel
+         WHERE md.id_matricula_detalle = $1
+         LIMIT 1`,
+        [practica.id_matricula_detalle],
+      );
+
+      const nivelNombre = nivel.length > 0 ? nivel[0].nivel_nombre : '';
+
+      const carrera = await this.dataSource.query(
+        `SELECT m.id_carrera, c.nombre as carrera_nombre
+         FROM matricula m
+         JOIN carrera c ON c.id_carrera = m.id_carrera
+         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVO'
+         LIMIT 1`,
+        [estudiante.id_estudiante],
+      );
+
+      const carreraNombre = carrera.length > 0 ? carrera[0].carrera_nombre : '';
+
+      return {
+        lugarFecha: `Quito D.M., ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
+        estudiante: {
+          nombre: `${estudiante.nombres} ${estudiante.apellidos}`,
+          cedula: estudiante.cedula,
+          nivel: nivelNombre,
+          carrera: carreraNombre,
+        },
+        empresa: {
+          razonSocial: practica.empresa?.razon_social ?? '',
+        },
+        textoLegal: [
+          'Reconozco que toda actividad puede tener riesgos y peligros, por tal razón, he recibido una inducción sobre los potenciales riesgos de la actividad que voy a realiza en la empresa formadora-receptora, sobre la identificación de situaciones potencialmente peligrosas, así como las orientaciones sobre las medidas de prevención y normas de seguridad para prevenir accidentes.',
+          'He entendido la orientación sobre los riesgos potenciales de esa actividad y sobre sus normas de seguridad para evitarlos o prevenirlos. Por esto, de manera libre y voluntaria, acepto los mismos y me comprometo a cumplir las exigencias de seguridad, protocolos y uso correcto de equipamientos que logren mitigarlos o evitarlos, durante toda mi permanencia en la empresa formadora-receptora.',
+          'Tengo conocimiento sobre la actividad que voy a realizar y he recibido medios de protección a ser usados por mí en las actividades designadas en la empresa formadora-receptora.',
+          'En caso que tenga una discapacidad física o mental, temporal o permanente, que pueda influir en mi seguridad personal o de un tercero, reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto.',
+          'En caso que identifique una situación que considere como potencialmente peligrosa o un incidente de seguridad, reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto.',
+          'No realizaré actividades que no estén detalladas en mis actividades, o que no cuenten con el respectivo análisis de riesgos, medidas de seguridad y procedimientos de emergencia establecidos.',
+          'Reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto, sobre la pérdida o daño en el equipamiento de protección personal que haya recibido.',
+        ],
+        firmaEstudiante: '______________________________',
+      };
+    } catch (error) {
+      return this.getActaInduccionSeguridadVacia();
+    }
+  }
+
+  private getActaInduccionSeguridadVacia(): ActaInduccionSeguridad {
+    return {
+      lugarFecha: '',
+      estudiante: {
+        nombre: '',
+        cedula: '',
+        nivel: '',
+        carrera: '',
+      },
+      empresa: {
+        razonSocial: '',
+      },
+      textoLegal: [],
+      firmaEstudiante: '______________________________',
+    };
+  }
+
+  private getActaEntornoLaboralVacia(): ActaEntornoLaboral {
+    return {
+      encabezado: {
+        instituto: 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC',
+        titulo: 'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL',
+        fecha: '',
+        carrera: '',
+        periodoAcademico: '',
+        entidadReceptora: '',
+      },
+      textoLegal: [],
+      anexos: [],
+      estudiantes: [],
+      firmas: {
+        tutorEmpresarial: { nombre: '', cedula: '' },
+        coordinador: { nombre: '', cedula: '' },
+        tutorAcademico: { nombre: '', cedula: '' },
+      },
+    };
+  }
+
+  async getActaEntornoLaboral(usuario: any): Promise<ActaEntornoLaboral> {
+    try {
+      let idEstudiante = usuario.idEstudiante;
+      let matricula: any[] = [];
+
+      if (idEstudiante) {
+        matricula = await this.dataSource.query(
+          `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, p.codigo as periodo_codigo, p.nombre as periodo_nombre
+           FROM matricula m
+           JOIN carrera c ON c.id_carrera = m.id_carrera
+           JOIN periodo_academico p ON p.id_periodo = m.id_periodo
+           WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVO'
+           LIMIT 1`,
+          [idEstudiante],
+        );
+      }
+
+      let practica: any = null;
+
+      if (matricula.length === 0) {
+        const idPractica = await this.obtenerIdPractica(usuario);
+        practica = await this.practicaRepository.findOne({
+          where: { id_practica: idPractica },
+          relations: ['empresa'],
+        });
+
+        if (!practica?.id_matricula_detalle) {
+          return this.getActaEntornoLaboralVacia();
+        }
+
+        const matriculaDetalle = await this.dataSource.query(
+          `SELECT md.id_matricula FROM matricula_detalle md WHERE md.id_matricula_detalle = $1 LIMIT 1`,
+          [practica.id_matricula_detalle],
+        );
+
+        if (matriculaDetalle.length > 0) {
+          matricula = await this.dataSource.query(
+            `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, p.codigo as periodo_codigo, p.nombre as periodo_nombre
+             FROM matricula m
+             JOIN carrera c ON c.id_carrera = m.id_carrera
+             JOIN periodo_academico p ON p.id_periodo = m.id_periodo
+             WHERE m.id_matricula = $1 AND m.estado = 'ACTIVA'
+             LIMIT 1`,
+            [matriculaDetalle[0].id_matricula],
+          );
+        }
+      }
+
+      if (matricula.length === 0) {
+        return this.getActaEntornoLaboralVacia();
+      }
+
+      const m = matricula[0];
+      const idCarrera = m.id_carrera;
+      const idPeriodo = m.id_periodo;
+
+      const estudiantes = await this.dataSource.query(
+        `SELECT 
+           e.nombres || ' ' || e.apellidos as nombre,
+           e.cedula,
+           n.nombre as nivel,
+           p.id_practica
+         FROM matricula m
+         JOIN matricula_detalle md ON md.id_matricula = m.id_matricula
+         JOIN estudiante e ON e.id_estudiante = m.id_estudiante
+         JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+         JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+         JOIN nivel n ON n.id_nivel = a.id_nivel
+         JOIN practica_estudiante p ON p.id_matricula_detalle = md.id_matricula_detalle
+         WHERE m.id_carrera = $1 AND m.id_periodo = $2 AND m.estado = 'ACTIVA'
+         ORDER BY e.apellidos, e.nombres`,
+        [idCarrera, idPeriodo],
+      );
+
+      const estudiantesConNota = await Promise.all(
+        estudiantes.map(async (est: any, index: number) => {
+          let nota = '';
+          if (est.id_practica) {
+            const evaluaciones = await this.evaluacionRepository.find({
+              where: { id_practica: est.id_practica },
+            });
+            if (evaluaciones.length > 0) {
+              const promedio = Number((evaluaciones.reduce((a: number, b: any) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2));
+              nota = promedio.toString();
+            }
+          }
+          return {
+            no: index + 1,
+            nombre: est.nombre,
+            cedula: est.cedula,
+            nivel: est.nivel,
+            nota,
+            firma: '',
+          };
+        }),
+      );
+
+      if (!practica) {
+        const idPractica = await this.obtenerIdPractica(usuario);
+        practica = await this.practicaRepository.findOne({
+          where: { id_practica: idPractica },
+          relations: ['empresa', 'tutor_empresarial'],
+        });
+      }
+
+      const periodoCarrera = await this.dataSource.query(
+        `SELECT pc.id_coordinador, doc.nombres as coordinador_nombres, doc.apellidos as coordinador_apellidos, doc.cedula as coordinador_cedula
+         FROM periodo_carrera pc
+         LEFT JOIN docente doc ON doc.id_docente = pc.id_coordinador
+         WHERE pc.id_periodo = $1 AND pc.id_carrera = $2
+         LIMIT 1`,
+        [idPeriodo, idCarrera],
+      );
+
+      const coordinador = periodoCarrera.length > 0 ? {
+        nombre: periodoCarrera[0].coordinador_nombres && periodoCarrera[0].coordinador_apellidos
+          ? `${periodoCarrera[0].coordinador_nombres} ${periodoCarrera[0].coordinador_apellidos}`
+          : '',
+        cedula: periodoCarrera[0].coordinador_cedula ?? '',
+      } : { nombre: '', cedula: '' };
+
+      const tutorAcademico = await this.dataSource.query(
+        `SELECT d.nombres, d.apellidos, d.cedula
+         FROM practica_estudiante p
+         JOIN docente d ON d.id_docente = p.id_docente
+         WHERE p.id_practica = $1
+         LIMIT 1`,
+        [practica?.id_practica ?? 0],
+      );
+
+      const tutorAcademicoNombre = tutorAcademico.length > 0
+        ? `${tutorAcademico[0].nombres} ${tutorAcademico[0].apellidos}`
+        : '';
+
+      const tutorEmpresarialNombre = practica?.tutor_empresarial
+        ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
+        : '';
+
+      return {
+        encabezado: {
+          instituto: 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC',
+          titulo: 'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL',
+          fecha: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
+          carrera: m.carrera_nombre,
+          periodoAcademico: `${m.periodo_codigo} - ${m.periodo_nombre}`,
+          entidadReceptora: practica?.empresa?.razon_social ?? '',
+        },
+        textoLegal: [
+          'La planificación de la formación práctica en el entorno laboral real tiene como objetivo: desarrollar en los estudiantes nuevas habilidades de pensamiento, destrezas sensoriales y motoras, hábitos y actitudes requeridos para el trabajo profesional y consolidar las capacidades prácticas adquiridas en el entorno académico en integración con los factores tecnológicos y socio laborales propios del entorno laboral real, cuyos escenarios concretos son las entidades formadoras seleccionadas de forma pertinente, con las que el instituto mantiene compromisos mutuos.',
+          `La presente acta válida el desarrollo del aprendizaje en el entorno laboral real de los estudiantes de la carrera de ${m.carrera_nombre} del Instituto Superior Tecnológico de Turismo y Patrimonio Yavirac, los mismos que han ejecutado sus prácticas preprofesionales acorde a lo estipulado en el Reglamento de Régimen Académico, en el Reglamento para las Carreras y Programas en Modalidad de Formación Dual y con el convenio de prácticas preprofesionales suscrito y vigente entre el instituto y la respectiva entidad receptora formadora.`,
+          'Además, al acta se anexan siete documentos que permiten garantizar la formación práctica en el entorno laboral real de los estudiantes, a través del seguimiento, control y evaluación de las actividades desarrolladas. Estos documentos son:',
+        ],
+        anexos: [
+          'Listado de estudiantes',
+          'Plan marco de formación',
+          'Plan de rotación del estudiante',
+          'Registro de asistencia',
+          'Informe de aprendizaje de fase práctica (Bitácora)',
+          'Ficha de Evaluación por parte del instituto',
+          'Ficha de evaluación por parte de la empresa',
+        ],
+        estudiantes: estudiantesConNota,
+        firmas: {
+          tutorEmpresarial: {
+            nombre: tutorEmpresarialNombre,
+            cedula: practica?.tutor_empresarial?.cedula ?? '',
+          },
+          coordinador: {
+            nombre: coordinador.nombre,
+            cedula: coordinador.cedula,
+          },
+          tutorAcademico: {
+            nombre: tutorAcademicoNombre,
+            cedula: tutorAcademico.length > 0 ? tutorAcademico[0].cedula : '',
+          },
+        },
+      };
+    } catch (error) {
+      return this.getActaEntornoLaboralVacia();
+    }
   }
 
   private formatearFecha(fecha: string): string {

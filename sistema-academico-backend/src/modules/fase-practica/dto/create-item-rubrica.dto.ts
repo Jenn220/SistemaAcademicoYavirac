@@ -1,8 +1,9 @@
 import { IsNumber, IsOptional, IsString, Max, MaxLength } from 'class-validator';
 
 export class CreateItemRubricaDto {
+  @IsOptional()
   @IsNumber()
-  id_rubrica!: number;
+  id_rubrica?: number;
 
   @IsString()
   descripcion_criterio!: string;

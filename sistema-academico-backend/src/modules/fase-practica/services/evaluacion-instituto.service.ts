@@ -75,7 +75,7 @@ export class EvaluacionInstitutoService {
 
   async remove(id: number): Promise<void> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
-    if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
+    if (!evaluacion) throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
     await this.evaluacionRepository.remove(evaluacion);
   }
 }
