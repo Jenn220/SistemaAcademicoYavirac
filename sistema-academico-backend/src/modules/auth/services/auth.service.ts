@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -114,12 +115,20 @@ export class AuthService {
     };
   }
 
+  async obtenerPeriodosActivos() {
+    return this.usuarioRepo.findPeriodosActivos();
+  }
+
   async generarAccesos(dto: GenerarAccesosDto): Promise<{
     tipo: string;
     creados: number;
     correos: string[];
     errores: { correo?: string; motivo: string }[];
   }> {
+    if (!dto.id_periodo) {
+      throw new BadRequestException('El período académico es obligatorio.');
+    }
+
     const rolPorTipo: Record<string, string> = {
       ESTUDIANTE: 'ESTUDIANTE',
       DOCENTE: 'DOCENTE',
@@ -128,7 +137,7 @@ export class AuthService {
 
     let candidatos: { id: number; correo: string; claveTemporal: string }[];
     if (dto.tipo === 'ESTUDIANTE') {
-      candidatos = await this.usuarioRepo.findEstudiantesSinUsuarioPorPeriodo(dto.id_periodo!);
+      candidatos = await this.usuarioRepo.findEstudiantesSinUsuarioPorPeriodo(dto.id_periodo);
     } else if (dto.tipo === 'DOCENTE') {
       candidatos = await this.usuarioRepo.findDocentesSinUsuario();
     } else {
@@ -142,6 +151,14 @@ export class AuthService {
       try {
         if (!candidato.correo) {
           errores.push({ motivo: `Registro id=${candidato.id} sin correo, se omitió` });
+          continue;
+        }
+
+        if (!candidato.claveTemporal) {
+          errores.push({
+            correo: candidato.correo,
+            motivo: 'Sin cédula o RUC registrado para generar la contraseña inicial',
+          });
           continue;
         }
 

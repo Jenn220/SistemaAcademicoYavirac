@@ -6,6 +6,7 @@ import {
   ClaveTemporalUsuario,
   CrearUsuarioConRolInput,
   IUsuarioRepository,
+  PeriodoAcademicoResponse,
   PersonaSinUsuario,
   UsuarioConRoles,
 } from '../ports/usuario.repository';
@@ -43,6 +44,17 @@ export class UsuarioPg implements IUsuarioRepository {
 
   async findByIdConRoles(idUsuario: number): Promise<UsuarioConRoles | null> {
     return this.findConRoles('u.id_usuario = $1', [idUsuario]);
+  }
+
+  async findPeriodosActivos(): Promise<PeriodoAcademicoResponse[]> {
+    return this.dataSource.query(
+      `
+      SELECT id_periodo, nombre, codigo
+      FROM periodo_academico
+      WHERE estado = 'ACTIVO'
+      ORDER BY id_periodo DESC
+      `
+    );
   }
 
   async registrarIntentoFallido(idUsuario: number, maxIntentos: number): Promise<void> {
