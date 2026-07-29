@@ -692,90 +692,229 @@
       XLSX.writeFile(workbook, nombreArchivo);
     }
 
-    exportarActaCompromisoExcel(id: number): void {
-      this.getActaCompromiso(id).subscribe({
-        next: (resp: any) => {
-          const filas: any[][] = [
-            ['', resp.instituto ?? 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC', '', '', '', ''],
-            [],
-            ['', resp.titulo ?? 'ACTA COMPROMISO DE PARTICIPACIÓN EN VINCULACIÓN CON LA COMUNIDAD', '', '', '', ''],
-            [],
-            ['A:', 'Ing. Raúl Páez', '', 'Coordinador de Carrera', '', ''],
-            ['De:', resp.estudiante ?? 'N/A', '', 'Tutor del Proyecto', '', ''],
-            ['Cédula:', resp.cedula ?? 'N/A', '', 'Carrera:', resp.carrera ?? 'N/A', ''],
-            ['Nivel:', resp.nivel ?? 'N/A', '', 'Entidad beneficiaria:', resp.entidad_beneficiaria ?? 'N/A', ''],
-            ['Docente tutor:', resp.docente_tutor ?? 'N/A', '', '', '', ''],
-            [],
-            ['Yo,', resp.estudiante ?? 'N/A', 'con C.I. Nº', resp.cedula ?? 'N/A', '', ''],
-            ['declaro que me comprometo a cumplir con el cronograma de actividades y normas de vinculación al proyecto.', '', '', '', '', ''],
-            ['El presente documento certifica el inicio de las actividades del estudiante en el proyecto asignado.', '', '', '', '', '']
-          ];
+exportarActaCompromisoExcel(id: number): void {
+  this.getActaCompromiso(id).subscribe({
+    next: (resp: any) => {
+      // 1. Textos reglamentarios completos
+      const obligacionesText = 
+        "Art. 22.- Obligaciones de los estudiantes de prácticas y vinculación con la sociedad. -\n" +
+        "a. Cumplir con las horas exigidas de prácticas pre profesionales o deformación dual y vinculación con la sociedad, dentro del programa curricular de su carrera y la normativa del instituto.\n" +
+        "b. Cumplir de forma eficiente, diligente y con calidez, las acciones encomendadas en el área y modalidad de práctica, y vinculación con la sociedad establecida.\n" +
+        "c. Conservar una apropiada presentación personal, y de ser el caso utilizar uniforme o la vestimenta de acuerdo a las políticas internas de la entidad receptora o el ISTY.\n" +
+        "d. Mantener absoluta reserva sobre toda información interna de la entidad receptora.\n" +
+        "e. Demostrar responsabilidad, disciplina, ética y eficiencia durante el desarrollo de sus prácticas o vinculación con la sociedad.\n" +
+        "f. Asistir puntualmente a las jornadas establecidas por la entidad receptora o el ISTY.\n" +
+        "g. Informar en in máximo de 72 horas al tutor académico y empresarial, cuando por enfermedad o fuerza mayor se vea impedido de asistir a cumplir con su jornada de prácticas o vinculación con la sociedad.\n" +
+        "h. Cumplir con las disposiciones enmarcadas por el ISTY, y por la entidad receptora de lo concerniente a su práctica o vinculación con la sociedad.\n" +
+        "i. Informar de forma escrita al tutor académico del instituto y de la entidad receptora sobre las novedades que se produzcan en el desempeño de sus tareas, a fin de establecer correctivos necesarios con el fin de ayudar el normal desarrollo de sus actividades.\n" +
+        "j. Guardar las debidas consideraciones éticas y humanas todo el personal en las entidades receptoras, tutores académicos, responsables y demás miembros relacionados del área.\n" +
+        "k. Presentar al tutor académico, la documentación necesaria para el registro de sus horas cumplidas en actividades de prácticas o vinculación con la sociedad.\n" +
+        "l. L. permanecer en la entidad receptora el tiempo determinado según el cronograma elaborado entre la entidad receptora y el ISTY.\n" +
+        "m. M. entregar un informe escrito del proyecto donde se evidencia el trabajo ejecutado en las prácticas pre profesionales o formación dual y vinculación con la sociedad.\n" +
+        "n. En caso de existir plazas disponibles para la realización de la vinculación con la sociedad el estudiante deberá aceptar dicha plaza; y,\n" +
+        "o. Las demás obligaciones que se encuentren establecidas en los convenios individuales pertinentes.";
 
-          const sheet = XLSX.utils.aoa_to_sheet(filas);
-          sheet['!merges'] = [
-            { s: { r: 0, c: 1 }, e: { r: 0, c: 4 } },
-            { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
-            { s: { r: 4, c: 1 }, e: { r: 4, c: 3 } },
-            { s: { r: 5, c: 1 }, e: { r: 5, c: 3 } },
-            { s: { r: 10, c: 1 }, e: { r: 10, c: 3 } },
-            { s: { r: 11, c: 0 }, e: { r: 11, c: 5 } },
-            { s: { r: 12, c: 0 }, e: { r: 12, c: 5 } }
-          ];
+      const prohibicionesText = 
+        "Art 23.- Prohibiciones a los estudiantes. -\n" +
+        "a. Crear documentación o circunstancias diferentes a las prácticas o vinculación con la sociedad.\n" +
+        "b. Disponer de los servicios, equipos y suministros de la entidad receptora para asuntos personales, salvo en casos de emergencia y previa autorización del responsable.\n" +
+        "c. Asistir al lugar de desarrollo de las prácticas o vinculación con la sociedad, bajo influencia la influencia de bebidas alcohólicas y sustancias psicotrópicas.\n" +
+        "d. Atender o aceptar visitas de tipo particular dentro de la entidad receptora.\n" +
+        "e. Cambiar de turno o encargar a otra persona, la realización de su práctica o vinculación con la sociedad.\n" +
+        "f. Abandonar las prácticas o vinculación con la sociedad, sin autorización del tutor académico y empresarial.\n" +
+        "g. Promover o participar en actos de indisciplina que alteren el normal funcionamiento de la entidad receptora.\n" +
+        "h. Cometer actos que alteren las buenas costumbres y que me atenten contra la salud y contra la seguridad de la entidad receptora o el ISTY.\n" +
+        "i. Abandonar las prácticas o vinculación con la sociedad sin justificación.\n" +
+        "j. Incumplir con las tareas asignadas en el área o realizar prácticas ajenas a su función.\n" +
+        "k. Sustraer bienes, divulgar o copiar información de la entidad receptora; y,\n" +
+        "l. Las demás establecidas en las normativas vigentes.";
 
-          const border = {
-            top: { style: 'thin', color: { rgb: '000000' } },
-            bottom: { style: 'thin', color: { rgb: '000000' } },
-            left: { style: 'thin', color: { rgb: '000000' } },
-            right: { style: 'thin', color: { rgb: '000000' } }
-          };
+      const fechaLarga = resp.fecha_larga ?? 'lunes, 20 de octubre de 2025';
+      const sancionesText = 
+        "El incumplimiento de lo establecido en esta Acta se aplicará el Art. 24 del Reglamento Interno de Prácticas preprofesionales, formación dual y vinculación con la sociedad del ISTY.\n\n" +
+        "Una vez que he leído y comprendido las normas a seguir durante el desarrollo de las actividades, en mi calidad de participante, entendiendo que estas son para un beneficio tanto colectivo como individual y procura el bienestar de todos quienes asistimos a estos eventos, me comprometo a seguir dichas recomendaciones y evitar causar cualquier actividad que pusiere en peligro a mi persona como al grupo en general.\n" +
+        `Una vez leído y entendido el contenido de la presente Acta, acepto las condiciones del mismo en favor de mi bienestar, para constancia de lo cual lo suscriben en el día ${fechaLarga}.`;
 
-          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:F20');
-          for (let R = range.s.r; R <= range.e.r; ++R) {
-            for (let C = range.s.c; C <= range.e.c; ++C) {
-              const ref = XLSX.utils.encode_cell({ r: R, c: C });
-              if (!sheet[ref]) sheet[ref] = { t: 's', v: '' };
-              const cell = sheet[ref];
-              cell.s = cell.s || {};
-              if (R === 2) {
-                cell.s = {
-                  font: { bold: true, sz: 13, name: 'Arial' },
-                  alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-                  border
-                };
-              } else if (R >= 4 && R <= 8) {
-                cell.s = {
-                  font: { bold: C === 0 || C === 3, name: 'Arial', sz: 10 },
-                  alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
-                  border
-                };
-              } else {
-                cell.s = {
-                  font: { name: 'Arial', sz: 10 },
-                  alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
-                  border
-                };
-              }
-            }
+      // 2. Matriz de celdas
+      const filas: any[][] = [
+        // Header / Banner
+        ['', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC', '', '', '', 'CÓDIGO', 'DS-040104'],
+        ['', 'MACROPROCESO 04 VINCULACIÓN', '', '', '', '', ''],
+        ['', 'PROCESO 01 VINCULACIÓN', '', '', '', '', ''],
+        ['', 'FORMATO 04 CARTA DE COMPROMISO DEL ESTUDIANTE', '', '', '', '', ''],
+        [], 
+
+        // Títulos Principales
+        ['INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"'],
+        [], 
+        ['ACTA COMPROMISO DE PARTICIPACIÓN EN VINCULACIÓN CON LA COMUNIDAD'],
+        [], 
+
+        // Datos del estudiante
+        ['Yo,', resp.estudiante ?? 'Kevin Josue Alvarado Carrera', '', '', 'con C.I.', resp.cedula ?? '1755432109', 'estudiante del Instituto Superior'],
+        ['Tecnológico de Turismo y Patrimonio "YAVIRAC" de la Carrera de', '', '', '', resp.carrera ?? 'Tecnología Superior en Desarrollo de Software', '', 'del tercer nivel'],
+        ['quien va a realizar la vinculación con la sociedad en la', '', '', '', resp.entidad_beneficiaria ?? 'Produbanco S.A.', '', ''],
+        ['me comprometo a seguir las siguientes recomendaciones:', '', '', '', '', '', ''],
+
+        // Cuadros normativos unidos
+        [obligacionesText], 
+        [prohibicionesText], 
+        [sancionesText],    
+        [], 
+
+        // Tabla de firmas estudiante
+        ['Estudiante', '', 'Cédula de Indentidad', '', 'Nivel', 'Firma', ''],
+        ['', '', '', '', '', '', ''],
+        [resp.estudiante ?? 'Kevin Josue Alvarado Carrera', '', resp.cedula ?? '1755432109', '', 'Tercero', '', ''],
+        [], 
+
+        // Firma Tutor (Colocada en la columna B para mantener un ancho estándar)
+        ['En constancia:'], 
+        [], [], 
+        ['', resp.docente_tutor ?? 'Ana Maria Pazmiño Cevallos'], 
+        ['', 'DOCENTE TUTOR'] 
+      ];
+
+      const sheet = XLSX.utils.aoa_to_sheet(filas);
+
+      // 3. Merges de celdas
+      sheet['!merges'] = [
+        // Banner
+        { s: { r: 0, c: 1 }, e: { r: 0, c: 4 } },
+        { s: { r: 1, c: 1 }, e: { r: 1, c: 4 } },
+        { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
+        { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } },
+        { s: { r: 0, c: 5 }, e: { r: 3, c: 5 } },
+        { s: { r: 0, c: 6 }, e: { r: 3, c: 6 } },
+
+        // Títulos
+        { s: { r: 5, c: 0 }, e: { r: 5, c: 6 } },
+        { s: { r: 7, c: 0 }, e: { r: 7, c: 6 } },
+
+        // Datos del estudiante
+        { s: { r: 9, c: 1 }, e: { r: 9, c: 3 } },
+        { s: { r: 10, c: 0 }, e: { r: 10, c: 3 } },
+        { s: { r: 10, c: 4 }, e: { r: 10, c: 5 } },
+        { s: { r: 11, c: 0 }, e: { r: 11, c: 3 } },
+        { s: { r: 11, c: 4 }, e: { r: 11, c: 6 } },
+        { s: { r: 12, c: 0 }, e: { r: 12, c: 6 } },
+
+        // Cajas normativas
+        { s: { r: 13, c: 0 }, e: { r: 13, c: 6 } },
+        { s: { r: 14, c: 0 }, e: { r: 14, c: 6 } },
+        { s: { r: 15, c: 0 }, e: { r: 15, c: 6 } },
+
+        // Tabla de firmas estudiante
+        { s: { r: 17, c: 0 }, e: { r: 18, c: 1 } },
+        { s: { r: 17, c: 2 }, e: { r: 18, c: 3 } },
+        { s: { r: 17, c: 4 }, e: { r: 18, c: 4 } },
+        { s: { r: 17, c: 5 }, e: { r: 18, c: 6 } },
+
+        { s: { r: 19, c: 0 }, e: { r: 19, c: 1 } },
+        { s: { r: 19, c: 2 }, e: { r: 19, c: 3 } },
+        { s: { r: 19, c: 4 }, e: { r: 19, c: 4 } },
+        { s: { r: 19, c: 5 }, e: { r: 19, c: 6 } },
+
+        // Firma Docente Tutor (AJUSTADO: únicamente abarca de columna B a C para controlar la longitud de la línea)
+        { s: { r: 24, c: 1 }, e: { r: 24, c: 2 } },
+        { s: { r: 25, c: 1 }, e: { r: 25, c: 2 } }
+      ];
+
+      // 4. Estilos y Formato
+      const borderThin = {
+        top: { style: 'thin', color: { rgb: '000000' } },
+        bottom: { style: 'thin', color: { rgb: '000000' } },
+        left: { style: 'thin', color: { rgb: '000000' } },
+        right: { style: 'thin', color: { rgb: '000000' } }
+      };
+
+      const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:G30');
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const ref = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!sheet[ref]) sheet[ref] = { t: 's', v: '' };
+          const cell = sheet[ref];
+          cell.s = cell.s || {};
+
+          // Banner Superior
+          if (R <= 3) {
+            let bgColor = 'FFFFFF';
+            let textColor = '000000';
+            if (R === 0 && C >= 1 && C <= 4) { bgColor = '006699'; textColor = 'FFFFFF'; }
+            if (R === 2 && C >= 1 && C <= 4) { bgColor = 'E36C09'; textColor = 'FFFFFF'; }
+            if (R === 1 || R === 3) { bgColor = 'F2F2F2'; }
+
+            cell.s = {
+              font: { bold: true, name: 'Arial', sz: C >= 5 ? 8 : 9, color: { rgb: textColor } },
+              fill: { fgColor: { rgb: bgColor } },
+              alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+              border: borderThin
+            };
           }
+          // Títulos
+          else if (R === 5 || R === 7) {
+            cell.s = {
+              font: { bold: true, name: 'Arial', sz: 11 },
+              alignment: { horizontal: 'center', vertical: 'center' }
+            };
+          }
+          // Cajas normativas
+          else if (R === 13 || R === 14 || R === 15) {
+            cell.s = {
+              font: { name: 'Arial', sz: 8 },
+              alignment: { horizontal: 'left', vertical: 'top', wrapText: true },
+              border: borderThin
+            };
+          }
+          // Tabla de firmas estudiante
+          else if (R >= 17 && R <= 19) {
+            const isHeader = R <= 18;
+            cell.s = {
+              font: { bold: isHeader, name: 'Arial', sz: 9 },
+              fill: isHeader ? { fgColor: { rgb: 'D9D9D9' } } : undefined,
+              alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+              border: borderThin
+            };
+          }
+          // Firma del Docente Tutor (Línea de firma acotada a las celdas B24:C24)
+          else if (R === 24 && (C === 1 || C === 2)) {
+            cell.s = {
+              font: { bold: true, name: 'Arial', sz: 9 },
+              alignment: { horizontal: 'center', vertical: 'center' },
+              border: { top: { style: 'thin', color: { rgb: '000000' } } }
+            };
+          } else if (R === 25 && (C === 1 || C === 2)) {
+            cell.s = {
+              font: { bold: true, name: 'Arial', sz: 9 },
+              alignment: { horizontal: 'center', vertical: 'center' }
+            };
+          }
+        }
+      }
 
-          sheet['!cols'] = [
-            { wch: 10 },
-            { wch: 28 },
-            { wch: 6 },
-            { wch: 24 },
-            { wch: 8 },
-            { wch: 10 }
-          ];
-          sheet['!rows'] = [{ hpt: 18 }, {}, { hpt: 26 }, {}, { hpt: 22 }, { hpt: 22 }, { hpt: 22 }, { hpt: 22 }, { hpt: 22 }, {}, { hpt: 24 }, { hpt: 26 }, { hpt: 26 }];
+      // 5. Dimensiones de columnas y filas
+      sheet['!cols'] = [
+        { wch: 10 }, { wch: 32 }, { wch: 10 }, { wch: 18 }, { wch: 38 }, { wch: 15 }, { wch: 20 }
+      ];
 
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, sheet, 'Acta Compromiso');
-          const nombreArchivo = `ACTA_COMPROMISO_${(resp.estudiante ?? 'VINCULACION').replace(/\s+/g, '_')}.xlsx`;
-          XLSX.writeFile(wb, nombreArchivo);
-        },
-        error: (err) => console.error('Error fetching acta compromiso:', err)
-      });
-    }
+      sheet['!rows'] = [
+        { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, {},
+        { hpt: 22 }, {}, { hpt: 22 }, {},
+        { hpt: 18 }, { hpt: 18 }, { hpt: 18 }, { hpt: 18 },
+        { hpt: 210 }, { hpt: 170 }, { hpt: 100 }, {},
+        { hpt: 16 }, { hpt: 16 }, { hpt: 20 }, {},
+        { hpt: 18 }, {}, {}, { hpt: 20 }, { hpt: 18 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, sheet, 'Carta de Compromiso');
+      const nombreArchivo = `ACTA_COMPROMISO_${(resp.estudiante ?? 'VINCULACION').replace(/\s+/g, '_')}.xlsx`;
+      XLSX.writeFile(wb, nombreArchivo);
+    },
+    error: (err) => console.error('Error al descargar el acta:', err)
+  });
+}
 
     exportarCertificadoExcel(id: number): void {
       this.getCertificado(id).subscribe({
