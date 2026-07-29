@@ -50,7 +50,7 @@ estudiante de
 
 <td>
 
-3ro
+{{ carta().estudiante.curso }}
 
 </td>
 
@@ -68,9 +68,27 @@ de la carrera
 
 <strong>
 
-DESARROLLO DE SOFTWARE
+{{ carta().estudiante.carrera }}
 
 </strong>
+
+en modalidad dual,
+
+</td>
+
+</tr>
+
+<tr>
+
+<td colspan="4">
+
+DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC,
+
+</td>
+
+<td colspan="2">
+
+asignado/a a
 
 </td>
 
@@ -80,25 +98,9 @@ DESARROLLO DE SOFTWARE
 
 <td colspan="6">
 
-DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC,
-
-</td>
-
-</tr>
-
-<tr>
-
-<td>
-
-asignado a
-
-</td>
-
-<td colspan="5">
-
 <strong>
 
-INSTITUTO DE CAPACITACIÓN Y ESPECIALIZACIÓN AMAUTA-TECH S.A.S. B.I.C.
+{{ carta().empresaAsignada }}
 
 </strong>
 

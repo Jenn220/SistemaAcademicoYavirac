@@ -40,4 +40,8 @@ export class CreateVinculacionDto {
   @IsString()
   @IsOptional()
   estado?: string;
+
+  @IsInt()
+  @IsOptional()
+  id_entidad_receptora?: number;
 }

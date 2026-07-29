@@ -1,4 +1,4 @@
-import { IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreatePlanRotacionDto {
   @IsNumber()
@@ -7,7 +7,8 @@ export class CreatePlanRotacionDto {
   @IsNumber()
   id_item_pm!: number;
 
+  @IsOptional()
   @IsString()
-  @MaxLength(200)
-  puesto_aprendizaje!: string;
+  @MaxLength(150)
+  puesto_aprendizaje?: string;
 }

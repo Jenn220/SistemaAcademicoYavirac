@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PortafolioReporteNotas } from '../domain/reporte-notas.entity';
@@ -6,12 +6,7 @@ import { PortafolioAceptacionEstudiante } from '../domain/aceptacion-estudiante.
 import { IAceptacionNotasRepository } from '../ports/aceptacion-notas.repository';
 import { CreateReporteNotasDto } from '../dto/create-reporte-notas.dto';
 import { ReporteNotasResponseDto } from '../dto/reporte-notas-response.dto';
-
-const COLUMNA_NOTA: Record<string, string> = {
-  APORTE_1: 'nota_ap1',
-  APORTE_2: 'nota_ap2',
-  SUPLETORIO: 'nota_supletorio',
-};
+import { NotaEstudianteDto } from '../dto/update-notas-aceptacion.dto';
 
 @Injectable()
 export class AceptacionNotasPg implements IAceptacionNotasRepository {
@@ -28,10 +23,8 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
     return count > 0;
   }
 
-  async generarReporte(dto: CreateReporteNotasDto): Promise<PortafolioReporteNotas> {
-    const columnaNota = COLUMNA_NOTA[dto.tipo_reporte];
-
-    return this.dataSource.transaction(async (manager) => {
+  async generarReporte(dto: CreateReporteNotasDto): Promise<ReporteNotasResponseDto> {
+    await this.dataSource.transaction(async (manager) => {
       const reporte = manager.create(PortafolioReporteNotas, {
         idPeriodo: dto.id_periodo,
         idOfertaAsignatura: dto.id_oferta_asignatura,
@@ -39,9 +32,9 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
       });
       const reporteGuardado = await manager.save(reporte);
 
-      const estudiantes: { id_matricula_detalle: number; nota: number | null }[] = await manager.query(
+      const estudiantes: { id_matricula_detalle: number }[] = await manager.query(
         `
-        SELECT id_matricula_detalle, ${columnaNota} AS nota
+        SELECT id_matricula_detalle
         FROM matricula_detalle
         WHERE id_oferta_asignatura = $1
         `,
@@ -53,13 +46,36 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
           manager.create(PortafolioAceptacionEstudiante, {
             idReporteNotas: reporteGuardado.idReporteNotas,
             idMatriculaDetalle: fila.id_matricula_detalle,
-            notaRegistrada: fila.nota,
+            notaRegistrada: null,
           }),
         );
         await manager.save(detalles);
       }
+    });
 
-      return reporteGuardado;
+    const reporteCreado = await this.findByOfertaAndTipo(dto.id_oferta_asignatura, dto.tipo_reporte);
+    return reporteCreado!;
+  }
+
+  async actualizarNotas(idReporteNotas: number, estudiantes: NotaEstudianteDto[]): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      for (const est of estudiantes) {
+        const resultado = await manager.query(
+          `
+          UPDATE portafolio_aceptacion_estudiante
+          SET nota_registrada = $1
+          WHERE id_aceptacion = $2 AND id_reporte_notas = $3
+          RETURNING id_aceptacion
+          `,
+          [est.nota, est.id_aceptacion, idReporteNotas],
+        );
+
+        if (!resultado.length) {
+          throw new NotFoundException(
+            `El estudiante con id_aceptacion=${est.id_aceptacion} no pertenece a este reporte`,
+          );
+        }
+      }
     });
   }
 
@@ -70,6 +86,7 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
     const cabecera = await this.dataSource.query(
       `
       SELECT
+        prn.id_reporte_notas,
         prn.tipo_reporte,
         prn.fecha_generacion,
         c.nombre  AS carrera,
@@ -78,7 +95,8 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
         p.nombre  AS paralelo,
         j.nombre  AS jornada,
         d.nombres || ' ' || d.apellidos AS docente,
-        pa.nombre AS periodo
+        pa.nombre AS periodo,
+        co.nombres || ' ' || co.apellidos AS coordinador
       FROM portafolio_reporte_notas prn
       JOIN oferta_asignatura oa ON prn.id_oferta_asignatura = oa.id_oferta_asignatura
       JOIN asignatura a         ON oa.id_asignatura = a.id_asignatura
@@ -86,9 +104,10 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
       JOIN carrera c            ON n.id_carrera = c.id_carrera
       JOIN paralelo p           ON oa.id_paralelo = p.id_paralelo
       JOIN jornada j            ON oa.id_jornada = j.id_jornada
-      JOIN periodo_docente pd   ON oa.id_periodo_docente = pd.id_periodo_docente
-      JOIN docente d            ON pd.id_docente = d.id_docente
+      JOIN docente d            ON oa.id_docente = d.id_docente
       JOIN periodo_academico pa ON prn.id_periodo = pa.id_periodo
+      LEFT JOIN periodo_carrera pc ON pc.id_periodo = prn.id_periodo AND pc.id_carrera = c.id_carrera
+      LEFT JOIN docente co         ON pc.id_coordinador = co.id_docente
       WHERE prn.id_oferta_asignatura = $1 AND prn.tipo_reporte = $2
       `,
       [idOfertaAsignatura, tipoReporte],
@@ -119,12 +138,14 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
     const row = cabecera[0];
     return {
       reporte: {
+        id_reporte_notas: row.id_reporte_notas,
         carrera: row.carrera,
         nivel: row.nivel,
         asignatura: row.asignatura,
         paralelo: row.paralelo,
         jornada: row.jornada,
         docente: row.docente,
+        coordinador: row.coordinador,
         periodo: row.periodo,
         tipo_reporte: row.tipo_reporte,
         fecha_generacion: row.fecha_generacion,

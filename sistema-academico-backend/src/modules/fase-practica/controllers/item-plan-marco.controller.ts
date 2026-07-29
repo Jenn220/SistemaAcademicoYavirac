@@ -1,0 +1,39 @@
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ItemPlanMarcoService } from '../services/item-plan-marco.service';
+import { JwtGuard } from '../../auth/guards/jwt.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { CreateItemPlanMarcoDto } from '../dto/create-item-plan-marco.dto';
+import { UpdateItemPlanMarcoDto } from '../dto/update-item-plan-marco.dto';
+
+@UseGuards(JwtGuard, RolesGuard)
+@Roles('DOCENTE', 'COORDINADOR')
+@Controller('fase-practica')
+export class ItemPlanMarcoController {
+  constructor(private readonly itemPlanMarcoService: ItemPlanMarcoService) {}
+
+  @Post('plan-marco/:idPlanMarco/items')
+  create(@Param('idPlanMarco') idPlanMarco: string, @Body() dto: CreateItemPlanMarcoDto) {
+    return this.itemPlanMarcoService.create({ ...dto, id_plan_marco: Number(idPlanMarco) });
+  }
+
+  @Get('plan-marco/:idPlanMarco/items')
+  findByPlanMarco(@Param('idPlanMarco') idPlanMarco: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.itemPlanMarcoService.findByPlanMarco(Number(idPlanMarco), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  }
+
+  @Get('items-plan-marco/:id')
+  findOne(@Param('id') id: string) {
+    return this.itemPlanMarcoService.findById(Number(id));
+  }
+
+  @Patch('items-plan-marco/:id')
+  update(@Param('id') id: string, @Body() dto: UpdateItemPlanMarcoDto) {
+    return this.itemPlanMarcoService.update(Number(id), dto);
+  }
+
+  @Delete('items-plan-marco/:id')
+  remove(@Param('id') id: string) {
+    return this.itemPlanMarcoService.remove(Number(id)).then(() => ({ deleted: true, id_item_pm: Number(id) }));
+  }
+}

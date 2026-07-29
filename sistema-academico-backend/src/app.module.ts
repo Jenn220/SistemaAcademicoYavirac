@@ -7,6 +7,7 @@ import { VinculacionModule } from './modules/vinculacion/vinculacion.module';
 import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   controllers: [AppController],
@@ -20,17 +21,18 @@ import { HealthModule } from './health/health.module';
         host: config.get<string>('DB_HOST') || 'localhost',
         port: config.get<number>('DB_PORT') || 5432,
         username: config.get<string>('DB_USER') || 'postgres',
-        password: '12345',
-        database: 'sistema_academico',
+        password: config.get<string>('DB_PASSWORD'),
+       database: config.get<string>('DB_NAME'),
         entities: [join(__dirname, '**', '*.entity.{ts,js}')],
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: false, 
       }),
     }),
     PortafolioModule,
     VinculacionModule,
     FasePracticaModule,
     HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
