@@ -147,10 +147,10 @@ export class DocumentoPlantillaService {
 
     const matricula = await this.dataSource.query(
       `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, c.codigo as carrera_codigo
-       FROM matricula m
-       JOIN carrera c ON c.id_carrera = m.id_carrera
-       WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVO'
-       LIMIT 1`,
+        FROM matricula m
+        JOIN carrera c ON c.id_carrera = m.id_carrera
+         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
+        LIMIT 1`,
       [estudiante.id_estudiante],
     );
 
@@ -662,7 +662,7 @@ export class DocumentoPlantillaService {
         `SELECT m.id_carrera, c.nombre as carrera_nombre
          FROM matricula m
          JOIN carrera c ON c.id_carrera = m.id_carrera
-         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVO'
+         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
          LIMIT 1`,
         [estudiante.id_estudiante],
       );
@@ -745,7 +745,7 @@ export class DocumentoPlantillaService {
            FROM matricula m
            JOIN carrera c ON c.id_carrera = m.id_carrera
            JOIN periodo_academico p ON p.id_periodo = m.id_periodo
-           WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVO'
+        WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
            LIMIT 1`,
           [idEstudiante],
         );

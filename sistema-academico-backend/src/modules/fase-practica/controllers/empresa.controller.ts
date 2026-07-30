@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { CreateEmpresaDto } from '../dto/create-empresa.dto';
 import { UpdateEmpresaDto } from '../dto/update-empresa.dto';
 import { EmpresaService } from '../services/empresa.service';
@@ -14,7 +14,14 @@ export class EmpresaController {
 
   @Post('empresas')
   createEmpresa(@Body() dto: CreateEmpresaDto) {
-    return this.empresaService.createEmpresa(dto);
+    try {
+      return this.empresaService.createEmpresa(dto);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        throw new ConflictException('El RUC ya está registrado');
+      }
+      throw error;
+    }
   }
 
   @Get('empresas')
