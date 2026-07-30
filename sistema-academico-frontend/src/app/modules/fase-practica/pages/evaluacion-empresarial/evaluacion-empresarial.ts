@@ -17,7 +17,7 @@ import {
   EvaluacionEmpresarial as EvaluacionEmpresarialModel,
   CriterioDefensaProyecto
 } from '../../interfaces';
-import { MOCK_EVALUACION_EMPRESARIAL } from '../../services/mock-documentos.data';
+import { CRITERIOS_DESEMPENO_EMPRESARIAL, CRITERIOS_DEFENSA_PROYECTO } from '../../services/rubricas-fase-practica';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 
 const NIVELES_RUBRICA: { etiqueta: string; nota: number }[] = [
@@ -26,6 +26,21 @@ const NIVELES_RUBRICA: { etiqueta: string; nota: number }[] = [
   { etiqueta: 'Regular', nota: 2 },
   { etiqueta: 'Deficiente', nota: 1 }
 ];
+
+function evaluacionVacia(): EvaluacionEmpresarialModel {
+  return {
+    estudiante: { nombre: '', cedula: '' },
+    encabezado: {
+      empresaFormadora: '', nivel: '', cicloAcademico: '',
+      fechaInicioFasePractica: '', fechaFinFasePractica: '',
+      tutorAcademico: '', nucleoEstructurante: '', tutorEmpresarial: '',
+      carrera: '', objetivoNucleoEstructurante: ''
+    },
+    desempeno: CRITERIOS_DESEMPENO_EMPRESARIAL.map((criterio) => ({ criterio, nota: 0 })),
+    defensaProyecto: CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
+    observaciones: ''
+  };
+}
 
 @Component({
   selector: 'app-evaluacion-empresarial',
@@ -42,8 +57,7 @@ export class EvaluacionEmpresarial implements OnInit {
 
   niveles = NIVELES_RUBRICA;
 
-  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
-  evaluacion: EvaluacionEmpresarialModel = structuredClone(MOCK_EVALUACION_EMPRESARIAL);
+  evaluacion: EvaluacionEmpresarialModel = evaluacionVacia();
 
   cargando = false;
 
@@ -57,15 +71,23 @@ export class EvaluacionEmpresarial implements OnInit {
 
   /**
    * El backend (GET /evaluacion-empresarial) solo envía una lista plana de
-   * criterios (id, criterio, puntaje, maximo) y no incluye el desglose por
-   * rúbrica de la defensa. Los datos de encabezado (nivel, ciclo, fechas,
-   * tutor académico, núcleo, carrera, objetivo) tampoco vienen en este
-   * endpoint, así que se completan con /documentos/datos.
+   * criterios (id, criterio, puntaje, maximo); "defensaProyecto" hoy
+   * siempre llega vacío desde ahí (el back todavía no lo calcula en este
+   * endpoint — ver DocumentoPlantillaService.getEvaluacionEmpresarial).
+   * Los datos de encabezado (nivel, ciclo, fechas, tutor académico,
+   * núcleo, carrera, objetivo) tampoco vienen en este endpoint, así que
+   * se completan con /documentos/datos.
+   *
+   * Los criterios (desempeño/defensa) son texto FIJO del formato F07
+   * (confirmado contra el PDF oficial), no datos de un estudiante: si el
+   * back trae criterios reales se usan esos; si no, se cae a las
+   * etiquetas fijas con nota en 0 — nunca se inventa una nota.
    */
   private mapearBase(res: Record<string, any>, datos: Record<string, any>): EvaluacionEmpresarialModel {
 
     const estudiante = res?.['estudiante'] ?? {};
     const criterios = (res?.['criterios'] ?? []) as any[];
+    const defensaProyecto = (res?.['defensaProyecto'] ?? []) as any[];
 
     const datosEstudiante = datos?.['estudiante'] ?? {};
     const datosCarrera = datos?.['carrera'] ?? {};
@@ -97,10 +119,11 @@ export class EvaluacionEmpresarial implements OnInit {
             criterio: c.criterio ?? '',
             nota: c.maximo ? this.redondear((c.puntaje / c.maximo) * 10) : (c.puntaje ?? 0)
           }))
-        : structuredClone(MOCK_EVALUACION_EMPRESARIAL.desempeno),
+        : CRITERIOS_DESEMPENO_EMPRESARIAL.map((criterio) => ({ criterio, nota: 0 })),
 
-      defensaProyecto: structuredClone(MOCK_EVALUACION_EMPRESARIAL.defensaProyecto)
-        .map((c: CriterioDefensaProyecto) => ({ ...c, nota: 0 })),
+      defensaProyecto: defensaProyecto.length
+        ? defensaProyecto.map((c) => ({ criterio: c.criterio ?? '', nota: c.nota ?? 0 }))
+        : CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
 
       observaciones: ''
 
@@ -127,9 +150,11 @@ export class EvaluacionEmpresarial implements OnInit {
 
       error: () => {
 
-        this.evaluacion = structuredClone(MOCK_EVALUACION_EMPRESARIAL);
+        this.evaluacion = evaluacionVacia();
         this.cargando = false;
         this.cdr.detectChanges();
+
+        Swal.fire('Error', 'No fue posible cargar la evaluación empresarial desde el servidor.', 'error');
 
       }
 

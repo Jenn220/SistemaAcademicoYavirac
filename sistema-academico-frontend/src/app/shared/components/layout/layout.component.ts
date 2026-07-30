@@ -1,4 +1,5 @@
 import { Component, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../modules/auth/services/auth.service';
 
@@ -6,6 +7,7 @@ import { AuthService } from '../../../modules/auth/services/auth.service';
   selector: 'app-layout-shell',
   standalone: true,
   imports: [
+    CommonModule,
     RouterOutlet,
     RouterLink,
     RouterLinkActive
@@ -15,7 +17,7 @@ import { AuthService } from '../../../modules/auth/services/auth.service';
 })
 export class LayoutShellComponent {
   private router = inject(Router);
-  private authService = inject(AuthService);
+  protected authService = inject(AuthService);
 
   menuUsuarioAbierto = signal(false);
 

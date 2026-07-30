@@ -73,6 +73,24 @@
         🏫 Evaluación Instituto
       </a>
 
+      <!-- Solo DOCENTE/COORDINADOR: el back restringe estos dos
+           formatos con @Roles('DOCENTE', 'COORDINADOR') -->
+      @if (authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR'])) {
+
+      <a routerLink="/fase-practica/plan-formacion"
+         [queryParams]="{modo: 'marco'}"
+         routerLinkActive="active">
+        📐 Plan Marco
+      </a>
+
+      <a routerLink="/fase-practica/plan-formacion"
+         [queryParams]="{modo: 'rotacion'}"
+         routerLinkActive="active">
+        🔄 Plan de Rotación
+      </a>
+
+      }
+
       <!-- Sección Vinculación con la sociedad -->
       <div class="menu-title">Vinculación con la sociedad</div>
 

@@ -8,14 +8,29 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 import { StudentPresentation } from '../../components/student-presentation/student-presentation';
 import { DocumentHeader } from '../../components/document-header/document-header';
 
 import { CartaCompromiso as Carta } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
-import { MOCK_CARTA_COMPROMISO } from '../../services/mock-documentos.data';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+
+function cartaVacia(): Carta {
+  return {
+    encabezado: '',
+    cuerpo: [],
+    prohibicionesIntro: '',
+    prohibiciones: [],
+    compromisosIntro: '',
+    compromisosConfidencialidad: [],
+    cierre: [],
+    estudiante: { nombre: '', cedula: '', carrera: '', curso: '' },
+    empresaAsignada: '',
+    espacioFirma: { lugar: '', fecha: '' }
+  };
+}
 
 @Component({
   selector: 'app-carta-compromiso',
@@ -34,8 +49,7 @@ export class CartaCompromiso implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
-  carta: Carta = structuredClone(MOCK_CARTA_COMPROMISO);
+  carta: Carta = cartaVacia();
 
   ngOnInit(): void {
 
@@ -92,10 +106,12 @@ export class CartaCompromiso implements OnInit {
 
       error: (err) => {
 
-        console.error('❌ Error obteniendo carta (usando datos moqueados):', err);
+        console.error('❌ Error obteniendo la carta compromiso:', err);
 
-        this.carta = structuredClone(MOCK_CARTA_COMPROMISO);
+        this.carta = cartaVacia();
         this.cdr.detectChanges();
+
+        Swal.fire('Error', 'No fue posible cargar la carta compromiso desde el servidor.', 'error');
 
       }
 

@@ -11,3 +11,5 @@ export * from './informe-aprendizaje-documento.interface';
 export * from './evaluacion-empresarial.interface';
 
 export * from './evaluacion-instituto.interface';
+
+export * from './plan-formacion.interface';

@@ -1,0 +1,49 @@
+<div class="contenedor">
+
+    <div class="cabecera">
+
+        <h2>{{ titulo() }}</h2>
+
+        <p class="subtitulo">Selecciona la práctica sobre la que quieres trabajar.</p>
+
+    </div>
+
+    @if (cargando()) {
+
+    <p class="text-center text-muted my-4">Cargando prácticas...</p>
+
+    } @else if (error()) {
+
+    <p class="text-center text-danger my-4">{{ error() }}</p>
+
+    } @else if (practicas().length === 0) {
+
+    <p class="text-center text-muted my-4">No hay prácticas registradas todavía.</p>
+
+    } @else {
+
+    <div class="lista-practicas">
+
+        @for (practica of practicas(); track practica.id_practica) {
+
+        <button class="tarjeta-practica" type="button" (click)="seleccionar(practica)">
+
+            <div class="tarjeta-titulo">
+                Práctica #{{ practica.id_practica }}
+                <span class="badge-estado">{{ practica.estado || 'EN_CURSO' }}</span>
+            </div>
+
+            <div class="tarjeta-detalle">
+                <span><strong>Empresa:</strong> {{ nombreEmpresa(practica) }}</span>
+                <span><strong>Tutor empresarial:</strong> {{ nombreTutor(practica) }}</span>
+            </div>
+
+        </button>
+
+        }
+
+    </div>
+
+    }
+
+</div>

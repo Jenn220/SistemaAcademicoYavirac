@@ -17,7 +17,7 @@ import {
   EvaluacionInstituto as EvaluacionInstitutoModel,
   CriterioDefensaProyecto
 } from '../../interfaces';
-import { MOCK_EVALUACION_INSTITUTO } from '../../services/mock-documentos.data';
+import { CRITERIOS_DEFENSA_PROYECTO, CRITERIOS_PARAMETROS_PROYECTO } from '../../services/rubricas-fase-practica';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 
 const NIVELES_RUBRICA: { etiqueta: string; nota: number }[] = [
@@ -26,6 +26,23 @@ const NIVELES_RUBRICA: { etiqueta: string; nota: number }[] = [
   { etiqueta: 'Regular', nota: 2 },
   { etiqueta: 'Deficiente', nota: 1 }
 ];
+
+function evaluacionVacia(): EvaluacionInstitutoModel {
+  return {
+    estudiante: { nombre: '', cedula: '' },
+    encabezado: {
+      empresaFormadora: '', nivel: '', cicloAcademico: '',
+      fechaInicioFasePractica: '', fechaFinFasePractica: '',
+      tutorAcademico: '', nucleoEstructurante: '', tutorEmpresarial: '',
+      carrera: '', objetivoNucleoEstructurante: ''
+    },
+    defensaProyecto: CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
+    tema: '',
+    parametrosProyecto: CRITERIOS_PARAMETROS_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
+    notaFinalEmpresa: 0,
+    observaciones: ''
+  };
+}
 
 @Component({
   selector: 'app-evaluacion-instituto',
@@ -42,8 +59,7 @@ export class EvaluacionInstituto implements OnInit {
 
   niveles = NIVELES_RUBRICA;
 
-  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
-  evaluacion: EvaluacionInstitutoModel = structuredClone(MOCK_EVALUACION_INSTITUTO);
+  evaluacion: EvaluacionInstitutoModel = evaluacionVacia();
 
   cargando = false;
 
@@ -58,16 +74,24 @@ export class EvaluacionInstituto implements OnInit {
   /**
    * El backend (GET /evaluacion-instituto) solo envía una lista plana de
    * criterios (id, criterio, puntaje, maximo), el tutor académico, el
-   * instituto y notaFinalEmpresa; no incluye el desglose por rúbrica de la
-   * defensa. El resto del encabezado (empresa, nivel, ciclo, fechas, núcleo,
-   * carrera, objetivo) y el tema del proyecto se completan con
-   * /documentos/datos (el "tema" se toma del nombre del proyecto
-   * empresarial, que es lo más parecido que expone el backend hoy).
+   * instituto y notaFinalEmpresa; "defensaProyecto" hoy siempre llega
+   * vacío desde ahí (el back todavía no lo calcula en este endpoint — ver
+   * DocumentoPlantillaService.getEvaluacionInstituto). El resto del
+   * encabezado (empresa, nivel, ciclo, fechas, núcleo, carrera, objetivo)
+   * y el tema del proyecto se completan con /documentos/datos (el "tema"
+   * se toma del nombre del proyecto empresarial, que es lo más parecido
+   * que expone el backend hoy).
+   *
+   * Los criterios (defensa/parámetros) son texto FIJO del formato F08
+   * (confirmado contra el PDF oficial), no datos de un estudiante: si el
+   * back trae criterios reales se usan esos; si no, se cae a las
+   * etiquetas fijas con nota en 0 — nunca se inventa una nota.
    */
   private mapearBase(res: Record<string, any>, datos: Record<string, any>): EvaluacionInstitutoModel {
 
     const estudiante = res?.['estudiante'] ?? {};
     const criteriosProyecto = (res?.['criteriosProyecto'] ?? []) as any[];
+    const defensaProyecto = (res?.['defensaProyecto'] ?? []) as any[];
 
     const datosEstudiante = datos?.['estudiante'] ?? {};
     const datosCarrera = datos?.['carrera'] ?? {};
@@ -95,8 +119,9 @@ export class EvaluacionInstituto implements OnInit {
         objetivoNucleoEstructurante: datosCarrera.objetivoNucleoEstructurante ?? ''
       },
 
-      defensaProyecto: structuredClone(MOCK_EVALUACION_INSTITUTO.defensaProyecto)
-        .map((c: CriterioDefensaProyecto) => ({ ...c, nota: 0 })),
+      defensaProyecto: defensaProyecto.length
+        ? defensaProyecto.map((c) => ({ criterio: c.criterio ?? '', nota: c.nota ?? 0 }))
+        : CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
 
       tema: datosProyecto.nombre ?? '',
 
@@ -105,7 +130,7 @@ export class EvaluacionInstituto implements OnInit {
             criterio: c.criterio ?? '',
             nota: c.maximo ? this.redondear((c.puntaje / c.maximo) * 10) : (c.puntaje ?? 0)
           }))
-        : structuredClone(MOCK_EVALUACION_INSTITUTO.parametrosProyecto),
+        : CRITERIOS_PARAMETROS_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
 
       notaFinalEmpresa: res?.['notaFinalEmpresa'] ?? 0,
 
@@ -134,9 +159,11 @@ export class EvaluacionInstituto implements OnInit {
 
       error: () => {
 
-        this.evaluacion = structuredClone(MOCK_EVALUACION_INSTITUTO);
+        this.evaluacion = evaluacionVacia();
         this.cargando = false;
         this.cdr.detectChanges();
+
+        Swal.fire('Error', 'No fue posible cargar la evaluación del instituto desde el servidor.', 'error');
 
       }
 

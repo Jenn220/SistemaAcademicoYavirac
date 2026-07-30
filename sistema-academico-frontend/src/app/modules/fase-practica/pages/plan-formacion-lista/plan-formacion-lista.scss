@@ -1,0 +1,70 @@
+:host {
+  display: block;
+  padding: 24px;
+}
+
+.contenedor {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.cabecera {
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0 0 4px;
+  }
+
+  .subtitulo {
+    color: #6c757d;
+    margin: 0;
+  }
+}
+
+.lista-practicas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tarjeta-practica {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: box-shadow .15s, border-color .15s;
+
+  &:hover {
+    border-color: #adb5bd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+  }
+}
+
+.tarjeta-titulo {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-estado {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.tarjeta-detalle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-size: 13px;
+  color: #495057;
+}

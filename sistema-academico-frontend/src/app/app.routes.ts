@@ -11,6 +11,7 @@ import {
 // Auth
 // ==============================
 import { authGuard } from './modules/auth/guards/auth.guard';
+import { roleGuard } from './modules/auth/guards/role.guard';
 
 // ==============================
 // Dashboard
@@ -118,6 +119,51 @@ export const routes: Routes = [
       {
         path: 'fase-practica/evaluacion-instituto',
         component: EvaluacionInstituto
+      },
+
+      // ===========================================
+      // Plan Marco de Formación / Plan de Rotación
+      //
+      // A diferencia de las demás vistas de Fase Práctica,
+      // estos dos formatos exigen elegir primero una
+      // práctica (el back no resuelve automáticamente la
+      // práctica del usuario logueado para estos endpoints,
+      // y además solo DOCENTE/COORDINADOR pueden usarlos).
+      // El roleGuard aquí es una segunda barrera de UX; la
+      // seguridad real la impone el backend con @Roles().
+      // ===========================================
+      {
+        path: 'fase-practica/plan-formacion',
+        canActivate: [roleGuard],
+        data: { roles: ['DOCENTE', 'COORDINADOR'] },
+        loadComponent: () =>
+          import(
+            './modules/fase-practica/pages/plan-formacion-lista/plan-formacion-lista'
+          ).then(
+            m => m.PlanFormacionLista
+          )
+      },
+      {
+        path: 'fase-practica/plan-marco/:idPractica',
+        canActivate: [roleGuard],
+        data: { roles: ['DOCENTE', 'COORDINADOR'] },
+        loadComponent: () =>
+          import(
+            './modules/fase-practica/pages/plan-marco/plan-marco'
+          ).then(
+            m => m.PlanMarco
+          )
+      },
+      {
+        path: 'fase-practica/plan-rotacion/:idPractica',
+        canActivate: [roleGuard],
+        data: { roles: ['DOCENTE', 'COORDINADOR'] },
+        loadComponent: () =>
+          import(
+            './modules/fase-practica/pages/plan-rotacion/plan-rotacion'
+          ).then(
+            m => m.PlanRotacion
+          )
       },
 
       // ===========================================

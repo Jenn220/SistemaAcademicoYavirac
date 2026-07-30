@@ -14,8 +14,22 @@ import Swal from 'sweetalert2';
 import { Documentos } from '../../services/documentos';
 import { DocumentHeader } from '../../components/document-header/document-header';
 import { InformeAprendizajeDocumento } from '../../interfaces';
-import { MOCK_INFORME_APRENDIZAJE } from '../../services/mock-documentos.data';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+
+function informeVacio(): InformeAprendizajeDocumento {
+  return {
+    estudiante: { nombre: '', cedula: '' },
+    encabezado: {
+      empresaFormadora: '', nivel: '', cicloAcademico: '',
+      fechaInicioFasePractica: '', fechaFinFasePractica: '',
+      tutorAcademico: '', nucleoEstructurante: '', tutorEmpresarial: '',
+      carrera: '', objetivoNucleoEstructurante: ''
+    },
+    semanas: [],
+    reflexionAprendizaje: '',
+    observacionesEmpresa: ''
+  };
+}
 
 @Component({
   selector: 'app-informe-aprendizaje',
@@ -30,8 +44,7 @@ export class InformeAprendizaje implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
-  informe: InformeAprendizajeDocumento = structuredClone(MOCK_INFORME_APRENDIZAJE);
+  informe: InformeAprendizajeDocumento = informeVacio();
 
   cargando = false;
 
@@ -46,10 +59,12 @@ export class InformeAprendizaje implements OnInit {
   /**
    * El backend anida al estudiante DENTRO de encabezado (no en la raíz), y
    * usa otros nombres de campo: "empresa" (no empresaFormadora),
-   * "periodoAcademico" (no cicloAcademico), "fechaInicio"/"fechaFin" (no
-   * fechaInicioFasePractica/fechaFinFasePractica). No manda nivel, núcleo
-   * estructurante, carrera ni el objetivo en este endpoint — se completan
-   * con /documentos/datos, que sí los tiene.
+   * "cicloAcademico" (no periodoAcademico), "fechaInicio"/"fechaFin" (no
+   * fechaInicioFasePractica/fechaFinFasePractica). Este mapeo leía la
+   * llave equivocada para cicloAcademico ("periodoAcademico", que no
+   * existe en la respuesta) así que quedaba vacío aunque el dato sí
+   * viajara. Se completa con /documentos/datos cuando el propio endpoint
+   * no trae el valor.
    */
   private mapearBase(res: Record<string, any>, datos: Record<string, any>): InformeAprendizajeDocumento {
 
@@ -59,23 +74,26 @@ export class InformeAprendizaje implements OnInit {
 
     const datosEstudiante = datos?.['estudiante'] ?? {};
     const datosCarrera = datos?.['carrera'] ?? {};
+    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+    const datosProyecto = datos?.['proyectoEmpresarial'] ?? {};
+    const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
 
     return {
       estudiante: {
-        nombre: estudiante.nombre ?? '',
-        cedula: estudiante.cedula ?? ''
+        nombre: estudiante.nombre ?? datosEstudiante.nombre ?? '',
+        cedula: estudiante.cedula ?? datosEstudiante.cedula ?? ''
       },
       encabezado: {
-        empresaFormadora: encabezado.empresa ?? '',
-        nivel: encabezado.nivel ?? datosEstudiante.nivel ?? '',
-        cicloAcademico: encabezado.periodoAcademico ?? '',
-        fechaInicioFasePractica: encabezado.fechaInicio ?? '',
-        fechaFinFasePractica: encabezado.fechaFin ?? '',
-        tutorAcademico: encabezado.tutorAcademico ?? '',
-        nucleoEstructurante: encabezado.nucleoEstructurante ?? datosCarrera.nucleoEstructurante ?? '',
-        tutorEmpresarial: encabezado.tutorEmpresarial ?? '',
-        carrera: encabezado.carrera ?? datosEstudiante.carrera ?? '',
-        objetivoNucleoEstructurante: encabezado.objetivoNucleoEstructurante ?? datosCarrera.objetivoNucleoEstructurante ?? ''
+        empresaFormadora: encabezado.empresa || datosProyecto.empresaAsignada || '',
+        nivel: encabezado.nivel || datosEstudiante.nivel || '',
+        cicloAcademico: encabezado.cicloAcademico || datosPeriodo.nombre || '',
+        fechaInicioFasePractica: encabezado.fechaInicio || datosProyecto.fechaInicio || '',
+        fechaFinFasePractica: encabezado.fechaFin || datosProyecto.fechaFin || '',
+        tutorAcademico: encabezado.tutorAcademico || datosCarrera.tutorAcademico || '',
+        nucleoEstructurante: encabezado.nucleoEstructurante || datosCarrera.nucleoEstructurante || '',
+        tutorEmpresarial: encabezado.tutorEmpresarial || datosEmpresa.tutorEmpresarial || '',
+        carrera: encabezado.carrera || datosEstudiante.carrera || '',
+        objetivoNucleoEstructurante: encabezado.objetivoNucleoEstructurante || datosCarrera.objetivoNucleoEstructurante || ''
       },
       semanas: semanas.map((s) => ({
         semana: s.semana ?? 0,
@@ -110,9 +128,11 @@ export class InformeAprendizaje implements OnInit {
 
       error: () => {
 
-        this.informe = structuredClone(MOCK_INFORME_APRENDIZAJE);
+        this.informe = informeVacio();
         this.cargando = false;
         this.cdr.detectChanges();
+
+        Swal.fire('Error', 'No fue posible cargar el informe de aprendizaje desde el servidor.', 'error');
 
       }
 

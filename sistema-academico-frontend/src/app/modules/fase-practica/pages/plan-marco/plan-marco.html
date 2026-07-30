@@ -1,0 +1,196 @@
+<div class="toolbar no-print">
+
+    <button class="btn btn-outline-secondary" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </button>
+
+    <button class="btn btn-primary" (click)="descargarWord()">
+        <i class="bi bi-file-earmark-word-fill"></i>
+        Descargar Word
+    </button>
+
+    <button class="btn btn-warning text-white" [disabled]="guardando" (click)="guardarEnBD()">
+        <i class="bi bi-save"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+    </button>
+
+</div>
+
+<div id="documento-plan-marco" class="documento">
+
+    <app-document-header
+        [titulo]="'FORMATO 03 PLAN MARCO DE FORMACIÓN'"
+        [codigo]="'DS-010203-4'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        @if (cargando) {
+
+        <p class="text-center text-muted my-4">Cargando datos base...</p>
+
+        } @else {
+
+        <table class="tabla-datos">
+
+            <tr>
+                <td class="label">NOMBRE(S) DE ESTUDIANTE(S):</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.estudianteNombre" name="estudianteNombre"></td>
+                <td class="label">PERÍODO:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.periodo" name="periodo"></td>
+            </tr>
+
+            <tr>
+                <td class="label">CARRERA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.carrera" name="carrera"></td>
+                <td class="label">NIVEL:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.nivel" name="nivel"></td>
+            </tr>
+
+            <tr>
+                <td class="label">EMPRESA FORMADORA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.empresaFormadora" name="empresaFormadora"></td>
+                <td class="label">HORAS DE FORMACIÓN PRÁCTICA:</td>
+                <td><input type="number" class="campo" [(ngModel)]="plan.horas_formacion" name="horasFormacion"></td>
+            </tr>
+
+            <tr>
+                <td class="label">DIRECCIÓN EMPRESA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.direccionEmpresa" name="direccionEmpresa"></td>
+                <td class="label">NÚCLEO ESTRUCTURANTE:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.nucleoEstructuranteNombre" name="nucleoEstructurante"></td>
+            </tr>
+
+        </table>
+
+        <div class="caja-niveles">
+
+            <strong>NIVELES DE LOGRO ESPERADO</strong>
+
+            @for (nivel of niveles; track nivel.nivel) {
+
+            <p class="nivel-item">
+                <strong>{{ nivel.nivel }}: {{ nivel.titulo }}:</strong>
+                {{ nivel.descripcion }}
+            </p>
+
+            }
+
+        </div>
+
+        <div class="caja-objetivo">
+
+            <strong>OBJETIVOS DE LA FASE PRÁCTICA</strong>
+
+            <textarea class="campo campo-textarea" rows="2" [(ngModel)]="plan.objetivos_fase_practica" name="objetivosFasePractica"></textarea>
+
+        </div>
+
+        <div class="caja-objetivo">
+
+            <strong>OBJETIVOS DE APRENDIZAJE</strong>
+
+            <p class="intro-objetivos">Al finalizar la fase práctica, el/la estudiante estará en capacidad de:</p>
+
+        </div>
+
+        <table class="tabla-items">
+
+            <thead>
+                <tr>
+                    <th style="width:28px">No.</th>
+                    <th>Resultados de aprendizaje</th>
+                    <th [attr.colspan]="4" style="width:160px">Nivel de logro esperado ({{ promedioNivelEsperado }})</th>
+                    <th style="width:70px">Nivel real alcanzado ({{ promedioNivelReal }})</th>
+                    <th>Tareas laborales</th>
+                    <th style="width:130px">Puesto de aprendizaje</th>
+                    <th style="width:60px">No. semanas</th>
+                    <th style="width:130px">Responsable</th>
+                    <th class="no-print" style="width:36px"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (item of items; track $index; let i = $index) {
+
+                <tr>
+                    <td class="text-center">{{ i + 1 }}</td>
+
+                    <td>
+                        <textarea class="campo campo-textarea" rows="2" [(ngModel)]="item.resultado_aprendizaje" name="resultado-{{ i }}"></textarea>
+                    </td>
+
+                    @for (nivel of niveles; track nivel.nivel) {
+                    <td
+                        class="celda-nivel no-print"
+                        [class.seleccionada]="item.nivel_logro_esperado === nivel.nivel"
+                        (click)="seleccionarNivelEsperado(item, nivel.nivel)">
+                        @if (item.nivel_logro_esperado === nivel.nivel) { X }
+                    </td>
+                    }
+
+                    <td class="text-center solo-print" [attr.colspan]="4">{{ item.nivel_logro_esperado }}</td>
+
+                    <td class="text-center">
+                        <input
+                            type="number"
+                            class="campo campo-nota"
+                            min="1" max="4"
+                            [(ngModel)]="item.nivel_real_alcanzado"
+                            name="nivelReal-{{ i }}"
+                            disabled
+                            title="Pendiente: el backend aún no expone el guardado de este dato (evaluacion_plan_marco)">
+                    </td>
+
+                    <td>
+                        <textarea class="campo campo-textarea" rows="2" [(ngModel)]="item.tareas_laborales" name="tareas-{{ i }}"></textarea>
+                    </td>
+
+                    <td><input type="text" class="campo" [(ngModel)]="item.puesto_aprendizaje" name="puesto-{{ i }}"></td>
+
+                    <td class="text-center"><input type="number" class="campo campo-nota" [(ngModel)]="item.semanas" name="semanas-{{ i }}"></td>
+
+                    <td><input type="text" class="campo" [(ngModel)]="item.responsable_puesto" name="responsable-{{ i }}"></td>
+
+                    <td class="text-center no-print">
+                        <button type="button" class="btn-eliminar-fila" (click)="eliminarFila(item)" title="Eliminar fila">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <button type="button" class="btn btn-outline-secondary btn-agregar-fila no-print" (click)="agregarFila()">
+            <i class="bi bi-plus-lg"></i>
+            Agregar resultado de aprendizaje
+        </button>
+
+        <div class="fila-firmas">
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>Tutor Académico del ISTY</span>
+                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorAcademicoNombre" name="tutorAcademico" placeholder="Nombre">
+            </div>
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>Tutor Empresarial de la Empresa Formadora</span>
+                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorEmpresarialNombre" name="tutorEmpresarial" placeholder="Nombre">
+            </div>
+
+        </div>
+
+        }
+
+    </div>
+
+</div>

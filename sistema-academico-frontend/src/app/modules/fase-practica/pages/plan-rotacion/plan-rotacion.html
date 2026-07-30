@@ -1,0 +1,167 @@
+<div class="toolbar no-print">
+
+    <button class="btn btn-outline-secondary" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </button>
+
+    <button class="btn btn-primary" [disabled]="!!error" (click)="descargarWord()">
+        <i class="bi bi-file-earmark-word-fill"></i>
+        Descargar Word
+    </button>
+
+    <button class="btn btn-warning text-white" [disabled]="guardando || !!error" (click)="guardarEnBD()">
+        <i class="bi bi-save"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+    </button>
+
+</div>
+
+<div id="documento-plan-rotacion" class="documento">
+
+    <app-document-header
+        [titulo]="'FORMATO 04 PLAN DE APRENDIZAJE PRÁCTICO Y DE ROTACIÓN'"
+        [codigo]="'DS-010204-4'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        @if (cargando) {
+
+        <p class="text-center text-muted my-4">Cargando datos base...</p>
+
+        } @else if (error) {
+
+        <p class="text-center text-danger my-4">{{ error }}</p>
+
+        } @else {
+
+        <table class="tabla-datos">
+
+            <tr>
+                <td class="label">NOMBRE(S) DEL ESTUDIANTE(S):</td>
+                <td colspan="3"><input type="text" class="campo" [(ngModel)]="encabezado.estudianteNombre" name="estudianteNombre"></td>
+            </tr>
+
+            <tr>
+                <td class="label">CARRERA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.carrera" name="carrera"></td>
+                <td class="label">NIVEL:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.nivel" name="nivel"></td>
+            </tr>
+
+            <tr>
+                <td class="label">EMPRESA FORMADORA:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.empresaFormadora" name="empresaFormadora"></td>
+                <td class="label">HORAS DE FORMACIÓN PRÁCTICA:</td>
+                <td><input type="number" class="campo" [(ngModel)]="encabezado.horasFormacion" name="horasFormacion"></td>
+            </tr>
+
+            <tr>
+                <td class="label">NÚCLEO ESTRUCTURANTE:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.nucleoEstructurante" name="nucleoEstructurante"></td>
+                <td class="label">PERÍODO LECTIVO:</td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.periodo" name="periodo"></td>
+            </tr>
+
+        </table>
+
+        <div class="controles-semanas no-print">
+
+            <span>Semanas mostradas: {{ numeroSemanas }}</span>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="quitarSemana()">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="agregarSemana()">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+
+        </div>
+
+        <table class="tabla-rotacion">
+
+            <thead>
+                <tr>
+                    <th style="width:28px">No.</th>
+                    <th>Resultados de aprendizaje</th>
+                    <th style="width:130px">Puesto de aprendizaje</th>
+                    @for (semana of columnasSemanas; track semana) {
+                    <th class="col-semana">S{{ semana }}</th>
+                    }
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (fila of filas; track $index; let i = $index) {
+
+                <tr>
+                    <td class="text-center">{{ i + 1 }}</td>
+
+                    <td>{{ fila.item.resultado_aprendizaje }}</td>
+
+                    <td><input type="text" class="campo" [(ngModel)]="fila.planRotacion.puesto_aprendizaje" name="puesto-{{ i }}"></td>
+
+                    @for (semana of columnasSemanas; track semana) {
+                    <td
+                        class="celda-semana"
+                        [class.activa]="fila.semanasActivas.has(semana)"
+                        (click)="toggleSemana(fila, semana)">
+                        @if (fila.semanasActivas.has(semana)) { X }
+                    </td>
+                    }
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <table class="tabla-competencias">
+
+            <thead>
+                <tr>
+                    <th colspan="3">Competencias Necesarias</th>
+                </tr>
+                <tr>
+                    <th>Conocimientos Teóricos</th>
+                    <th>Procedimentales</th>
+                    <th>Actitudinales</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.conocimientosTeoricos" name="conocimientosTeoricos"></textarea></td>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.procedimentales" name="procedimentales"></textarea></td>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.actitudinales" name="actitudinales"></textarea></td>
+                </tr>
+            </tbody>
+
+        </table>
+
+        <div class="fila-firmas">
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>Tutor Académico del ISTY</span>
+                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorAcademicoNombre" name="tutorAcademico" placeholder="Nombre">
+            </div>
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>Tutor Empresarial de la Empresa Formadora</span>
+                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorEmpresarialNombre" name="tutorEmpresarial" placeholder="Nombre">
+            </div>
+
+        </div>
+
+        }
+
+    </div>
+
+</div>

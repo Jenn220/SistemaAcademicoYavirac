@@ -122,6 +122,12 @@
                         </td>
                     </tr>
 
+                    } @empty {
+
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">Sin criterios de desempeño registrados en la base de datos todavía.</td>
+                    </tr>
+
                     }
 
                 </tbody>
@@ -175,6 +181,12 @@
                         <td class="text-center solo-print" [attr.colspan]="niveles.length">{{ fila.nota || '' }}</td>
 
                         <td class="text-center">{{ fila.nota || 0 }}</td>
+                    </tr>
+
+                    } @empty {
+
+                    <tr>
+                        <td [attr.colspan]="niveles.length + 2" class="text-center text-muted">Sin criterios de defensa registrados en la base de datos todavía.</td>
                     </tr>
 
                     }

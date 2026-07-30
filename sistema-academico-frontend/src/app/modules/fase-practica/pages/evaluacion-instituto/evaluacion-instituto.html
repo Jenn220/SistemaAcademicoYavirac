@@ -140,6 +140,12 @@
                         <td class="text-center">{{ fila.nota || 0 }}</td>
                     </tr>
 
+                    } @empty {
+
+                    <tr>
+                        <td [attr.colspan]="niveles.length + 2" class="text-center text-muted">Sin criterios de defensa registrados en la base de datos todavía.</td>
+                    </tr>
+
                     }
 
                 </tbody>
@@ -189,6 +195,15 @@
                             <input type="number" min="0" max="10" step="0.1" class="campo campo-nota" [(ngModel)]="fila.nota" name="parametro-{{ i }}">
                         </td>
 
+                    </tr>
+
+                    } @empty {
+
+                    <tr>
+                        <td class="celda-tema">
+                            <input type="text" class="campo" [(ngModel)]="evaluacion.tema" name="tema">
+                        </td>
+                        <td colspan="2" class="text-center text-muted">Sin parámetros del proyecto registrados en la base de datos todavía.</td>
                     </tr>
 
                     }

@@ -14,8 +14,18 @@ import Swal from 'sweetalert2';
 import { Documentos } from '../../services/documentos';
 import { DocumentHeader } from '../../components/document-header/document-header';
 import { Curriculum as CurriculumModel } from '../../interfaces';
-import { MOCK_CURRICULUM } from '../../services/mock-documentos.data';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+
+function curriculumVacio(): CurriculumModel {
+  return {
+    periodoAcademico: '',
+    datosPersonales: { nombre: '', cedula: '', estadoCivil: '', telefono: '', domicilio: '', emailInstitucional: '' },
+    datosAcademicos: [],
+    experienciaLaboral: [],
+    practicasDuales: [],
+    informacionAdicional: []
+  };
+}
 
 @Component({
   selector: 'app-curriculum',
@@ -30,8 +40,7 @@ export class Curriculum implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
-  curriculum: CurriculumModel = structuredClone(MOCK_CURRICULUM);
+  curriculum: CurriculumModel = curriculumVacio();
 
   cargando = false;
 
@@ -47,6 +56,13 @@ export class Curriculum implements OnInit {
    * El endpoint propio de curriculum no manda un "periodoAcademico" a nivel
    * raíz (el formato F02 lo pide como campo del encabezado, aparte de los
    * datos académicos). Se completa con /documentos/datos.
+   *
+   * "emailInstitucional" tampoco se leía bien: el back lo manda como
+   * datosPersonales.emailInstitucional (no .email), y este mapeo leía la
+   * llave equivocada, así que siempre quedaba vacío aunque el dato ya
+   * viajara en la respuesta. Junto con estadoCivil/teléfono/domicilio,
+   * también se completa con /documentos/datos si el propio endpoint no
+   * trae el valor.
    */
   private mapearBase(res: Record<string, any>, datos: Record<string, any>): CurriculumModel {
 
@@ -61,16 +77,17 @@ export class Curriculum implements OnInit {
     const habilidades: string[] = infoAdicional?.['habilidades'] ?? [];
 
     const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+    const datosEstudiante = datos?.['estudiante'] ?? {};
 
     return {
       periodoAcademico: res?.['periodoAcademico'] ?? datosPeriodo.nombre ?? '',
       datosPersonales: {
-        nombre: dp.nombre ?? '',
-        cedula: dp.cedula ?? '',
-        estadoCivil: dp.estadoCivil ?? '',
-        telefono: dp.telefono ?? '',
-        domicilio: dp.domicilio ?? '',
-        emailInstitucional: dp.email ?? ''
+        nombre: dp.nombre ?? datosEstudiante.nombre ?? '',
+        cedula: dp.cedula ?? datosEstudiante.cedula ?? '',
+        estadoCivil: dp.estadoCivil || datosEstudiante.estadoCivil || '',
+        telefono: dp.telefono || datosEstudiante.telefono || '',
+        domicilio: dp.domicilio || datosEstudiante.domicilio || '',
+        emailInstitucional: dp.emailInstitucional || datosEstudiante.email || ''
       },
       datosAcademicos: da?.institucion ? [{
         anio: '',
@@ -118,9 +135,11 @@ export class Curriculum implements OnInit {
 
       error: () => {
 
-        this.curriculum = structuredClone(MOCK_CURRICULUM);
+        this.curriculum = curriculumVacio();
         this.cargando = false;
         this.cdr.detectChanges();
+
+        Swal.fire('Error', 'No fue posible cargar el currículo desde el servidor.', 'error');
 
       }
 

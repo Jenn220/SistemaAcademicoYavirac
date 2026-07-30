@@ -8,13 +8,31 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 import { RegistroAsistencia as Registro } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
-import { MOCK_REGISTRO_ASISTENCIA } from '../../services/mock-documentos.data';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 
 import { DocumentHeader } from '../../components/document-header/document-header';
+
+function registroVacio(): Registro {
+  return {
+    estudiante: { nombre: '', cedula: '', email: '', telefono: '', tipoSangre: '' },
+    empresa: '',
+    carrera: '',
+    curso: '',
+    periodoAcademico: '',
+    nucleoEstructurante: '',
+    tutorAcademico: '',
+    tutorEmpresarial: '',
+    contactoEmergenciaNombre: '',
+    contactoEmergenciaTelefono: '',
+    registros: [],
+    horasAutonomas: 0,
+    subtotalHorasPractica: 0
+  };
+}
 
 @Component({
   selector: 'app-registro-asistencia',
@@ -32,8 +50,7 @@ export class RegistroAsistencia implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  // TODO: quitar el mock cuando el login/JWT del frontend esté conectado
-  registro: Registro = structuredClone(MOCK_REGISTRO_ASISTENCIA);
+  registro: Registro = registroVacio();
 
   ngOnInit(): void {
 
@@ -96,10 +113,12 @@ export class RegistroAsistencia implements OnInit {
 
       error: (err) => {
 
-        console.error('❌ Error obteniendo registro (usando datos moqueados):', err);
+        console.error('❌ Error obteniendo el registro de asistencia:', err);
 
-        this.registro = structuredClone(MOCK_REGISTRO_ASISTENCIA);
+        this.registro = registroVacio();
         this.cdr.detectChanges();
+
+        Swal.fire('Error', 'No fue posible cargar el registro de asistencia desde el servidor.', 'error');
 
       }
 
