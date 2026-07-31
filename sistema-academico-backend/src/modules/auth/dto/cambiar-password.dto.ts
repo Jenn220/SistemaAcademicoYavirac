@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class CambiarPasswordDto {
   @IsOptional()
@@ -8,5 +8,6 @@ export class CambiarPasswordDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
+  @Matches(/^\S+$/, { message: 'La contraseña no puede contener espacios' })
   passwordNueva: string;
 }

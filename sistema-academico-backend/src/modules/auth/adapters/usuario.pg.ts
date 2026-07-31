@@ -6,6 +6,7 @@ import {
   ClaveTemporalUsuario,
   CrearUsuarioConRolInput,
   IUsuarioRepository,
+  PeriodoAcademicoResponse,
   PersonaSinUsuario,
   UsuarioConRoles,
 } from '../ports/usuario.repository';
@@ -43,6 +44,17 @@ export class UsuarioPg implements IUsuarioRepository {
 
   async findByIdConRoles(idUsuario: number): Promise<UsuarioConRoles | null> {
     return this.findConRoles('u.id_usuario = $1', [idUsuario]);
+  }
+
+  async findPeriodosActivos(): Promise<PeriodoAcademicoResponse[]> {
+    return this.dataSource.query(
+      `
+      SELECT id_periodo, nombre, codigo
+      FROM periodo_academico
+      WHERE estado = 'ACTIVO'
+      ORDER BY id_periodo DESC
+      `
+    );
   }
 
   async registrarIntentoFallido(idUsuario: number, maxIntentos: number): Promise<void> {
@@ -107,20 +119,31 @@ export class UsuarioPg implements IUsuarioRepository {
     );
   }
 
-  async findDocentesSinUsuario(): Promise<PersonaSinUsuario[]> {
-    return this.dataSource.query(`
-      SELECT d.id_docente AS id, d.correo, d.cedula AS "claveTemporal"
+  async findDocentesSinUsuarioPorPeriodo(idPeriodo: number): Promise<PersonaSinUsuario[]> {
+    return this.dataSource.query(
+      `
+      SELECT DISTINCT d.id_docente AS id, d.correo, d.cedula AS "claveTemporal"
       FROM docente d
-      WHERE NOT EXISTS (SELECT 1 FROM usuario u WHERE u.id_docente = d.id_docente)
-    `);
+      JOIN oferta_asignatura oa ON oa.id_docente = d.id_docente
+      JOIN periodo_carrera pc ON pc.id_periodo_carrera = oa.id_periodo_carrera
+      WHERE pc.id_periodo = $1
+        AND NOT EXISTS (SELECT 1 FROM usuario u WHERE u.id_docente = d.id_docente)
+      `,
+      [idPeriodo],
+    );
   }
 
-  async findEmpresasSinUsuario(): Promise<PersonaSinUsuario[]> {
-    return this.dataSource.query(`
-      SELECT emp.id_empresa AS id, emp.razon_social AS correo, emp.ruc AS "claveTemporal"
+  async findEmpresasSinUsuarioPorPeriodo(idPeriodo: number): Promise<PersonaSinUsuario[]> {
+    return this.dataSource.query(
+      `
+      SELECT DISTINCT emp.id_empresa AS id, emp.razon_social AS correo, emp.ruc AS "claveTemporal"
       FROM empresa emp
-      WHERE NOT EXISTS (SELECT 1 FROM usuario u WHERE u.id_empresa = emp.id_empresa)
-    `);
+      JOIN practica_estudiante pe ON pe.id_empresa = emp.id_empresa
+      WHERE pe.id_periodo = $1
+        AND NOT EXISTS (SELECT 1 FROM usuario u WHERE u.id_empresa = emp.id_empresa)
+      `,
+      [idPeriodo],
+    );
   }
 
   async crearUsuarioConRol(input: CrearUsuarioConRolInput): Promise<UsuarioEntity> {

@@ -25,6 +25,11 @@ export class InformeFinalService {
     return this.http.post(this.apiUrl, dto);
   }
 
+  /** Actualiza únicamente el horario de un informe final existente */
+  actualizarHorario(idInformeFinal: number, horario: string): Observable<unknown> {
+    return this.http.patch(`${this.apiUrl}/${idInformeFinal}`, { horario });
+  }
+
   // --------------------------------------------------------------------
   // Secciones manuales (antecedentes, desarrollo, resultados, etc.)
   // El backend no tiene columnas para esto, así que se guardan en

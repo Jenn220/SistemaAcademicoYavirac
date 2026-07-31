@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, ParseIntPipe, Req, UseGuards } from '@nestjs/common';
 import { InformeFinalService } from '../services/informe-final.service';
 import { CreateInformeFinalDto } from '../dto/create-informe-final.dto';
+import { UpdateHorarioInformeFinalDto } from '../dto/update-horario-informe-final.dto';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -23,5 +24,13 @@ export class InformeFinalController {
   @Post()
   createInformeFinal(@Body() dto: CreateInformeFinalDto) {
     return this.informeFinalService.createInformeFinal(dto);
+  }
+
+  @Patch(':id_informe_final')
+  actualizarHorario(
+    @Param('id_informe_final', ParseIntPipe) idInformeFinal: number,
+    @Body() dto: UpdateHorarioInformeFinalDto,
+  ) {
+    return this.informeFinalService.actualizarHorario(idInformeFinal, dto.horario);
   }
 }

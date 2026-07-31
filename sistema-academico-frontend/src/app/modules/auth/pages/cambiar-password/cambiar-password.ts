@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
@@ -8,7 +8,6 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 
@@ -33,9 +32,15 @@ export class CambiarPassword {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  // Estados reactivos
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
   readonly exito = signal(false);
+
+  // Estados para visibilidad de contraseñas
+  readonly mostrarActual = signal(false);
+  readonly mostrarNueva = signal(false);
+  readonly mostrarConfirmacion = signal(false);
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -43,7 +48,7 @@ export class CambiarPassword {
       passwordNueva: ['', [Validators.required, Validators.minLength(6)]],
       confirmacion: ['', [Validators.required]],
     },
-    { validators: passwordsCoinciden },
+    { validators: passwordsCoinciden }
   );
 
   get passwordNueva() {
@@ -54,46 +59,58 @@ export class CambiarPassword {
     return this.form.controls.confirmacion;
   }
 
-  enviar(): void {
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-    return;
+  // Toggle de visibilidad
+  toggleMostrarActual(): void {
+    this.mostrarActual.update((v) => !v);
   }
 
-  this.error.set(null);
-  this.exito.set(false);
-  this.cargando.set(true);
+  toggleMostrarNueva(): void {
+    this.mostrarNueva.update((v) => !v);
+  }
 
-  const { passwordActual, passwordNueva } = this.form.getRawValue();
+  toggleMostrarConfirmacion(): void {
+    this.mostrarConfirmacion.update((v) => !v);
+  }
 
-  this.authService
-    .cambiarPassword({
-      passwordActual: passwordActual?.trim() ? passwordActual : undefined,
-      passwordNueva,
-    })
-    .subscribe({
-      next: () => {
-        this.cargando.set(false);
-        this.exito.set(true);
-        this.form.reset();
+  enviar(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
-        // 1. Cerramos la sesión antigua para limpiar el token viejo
-        this.authService.logout();
+    this.error.set(null);
+    this.exito.set(false);
+    this.cargando.set(true);
 
-        // 2. Redirigimos al Login tras 1.5s para que entre con la NUEVA contraseña
-        setTimeout(() => {
-          this.router.navigate(['/auth/login'], {
-            queryParams: { cambiado: 'true' }
-          });
-        }, 1500);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.cargando.set(false);
-        const mensajeServidor = error.error?.message;
-        this.error.set(
-          mensajeServidor || 'No se pudo actualizar la contraseña. Verifica los datos.'
-        );
-      },
-    });
+    const { passwordActual, passwordNueva } = this.form.getRawValue();
+
+    this.authService
+      .cambiarPassword({
+        passwordActual: passwordActual?.trim() ? passwordActual : undefined,
+        passwordNueva,
+      })
+      .subscribe({
+        next: () => {
+          this.cargando.set(false);
+          this.exito.set(true);
+          this.form.reset();
+
+          this.authService.logout();
+
+          setTimeout(() => {
+            this.router.navigate(['/auth/login'], {
+              queryParams: { cambiado: 'true' },
+            });
+          }, 1500);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.cargando.set(false);
+          const mensajeServidor = error.error?.message;
+          this.error.set(
+            mensajeServidor ||
+              'No se pudo actualizar la contraseña. Verifica los datos.'
+          );
+        },
+      });
   }
 }

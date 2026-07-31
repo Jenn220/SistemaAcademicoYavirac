@@ -1,4 +1,5 @@
 export class InformeDto {
+  id_informe_final: number;        // ← NUEVO
   nombre_docente: string;
   nombre_asignatura: string;
   paralelo: string;
