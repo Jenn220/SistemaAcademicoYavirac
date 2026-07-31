@@ -12,6 +12,7 @@ import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { PlanFormacion } from '../../services/plan-formacion';
+import { Documentos } from '../../services/documentos';
 import { AuthService } from '../../../auth/services/auth.service';
 import { DocumentHeader } from '../../components/document-header/document-header';
 import { PlanMarcoFormacion, ItemPlanMarco, PracticaSelector } from '../../interfaces';
@@ -78,6 +79,7 @@ function encabezadoVacio(): EncabezadoPlanMarco {
 export class PlanMarco implements OnInit {
 
   private planFormacion = inject(PlanFormacion);
+  private documentos = inject(Documentos);
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -122,7 +124,12 @@ export class PlanMarco implements OnInit {
       planes: this.planFormacion.obtenerPlanMarcoPorPractica(this.idPractica).pipe(catchError(() => of([] as PlanMarcoFormacion[])))
     }).subscribe({
 
-      next: ({ practica, planes }) => {
+      next: ({ practica, planes, datos }) => {
+
+        const datosEstudiante = datos?.['estudiante'] ?? {};
+        const datosCarrera = datos?.['carrera'] ?? {};
+        const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+        const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
 
         if (practica) {
           this.encabezado.empresaFormadora = practica.empresa?.razon_social ?? '';
