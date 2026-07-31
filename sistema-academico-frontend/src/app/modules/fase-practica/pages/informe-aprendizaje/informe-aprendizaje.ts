@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
@@ -42,9 +42,12 @@ export class InformeAprendizaje implements OnInit {
 
   private documentos = inject(Documentos);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
 
   informe: InformeAprendizajeDocumento = informeVacio();
+
+  private idPractica: number | undefined;
 
   cargando = false;
 
@@ -113,9 +116,11 @@ export class InformeAprendizaje implements OnInit {
 
     this.cargando = true;
 
+    this.idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
     forkJoin({
-      informe: this.documentos.obtenerInformeAprendizajeBase(),
-      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+      informe: this.documentos.obtenerInformeAprendizajeBase(this.idPractica),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ informe, datos }) => {
@@ -180,7 +185,7 @@ export class InformeAprendizaje implements OnInit {
 
     this.guardando = true;
 
-    this.documentos.guardarInformeAprendizaje(this.informe).subscribe({
+    this.documentos.guardarInformeAprendizaje(this.informe, this.idPractica).subscribe({
 
       next: (res) => {
 

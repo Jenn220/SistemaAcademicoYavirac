@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { PRACTICA_REPOSITORY, IPracticaRepository } from '../ports/practica.repository.port';
 import { CreatePracticaDto } from '../dto/create-practica.dto';
 import { UpdatePracticaDto } from '../dto/update-practica.dto';
@@ -56,6 +57,7 @@ export class PracticaService {
     private readonly rubricaRepository: IRubricaRepository,
     @Inject(ITEM_PLAN_MARCO_REPOSITORY)
     private readonly itemPlanMarcoRepository: IItemPlanMarcoRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createPractica(dto: CreatePracticaDto): Promise<PracticaEntity> {
@@ -68,8 +70,56 @@ export class PracticaService {
     return this.practicaRepository.createPractica(data);
   }
 
-  async findAllPracticas(skip?: number, take?: number): Promise<PracticaEntity[]> {
-    return this.practicaRepository.findAllPracticas(skip, take);
+  /**
+   * El selector de práctica (fase-practica/plan-formacion) necesita saber
+   * DE QUÉ ESTUDIANTE es cada práctica para que DOCENTE/COORDINADOR/
+   * TUTOR_EMPRESARIAL puedan buscarlo por nombre o cédula — PracticaEntity
+   * no tiene relación directa a estudiante (solo a matricula_detalle), así
+   * que se resuelve aparte con un solo query batch.
+   *
+   * Además se filtra por rol: DOCENTE solo ve sus propios asignados
+   * (id_docente), TUTOR_EMPRESARIAL solo los de su empresa (id_empresa),
+   * ESTUDIANTE solo el suyo. COORDINADOR ve todos (es quien asigna).
+   */
+  async findAllPracticas(usuario: any, skip?: number, take?: number): Promise<any[]> {
+    const practicas = await this.practicaRepository.findAllPracticas(skip, take);
+    if (practicas.length === 0) return practicas;
+
+    const idsMatriculaDetalle = practicas.map((p) => p.id_matricula_detalle);
+
+    const filas = await this.dataSource.query(
+      `SELECT md.id_matricula_detalle, e.id_estudiante, e.nombres, e.apellidos, e.cedula
+       FROM matricula_detalle md
+       JOIN matricula m ON m.id_matricula = md.id_matricula
+       JOIN estudiante e ON e.id_estudiante = m.id_estudiante
+       WHERE md.id_matricula_detalle = ANY($1)`,
+      [idsMatriculaDetalle],
+    );
+
+    const porMatriculaDetalle = new Map<number, any>(filas.map((f: any) => [Number(f.id_matricula_detalle), f]));
+
+    const enriquecidas = practicas.map((p) => {
+      const fila = porMatriculaDetalle.get(Number(p.id_matricula_detalle));
+      return {
+        ...p,
+        estudiante: fila
+          ? { id_estudiante: Number(fila.id_estudiante), nombre: `${fila.nombres} ${fila.apellidos}`, cedula: fila.cedula }
+          : null,
+      };
+    });
+
+    const roles: string[] = usuario?.roles ?? [];
+
+    if (roles.includes('COORDINADOR')) {
+      return enriquecidas;
+    }
+
+    return enriquecidas.filter((p) => {
+      if (roles.includes('DOCENTE') && Number(p.id_docente) === Number(usuario.idDocente)) return true;
+      if (roles.includes('TUTOR_EMPRESARIAL') && Number(p.id_empresa) === Number(usuario.idEmpresa)) return true;
+      if (roles.includes('ESTUDIANTE') && Number(p.estudiante?.id_estudiante) === Number(usuario.idEstudiante)) return true;
+      return false;
+    });
   }
 
   async findPracticaById(id: number): Promise<PracticaEntity> {
@@ -83,6 +133,27 @@ export class PracticaService {
   async updatePractica(id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
     await this.findPracticaById(id);
     return this.practicaRepository.updatePractica(id, dto);
+  }
+
+  /** Catálogo para el select de "docente académico" en la pantalla de Asignaciones. */
+  async findAllDocentes(): Promise<any[]> {
+    return this.dataSource.query(
+      `SELECT id_docente, nombres, apellidos, cedula
+       FROM docente
+       WHERE estado = 'ACTIVO'
+       ORDER BY nombres, apellidos`,
+    );
+  }
+
+  /** Catálogo para el select de "tutor empresarial" en la pantalla de Asignaciones. */
+  async findAllTutoresEmpresariales(): Promise<any[]> {
+    return this.dataSource.query(
+      `SELECT te.id_tutor_empresarial, te.nombres, te.apellidos, te.id_empresa, e.razon_social
+       FROM tutor_empresarial te
+       JOIN empresa e ON e.id_empresa = te.id_empresa
+       WHERE te.estado = 'ACTIVO'
+       ORDER BY te.nombres, te.apellidos`,
+    );
   }
 
   async removePractica(id: number): Promise<void> {

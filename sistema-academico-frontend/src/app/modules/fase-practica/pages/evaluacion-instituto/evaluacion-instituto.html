@@ -20,6 +20,7 @@
 
     </button>
 
+    @if (!soloLectura) {
     <button
         class="btn btn-warning text-white"
         [disabled]="guardando"
@@ -30,6 +31,9 @@
         {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
 
     </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
 
 </div>
 
@@ -128,6 +132,7 @@
                         <td
                             class="celda-nivel no-print"
                             [class.seleccionada]="fila.nota === nivel.nota"
+                            [class.deshabilitada]="soloLectura"
                             (click)="seleccionarNivel(fila, nivel.nota)">
 
                             @if(fila.nota === nivel.nota){ {{ nivel.nota }} }
@@ -185,14 +190,14 @@
 
                         @if(i === 0){
                         <td [attr.rowspan]="evaluacion.parametrosProyecto.length" class="celda-tema">
-                            <input type="text" class="campo" [(ngModel)]="evaluacion.tema" name="tema">
+                            <input type="text" class="campo" [(ngModel)]="evaluacion.tema" name="tema" [disabled]="soloLectura">
                         </td>
                         }
 
                         <td>{{ fila.criterio }}</td>
 
                         <td class="text-center">
-                            <input type="number" min="0" max="10" step="0.1" class="campo campo-nota" [(ngModel)]="fila.nota" name="parametro-{{ i }}">
+                            <input type="number" min="0" max="10" step="0.1" class="campo campo-nota" [(ngModel)]="fila.nota" name="parametro-{{ i }}" [disabled]="soloLectura">
                         </td>
 
                     </tr>
@@ -201,7 +206,7 @@
 
                     <tr>
                         <td class="celda-tema">
-                            <input type="text" class="campo" [(ngModel)]="evaluacion.tema" name="tema">
+                            <input type="text" class="campo" [(ngModel)]="evaluacion.tema" name="tema" [disabled]="soloLectura">
                         </td>
                         <td colspan="2" class="text-center text-muted">Sin parámetros del proyecto registrados en la base de datos todavía.</td>
                     </tr>
@@ -238,9 +243,7 @@
                 <tbody>
                     <tr>
                         <td class="label">Evaluación Empresa</td>
-                        <td class="text-center">
-                            <input type="number" min="0" max="10" step="0.01" class="campo campo-nota" [(ngModel)]="evaluacion.notaFinalEmpresa" name="notaFinalEmpresa">
-                        </td>
+                        <td class="text-center">{{ evaluacion.notaFinalEmpresa }}</td>
                     </tr>
                     <tr>
                         <td class="label">Evaluación Instituto</td>
@@ -258,7 +261,7 @@
 
                 <strong>COMENTARIOS / OBSERVACIÓN</strong>
 
-                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="evaluacion.observaciones" name="observaciones"></textarea>
+                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="evaluacion.observaciones" name="observaciones" [disabled]="soloLectura"></textarea>
 
             </div>
 

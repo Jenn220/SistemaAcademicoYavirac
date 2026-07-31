@@ -5,7 +5,7 @@ import {
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
@@ -48,6 +48,7 @@ export class RegistroAsistencia implements OnInit {
 
   private documentos = inject(Documentos);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
 
   registro: Registro = registroVacio();
@@ -99,9 +100,11 @@ export class RegistroAsistencia implements OnInit {
 
   cargarRegistro(): void {
 
+    const idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
     forkJoin({
-      registro: this.documentos.obtenerRegistroAsistencia(),
-      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+      registro: this.documentos.obtenerRegistroAsistencia(idPractica),
+      datos: this.documentos.obtenerDatosMaestra(idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ registro, datos }) => {

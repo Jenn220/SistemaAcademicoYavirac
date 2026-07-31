@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
@@ -39,9 +40,15 @@ export class PracticaController {
     return this.practicaService.createPractica(dto);
   }
 
+  /**
+   * DOCENTE solo ve las prácticas donde es el docente asignado (id_docente);
+   * TUTOR_EMPRESARIAL solo las de su empresa; COORDINADOR ve todas (es quien
+   * asigna). Antes esto devolvía la lista completa a cualquier rol — un
+   * docente veía estudiantes de otros profesores.
+   */
   @Get('practicas')
-  findAllPracticas(@Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.practicaService.findAllPracticas(skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findAllPracticas(@Req() req: any, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findAllPracticas(req.user, skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Get('practicas/:id')
@@ -49,9 +56,27 @@ export class PracticaController {
     return this.practicaService.findPracticaById(Number(id));
   }
 
+  /**
+   * Reasignar docente/tutor empresarial de una práctica es exclusivo de
+   * COORDINADOR (antes lo podía llamar cualquiera de los 4 roles).
+   */
   @Patch('practicas/:id')
+  @Roles('COORDINADOR')
   updatePractica(@Param('id') id: string, @Body() dto: UpdatePracticaDto) {
     return this.practicaService.updatePractica(Number(id), dto);
+  }
+
+  /** Catálogos de solo lectura para los selects de la pantalla de Asignaciones. */
+  @Get('docentes')
+  @Roles('COORDINADOR')
+  findAllDocentes() {
+    return this.practicaService.findAllDocentes();
+  }
+
+  @Get('tutores-empresariales')
+  @Roles('COORDINADOR')
+  findAllTutoresEmpresariales() {
+    return this.practicaService.findAllTutoresEmpresariales();
   }
 
   @Delete('practicas/:id')
@@ -85,7 +110,11 @@ export class PracticaController {
     }));
   }
 
+  // Plan de Rotación: solo ESTUDIANTE crea/edita/elimina (sobreescribe el
+  // @Roles de la clase); el GET queda abierto a los 4 roles de la clase
+  // para que DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL puedan verlo.
   @Post('plan-rotacion')
+  @Roles('ESTUDIANTE')
   createPlanRotacion(@Body() dto: CreatePlanRotacionDto) {
     return this.practicaService.createPlanRotacion(dto);
   }
@@ -96,11 +125,13 @@ export class PracticaController {
   }
 
   @Patch('plan-rotacion/:id')
+  @Roles('ESTUDIANTE')
   updatePlanRotacion(@Param('id') id: string, @Body() dto: UpdatePlanRotacionDto) {
     return this.practicaService.updatePlanRotacion(Number(id), dto);
   }
 
   @Delete('plan-rotacion/:id')
+  @Roles('ESTUDIANTE')
   removePlanRotacion(@Param('id') id: string) {
     return this.practicaService.removePlanRotacion(Number(id)).then(() => ({
       deleted: true,

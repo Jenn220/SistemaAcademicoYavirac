@@ -10,10 +10,14 @@
         Descargar Word
     </button>
 
+    @if (!soloLectura) {
     <button class="btn btn-warning text-white" [disabled]="guardando || !!error" (click)="guardarEnBD()">
         <i class="bi bi-save"></i>
         {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
     </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
 
 </div>
 
@@ -40,32 +44,33 @@
 
             <tr>
                 <td class="label">NOMBRE(S) DEL ESTUDIANTE(S):</td>
-                <td colspan="3"><input type="text" class="campo" [(ngModel)]="encabezado.estudianteNombre" name="estudianteNombre"></td>
+                <td colspan="3"><input type="text" class="campo" [(ngModel)]="encabezado.estudianteNombre" name="estudianteNombre" [disabled]="soloLectura"></td>
             </tr>
 
             <tr>
                 <td class="label">CARRERA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.carrera" name="carrera"></td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.carrera" name="carrera" [disabled]="soloLectura"></td>
                 <td class="label">NIVEL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.nivel" name="nivel"></td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.nivel" name="nivel" [disabled]="soloLectura"></td>
             </tr>
 
             <tr>
                 <td class="label">EMPRESA FORMADORA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.empresaFormadora" name="empresaFormadora"></td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.empresaFormadora" name="empresaFormadora" [disabled]="soloLectura"></td>
                 <td class="label">HORAS DE FORMACIÓN PRÁCTICA:</td>
-                <td><input type="number" class="campo" [(ngModel)]="encabezado.horasFormacion" name="horasFormacion"></td>
+                <td><input type="number" class="campo" [(ngModel)]="encabezado.horasFormacion" name="horasFormacion" [disabled]="soloLectura"></td>
             </tr>
 
             <tr>
                 <td class="label">NÚCLEO ESTRUCTURANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.nucleoEstructurante" name="nucleoEstructurante"></td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.nucleoEstructurante" name="nucleoEstructurante" [disabled]="soloLectura"></td>
                 <td class="label">PERÍODO LECTIVO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.periodo" name="periodo"></td>
+                <td><input type="text" class="campo" [(ngModel)]="encabezado.periodo" name="periodo" [disabled]="soloLectura"></td>
             </tr>
 
         </table>
 
+        @if (!soloLectura) {
         <div class="controles-semanas no-print">
 
             <span>Semanas mostradas: {{ numeroSemanas }}</span>
@@ -79,6 +84,7 @@
             </button>
 
         </div>
+        }
 
         <table class="tabla-rotacion">
 
@@ -102,12 +108,13 @@
 
                     <td>{{ fila.item.resultado_aprendizaje }}</td>
 
-                    <td><input type="text" class="campo" [(ngModel)]="fila.planRotacion.puesto_aprendizaje" name="puesto-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.planRotacion.puesto_aprendizaje" name="puesto-{{ i }}" [disabled]="soloLectura"></td>
 
                     @for (semana of columnasSemanas; track semana) {
                     <td
                         class="celda-semana"
                         [class.activa]="fila.semanasActivas.has(semana)"
+                        [class.deshabilitada]="soloLectura"
                         (click)="toggleSemana(fila, semana)">
                         @if (fila.semanasActivas.has(semana)) { X }
                     </td>
@@ -136,9 +143,9 @@
 
             <tbody>
                 <tr>
-                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.conocimientosTeoricos" name="conocimientosTeoricos"></textarea></td>
-                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.procedimentales" name="procedimentales"></textarea></td>
-                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.actitudinales" name="actitudinales"></textarea></td>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.conocimientosTeoricos" name="conocimientosTeoricos" [disabled]="soloLectura"></textarea></td>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.procedimentales" name="procedimentales" [disabled]="soloLectura"></textarea></td>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.actitudinales" name="actitudinales" [disabled]="soloLectura"></textarea></td>
                 </tr>
             </tbody>
 
@@ -149,13 +156,13 @@
             <div class="firma">
                 <div class="linea"></div>
                 <span>Tutor Académico del ISTY</span>
-                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorAcademicoNombre" name="tutorAcademico" placeholder="Nombre">
+                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorAcademicoNombre" name="tutorAcademico" placeholder="Nombre" [disabled]="soloLectura">
             </div>
 
             <div class="firma">
                 <div class="linea"></div>
                 <span>Tutor Empresarial de la Empresa Formadora</span>
-                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorEmpresarialNombre" name="tutorEmpresarial" placeholder="Nombre">
+                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorEmpresarialNombre" name="tutorEmpresarial" placeholder="Nombre" [disabled]="soloLectura">
             </div>
 
         </div>

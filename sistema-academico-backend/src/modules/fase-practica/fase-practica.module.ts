@@ -16,6 +16,7 @@ import { PlanRotacionSemanaController } from './controllers/plan-rotacion-semana
 import { PlanMarcoController } from './controllers/plan-marco.controller';
 import { ItemPlanMarcoController } from './controllers/item-plan-marco.controller';
 import { PerfilEstudianteController } from './controllers/perfil-estudiante.controller';
+import { EvaluacionPlanMarcoController } from './controllers/evaluacion-plan-marco.controller';
 import { BitacoraSemanalEntity } from './domain/bitacora-semanal.entity';
 import { CvDatoAcademicoEntity } from './domain/cv-dato-academico.entity';
 import { CvExperienciaLaboralEntity } from './domain/cv-experiencia-laboral.entity';
@@ -55,6 +56,7 @@ import { DetalleEvaluacionService } from './services/detalle-evaluacion.service'
 import { PlanRotacionSemanaService } from './services/plan-rotacion-semana.service';
 import { PlanMarcoService } from './services/plan-marco.service';
 import { ItemPlanMarcoService } from './services/item-plan-marco.service';
+import { EvaluacionPlanMarcoService } from './services/evaluacion-plan-marco.service';
 import { InformeFasePracticaPg } from './adapters/informe-fase-practica.pg';
 import {
   INFORME_FASE_PRACTICA_REPOSITORY,
@@ -76,6 +78,8 @@ import { PLAN_MARCO_REPOSITORY } from './ports/plan-marco.repository.port';
 import { PlanMarcoPg } from './adapters/plan-marco.pg';
 import { ITEM_PLAN_MARCO_REPOSITORY } from './ports/item-plan-marco.repository.port';
 import { ItemPlanMarcoPg } from './adapters/item-plan-marco.pg';
+import { EVALUACION_PLAN_MARCO_REPOSITORY } from './ports/evaluacion-plan-marco.repository.port';
+import { EvaluacionPlanMarcoPg } from './adapters/evaluacion-plan-marco.pg';
 import { INFORME_APRENDIZAJE_REPOSITORY } from './ports/informe-aprendizaje.repository.port';
 import { InformeAprendizajePg } from './adapters/informe-aprendizaje.pg';
 import { EVALUACION_PRACTICA_REPOSITORY } from './ports/evaluacion-practica.repository.port';
@@ -136,6 +140,7 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       PlanMarcoController,
       ItemPlanMarcoController,
       PerfilEstudianteController,
+      EvaluacionPlanMarcoController,
   ],
   providers: [
     PracticaService,
@@ -208,6 +213,11 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       {
         provide: ITEM_PLAN_MARCO_REPOSITORY,
         useClass: ItemPlanMarcoPg,
+      },
+      EvaluacionPlanMarcoService,
+      {
+        provide: EVALUACION_PLAN_MARCO_REPOSITORY,
+        useClass: EvaluacionPlanMarcoPg,
       },
       InformeFasePracticaService,
     {

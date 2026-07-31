@@ -1,0 +1,121 @@
+:host {
+  display: block;
+  padding: 24px;
+}
+
+.contenedor {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.cabecera {
+  margin-bottom: 20px;
+  position: relative;
+
+  .btn-volver {
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    margin: 0 0 4px;
+  }
+
+  .subtitulo {
+    color: #6c757d;
+    margin: 0;
+  }
+}
+
+.buscador {
+  margin-bottom: 16px;
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: #6c8ee8;
+      box-shadow: 0 0 0 3px rgba(108, 142, 232, .15);
+    }
+  }
+}
+
+.tabla-asignaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fila-encabezado,
+.fila-asignacion {
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 1.3fr 1.6fr .8fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.fila-encabezado {
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+.fila-asignacion {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.celda-estudiante {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .cedula,
+  .practica-id {
+    font-size: 12px;
+    color: #6c757d;
+  }
+}
+
+.celda-empresa {
+  font-size: 13px;
+  color: #495057;
+}
+
+.celda-select select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.celda-guardar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+
+  .fila-encabezado {
+    display: none;
+  }
+
+  .fila-asignacion {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .celda-guardar {
+    justify-content: flex-start;
+  }
+
+}

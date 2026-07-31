@@ -1,12 +1,11 @@
 // ============================================================
 // Plan Marco de Formación (Formato 03) y Plan de Rotación
-// (Formato 04). A diferencia del resto de documentos de este
-// módulo, estos dos NO se autocargan desde el JWT del usuario:
-// el back los expone como CRUD puro sobre id_practica /
-// id_plan_marco, restringido a DOCENTE y COORDINADOR
-// (ver PlanMarcoController / ItemPlanMarcoController /
-// PlanRotacionSemanaController en el back). Por eso la vista
-// necesita un selector de práctica en vez de autocargar.
+// (Formato 04). Los edita el ESTUDIANTE (autoservicio, resuelve
+// su práctica vía /mi-practica); DOCENTE/COORDINADOR/
+// TUTOR_EMPRESARIAL solo consultan en modo lectura — necesitan
+// elegir de una lista qué estudiante ver, por eso las páginas
+// siguen recibiendo idPractica por ruta en vez de autocargar
+// igual que el resto de documentos del módulo.
 // ============================================================
 
 export interface PracticaSelector {
@@ -14,6 +13,8 @@ export interface PracticaSelector {
   estado?: string;
   fecha_inicio?: string;
   fecha_fin?: string;
+  /** id_docente asignado en crudo — para preseleccionarlo en Asignaciones. */
+  id_docente?: number;
   empresa?: {
     id_empresa: number;
     razon_social: string;
@@ -24,6 +25,12 @@ export interface PracticaSelector {
     nombres: string;
     apellidos: string;
   };
+  /** A qué estudiante pertenece la práctica — para buscar/filtrar en el selector. */
+  estudiante?: {
+    id_estudiante: number;
+    nombre: string;
+    cedula: string;
+  } | null;
 }
 
 export interface PlanMarcoFormacion {
@@ -45,13 +52,16 @@ export interface ItemPlanMarco {
   puesto_aprendizaje?: string;
   semanas?: number;
   responsable_puesto?: string;
-  /**
-   * Nivel real alcanzado (columna del PDF). El back tiene la entidad
-   * evaluacion_plan_marco creada pero SIN controller/service todavía,
-   * así que este campo vive solo en el front por ahora: se muestra
-   * pero no se envía al guardar. Quitar el disabled del input en
-   * plan-marco.html en cuanto exista el endpoint.
-   */
+  /** Nivel real alcanzado, cargado desde evaluacion_plan_marco. */
+  nivel_real_alcanzado?: number;
+  /** id_evaluacion_pm si ya existe una evaluación guardada para este ítem. */
+  id_evaluacion_pm?: number;
+}
+
+export interface EvaluacionPlanMarco {
+  id_evaluacion_pm?: number;
+  id_practica: number;
+  id_item_pm: number;
   nivel_real_alcanzado?: number;
 }
 

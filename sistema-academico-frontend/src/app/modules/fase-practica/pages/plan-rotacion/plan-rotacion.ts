@@ -12,9 +12,11 @@ import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { PlanFormacion } from '../../services/plan-formacion';
+import { Documentos } from '../../services/documentos';
 import { DocumentHeader } from '../../components/document-header/document-header';
 import { ItemPlanMarco, PlanMarcoFormacion, PlanRotacion as PlanRotacionModel, PracticaSelector } from '../../interfaces';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+import { AuthService } from '../../../auth/services/auth.service';
 
 const NUMERO_SEMANAS_MINIMO = 8;
 
@@ -79,9 +81,16 @@ function competenciasVacias(): CompetenciasNecesarias {
 export class PlanRotacion implements OnInit {
 
   private planFormacion = inject(PlanFormacion);
+  private documentos = inject(Documentos);
+  private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  /** Solo ESTUDIANTE edita; DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL solo consultan. */
+  get soloLectura(): boolean {
+    return !this.authService.tieneAlgunRol(['ESTUDIANTE']);
+  }
 
   idPractica = 0;
 
@@ -119,10 +128,11 @@ export class PlanRotacion implements OnInit {
 
     forkJoin({
       practica: this.planFormacion.obtenerPractica(this.idPractica).pipe(catchError(() => of(null as PracticaSelector | null))),
-      planesMarco: this.planFormacion.obtenerPlanMarcoPorPractica(this.idPractica).pipe(catchError(() => of([])))
+      planesMarco: this.planFormacion.obtenerPlanMarcoPorPractica(this.idPractica).pipe(catchError(() => of([]))),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
-      next: ({ practica, planesMarco }) => {
+      next: ({ practica, planesMarco, datos }) => {
 
         if (practica) {
           this.encabezado.empresaFormadora = practica.empresa?.razon_social ?? '';
@@ -130,6 +140,19 @@ export class PlanRotacion implements OnInit {
             ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
             : '';
         }
+
+        // Igual que en plan-marco.ts: el resto del encabezado no vive en
+        // PracticaSelector, se completa con /documentos/datos.
+        const datosEstudiante = datos?.['estudiante'] ?? {};
+        const datosCarrera = datos?.['carrera'] ?? {};
+        const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+
+        this.encabezado.estudianteNombre = datosEstudiante.nombre ?? '';
+        this.encabezado.carrera = datosEstudiante.carrera ?? '';
+        this.encabezado.nivel = datosEstudiante.nivel ?? '';
+        this.encabezado.periodo = datosPeriodo.nombre ?? '';
+        this.encabezado.nucleoEstructurante = datosCarrera.nucleoEstructurante ?? '';
+        this.encabezado.tutorAcademicoNombre = datosCarrera.tutorAcademico ?? '';
 
         if (planesMarco.length === 0) {
           this.error = 'Esta práctica todavía no tiene un Plan Marco de Formación. Créalo primero para poder definir el Plan de Rotación.';
@@ -245,11 +268,13 @@ export class PlanRotacion implements OnInit {
   }
 
   agregarSemana(): void {
+    if (this.soloLectura) return;
     this.numeroSemanas++;
   }
 
   quitarSemana(): void {
 
+    if (this.soloLectura) return;
     if (this.numeroSemanas <= 1) return;
 
     this.filas.forEach((f) => {
@@ -262,6 +287,8 @@ export class PlanRotacion implements OnInit {
 
   toggleSemana(fila: FilaRotacion, semana: number): void {
 
+    if (this.soloLectura) return;
+
     if (fila.semanasActivas.has(semana)) {
       fila.semanasActivas.delete(semana);
     } else {
@@ -271,7 +298,11 @@ export class PlanRotacion implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'rotacion' } });
+    if (this.soloLectura) {
+      this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'rotacion' } });
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   descargarWord(): void {
@@ -280,7 +311,7 @@ export class PlanRotacion implements OnInit {
 
   guardarEnBD(): void {
 
-    if (this.guardando || this.filas.length === 0) return;
+    if (this.guardando || this.soloLectura || this.filas.length === 0) return;
 
     this.guardando = true;
 

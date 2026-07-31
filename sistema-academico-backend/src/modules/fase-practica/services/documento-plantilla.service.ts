@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -29,6 +29,7 @@ import {
   InformeSemana,
   InformeAprendizaje,
   CriterioEmpresarial,
+  DefensaProyectoItem,
   EvaluacionEmpresarial,
   CriterioInstituto,
   EvaluacionInstituto,
@@ -64,28 +65,95 @@ export class DocumentoPlantillaService {
     private readonly dataSource: DataSource,
   ) {}
 
-  private async obtenerIdPractica(usuario: any): Promise<number> {
-    const practica = await this.practicaRepository.findOne({
-      where: { id_empresa: usuario.idEmpresa ?? 1 },
-    });
+  /**
+   * Resuelve el id_practica que le corresponde consultar al usuario logueado.
+   * ESTUDIANTE y TUTOR_EMPRESARIAL siempre ven SU práctica (por matrícula o
+   * por empresa) — nunca pueden pedir la de otro. DOCENTE debe indicar
+   * explícitamente qué práctica quiere ver (idPracticaSolicitado) y solo se
+   * la resuelve si es el docente asignado. COORDINADOR puede pedir
+   * cualquier práctica explícita, sin restricción de dueño.
+   *
+   * Antes esto caía silenciosamente a "la primera práctica que exista" para
+   * cualquier usuario sin idEmpresa — permitía que un docente o tutor sin
+   * relación con la práctica igual viera sus datos (ver hallazgos de QA
+   * IA-12 / EE-12 / EI-11 / PMF-07).
+   */
+  private async obtenerIdPractica(usuario: any, idPracticaSolicitado?: number): Promise<number> {
 
-    if (!practica) {
-      const primera = await this.practicaRepository.find({
-        order: { id_practica: 'ASC' },
-        take: 1,
-      });
-      return primera[0]?.id_practica ?? 1;
+    if (usuario.idEstudiante) {
+      const rows = await this.dataSource.query(
+        `SELECT p.id_practica
+         FROM practica_estudiante p
+         JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE m.id_estudiante = $1
+         ORDER BY p.id_practica DESC
+         LIMIT 1`,
+        [usuario.idEstudiante],
+      );
+
+      if (rows.length === 0) {
+        throw new ForbiddenException('No tiene una práctica registrada.');
+      }
+
+      return rows[0].id_practica;
     }
 
-    return practica.id_practica;
+    if (usuario.idEmpresa) {
+      const practica = await this.practicaRepository.findOne({
+        where: { id_empresa: usuario.idEmpresa },
+      });
+
+      if (!practica) {
+        throw new ForbiddenException('No tiene una práctica vinculada a su empresa.');
+      }
+
+      return practica.id_practica;
+    }
+
+    // COORDINADOR tiene alcance total y va antes que la validación de
+    // dueño de DOCENTE: rav.villa, por ejemplo, tiene ambos roles
+    // (COORDINADOR + DOCENTE con idDocente propio) y no debe quedar
+    // restringida a solo sus propias prácticas asignadas.
+    const roles: string[] = usuario.roles ?? [];
+
+    if (roles.includes('COORDINADOR')) {
+      if (!idPracticaSolicitado) {
+        throw new ForbiddenException('Debe indicar la práctica que desea consultar.');
+      }
+
+      return idPracticaSolicitado;
+    }
+
+    if (usuario.idDocente) {
+      if (!idPracticaSolicitado) {
+        throw new ForbiddenException('Debe indicar la práctica que desea consultar.');
+      }
+
+      const practica = await this.practicaRepository.findOne({
+        where: { id_practica: idPracticaSolicitado },
+      });
+
+      if (!practica || practica.id_docente !== usuario.idDocente) {
+        throw new ForbiddenException('No tiene permisos sobre esta práctica.');
+      }
+
+      return practica.id_practica;
+    }
+
+    if (idPracticaSolicitado) {
+      return idPracticaSolicitado;
+    }
+
+    throw new ForbiddenException('No fue posible resolver la práctica del usuario.');
   }
 
-  async getDatosMaestra(usuario: any): Promise<DatosMaestra> {
+  async getDatosMaestra(usuario: any, idPracticaSolicitado?: number): Promise<DatosMaestra> {
     let idPractica: number | undefined;
     let practica: any = null;
 
     try {
-      idPractica = await this.obtenerIdPractica(usuario);
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
       practica = await this.practicaRepository.findOne({
         where: { id_practica: idPractica },
         relations: ['empresa', 'tutor_empresarial'],
@@ -259,6 +327,7 @@ export class DocumentoPlantillaService {
 
     return {
       estudiante: {
+        idEstudiante: estudiante?.id_estudiante ?? null,
         nombre: estudiante ? `${estudiante.nombres} ${estudiante.apellidos}` : '',
         cedula: estudiante?.cedula ?? '',
         carrera: carreraNombre,
@@ -283,6 +352,7 @@ export class DocumentoPlantillaService {
   private getDatosMaestraVacia(): DatosMaestra {
     return {
       estudiante: {
+        idEstudiante: null,
         nombre: '',
         cedula: '',
         carrera: '',
@@ -327,8 +397,8 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getCartaCompromiso(usuario: any): Promise<CartaCompromiso> {
-    const datos = await this.getDatosMaestra(usuario);
+  async getCartaCompromiso(usuario: any, idPracticaSolicitado?: number): Promise<CartaCompromiso> {
+    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
     const { estudiante, empresaBeneficiaria } = datos;
 
     return {
@@ -368,8 +438,8 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getCurriculum(usuario: any): Promise<Curriculum> {
-    const datos = await this.getDatosMaestra(usuario);
+  async getCurriculum(usuario: any, idPracticaSolicitado?: number): Promise<Curriculum> {
+    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
     const { estudiante } = datos;
 
     const datosAcademicos = await this.cvDatoAcademicoRepository.find({
@@ -415,12 +485,12 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getRegistroAsistencia(usuario: any): Promise<RegistroAsistencia> {
-    const datos = await this.getDatosMaestra(usuario);
+  async getRegistroAsistencia(usuario: any, idPracticaSolicitado?: number): Promise<RegistroAsistencia> {
+    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
     const { estudiante, empresaBeneficiaria, carrera, periodoAcademico } = datos;
 
     const registros = await this.registroDiarioRepository.find({
-      where: { id_practica: await this.obtenerIdPractica(usuario) },
+      where: { id_practica: await this.obtenerIdPractica(usuario, idPracticaSolicitado) },
       order: { fecha: 'ASC' },
     });
 
@@ -460,8 +530,8 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getInformeAprendizaje(usuario: any): Promise<InformeAprendizaje> {
-    const datos = await this.getDatosMaestra(usuario);
+  async getInformeAprendizaje(usuario: any, idPracticaSolicitado?: number): Promise<InformeAprendizaje> {
+    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
     const { empresaBeneficiaria, periodoAcademico, carrera } = datos;
 
     const encabezado: InformeAprendizajeEncabezado = {
@@ -478,7 +548,7 @@ export class DocumentoPlantillaService {
       totalSemanas: 8,
     };
 
-    const idPractica = await this.obtenerIdPractica(usuario);
+    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
     const informe = await this.informeRepository.findOne({
       where: { id_practica: idPractica },
     });
@@ -508,17 +578,24 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getEvaluacionEmpresarial(usuario: any): Promise<EvaluacionEmpresarial> {
-    const datos = await this.getDatosMaestra(usuario);
+  async getEvaluacionEmpresarial(usuario: any, idPracticaSolicitado?: number): Promise<EvaluacionEmpresarial> {
+    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
 
+    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+
     const evaluaciones = await this.evaluacionRepository.find({
-      where: { id_practica: await this.obtenerIdPractica(usuario), tipo_evaluador: 'EMPRESA' },
+      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
     });
 
     const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
 
     const evaluacionPrincipal = evaluaciones[0];
+
+    const { criterios, defensaProyecto, idRubrica } = await this.obtenerCriteriosRubrica(
+      'EMPRESARIAL',
+      evaluacionPrincipal?.id_evaluacion,
+    );
 
     return {
       estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
@@ -530,29 +607,102 @@ export class DocumentoPlantillaService {
       carrera: estudiante.carrera,
       fechaInicio: datos.proyectoEmpresarial.fechaInicio,
       fechaFin: datos.proyectoEmpresarial.fechaFin,
-      criterios: [],
-      defensaProyecto: [],
-      promedioCriterios: evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios,
-      notaPonderadaSobre7: Number(((evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios) * 7 / 6).toFixed(2)),
-      notaParcialDefensa: evaluacionPrincipal?.nota_parcial_defensa ?? 0,
-      notaFinalDefensa: evaluacionPrincipal?.nota_final_defensa ?? 0,
-      notaPonderadaDefensa: evaluacionPrincipal?.nota_ponderada_defensa ?? 0,
-      notaFinalEmpresa: evaluacionPrincipal?.nota_final_empresa ?? promedioCriterios,
+      criterios,
+      defensaProyecto,
+      promedioCriterios: Number(evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios),
+      notaPonderadaSobre7: Number((Number(evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios) * 7 / 6).toFixed(2)),
+      notaParcialDefensa: Number(evaluacionPrincipal?.nota_parcial_defensa ?? 0),
+      notaFinalDefensa: Number(evaluacionPrincipal?.nota_final_defensa ?? 0),
+      notaPonderadaDefensa: Number(evaluacionPrincipal?.nota_ponderada_defensa ?? 0),
+      notaFinalEmpresa: Number(evaluacionPrincipal?.nota_final_empresa ?? promedioCriterios),
       observaciones: 'Sin novedad',
+      idPractica,
+      idEvaluacion: evaluacionPrincipal?.id_evaluacion ?? null,
+      idRubrica,
     };
   }
 
-  async getEvaluacionInstituto(usuario: any): Promise<EvaluacionInstituto> {
-    const datos = await this.getDatosMaestra(usuario);
+  /**
+   * Trae los criterios (item_rubrica) de la rúbrica activa del tipo pedido,
+   * con la nota ya guardada en detalle_evaluacion (si existe evaluación).
+   * Los ítems de defensa se identifican por puntaje_maximo <= 5 (sembrados
+   * en 4.00, escala 1-4) vs. los de desempeño/parámetros en 10.00 — ver
+   * migración SeedCatalogoRubricaFasePractica.
+   */
+  private async obtenerCriteriosRubrica(
+    tipo: 'EMPRESARIAL' | 'INSTITUTO',
+    idEvaluacion?: number,
+  ): Promise<{ criterios: CriterioEmpresarial[]; defensaProyecto: DefensaProyectoItem[]; idRubrica: number | null }> {
+    const rubricaRows = await this.dataSource.query(
+      `SELECT id_rubrica FROM catalogo_rubrica WHERE tipo = $1 AND estado = 'ACTIVO' ORDER BY id_rubrica LIMIT 1`,
+      [tipo],
+    );
+    const idRubrica: number | null = rubricaRows[0]?.id_rubrica ?? null;
+
+    if (!idRubrica) {
+      return { criterios: [], defensaProyecto: [], idRubrica: null };
+    }
+
+    const items = await this.dataSource.query(
+      `SELECT ir.id_item, ir.descripcion_criterio, ir.puntaje_maximo, de.puntaje_asignado
+       FROM item_rubrica ir
+       LEFT JOIN detalle_evaluacion de ON de.id_item = ir.id_item AND de.id_evaluacion = $1
+       WHERE ir.id_rubrica = $2
+       ORDER BY ir.id_item`,
+      [idEvaluacion ?? 0, idRubrica],
+    );
+
+    const criterios: CriterioEmpresarial[] = items
+      .filter((i: any) => Number(i.puntaje_maximo) > 5)
+      .map((i: any) => ({
+        id: Number(i.id_item),
+        criterio: i.descripcion_criterio,
+        puntaje: i.puntaje_asignado !== null ? Number(i.puntaje_asignado) : 0,
+        maximo: Number(i.puntaje_maximo),
+      }));
+
+    const defensaProyecto: DefensaProyectoItem[] = items
+      .filter((i: any) => Number(i.puntaje_maximo) <= 5)
+      .map((i: any) => ({
+        id: Number(i.id_item),
+        criterio: i.descripcion_criterio,
+        puntaje: i.puntaje_asignado !== null ? Number(i.puntaje_asignado) : 0,
+        maximo: Number(i.puntaje_maximo),
+      }));
+
+    return { criterios, defensaProyecto, idRubrica };
+  }
+
+  async getEvaluacionInstituto(usuario: any, idPracticaSolicitado?: number): Promise<EvaluacionInstituto> {
+    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
 
+    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+
     const evaluaciones = await this.evaluacionRepository.find({
-      where: { id_practica: await this.obtenerIdPractica(usuario), tipo_evaluador: 'INSTITUTO' },
+      where: { id_practica: idPractica, tipo_evaluador: 'INSTITUTO' },
     });
+
+    // EI-05: la nota de empresa debe venir de la evaluación tipo EMPRESA, no
+    // de un promedio de las evaluaciones INSTITUTO (bug detectado en QA).
+    const evaluacionesEmpresa = await this.evaluacionRepository.find({
+      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
+    });
+    const evaluacionEmpresaPrincipal = evaluacionesEmpresa[0];
+    // TypeORM devuelve las columnas numeric como string: sin el Number(...)
+    // aquí, "8.3" + "9" concatena texto ("8.39") en vez de sumar (17.3),
+    // dejando notaFinalConsolidada mal calculada (bug detectado al verificar
+    // esta fase con datos reales).
+    const notaFinalEmpresaReal = Number(evaluacionEmpresaPrincipal?.nota_final_empresa ?? 0);
 
     const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
 
     const evaluacionPrincipal = evaluaciones[0];
+
+    const { criterios: criteriosProyecto, defensaProyecto, idRubrica } = await this.obtenerCriteriosRubrica(
+      'INSTITUTO',
+      evaluacionPrincipal?.id_evaluacion,
+    );
 
     return {
       estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
@@ -565,30 +715,33 @@ export class DocumentoPlantillaService {
       carrera: estudiante.carrera,
       fechaInicio: datos.proyectoEmpresarial.fechaInicio,
       fechaFin: datos.proyectoEmpresarial.fechaFin,
-      defensaProyecto: [],
-      notaParcialDefensa: evaluacionPrincipal?.nota_parcial_defensa ?? 0,
-      notaFinalDefensa: evaluacionPrincipal?.nota_final_defensa ?? 0,
-      notaPonderadaDefensa: evaluacionPrincipal?.nota_ponderada_defensa ?? 0,
-      criteriosProyecto: [],
-      promedioProyecto: evaluacionPrincipal?.promedio_proyecto_empresarial ?? promedioCriterios,
-      notaPonderadaProyecto: evaluacionPrincipal?.nota_ponderada_proyecto ?? Number((promedioCriterios * 7 / 10).toFixed(2)),
-      notaFinalEmpresa: promedioCriterios,
-      notaFinalInstituto: evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios,
-      notaFinalConsolidada: Number(((evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios) / 2).toFixed(2)),
+      defensaProyecto,
+      notaParcialDefensa: Number(evaluacionPrincipal?.nota_parcial_defensa ?? 0),
+      notaFinalDefensa: Number(evaluacionPrincipal?.nota_final_defensa ?? 0),
+      notaPonderadaDefensa: Number(evaluacionPrincipal?.nota_ponderada_defensa ?? 0),
+      criteriosProyecto,
+      promedioProyecto: Number(evaluacionPrincipal?.promedio_proyecto_empresarial ?? promedioCriterios),
+      notaPonderadaProyecto: Number(evaluacionPrincipal?.nota_ponderada_proyecto ?? (promedioCriterios * 7 / 10).toFixed(2)),
+      notaFinalEmpresa: notaFinalEmpresaReal,
+      notaFinalInstituto: Number(evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios),
+      notaFinalConsolidada: Number(((notaFinalEmpresaReal + Number(evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios)) / 2).toFixed(2)),
       observaciones: 'Sin novedad',
+      idPractica,
+      idEvaluacion: evaluacionPrincipal?.id_evaluacion ?? null,
+      idRubrica,
     };
   }
 
-  async getTodosLosDocumentos(usuario: any) {
-    const datosMaestra = await this.getDatosMaestra(usuario);
-    const cartaCompromiso = await this.getCartaCompromiso(usuario);
-    const curriculum = await this.getCurriculum(usuario);
-    const registroAsistencia = await this.getRegistroAsistencia(usuario);
-    const informeAprendizaje = await this.getInformeAprendizaje(usuario);
-    const evaluacionEmpresarial = await this.getEvaluacionEmpresarial(usuario);
-    const evaluacionInstituto = await this.getEvaluacionInstituto(usuario);
-    const actaInduccionSeguridad = await this.getActaInduccionSeguridad(usuario);
-    const actaEntornoLaboral = await this.getActaEntornoLaboral(usuario);
+  async getTodosLosDocumentos(usuario: any, idPracticaSolicitado?: number) {
+    const datosMaestra = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    const cartaCompromiso = await this.getCartaCompromiso(usuario, idPracticaSolicitado);
+    const curriculum = await this.getCurriculum(usuario, idPracticaSolicitado);
+    const registroAsistencia = await this.getRegistroAsistencia(usuario, idPracticaSolicitado);
+    const informeAprendizaje = await this.getInformeAprendizaje(usuario, idPracticaSolicitado);
+    const evaluacionEmpresarial = await this.getEvaluacionEmpresarial(usuario, idPracticaSolicitado);
+    const evaluacionInstituto = await this.getEvaluacionInstituto(usuario, idPracticaSolicitado);
+    const actaInduccionSeguridad = await this.getActaInduccionSeguridad(usuario, idPracticaSolicitado);
+    const actaEntornoLaboral = await this.getActaEntornoLaboral(usuario, idPracticaSolicitado);
 
     return {
       datos: datosMaestra,
@@ -603,9 +756,9 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getActaInduccionSeguridad(usuario: any): Promise<ActaInduccionSeguridad> {
+  async getActaInduccionSeguridad(usuario: any, idPracticaSolicitado?: number): Promise<ActaInduccionSeguridad> {
     try {
-      const idPractica = await this.obtenerIdPractica(usuario);
+      const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
       const practica = await this.practicaRepository.findOne({
         where: { id_practica: idPractica },
         relations: ['empresa', 'tutor_empresarial'],
@@ -734,7 +887,7 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getActaEntornoLaboral(usuario: any): Promise<ActaEntornoLaboral> {
+  async getActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number): Promise<ActaEntornoLaboral> {
     try {
       let idEstudiante = usuario.idEstudiante;
       let matricula: any[] = [];
@@ -754,7 +907,7 @@ export class DocumentoPlantillaService {
       let practica: any = null;
 
       if (matricula.length === 0) {
-        const idPractica = await this.obtenerIdPractica(usuario);
+        const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
         practica = await this.practicaRepository.findOne({
           where: { id_practica: idPractica },
           relations: ['empresa'],
@@ -832,7 +985,7 @@ export class DocumentoPlantillaService {
       );
 
       if (!practica) {
-        const idPractica = await this.obtenerIdPractica(usuario);
+        const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
         practica = await this.practicaRepository.findOne({
           where: { id_practica: idPractica },
           relations: ['empresa', 'tutor_empresarial'],

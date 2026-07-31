@@ -6,12 +6,14 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, of, Observable } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { Documentos } from '../../services/documentos';
+import { Evaluacion, DetalleEvaluacion } from '../../services/evaluacion';
+import { AuthService } from '../../../auth/services/auth.service';
 import { DocumentHeader } from '../../components/document-header/document-header';
 import {
   EvaluacionInstituto as EvaluacionInstitutoModel,
@@ -54,7 +56,10 @@ function evaluacionVacia(): EvaluacionInstitutoModel {
 export class EvaluacionInstituto implements OnInit {
 
   private documentos = inject(Documentos);
+  private evaluacionSvc = inject(Evaluacion);
+  private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
 
   niveles = NIVELES_RUBRICA;
@@ -65,6 +70,14 @@ export class EvaluacionInstituto implements OnInit {
 
   guardando = false;
 
+  /** Solo DOCENTE/COORDINADOR califican F08; ESTUDIANTE y TUTOR_EMPRESARIAL solo consultan. */
+  get soloLectura(): boolean {
+    return !this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR']);
+  }
+
+  private idPractica: number | null = null;
+  private idRubrica: number | null = null;
+
   ngOnInit(): void {
 
     this.cargar();
@@ -72,20 +85,14 @@ export class EvaluacionInstituto implements OnInit {
   }
 
   /**
-   * El backend (GET /evaluacion-instituto) solo envía una lista plana de
-   * criterios (id, criterio, puntaje, maximo), el tutor académico, el
-   * instituto y notaFinalEmpresa; "defensaProyecto" hoy siempre llega
-   * vacío desde ahí (el back todavía no lo calcula en este endpoint — ver
-   * DocumentoPlantillaService.getEvaluacionInstituto). El resto del
-   * encabezado (empresa, nivel, ciclo, fechas, núcleo, carrera, objetivo)
-   * y el tema del proyecto se completan con /documentos/datos (el "tema"
-   * se toma del nombre del proyecto empresarial, que es lo más parecido
-   * que expone el backend hoy).
-   *
-   * Los criterios (defensa/parámetros) son texto FIJO del formato F08
-   * (confirmado contra el PDF oficial), no datos de un estudiante: si el
-   * back trae criterios reales se usan esos; si no, se cae a las
-   * etiquetas fijas con nota en 0 — nunca se inventa una nota.
+   * defensaProyecto/criteriosProyecto ya vienen del sistema real de
+   * evaluaciones (item_rubrica + detalle_evaluacion, resueltos por
+   * DocumentoPlantillaService.getEvaluacionInstituto junto con
+   * idPractica/idEvaluacion/idRubrica). notaFinalEmpresa también es real:
+   * la trae la evaluación EMPRESA de la misma práctica (fix EI-05), ya no
+   * es editable a mano. El resto del encabezado y el tema del proyecto
+   * siguen viniendo de /documentos/datos (texto descriptivo sin sistema
+   * real detrás).
    */
   private mapearBase(res: Record<string, any>, datos: Record<string, any>): EvaluacionInstitutoModel {
 
@@ -98,6 +105,9 @@ export class EvaluacionInstituto implements OnInit {
     const datosPeriodo = datos?.['periodoAcademico'] ?? {};
     const datosProyecto = datos?.['proyectoEmpresarial'] ?? {};
     const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
+
+    this.idPractica = res?.['idPractica'] ?? null;
+    this.idRubrica = res?.['idRubrica'] ?? null;
 
     return {
 
@@ -120,21 +130,20 @@ export class EvaluacionInstituto implements OnInit {
       },
 
       defensaProyecto: defensaProyecto.length
-        ? defensaProyecto.map((c) => ({ criterio: c.criterio ?? '', nota: c.nota ?? 0 }))
+        ? defensaProyecto.map((c) => ({ criterio: c.criterio ?? '', nota: c.puntaje ?? 0, idItem: c.id }))
         : CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
 
       tema: datosProyecto.nombre ?? '',
 
       parametrosProyecto: criteriosProyecto.length
-        ? criteriosProyecto.map((c) => ({
-            criterio: c.criterio ?? '',
-            nota: c.maximo ? this.redondear((c.puntaje / c.maximo) * 10) : (c.puntaje ?? 0)
-          }))
+        ? criteriosProyecto.map((c) => ({ criterio: c.criterio ?? '', nota: c.puntaje ?? 0, idItem: c.id }))
         : CRITERIOS_PARAMETROS_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
 
       notaFinalEmpresa: res?.['notaFinalEmpresa'] ?? 0,
 
-      observaciones: ''
+      observaciones: '',
+
+      idEvaluacion: res?.['idEvaluacion'] ?? undefined
 
     };
 
@@ -144,9 +153,11 @@ export class EvaluacionInstituto implements OnInit {
 
     this.cargando = true;
 
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
     forkJoin({
-      evaluacion: this.documentos.obtenerEvaluacionInstitutoBase(),
-      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+      evaluacion: this.documentos.obtenerEvaluacionInstitutoBase(idPracticaRuta),
+      datos: this.documentos.obtenerDatosMaestra(idPracticaRuta).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ evaluacion, datos }) => {
@@ -172,6 +183,8 @@ export class EvaluacionInstituto implements OnInit {
   }
 
   seleccionarNivel(criterio: CriterioDefensaProyecto, nota: number): void {
+
+    if (this.soloLectura) return;
 
     criterio.nota = nota;
 
@@ -245,7 +258,7 @@ export class EvaluacionInstituto implements OnInit {
 
   guardarEnBD(): void {
 
-    if (this.guardando) return;
+    if (this.guardando || this.soloLectura) return;
 
     if (!this.evaluacion.estudiante.nombre || !this.evaluacion.estudiante.cedula) {
 
@@ -254,34 +267,91 @@ export class EvaluacionInstituto implements OnInit {
 
     }
 
+    if (!this.idPractica || !this.idRubrica) {
+
+      Swal.fire('Error', 'No fue posible determinar la práctica o la rúbrica a calificar.', 'error');
+      return;
+
+    }
+
     this.guardando = true;
 
-    this.documentos.guardarEvaluacionInstituto(this.evaluacion).subscribe({
+    const idEvaluacion$: Observable<number> = this.evaluacion.idEvaluacion
+      ? of(this.evaluacion.idEvaluacion)
+      : this.evaluacionSvc
+          .crearEvaluacionInstituto({ id_practica: this.idPractica, id_evaluacion_plan_marco: this.idRubrica })
+          .pipe(map((creada) => creada.id_evaluacion_instituto!));
 
-      next: (res) => {
+    idEvaluacion$
+      .pipe(
+        switchMap((idEvaluacion) => this.guardarNotas(idEvaluacion).pipe(map(() => idEvaluacion))),
+        switchMap((idEvaluacion) => this.evaluacionSvc.calcularEvaluacionInstituto(idEvaluacion)),
+        switchMap((resultado) =>
+          this.documentos.guardarEvaluacionInstituto(this.evaluacion, this.idPractica ?? undefined).pipe(
+            catchError(() => of(null)),
+            map(() => resultado)
+          )
+        )
+      )
+      .subscribe({
 
-        this.guardando = false;
-        this.cdr.detectChanges();
+        next: (resultado) => {
 
-        Swal.fire({
+          this.evaluacion.idEvaluacion = resultado.evaluacion.id_evaluacion;
+          this.guardando = false;
+          this.cdr.detectChanges();
 
-          icon: 'success',
-          title: 'Evaluación guardada',
-          html: `<b>ID:</b> ${res.id_documento}<br><b>Formato:</b> ${res.codigo_formato}<br><b>Fecha:</b> ${res.created_at}`
+          Swal.fire({
+            icon: 'success',
+            title: 'Evaluación guardada',
+            html: `<b>Nota final instituto:</b> ${resultado.notaFinalInstituto}`
+          });
 
-        });
+        },
 
-      },
+        error: () => {
 
-      error: () => {
+          this.guardando = false;
+          this.cdr.detectChanges();
+          Swal.fire('Error', 'No fue posible guardar la evaluación.', 'error');
 
-        this.guardando = false;
-        this.cdr.detectChanges();
-        Swal.fire('Error', 'No fue posible guardar la evaluación.', 'error');
+        }
 
-      }
+      });
 
-    });
+  }
+
+  /**
+   * Crea o actualiza (según ya exista o no un id_detalle_evaluacion para
+   * ese id_item) la nota de cada criterio calificado. A diferencia de
+   * evaluacion-empresarial, aquí la evaluación NO auto-siembra los
+   * detalles al crearse (EvaluacionInstitutoService.create() no lo hace),
+   * así que la primera vez todos se crean.
+   */
+  private guardarNotas(idEvaluacion: number) {
+
+    return this.evaluacionSvc.listarDetalles(idEvaluacion).pipe(
+      switchMap((detalles) => {
+
+        const porItem = new Map(detalles.map((d) => [Number(d.id_item), d]));
+
+        const operaciones = [...this.evaluacion.defensaProyecto, ...this.evaluacion.parametrosProyecto]
+          .filter((c) => c.idItem)
+          .map((c) => {
+
+            const existente = porItem.get(c.idItem!);
+            const dto: Partial<DetalleEvaluacion> = { puntaje_asignado: Number(c.nota) || 0 };
+
+            return existente?.id_detalle_evaluacion
+              ? this.evaluacionSvc.actualizarDetalle(existente.id_detalle_evaluacion, dto)
+              : this.evaluacionSvc.crearDetalle(idEvaluacion, { id_item: c.idItem, ...dto });
+
+          });
+
+        return operaciones.length ? forkJoin(operaciones) : of([]);
+
+      })
+    );
 
   }
 

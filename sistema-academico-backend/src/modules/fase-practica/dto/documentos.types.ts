@@ -1,4 +1,5 @@
 export interface DatosEstudiante {
+  idEstudiante: number | null;
   nombre: string;
   cedula: string;
   carrera: string;
@@ -187,6 +188,7 @@ export interface CriterioEmpresarial {
 }
 
 export interface DefensaProyectoItem {
+  id?: number;
   criterio: string;
   puntaje: number;
   maximo: number;
@@ -211,6 +213,10 @@ export interface EvaluacionEmpresarial {
   notaPonderadaDefensa: number;
   notaFinalEmpresa: number;
   observaciones: string;
+  /** Datos para que el front pueda leer/escribir contra el sistema real de evaluaciones. */
+  idPractica: number;
+  idEvaluacion: number | null;
+  idRubrica: number | null;
 }
 
 export interface CriterioInstituto {
@@ -242,6 +248,10 @@ export interface EvaluacionInstituto {
   notaFinalInstituto: number;
   notaFinalConsolidada: number;
   observaciones: string;
+  /** Datos para que el front pueda leer/escribir contra el sistema real de evaluaciones. */
+  idPractica: number;
+  idEvaluacion: number | null;
+  idRubrica: number | null;
 }
 
 export interface ActaInduccionSeguridad {

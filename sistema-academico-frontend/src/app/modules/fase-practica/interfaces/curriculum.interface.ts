@@ -16,6 +16,9 @@ export interface CurriculumDatosPersonales {
 
 export interface CurriculumDatoAcademico {
 
+    /** id_cv_dato_academico real si ya está persistido en el back. */
+    id?:number;
+
     anio:string;
 
     institucion:string;
@@ -28,6 +31,9 @@ export interface CurriculumDatoAcademico {
 
 export interface CurriculumExperienciaLaboral {
 
+    /** id_cv_experiencia_laboral real si ya está persistido en el back. */
+    id?:number;
+
     anio:string;
 
     institucion:string;
@@ -39,6 +45,9 @@ export interface CurriculumExperienciaLaboral {
 }
 
 export interface CurriculumPracticaDual {
+
+    /** id_cv_practica_dual real si ya está persistido en el back. */
+    id?:number;
 
     anio:string;
 

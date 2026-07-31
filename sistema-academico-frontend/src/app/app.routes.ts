@@ -96,8 +96,17 @@ export const routes: Routes = [
       // ===========================================
       // Fase Práctica
       // ===========================================
+      // NOTA: cada documento tiene ruta "sin id" (ESTUDIANTE, resuelve su
+      // práctica solo en el back) y ruta "/:idPractica" (DOCENTE/
+      // COORDINADOR/TUTOR_EMPRESARIAL, llegan aquí desde el selector
+      // /fase-practica/plan-formacion?modo=... porque necesitan elegir a
+      // qué estudiante ver — ver plan-formacion-lista.ts).
       {
         path: 'fase-practica/carta-compromiso',
+        component: CartaCompromiso
+      },
+      {
+        path: 'fase-practica/carta-compromiso/:idPractica',
         component: CartaCompromiso
       },
       {
@@ -105,7 +114,15 @@ export const routes: Routes = [
         component: RegistroAsistencia
       },
       {
+        path: 'fase-practica/registro-asistencia/:idPractica',
+        component: RegistroAsistencia
+      },
+      {
         path: 'fase-practica/curriculum',
+        component: Curriculum
+      },
+      {
+        path: 'fase-practica/curriculum/:idPractica',
         component: Curriculum
       },
       {
@@ -113,29 +130,44 @@ export const routes: Routes = [
         component: InformeAprendizaje
       },
       {
+        path: 'fase-practica/informe-aprendizaje/:idPractica',
+        component: InformeAprendizaje
+      },
+      {
         path: 'fase-practica/evaluacion-empresarial',
+        component: EvaluacionEmpresarial
+      },
+      {
+        path: 'fase-practica/evaluacion-empresarial/:idPractica',
         component: EvaluacionEmpresarial
       },
       {
         path: 'fase-practica/evaluacion-instituto',
         component: EvaluacionInstituto
       },
+      {
+        path: 'fase-practica/evaluacion-instituto/:idPractica',
+        component: EvaluacionInstituto
+      },
 
       // ===========================================
       // Plan Marco de Formación / Plan de Rotación
       //
-      // A diferencia de las demás vistas de Fase Práctica,
-      // estos dos formatos exigen elegir primero una
-      // práctica (el back no resuelve automáticamente la
-      // práctica del usuario logueado para estos endpoints,
-      // y además solo DOCENTE/COORDINADOR pueden usarlos).
+      // Los 4 roles pueden entrar: ESTUDIANTE edita (crea,
+      // agrega, elimina resultados de aprendizaje/semanas),
+      // el resto solo consulta en modo lectura. ESTUDIANTE
+      // se salta el selector (/plan-formacion resuelve su
+      // propia práctica vía /mi-practica); los demás roles
+      // sí necesitan elegir de la lista qué estudiante ver.
       // El roleGuard aquí es una segunda barrera de UX; la
-      // seguridad real la impone el backend con @Roles().
+      // seguridad real la impone el backend con @Roles() por
+      // método (GET abierto a los 4, POST/PATCH/DELETE solo
+      // ESTUDIANTE).
       // ===========================================
       {
         path: 'fase-practica/plan-formacion',
         canActivate: [roleGuard],
-        data: { roles: ['DOCENTE', 'COORDINADOR'] },
+        data: { roles: ['ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL'] },
         loadComponent: () =>
           import(
             './modules/fase-practica/pages/plan-formacion-lista/plan-formacion-lista'
@@ -143,10 +175,28 @@ export const routes: Routes = [
             m => m.PlanFormacionLista
           )
       },
+
+      // ===========================================
+      // Asignaciones (docente académico / tutor empresarial por práctica)
+      // Exclusivo de COORDINADOR — el backend también lo restringe con
+      // @Roles('COORDINADOR') en PATCH /practicas/:id, GET /docentes y
+      // GET /tutores-empresariales.
+      // ===========================================
+      {
+        path: 'fase-practica/asignaciones',
+        canActivate: [roleGuard],
+        data: { roles: ['COORDINADOR'] },
+        loadComponent: () =>
+          import(
+            './modules/fase-practica/pages/asignaciones/asignaciones'
+          ).then(
+            m => m.AsignacionesPage
+          )
+      },
       {
         path: 'fase-practica/plan-marco/:idPractica',
         canActivate: [roleGuard],
-        data: { roles: ['DOCENTE', 'COORDINADOR'] },
+        data: { roles: ['ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL'] },
         loadComponent: () =>
           import(
             './modules/fase-practica/pages/plan-marco/plan-marco'
@@ -157,7 +207,7 @@ export const routes: Routes = [
       {
         path: 'fase-practica/plan-rotacion/:idPractica',
         canActivate: [roleGuard],
-        data: { roles: ['DOCENTE', 'COORDINADOR'] },
+        data: { roles: ['ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL'] },
         loadComponent: () =>
           import(
             './modules/fase-practica/pages/plan-rotacion/plan-rotacion'

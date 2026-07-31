@@ -20,6 +20,7 @@
 
     </button>
 
+    @if (!soloLectura) {
     <button
         class="btn btn-warning text-white"
         [disabled]="guardando"
@@ -30,6 +31,9 @@
         {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
 
     </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
 
 </div>
 
@@ -118,7 +122,7 @@
                     <tr>
                         <td>{{ fila.criterio }}</td>
                         <td class="text-center">
-                            <input type="number" min="0" max="10" step="0.1" class="campo campo-nota" [(ngModel)]="fila.nota" name="desempeno-{{ i }}">
+                            <input type="number" min="0" max="10" step="0.1" class="campo campo-nota" [(ngModel)]="fila.nota" name="desempeno-{{ i }}" [disabled]="soloLectura">
                         </td>
                     </tr>
 
@@ -171,6 +175,7 @@
                         <td
                             class="celda-nivel no-print"
                             [class.seleccionada]="fila.nota === nivel.nota"
+                            [class.deshabilitada]="soloLectura"
                             (click)="seleccionarNivel(fila, nivel.nota)">
 
                             @if(fila.nota === nivel.nota){ {{ nivel.nota }} }
@@ -224,7 +229,7 @@
 
             <strong>COMENTARIOS / OBSERVACIONES</strong>
 
-            <textarea class="campo campo-textarea" rows="3" [(ngModel)]="evaluacion.observaciones" name="observaciones"></textarea>
+            <textarea class="campo campo-textarea" rows="3" [(ngModel)]="evaluacion.observaciones" name="observaciones" [disabled]="soloLectura"></textarea>
 
         </div>
 

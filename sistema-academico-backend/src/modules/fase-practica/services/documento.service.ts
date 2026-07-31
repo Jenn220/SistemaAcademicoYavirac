@@ -20,43 +20,43 @@ export class DocumentoService {
     return this.documentoRepository.guardarDocumento(codigo, titulo, contenido);
   }
 
-  getDatosMaestra(usuario: any) {
-    return this.plantillaService.getDatosMaestra(usuario);
+  getDatosMaestra(usuario: any, idPractica?: number) {
+    return this.plantillaService.getDatosMaestra(usuario, idPractica);
   }
 
-  getCartaCompromiso(usuario: any) {
-    return this.plantillaService.getCartaCompromiso(usuario);
+  getCartaCompromiso(usuario: any, idPractica?: number) {
+    return this.plantillaService.getCartaCompromiso(usuario, idPractica);
   }
 
-  getCurriculum(usuario: any) {
-    return this.plantillaService.getCurriculum(usuario);
+  getCurriculum(usuario: any, idPractica?: number) {
+    return this.plantillaService.getCurriculum(usuario, idPractica);
   }
 
-  getRegistroAsistencia(usuario: any) {
-    return this.plantillaService.getRegistroAsistencia(usuario);
+  getRegistroAsistencia(usuario: any, idPractica?: number) {
+    return this.plantillaService.getRegistroAsistencia(usuario, idPractica);
   }
 
-  getInformeAprendizaje(usuario: any) {
-    return this.plantillaService.getInformeAprendizaje(usuario);
+  getInformeAprendizaje(usuario: any, idPractica?: number) {
+    return this.plantillaService.getInformeAprendizaje(usuario, idPractica);
   }
 
-  getEvaluacionEmpresarial(usuario: any) {
-    return this.plantillaService.getEvaluacionEmpresarial(usuario);
+  getEvaluacionEmpresarial(usuario: any, idPractica?: number) {
+    return this.plantillaService.getEvaluacionEmpresarial(usuario, idPractica);
   }
 
-  getEvaluacionInstituto(usuario: any) {
-    return this.plantillaService.getEvaluacionInstituto(usuario);
+  getEvaluacionInstituto(usuario: any, idPractica?: number) {
+    return this.plantillaService.getEvaluacionInstituto(usuario, idPractica);
   }
 
-  getActaInduccionSeguridad(usuario: any) {
-    return this.plantillaService.getActaInduccionSeguridad(usuario);
+  getActaInduccionSeguridad(usuario: any, idPractica?: number) {
+    return this.plantillaService.getActaInduccionSeguridad(usuario, idPractica);
   }
 
-  getActaEntornoLaboral(usuario: any) {
-    return this.plantillaService.getActaEntornoLaboral(usuario);
+  getActaEntornoLaboral(usuario: any, idPractica?: number) {
+    return this.plantillaService.getActaEntornoLaboral(usuario, idPractica);
   }
 
-  getTodosLosDocumentos(usuario: any) {
-    return this.plantillaService.getTodosLosDocumentos(usuario);
+  getTodosLosDocumentos(usuario: any, idPractica?: number) {
+    return this.plantillaService.getTodosLosDocumentos(usuario, idPractica);
   }
 }

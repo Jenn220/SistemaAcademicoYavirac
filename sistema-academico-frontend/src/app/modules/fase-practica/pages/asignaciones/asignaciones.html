@@ -1,0 +1,106 @@
+<div class="contenedor">
+
+    <div class="cabecera">
+
+        <button class="btn btn-outline-secondary btn-volver" type="button" (click)="volver()">
+            <i class="bi bi-arrow-left"></i>
+            Volver
+        </button>
+
+        <h2>Asignaciones de docente y tutor empresarial</h2>
+
+        <p class="subtitulo">Elige el docente académico y el tutor empresarial de cada estudiante. Solo verán a su estudiante los que asignes aquí.</p>
+
+    </div>
+
+    @if (!cargando() && !error() && filas().length > 0) {
+
+    <div class="buscador">
+        <input
+            type="text"
+            placeholder="Buscar estudiante por nombre o cédula..."
+            [value]="busqueda()"
+            (input)="busqueda.set($any($event.target).value)">
+    </div>
+
+    }
+
+    @if (cargando()) {
+
+    <p class="text-center text-muted my-4">Cargando...</p>
+
+    } @else if (error()) {
+
+    <p class="text-center text-danger my-4">{{ error() }}</p>
+
+    } @else if (filas().length === 0) {
+
+    <p class="text-center text-muted my-4">No hay prácticas registradas todavía.</p>
+
+    } @else if (filasFiltradas().length === 0) {
+
+    <p class="text-center text-muted my-4">Ningún estudiante coincide con "{{ busqueda() }}".</p>
+
+    } @else {
+
+    <div class="tabla-asignaciones">
+
+        <div class="fila-encabezado">
+            <span>Estudiante</span>
+            <span>Empresa actual</span>
+            <span>Docente académico</span>
+            <span>Tutor empresarial</span>
+            <span></span>
+        </div>
+
+        @for (fila of filasFiltradas(); track fila.practica.id_practica) {
+
+        <div class="fila-asignacion">
+
+            <div class="celda-estudiante">
+                <strong>{{ fila.practica.estudiante?.nombre || 'Estudiante sin asignar' }}</strong>
+                <span class="cedula">{{ fila.practica.estudiante?.cedula || '—' }}</span>
+                <span class="practica-id">Práctica #{{ fila.practica.id_practica }}</span>
+            </div>
+
+            <div class="celda-empresa">
+                {{ nombreEmpresaActual(fila.practica) }}
+            </div>
+
+            <div class="celda-select">
+                <select [(ngModel)]="fila.idDocenteSeleccionado" [disabled]="fila.guardando">
+                    <option [ngValue]="null">— Sin asignar —</option>
+                    @for (docente of docentes(); track docente.id_docente) {
+                    <option [ngValue]="docente.id_docente">{{ docente.nombres }} {{ docente.apellidos }}</option>
+                    }
+                </select>
+            </div>
+
+            <div class="celda-select">
+                <select [(ngModel)]="fila.idTutorSeleccionado" [disabled]="fila.guardando">
+                    <option [ngValue]="null">— Sin asignar —</option>
+                    @for (tutor of tutores(); track tutor.id_tutor_empresarial) {
+                    <option [ngValue]="tutor.id_tutor_empresarial">{{ tutor.nombres }} {{ tutor.apellidos }} — {{ tutor.razon_social }}</option>
+                    }
+                </select>
+            </div>
+
+            <div class="celda-guardar">
+                <button
+                    class="btn btn-warning btn-sm text-white"
+                    type="button"
+                    [disabled]="fila.guardando"
+                    (click)="guardar(fila)">
+                    {{ fila.guardando ? 'Guardando...' : 'Guardar' }}
+                </button>
+            </div>
+
+        </div>
+
+        }
+
+    </div>
+
+    }
+
+</div>

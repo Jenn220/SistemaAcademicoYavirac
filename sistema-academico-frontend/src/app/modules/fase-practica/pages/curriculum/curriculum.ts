@@ -6,12 +6,14 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { Documentos } from '../../services/documentos';
+import { Cv, CvDatoAcademico, CvExperienciaLaboral, CvPracticaDual } from '../../services/cv';
+import { AuthService } from '../../../auth/services/auth.service';
 import { DocumentHeader } from '../../components/document-header/document-header';
 import { Curriculum as CurriculumModel } from '../../interfaces';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
@@ -37,8 +39,26 @@ function curriculumVacio(): CurriculumModel {
 export class Curriculum implements OnInit {
 
   private documentos = inject(Documentos);
+  private cv = inject(Cv);
+  private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+
+  /**
+   * Para el ESTUDIANTE es su propio id (del JWT); para DOCENTE/COORDINADOR
+   * viendo el currículo de otro estudiante (vía selector), es el id que
+   * devuelve /documentos/datos para la práctica elegida — sin esto,
+   * DOCENTE siempre intentaba leer/escribir el CV de "su" id_estudiante
+   * (inexistente), nunca el del estudiante que en realidad estaba viendo.
+   */
+  private idEstudianteVisto: number | null = null;
+
+  private get idEstudiante(): number {
+    return this.idEstudianteVisto ?? this.authService.usuario()?.idEstudiante ?? 0;
+  }
+
+  private idPractica: number | undefined;
 
   curriculum: CurriculumModel = curriculumVacio();
 
@@ -120,16 +140,18 @@ export class Curriculum implements OnInit {
 
     this.cargando = true;
 
+    this.idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
     forkJoin({
-      curriculum: this.documentos.obtenerCurriculumBase(),
-      datos: this.documentos.obtenerDatosMaestra().pipe(catchError(() => of({} as Record<string, any>)))
+      curriculum: this.documentos.obtenerCurriculumBase(this.idPractica),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ curriculum, datos }) => {
 
+        this.idEstudianteVisto = datos?.['estudiante']?.['idEstudiante'] ?? null;
         this.curriculum = this.mapearBase(curriculum, datos);
-        this.cargando = false;
-        this.cdr.detectChanges();
+        this.cargarCvReal();
 
       },
 
@@ -147,6 +169,60 @@ export class Curriculum implements OnInit {
 
   }
 
+  /**
+   * Los datos académicos, experiencia laboral y prácticas duales previas
+   * viven en tablas reales (cv_dato_academico, etc.) aparte del snapshot F02
+   * que arma mapearBase(). Se sobrescriben aquí con la fuente real para que
+   * "agregar/quitar" trabajen contra ids persistidos de verdad.
+   */
+  private cargarCvReal(): void {
+
+    forkJoin({
+      datosAcademicos: this.cv.listarDatosAcademicos(this.idEstudiante).pipe(catchError(() => of([] as CvDatoAcademico[]))),
+      experienciaLaboral: this.cv.listarExperienciaLaboral(this.idEstudiante).pipe(catchError(() => of([] as CvExperienciaLaboral[]))),
+      practicasDuales: this.cv.listarPracticasDuales(this.idEstudiante).pipe(catchError(() => of([] as CvPracticaDual[])))
+    }).subscribe({
+
+      next: ({ datosAcademicos, experienciaLaboral, practicasDuales }) => {
+
+        this.curriculum.datosAcademicos = datosAcademicos.map((d) => ({
+          id: d.id_cv_dato_academico,
+          anio: d.anio,
+          institucion: d.institucion,
+          tituloMencion: d.titulo_mencion,
+          notaFinal: d.nota_final !== undefined && d.nota_final !== null ? String(d.nota_final) : ''
+        }));
+
+        this.curriculum.experienciaLaboral = experienciaLaboral.map((e) => ({
+          id: e.id_cv_experiencia_laboral,
+          anio: e.anio,
+          institucion: e.institucion,
+          cargo: e.cargo,
+          actividades: e.actividades
+        }));
+
+        this.curriculum.practicasDuales = practicasDuales.map((p) => ({
+          id: p.id_cv_practica_dual,
+          anio: p.anio_periodo,
+          institucion: p.institucion,
+          puestoAprendizaje: p.cargo,
+          actividades: p.actividades_realizadas
+        }));
+
+        this.cargando = false;
+        this.cdr.detectChanges();
+
+      },
+
+      error: () => {
+        this.cargando = false;
+        this.cdr.detectChanges();
+      }
+
+    });
+
+  }
+
   agregarDatoAcademico(): void {
 
     this.curriculum.datosAcademicos.push({ anio: '', institucion: '', tituloMencion: '', notaFinal: '' });
@@ -155,7 +231,20 @@ export class Curriculum implements OnInit {
 
   quitarDatoAcademico(i: number): void {
 
-    this.curriculum.datosAcademicos.splice(i, 1);
+    const item = this.curriculum.datosAcademicos[i];
+
+    if (!item.id) {
+      this.curriculum.datosAcademicos.splice(i, 1);
+      return;
+    }
+
+    this.cv.eliminarDatoAcademico(item.id).subscribe({
+      next: () => {
+        this.curriculum.datosAcademicos.splice(i, 1);
+        this.cdr.detectChanges();
+      },
+      error: () => Swal.fire('Error', 'No fue posible eliminar el dato académico.', 'error')
+    });
 
   }
 
@@ -167,7 +256,20 @@ export class Curriculum implements OnInit {
 
   quitarExperiencia(i: number): void {
 
-    this.curriculum.experienciaLaboral.splice(i, 1);
+    const item = this.curriculum.experienciaLaboral[i];
+
+    if (!item.id) {
+      this.curriculum.experienciaLaboral.splice(i, 1);
+      return;
+    }
+
+    this.cv.eliminarExperienciaLaboral(item.id).subscribe({
+      next: () => {
+        this.curriculum.experienciaLaboral.splice(i, 1);
+        this.cdr.detectChanges();
+      },
+      error: () => Swal.fire('Error', 'No fue posible eliminar la experiencia laboral.', 'error')
+    });
 
   }
 
@@ -179,7 +281,20 @@ export class Curriculum implements OnInit {
 
   quitarPracticaDual(i: number): void {
 
-    this.curriculum.practicasDuales.splice(i, 1);
+    const item = this.curriculum.practicasDuales[i];
+
+    if (!item.id) {
+      this.curriculum.practicasDuales.splice(i, 1);
+      return;
+    }
+
+    this.cv.eliminarPracticaDual(item.id).subscribe({
+      next: () => {
+        this.curriculum.practicasDuales.splice(i, 1);
+        this.cdr.detectChanges();
+      },
+      error: () => Swal.fire('Error', 'No fue posible eliminar la práctica dual previa.', 'error')
+    });
 
   }
 
@@ -214,22 +329,9 @@ export class Curriculum implements OnInit {
 
     this.guardando = true;
 
-    this.documentos.guardarCurriculum(this.curriculum).subscribe({
+    this.documentos.guardarCurriculum(this.curriculum, this.idPractica).subscribe({
 
-      next: (res) => {
-
-        this.guardando = false;
-        this.cdr.detectChanges();
-
-        Swal.fire({
-
-          icon: 'success',
-          title: 'Currículo guardado',
-          html: `<b>ID:</b> ${res.id_documento}<br><b>Formato:</b> ${res.codigo_formato}<br><b>Fecha:</b> ${res.created_at}`
-
-        });
-
-      },
+      next: (res) => this.guardarCvReal(res),
 
       error: () => {
 
@@ -237,6 +339,96 @@ export class Curriculum implements OnInit {
         this.cdr.detectChanges();
         Swal.fire('Error', 'No fue posible guardar el currículo.', 'error');
 
+      }
+
+    });
+
+  }
+
+  /**
+   * Persiste datos académicos / experiencia laboral / prácticas duales en
+   * las tablas reales del CV (crea o actualiza según tengan id), igual que
+   * plan-marco.ts hace con sus ítems. Filas nuevas totalmente vacías se
+   * ignoran en vez de mandarlas al back (las validaciones del DTO las
+   * rechazarían de todas formas).
+   */
+  private guardarCvReal(resultadoSnapshot: { id_documento: number; codigo_formato: string; created_at: string }): void {
+
+    const operacionesDatosAcademicos = this.curriculum.datosAcademicos
+      .filter((d) => d.id || (d.anio && d.institucion && d.tituloMencion))
+      .map((d) => {
+        const dto: Partial<CvDatoAcademico> = {
+          anio: d.anio,
+          institucion: d.institucion,
+          titulo_mencion: d.tituloMencion,
+          nota_final: d.notaFinal ? Number(d.notaFinal) : undefined
+        };
+        return d.id
+          ? this.cv.actualizarDatoAcademico(d.id, dto)
+          : this.cv.crearDatoAcademico(this.idEstudiante, dto);
+      });
+
+    const operacionesExperiencia = this.curriculum.experienciaLaboral
+      .filter((e) => e.id || (e.anio && e.institucion && e.cargo && e.actividades))
+      .map((e) => {
+        const dto: Partial<CvExperienciaLaboral> = {
+          anio: e.anio,
+          institucion: e.institucion,
+          cargo: e.cargo,
+          actividades: e.actividades
+        };
+        return e.id
+          ? this.cv.actualizarExperienciaLaboral(e.id, dto)
+          : this.cv.crearExperienciaLaboral(this.idEstudiante, dto);
+      });
+
+    const operacionesPracticas = this.curriculum.practicasDuales
+      .filter((p) => p.id || (p.anio && p.institucion && p.puestoAprendizaje && p.actividades))
+      .map((p) => {
+        const dto: Partial<CvPracticaDual> = {
+          anio_periodo: p.anio,
+          institucion: p.institucion,
+          cargo: p.puestoAprendizaje,
+          actividades_realizadas: p.actividades
+        };
+        return p.id
+          ? this.cv.actualizarPracticaDual(p.id, dto)
+          : this.cv.crearPracticaDual(this.idEstudiante, dto);
+      });
+
+    const finalizar = () => {
+
+      this.guardando = false;
+      this.cdr.detectChanges();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Currículo guardado',
+        html: `<b>ID:</b> ${resultadoSnapshot.id_documento}<br><b>Formato:</b> ${resultadoSnapshot.codigo_formato}<br><b>Fecha:</b> ${resultadoSnapshot.created_at}`
+      });
+
+    };
+
+    if (operacionesDatosAcademicos.length === 0 && operacionesExperiencia.length === 0 && operacionesPracticas.length === 0) {
+      finalizar();
+      return;
+    }
+
+    forkJoin({
+      datosAcademicos: operacionesDatosAcademicos.length ? forkJoin(operacionesDatosAcademicos) : of([]),
+      experienciaLaboral: operacionesExperiencia.length ? forkJoin(operacionesExperiencia) : of([]),
+      practicasDuales: operacionesPracticas.length ? forkJoin(operacionesPracticas) : of([])
+    }).subscribe({
+
+      next: () => {
+        this.cargarCvReal();
+        finalizar();
+      },
+
+      error: () => {
+        this.guardando = false;
+        this.cdr.detectChanges();
+        Swal.fire('Error', 'El currículo se guardó, pero hubo un problema guardando datos académicos, experiencia laboral o prácticas duales.', 'error');
       }
 
     });

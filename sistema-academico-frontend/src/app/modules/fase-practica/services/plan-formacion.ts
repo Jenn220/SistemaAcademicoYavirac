@@ -8,14 +8,14 @@ import {
   PlanMarcoFormacion,
   ItemPlanMarco,
   PlanRotacion,
-  PlanRotacionSemana
+  PlanRotacionSemana,
+  EvaluacionPlanMarco
 } from '../interfaces';
 
 /**
  * A diferencia de Documentos (fase-practica/services/documentos.ts), este
  * servicio NO habla con /fase-practica/documentos: Plan Marco y Plan de
- * Rotación son CRUD normales sobre id_practica / id_plan_marco, sin
- * resolución automática del usuario logueado en el back.
+ * Rotación son CRUD normales sobre id_practica / id_plan_marco.
  */
 @Injectable({
   providedIn: 'root'
@@ -36,6 +36,11 @@ export class PlanFormacion {
 
   obtenerPractica(idPractica: number): Observable<PracticaSelector> {
     return this.http.get<PracticaSelector>(`${this.API}/practicas/${idPractica}`);
+  }
+
+  /** Solo ESTUDIANTE: resuelve su propia práctica para saltarse el selector. */
+  obtenerMiPractica(): Observable<{ id_practica: number }> {
+    return this.http.get<{ id_practica: number }>(`${this.API}/mi-practica`);
   }
 
   // ==========================================================
@@ -72,6 +77,19 @@ export class PlanFormacion {
 
   eliminarItemPlanMarco(id: number): Observable<{ deleted: boolean; id_item_pm: number }> {
     return this.http.delete<{ deleted: boolean; id_item_pm: number }>(`${this.API}/items-plan-marco/${id}`);
+  }
+
+  // ==========================================================
+  // Nivel real alcanzado (evaluacion_plan_marco)
+  // ==========================================================
+
+  listarEvaluacionPlanMarco(idPractica: number): Observable<EvaluacionPlanMarco[]> {
+    return this.http.get<EvaluacionPlanMarco[]>(`${this.API}/evaluacion-plan-marco/practica/${idPractica}`);
+  }
+
+  /** El back crea o actualiza automáticamente según si ya existe una evaluación para ese ítem. */
+  guardarEvaluacionPlanMarco(dto: EvaluacionPlanMarco): Observable<EvaluacionPlanMarco> {
+    return this.http.post<EvaluacionPlanMarco>(`${this.API}/evaluacion-plan-marco`, dto);
   }
 
   // ==========================================================

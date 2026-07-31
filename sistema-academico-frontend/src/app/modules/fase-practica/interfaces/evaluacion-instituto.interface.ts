@@ -23,4 +23,7 @@ export interface EvaluacionInstituto {
 
     observaciones:string;
 
+    /** id_evaluacion_instituto real si ya existe una evaluación guardada para esta práctica. */
+    idEvaluacion?:number;
+
 }

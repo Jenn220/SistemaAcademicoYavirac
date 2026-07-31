@@ -8,37 +8,42 @@ import { CreateEvaluacionInstitutoDto } from '../dto/create-evaluacion-instituto
 import { UpdateEvaluacionInstitutoDto } from '../dto/update-evaluacion-instituto.dto';
 
 @UseGuards(JwtGuard, RolesGuard)
-@Roles('DOCENTE', 'COORDINADOR')
 @Controller('fase-practica')
 export class EvaluacionInstitutoController {
   constructor(private readonly service: EvaluacionInstitutoService, private readonly calculoService: EvaluacionCalculoService) {}
 
   @Post('evaluaciones-instituto')
+  @Roles('DOCENTE', 'COORDINADOR')
   create(@Body() dto: CreateEvaluacionInstitutoDto) {
     return this.service.create(dto);
   }
 
   @Get('evaluaciones-instituto/practica/:idPractica')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
   findByPractica(@Param('idPractica') idPractica: string) {
     return this.service.findByPractica(Number(idPractica));
   }
 
   @Get('evaluaciones-instituto/:id')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
   findOne(@Param('id') id: string) {
     return this.service.findOne(Number(id));
   }
 
   @Patch('evaluaciones-instituto/:id')
+  @Roles('DOCENTE', 'COORDINADOR')
   update(@Param('id') id: string, @Body() dto: UpdateEvaluacionInstitutoDto) {
     return this.service.update(Number(id), dto);
   }
 
   @Delete('evaluaciones-instituto/:id')
+  @Roles('DOCENTE', 'COORDINADOR')
   remove(@Param('id') id: string) {
     return this.service.remove(Number(id)).then(() => ({ deleted: true, id: Number(id) }));
   }
 
   @Post('evaluaciones-instituto/:id/calcular')
+  @Roles('DOCENTE', 'COORDINADOR')
   async calcular(@Param('id') id: string) {
     const resultado = await this.calculoService.calcularEvaluacionInstituto(Number(id));
     return resultado;

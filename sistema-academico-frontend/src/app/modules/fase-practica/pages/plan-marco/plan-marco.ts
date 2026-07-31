@@ -12,9 +12,11 @@ import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { PlanFormacion } from '../../services/plan-formacion';
+import { Documentos } from '../../services/documentos';
 import { DocumentHeader } from '../../components/document-header/document-header';
 import { PlanMarcoFormacion, ItemPlanMarco, PracticaSelector } from '../../interfaces';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+import { AuthService } from '../../../auth/services/auth.service';
 
 // Niveles de logro esperado: definiciones institucionales fijas
 // (idénticas para toda práctica), tal como aparecen en el Formato 03.
@@ -77,11 +79,18 @@ function encabezadoVacio(): EncabezadoPlanMarco {
 export class PlanMarco implements OnInit {
 
   private planFormacion = inject(PlanFormacion);
+  private documentos = inject(Documentos);
+  private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   niveles = NIVELES_LOGRO_ESPERADO;
+
+  /** Solo ESTUDIANTE edita; DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL solo consultan. */
+  get soloLectura(): boolean {
+    return !this.authService.tieneAlgunRol(['ESTUDIANTE']);
+  }
 
   idPractica = 0;
 
@@ -113,10 +122,11 @@ export class PlanMarco implements OnInit {
 
     forkJoin({
       practica: this.planFormacion.obtenerPractica(this.idPractica).pipe(catchError(() => of(null as PracticaSelector | null))),
-      planes: this.planFormacion.obtenerPlanMarcoPorPractica(this.idPractica).pipe(catchError(() => of([] as PlanMarcoFormacion[])))
+      planes: this.planFormacion.obtenerPlanMarcoPorPractica(this.idPractica).pipe(catchError(() => of([] as PlanMarcoFormacion[]))),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
-      next: ({ practica, planes }) => {
+      next: ({ practica, planes, datos }) => {
 
         if (practica) {
           this.encabezado.empresaFormadora = practica.empresa?.razon_social ?? '';
@@ -125,6 +135,21 @@ export class PlanMarco implements OnInit {
             ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
             : '';
         }
+
+        // El resto del encabezado (estudiante, carrera, nivel, período,
+        // núcleo estructurante, tutor académico) no vive en PracticaSelector
+        // — se completa con /documentos/datos, igual que el resto de
+        // formatos del módulo (curriculum, informe-aprendizaje, etc.).
+        const datosEstudiante = datos?.['estudiante'] ?? {};
+        const datosCarrera = datos?.['carrera'] ?? {};
+        const datosPeriodo = datos?.['periodoAcademico'] ?? {};
+
+        this.encabezado.estudianteNombre = datosEstudiante.nombre ?? '';
+        this.encabezado.carrera = datosEstudiante.carrera ?? '';
+        this.encabezado.nivel = datosEstudiante.nivel ?? '';
+        this.encabezado.periodo = datosPeriodo.nombre ?? '';
+        this.encabezado.nucleoEstructuranteNombre = datosCarrera.nucleoEstructurante ?? '';
+        this.encabezado.tutorAcademicoNombre = datosCarrera.tutorAcademico ?? '';
 
         if (planes.length > 0) {
           this.plan = planes[0];
@@ -153,8 +178,7 @@ export class PlanMarco implements OnInit {
 
       next: (items) => {
         this.items = items;
-        this.cargando = false;
-        this.cdr.detectChanges();
+        this.cargarNivelesReales();
       },
 
       error: () => {
@@ -167,7 +191,38 @@ export class PlanMarco implements OnInit {
 
   }
 
+  private cargarNivelesReales(): void {
+
+    this.planFormacion.listarEvaluacionPlanMarco(this.idPractica).subscribe({
+
+      next: (evaluaciones) => {
+
+        const porItem = new Map(evaluaciones.map((e) => [e.id_item_pm, e]));
+
+        this.items = this.items.map((item) => {
+          const evaluacion = item.id_item_pm ? porItem.get(item.id_item_pm) : undefined;
+          return evaluacion
+            ? { ...item, nivel_real_alcanzado: evaluacion.nivel_real_alcanzado, id_evaluacion_pm: evaluacion.id_evaluacion_pm }
+            : item;
+        });
+
+        this.cargando = false;
+        this.cdr.detectChanges();
+
+      },
+
+      error: () => {
+        this.cargando = false;
+        this.cdr.detectChanges();
+      }
+
+    });
+
+  }
+
   agregarFila(): void {
+
+    if (this.soloLectura) return;
 
     this.items.push({
       id_plan_marco: this.plan.id_plan_marco,
@@ -182,6 +237,8 @@ export class PlanMarco implements OnInit {
   }
 
   eliminarFila(item: ItemPlanMarco): void {
+
+    if (this.soloLectura) return;
 
     const index = this.items.indexOf(item);
     if (index === -1) return;
@@ -205,6 +262,7 @@ export class PlanMarco implements OnInit {
   }
 
   seleccionarNivelEsperado(item: ItemPlanMarco, nivel: number): void {
+    if (this.soloLectura) return;
     item.nivel_logro_esperado = nivel;
   }
 
@@ -239,7 +297,11 @@ export class PlanMarco implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'marco' } });
+    if (this.soloLectura) {
+      this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'marco' } });
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   descargarWord(): void {
@@ -248,7 +310,7 @@ export class PlanMarco implements OnInit {
 
   guardarEnBD(): void {
 
-    if (this.guardando) return;
+    if (this.guardando || this.soloLectura) return;
 
     if (this.items.length === 0) {
       Swal.fire('Sin resultados de aprendizaje', 'Agrega al menos un resultado de aprendizaje antes de guardar.', 'warning');
@@ -287,8 +349,6 @@ export class PlanMarco implements OnInit {
 
   private guardarItems(idPlanMarco: number): void {
 
-    // nivel_real_alcanzado no se envía: el back todavía no expone
-    // evaluacion_plan_marco (ver ItemPlanMarco en plan-formacion.interface.ts).
     const operaciones = this.items.map((item) => {
 
       const dto = {
@@ -312,13 +372,11 @@ export class PlanMarco implements OnInit {
 
         this.items = itemsGuardados.map((guardado, i) => ({
           ...guardado,
-          nivel_real_alcanzado: this.items[i].nivel_real_alcanzado
+          nivel_real_alcanzado: this.items[i].nivel_real_alcanzado,
+          id_evaluacion_pm: this.items[i].id_evaluacion_pm
         }));
 
-        this.guardando = false;
-        this.cdr.detectChanges();
-
-        Swal.fire('Plan Marco guardado', 'Los resultados de aprendizaje se guardaron correctamente.', 'success');
+        this.guardarNivelesReales();
 
       },
 
@@ -326,6 +384,45 @@ export class PlanMarco implements OnInit {
         this.guardando = false;
         this.cdr.detectChanges();
         Swal.fire('Error', 'El Plan Marco se guardó, pero hubo un problema guardando los resultados de aprendizaje.', 'error');
+      }
+
+    });
+
+  }
+
+  private guardarNivelesReales(): void {
+
+    const itemsConNivelReal = this.items.filter(
+      (item) => item.nivel_real_alcanzado !== undefined && item.nivel_real_alcanzado !== null
+    );
+
+    if (itemsConNivelReal.length === 0) {
+      this.guardando = false;
+      this.cdr.detectChanges();
+      Swal.fire('Plan Marco guardado', 'Los resultados de aprendizaje se guardaron correctamente.', 'success');
+      return;
+    }
+
+    const operaciones = itemsConNivelReal.map((item) =>
+      this.planFormacion.guardarEvaluacionPlanMarco({
+        id_practica: this.idPractica,
+        id_item_pm: item.id_item_pm!,
+        nivel_real_alcanzado: item.nivel_real_alcanzado
+      })
+    );
+
+    forkJoin(operaciones).subscribe({
+
+      next: () => {
+        this.guardando = false;
+        this.cdr.detectChanges();
+        Swal.fire('Plan Marco guardado', 'Los resultados de aprendizaje y niveles reales se guardaron correctamente.', 'success');
+      },
+
+      error: () => {
+        this.guardando = false;
+        this.cdr.detectChanges();
+        Swal.fire('Guardado parcial', 'Los resultados de aprendizaje se guardaron, pero hubo un problema guardando el nivel real alcanzado.', 'warning');
       }
 
     });

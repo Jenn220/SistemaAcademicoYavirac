@@ -21,6 +21,24 @@
   }
 }
 
+.buscador {
+  margin-bottom: 16px;
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: #6c8ee8;
+      box-shadow: 0 0 0 3px rgba(108, 142, 232, .15);
+    }
+  }
+}
+
 .lista-practicas {
   display: flex;
   flex-direction: column;
@@ -67,4 +85,9 @@
   gap: 4px 18px;
   font-size: 13px;
   color: #495057;
+}
+
+.tarjeta-id {
+  margin-left: auto;
+  color: #adb5bd;
 }
