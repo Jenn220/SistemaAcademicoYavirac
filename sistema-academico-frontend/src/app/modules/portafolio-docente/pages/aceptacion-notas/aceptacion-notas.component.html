@@ -121,19 +121,19 @@
       </table>
 
       <table class="formato-07__firmas">
-        <tr>
-          <th>DOCENTE:</th>
-          <td class="col-firma-final"></td>
-          <th>COORDINADOR:</th>
-          <td class="col-firma-final"></td>
-        </tr>
-        <tr>
-          <th>FECHA:</th>
-          <td>{{ fechaHoy | date: 'EEEE, d \'de\' MMMM \'de\' y' }}</td>
-          <th>FECHA:</th>
-          <td>{{ fechaHoy | date: 'EEEE, d \'de\' MMMM \'de\' y' }}</td>
-        </tr>
-      </table>
+  <tr>
+    <th>DOCENTE:</th>
+    <td class="col-firma-final">{{ r.reporte.docente || '' }}</td>
+    <th>COORDINADOR:</th>
+    <td class="col-firma-final">{{ r.reporte.coordinador || '' }}</td>
+  </tr>
+  <tr>
+    <th>FECHA:</th>
+    <td>{{ fechaHoy | date: 'dd/MM/yyyy' }}</td>
+    <th>FECHA:</th>
+    <td>{{ fechaHoy | date: 'dd/MM/yyyy' }}</td>
+  </tr>
+</table>
     </div>
 
     <div class="aceptacion-notas__acciones no-print">

@@ -19,40 +19,29 @@ export class ListaPortafolioComponent implements OnInit {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
-  // Si vienes del sidebar con ?modo=informe-final o ?modo=aceptacion-notas,
-  // esta pantalla actúa como si fuera la de destino (título y botón único),
-  // manteniendo igual el paso obligatorio de elegir la materia (los IDs
-  // solo se conocen después de elegir).
-  //
-  // OJO: se lee de forma REACTIVA (toSignal sobre queryParamMap), no con
-  // route.snapshot. Como el sidebar navega dentro de la MISMA ruta
-  // ('/portafolio-docente') y solo cambia el query param, Angular reutiliza
-  // la instancia del componente y NO vuelve a llamar a ngOnInit. Si se leía
-  // el modo solo una vez en ngOnInit (snapshot), al cambiar de pestaña
-  // quedaba "pegado" el modo anterior hasta refrescar manualmente.
   private readonly modoParam = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
 
   readonly modo = computed<ModoPortafolio>(() => {
-  const valor = this.modoParam().get('modo');
-  return valor === 'informe-final' || valor === 'aceptacion-notas' || valor === 'seguimiento-pea'
-    ? valor
-    : null;
-});
+    const valor = this.modoParam().get('modo');
+    return valor === 'informe-final' || valor === 'aceptacion-notas' || valor === 'seguimiento-pea'
+      ? valor
+      : null;
+  });
 
   readonly titulo = computed(() => {
-  switch (this.modo()) {
-    case 'informe-final':
-      return 'Informe Final';
-    case 'aceptacion-notas':
-      return 'Aceptación de Notas';
-    case 'seguimiento-pea':
-      return 'Seguimiento PEA';
-    default:
-      return 'Mi Portafolio Docente';
-  }
-});
+    switch (this.modo()) {
+      case 'informe-final':
+        return 'Informe Final';
+      case 'aceptacion-notas':
+        return 'Aceptación de Notas';
+      case 'seguimiento-pea':
+        return 'Seguimiento PEA';
+      default:
+        return 'Mi Portafolio Docente';
+    }
+  });
 
   readonly subtitulo = computed(() => {
     if (this.modo()) {
@@ -60,6 +49,24 @@ export class ListaPortafolioComponent implements OnInit {
     }
     return 'Selecciona una materia para gestionar su Informe Final o Aceptación de Notas.';
   });
+
+  // Filtros para clasificar materias por el estado del informe
+  readonly ofertasPendientes = computed(() => {
+    return this.ofertas().filter((o) => !o.tiene_informe_final);
+  });
+
+  readonly ofertasGeneradas = computed(() => {
+    return this.ofertas().filter((o) => !!o.tiene_informe_final);
+  });
+
+  // Filtros para clasificar materias por el estado de Seguimiento PEA
+readonly ofertasPeaPendientes = computed(() => {
+  return this.ofertas().filter((o) => !o.tiene_seguimiento_pea);
+});
+
+readonly ofertasPeaGeneradas = computed(() => {
+  return this.ofertas().filter((o) => !!o.tiene_seguimiento_pea);
+});
 
   constructor(
     private readonly portafolioService: PortafolioService,
@@ -86,20 +93,19 @@ export class ListaPortafolioComponent implements OnInit {
     });
   }
 
-  /** Al elegir materia: si venías con un modo fijo, va directo a esa pantalla. */
   seleccionarOferta(oferta: OfertaDocenteDto): void {
-  if (this.modo() === 'informe-final') {
-    this.irAInformeFinal(oferta);
-  } else if (this.modo() === 'aceptacion-notas') {
-    this.irAAceptacionNotas(oferta);
-  } else if (this.modo() === 'seguimiento-pea') {
-    this.irASeguimientoPea(oferta);
+    if (this.modo() === 'informe-final') {
+      this.irAInformeFinal(oferta);
+    } else if (this.modo() === 'aceptacion-notas') {
+      this.irAAceptacionNotas(oferta);
+    } else if (this.modo() === 'seguimiento-pea') {
+      this.irASeguimientoPea(oferta);
+    }
   }
-}
 
-irASeguimientoPea(oferta: OfertaDocenteDto): void {
-  this.router.navigate(['/portafolio-docente/seguimiento-pea', oferta.id_oferta_asignatura]);
-}
+  irASeguimientoPea(oferta: OfertaDocenteDto): void {
+    this.router.navigate(['/portafolio-docente/seguimiento-pea', oferta.id_oferta_asignatura]);
+  }
 
   irAInformeFinal(oferta: OfertaDocenteDto): void {
     this.router.navigate(['/portafolio-docente/informe-final', oferta.id_oferta_asignatura]);

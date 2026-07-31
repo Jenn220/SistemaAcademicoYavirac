@@ -7,4 +7,6 @@ export interface OfertaDocenteDto {
   id_periodo: number;
   periodo: string;
   estado: string;
+  tiene_informe_final?: boolean;
+  tiene_seguimiento_pea?: boolean; // <-- Nuevo campo
 }

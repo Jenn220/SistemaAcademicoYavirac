@@ -39,7 +39,7 @@
         🗂️ Seguimiento PEA
       </a>
 
-            <div class="menu-title">
+      <div class="menu-title">
         Fase Práctica
       </div>
 
@@ -131,9 +131,6 @@
         <h1>Sistema Académico</h1>
       </div>
       <div class="topbar-right">
-        <button class="icon-btn">🔔</button>
-        <button class="icon-btn">⚙️</button>
-        
         <!-- Menú de Usuario con Dropdown -->
         <div class="user-menu-wrapper">
           <div class="user" (click)="toggleMenuUsuario()">
@@ -141,8 +138,8 @@
               <img src="assets/icons/usuario.png" alt="Avatar">
             </div>
             <div class="user-info">
-              <span class="name">Juan Pérez</span>
-              <span class="role">Docente</span>
+              <span class="name">{{ nombreUsuario() }}</span>
+              <span class="role">{{ rolUsuario() }}</span>
             </div>
             <span class="arrow" [class.rotated]="menuUsuarioAbierto()">▼</span>
           </div>
