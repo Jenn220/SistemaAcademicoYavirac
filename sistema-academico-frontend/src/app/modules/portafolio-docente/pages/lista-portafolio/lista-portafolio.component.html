@@ -4,6 +4,9 @@
     <p>{{ subtitulo() }}</p>
   </header>
 
+  <!-- ============================================= -->
+  <!-- ESTADOS: cargando, error, sin materias        -->
+  <!-- ============================================= -->
   @if (cargando()) {
     <div class="lista-portafolio__estado">
       <span class="spinner"></span>
@@ -24,95 +27,161 @@
     </div>
   }
 
+  <!-- ============================================= -->
+  <!-- CUANDO HAY OFERTAS                            -->
+  <!-- ============================================= -->
   @if (!cargando() && ofertas().length > 0) {
-  @if (modo() === 'informe-final') {
-    <!-- SECCIÓN INFORME FINAL (Existente) -->
-    <section class="seccion-portafolio">
-      <div class="seccion-portafolio__header">
-        <h2>Informes Pendientes de Generación</h2>
-        <span class="seccion-portafolio__contador">{{ ofertasPendientes().length }}</span>
-      </div>
-      @if (ofertasPendientes().length === 0) {
-        <p class="seccion-portafolio__vacio">No tienes materias pendientes por generar informe.</p>
-      } @else {
-        <div class="lista-portafolio__grid">
-          @for (oferta of ofertasPendientes(); track oferta.id_oferta_asignatura) {
-            <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
-          }
+
+    <!-- ============================================= -->
+    <!-- MODO: INFORME FINAL (EXISTENTE)               -->
+    <!-- ============================================= -->
+    @if (modo() === 'informe-final') {
+      <section class="seccion-portafolio">
+        <div class="seccion-portafolio__header">
+          <h2>Informes Pendientes de Generación</h2>
+          <span class="seccion-portafolio__contador">{{ ofertasPendientes().length }}</span>
         </div>
-      }
-    </section>
+        @if (ofertasPendientes().length === 0) {
+          <p class="seccion-portafolio__vacio">No tienes materias pendientes por generar informe.</p>
+        } @else {
+          <div class="lista-portafolio__grid">
+            @for (oferta of ofertasPendientes(); track oferta.id_oferta_asignatura) {
+              <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+            }
+          </div>
+        }
+      </section>
 
-    <section class="seccion-portafolio">
-      <div class="seccion-portafolio__header">
-        <h2>Informes Generados</h2>
-        <span class="seccion-portafolio__contador seccion-portafolio__contador--completado">
-          {{ ofertasGeneradas().length }}
-        </span>
-      </div>
-      @if (ofertasGeneradas().length === 0) {
-        <p class="seccion-portafolio__vacio">Aún no has generado informes finales en este periodo.</p>
-      } @else {
-        <div class="lista-portafolio__grid">
-          @for (oferta of ofertasGeneradas(); track oferta.id_oferta_asignatura) {
-            <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
-          }
+      <section class="seccion-portafolio">
+        <div class="seccion-portafolio__header">
+          <h2>Informes Generados</h2>
+          <span class="seccion-portafolio__contador seccion-portafolio__contador--completado">
+            {{ ofertasGeneradas().length }}
+          </span>
         </div>
-      }
-    </section>
+        @if (ofertasGeneradas().length === 0) {
+          <p class="seccion-portafolio__vacio">Aún no has generado informes finales en este periodo.</p>
+        } @else {
+          <div class="lista-portafolio__grid">
+            @for (oferta of ofertasGeneradas(); track oferta.id_oferta_asignatura) {
+              <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+            }
+          </div>
+        }
+      </section>
+    }
 
-  } @else if (modo() === 'seguimiento-pea') {
-    <!-- NUEVA SECCIÓN: SEGUIMIENTO PEA -->
-    <!-- GRUPO 1: PENDIENTES -->
-    <section class="seccion-portafolio">
-      <div class="seccion-portafolio__header">
-        <h2>Seguimiento PEA Pendientes</h2>
-        <span class="seccion-portafolio__contador">{{ ofertasPeaPendientes().length }}</span>
-      </div>
-
-      @if (ofertasPeaPendientes().length === 0) {
-        <p class="seccion-portafolio__vacio">No tienes materias pendientes por generar Seguimiento PEA.</p>
-      } @else {
-        <div class="lista-portafolio__grid">
-          @for (oferta of ofertasPeaPendientes(); track oferta.id_oferta_asignatura) {
-            <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
-          }
+    <!-- ============================================= -->
+    <!-- MODO: SEGUIMIENTO PEA (EXISTENTE)             -->
+    <!-- ============================================= -->
+    @else if (modo() === 'seguimiento-pea') {
+      <section class="seccion-portafolio">
+        <div class="seccion-portafolio__header">
+          <h2>Seguimiento PEA Pendientes</h2>
+          <span class="seccion-portafolio__contador">{{ ofertasPeaPendientes().length }}</span>
         </div>
-      }
-    </section>
+        @if (ofertasPeaPendientes().length === 0) {
+          <p class="seccion-portafolio__vacio">No tienes materias pendientes por generar Seguimiento PEA.</p>
+        } @else {
+          <div class="lista-portafolio__grid">
+            @for (oferta of ofertasPeaPendientes(); track oferta.id_oferta_asignatura) {
+              <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+            }
+          </div>
+        }
+      </section>
 
-    <!-- GRUPO 2: REPORTES GENERADOS -->
-    <section class="seccion-portafolio">
-      <div class="seccion-portafolio__header">
-        <h2>Seguimiento PEA Generado</h2>
-        <span class="seccion-portafolio__contador seccion-portafolio__contador--completado">
-          {{ ofertasPeaGeneradas().length }}
-        </span>
-      </div>
-
-      @if (ofertasPeaGeneradas().length === 0) {
-        <p class="seccion-portafolio__vacio">Aún no has generado reportes de Seguimiento PEA.</p>
-      } @else {
-        <div class="lista-portafolio__grid">
-          @for (oferta of ofertasPeaGeneradas(); track oferta.id_oferta_asignatura) {
-            <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
-          }
+      <section class="seccion-portafolio">
+        <div class="seccion-portafolio__header">
+          <h2>Seguimiento PEA Generado</h2>
+          <span class="seccion-portafolio__contador seccion-portafolio__contador--completado">
+            {{ ofertasPeaGeneradas().length }}
+          </span>
         </div>
-      }
-    </section>
+        @if (ofertasPeaGeneradas().length === 0) {
+          <p class="seccion-portafolio__vacio">Aún no has generado reportes de Seguimiento PEA.</p>
+        } @else {
+          <div class="lista-portafolio__grid">
+            @for (oferta of ofertasPeaGeneradas(); track oferta.id_oferta_asignatura) {
+              <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+            }
+          </div>
+        }
+      </section>
+    }
 
-  } @else {
-    <!-- OTROS MODOS -->
-    <div class="lista-portafolio__grid">
-      @for (oferta of ofertas(); track oferta.id_oferta_asignatura) {
-        <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
-      }
-    </div>
+    <!-- ============================================= -->
+    <!-- MODO: ACEPTACIÓN DE NOTAS (NUEVO)             -->
+    <!-- ============================================= -->
+    @else if (modo() === 'aceptacion-notas') {
+      <!-- 1er PARCIAL -->
+      <section class="seccion-portafolio">
+        <div class="seccion-portafolio__header">
+          <h2>Aceptacion de Notas 1er parcial</h2>
+          <span class="seccion-portafolio__contador">{{ ofertasAporte1().length }}</span>
+        </div>
+        @if (ofertasAporte1().length === 0) {
+          <p class="seccion-portafolio__vacio">No hay materias con reporte del 1er parcial.</p>
+        } @else {
+          <div class="lista-portafolio__grid">
+            @for (oferta of ofertasAporte1(); track oferta.id_oferta_asignatura) {
+              <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- 2do PARCIAL -->
+      <section class="seccion-portafolio">
+        <div class="seccion-portafolio__header">
+          <h2>Aceptacion de notas 2do parcial</h2>
+          <span class="seccion-portafolio__contador seccion-portafolio__contador--completado">
+            {{ ofertasAporte2().length }}
+          </span>
+        </div>
+        @if (ofertasAporte2().length === 0) {
+          <p class="seccion-portafolio__vacio">No hay materias con reporte del 1er y 2do parcial.</p>
+        } @else {
+          <div class="lista-portafolio__grid">
+            @for (oferta of ofertasAporte2(); track oferta.id_oferta_asignatura) {
+              <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- SUPLETORIO -->
+      <section class="seccion-portafolio">
+        <div class="seccion-portafolio__header">
+          <h2>Aceptacion de notas examen supletorio</h2>
+          <span class="seccion-portafolio__contador">{{ ofertasSupletorio().length }}</span>
+        </div>
+        @if (ofertasSupletorio().length === 0) {
+          <p class="seccion-portafolio__vacio">No hay materias con reporte de supletorio (requiere 1er y 2do parcial).</p>
+        } @else {
+          <div class="lista-portafolio__grid">
+            @for (oferta of ofertasSupletorio(); track oferta.id_oferta_asignatura) {
+              <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- MODO POR DEFECTO (OTROS) -->
+    @else {
+      <div class="lista-portafolio__grid">
+        @for (oferta of ofertas(); track oferta.id_oferta_asignatura) {
+          <ng-container *ngTemplateOutlet="tarjetaOferta; context: { $implicit: oferta }"></ng-container>
+        }
+      </div>
+    }
   }
-}
 </div>
 
-<!-- PLANTILLA REUTILIZABLE PARA LA TARJETA -->
+<!-- ============================================= -->
+<!-- PLANTILLA DE TARJETA (REUTILIZABLE)           -->
+<!-- ============================================= -->
 <ng-template #tarjetaOferta let-oferta>
   <article class="oferta-card">
     <div class="oferta-card__accent"></div>

@@ -22,7 +22,11 @@ async findOfertasByDocente(idDocente: number): Promise<OfertaDocenteDto[]> {
       pa.nombre AS periodo,
       oa.estado,
       CASE WHEN inf.id_informe_final IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_informe_final,
-      CASE WHEN spea.id_seguimiento_pea IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_seguimiento_pea
+      CASE WHEN spea.id_seguimiento_pea IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_seguimiento_pea,
+      -- NUEVOS FLAGS PARA ACEPTACIÓN DE NOTAS
+      CASE WHEN rn1.id_reporte_notas IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_aporte_1,
+      CASE WHEN rn2.id_reporte_notas IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_aporte_2,
+      CASE WHEN rns.id_reporte_notas IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_supletorio
     FROM oferta_asignatura oa
     JOIN periodo_carrera   pc ON oa.id_periodo_carrera = pc.id_periodo_carrera
     JOIN periodo_academico pa ON pc.id_periodo = pa.id_periodo
@@ -30,6 +34,13 @@ async findOfertasByDocente(idDocente: number): Promise<OfertaDocenteDto[]> {
     JOIN paralelo          p  ON oa.id_paralelo = p.id_paralelo
     LEFT JOIN portafolio_informe_final inf ON inf.id_oferta_asignatura = oa.id_oferta_asignatura
     LEFT JOIN portafolio_seguimiento_pea spea ON spea.id_oferta_asignatura = oa.id_oferta_asignatura
+    -- NUEVOS JOINS PARA REPORTES DE NOTAS (usando la tabla real)
+    LEFT JOIN portafolio_reporte_notas rn1 ON rn1.id_oferta_asignatura = oa.id_oferta_asignatura
+                                             AND rn1.tipo_reporte = 'APORTE_1'
+    LEFT JOIN portafolio_reporte_notas rn2 ON rn2.id_oferta_asignatura = oa.id_oferta_asignatura
+                                             AND rn2.tipo_reporte = 'APORTE_2'
+    LEFT JOIN portafolio_reporte_notas rns ON rns.id_oferta_asignatura = oa.id_oferta_asignatura
+                                              AND rns.tipo_reporte = 'SUPLETORIO'
     WHERE oa.id_docente = $1
     ORDER BY pa.fecha_inicio DESC
     `,

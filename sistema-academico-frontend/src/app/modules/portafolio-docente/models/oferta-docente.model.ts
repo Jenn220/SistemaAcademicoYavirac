@@ -8,5 +8,8 @@ export interface OfertaDocenteDto {
   periodo: string;
   estado: string;
   tiene_informe_final?: boolean;
-  tiene_seguimiento_pea?: boolean; // <-- Nuevo campo
+  tiene_seguimiento_pea?: boolean;
+  tiene_aporte_1?: boolean;
+  tiene_aporte_2?: boolean;
+  tiene_supletorio?: boolean;
 }
