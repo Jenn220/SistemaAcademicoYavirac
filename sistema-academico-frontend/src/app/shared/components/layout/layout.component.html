@@ -39,15 +39,9 @@
         🗂️ Seguimiento PEA
       </a>
 
-            <div class="menu-title">
+                  <div class="menu-title">
         Fase Práctica
       </div>
-
-      <!-- ESTUDIANTE entra directo (el back resuelve su propia práctica
-           sola); DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL necesitan elegir de
-           una lista a qué estudiante quieren ver, así que pasan primero
-           por el selector /fase-practica/plan-formacion -->
-      @if (authService.tieneAlgunRol(['ESTUDIANTE'])) {
 
       <a routerLink="/fase-practica/carta-compromiso"
          routerLinkActive="active">
@@ -79,48 +73,6 @@
         🏫 Evaluación Instituto
       </a>
 
-      } @else {
-
-      <a routerLink="/fase-practica/plan-formacion"
-         [queryParams]="{modo: 'carta-compromiso'}"
-         routerLinkActive="active">
-        ✍️ Carta Compromiso
-      </a>
-
-      <a routerLink="/fase-practica/plan-formacion"
-         [queryParams]="{modo: 'registro-asistencia'}"
-         routerLinkActive="active">
-        📅 Registro Asistencia
-      </a>
-
-      <a routerLink="/fase-practica/plan-formacion"
-         [queryParams]="{modo: 'curriculum'}"
-         routerLinkActive="active">
-        🧾 Currículo
-      </a>
-
-      <a routerLink="/fase-practica/plan-formacion"
-         [queryParams]="{modo: 'informe-aprendizaje'}"
-         routerLinkActive="active">
-        📝 Informe Aprendizaje
-      </a>
-
-      <a routerLink="/fase-practica/plan-formacion"
-         [queryParams]="{modo: 'evaluacion-empresarial'}"
-         routerLinkActive="active">
-        🏢 Evaluación Empresarial
-      </a>
-
-      <a routerLink="/fase-practica/plan-formacion"
-         [queryParams]="{modo: 'evaluacion-instituto'}"
-         routerLinkActive="active">
-        🏫 Evaluación Instituto
-      </a>
-
-      }
-
-      <!-- Los 4 roles pueden ver Plan Marco/Rotación: ESTUDIANTE los edita,
-           el resto los consulta en modo solo lectura -->
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'marco'}"
          routerLinkActive="active">
@@ -132,13 +84,6 @@
          routerLinkActive="active">
         🔄 Plan de Rotación
       </a>
-
-      @if (authService.tieneAlgunRol(['COORDINADOR'])) {
-      <a routerLink="/fase-practica/asignaciones"
-         routerLinkActive="active">
-        🧑‍🏫 Asignaciones
-      </a>
-      }
 
       <!-- Sección Vinculación con la sociedad -->
       <div class="menu-title">Vinculación con la sociedad</div>

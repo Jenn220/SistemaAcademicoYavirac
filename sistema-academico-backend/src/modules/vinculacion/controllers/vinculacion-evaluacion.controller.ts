@@ -26,23 +26,22 @@ export class VinculacionEvaluacionController {
     return await this.evaluacionService.crearDetalleEvaluacion(createDetalleEvaluacionDto);
   }
 
- @Get()
-async obtenerTodasLasEvaluaciones() {
-  return await this.evaluacionService.obtenerTodasLasEvaluaciones();
-}
+  @Get()
+  async obtenerTodasLasEvaluaciones() {
+    return await this.evaluacionService.obtenerTodasLasEvaluaciones();
+  }
 
   @Get('detalles')
-async obtenerDetallesEvaluacion() {
-  return await this.evaluacionService.obtenerDetallesEvaluacion();
-}
+  async obtenerDetallesEvaluacion() {
+    return await this.evaluacionService.obtenerDetallesEvaluacion();
+  }
 
-// En tu controlador:
-@Get('detalles/:idEvaluacion')
-async obtenerDetallesPorEvaluacion(
-  @Param('idEvaluacion', ParseIntPipe) idEvaluacion: number,
-) {
-  return await this.evaluacionService.obtenerDetallesEvaluacion(idEvaluacion);
-}
+  @Get('detalles/:idEvaluacion')
+  async obtenerDetallesPorEvaluacion(
+    @Param('idEvaluacion', ParseIntPipe) idEvaluacion: number,
+  ) {
+    return await this.evaluacionService.obtenerDetallesEvaluacion(idEvaluacion);
+  }
 
   @Patch(':id')
   async actualizarEvaluacion(

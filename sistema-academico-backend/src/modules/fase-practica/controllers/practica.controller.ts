@@ -120,6 +120,7 @@ export class PracticaController {
   }
 
   @Get('plan-rotacion/practica/:id')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
   findPlanRotacionByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
     return this.practicaService.findPlanRotacionByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
