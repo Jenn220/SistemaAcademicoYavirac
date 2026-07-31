@@ -103,7 +103,7 @@ export class ActaInduccionSeguridadPage implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'induccion' } });
+    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'acta-induccion-seguridad' } });
   }
 
   descargarWord(): void {

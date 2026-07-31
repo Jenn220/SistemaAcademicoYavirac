@@ -124,7 +124,7 @@ export class ActaEntornoLaboralPage implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'entorno' } });
+    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'acta-entorno-laboral' } });
   }
 
   descargarWord(): void {
