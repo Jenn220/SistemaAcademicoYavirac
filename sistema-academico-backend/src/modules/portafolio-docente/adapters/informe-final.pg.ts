@@ -86,4 +86,14 @@ export class InformeFinalPg implements IInformeFinalRepository {
     });
     return this.repo.save(informe);
   }
+
+  async updateHorario(idInformeFinal: number, horario: string): Promise<PortafolioInformeFinal> {
+    const informe = await this.repo.findOneBy({ idInformeFinal });
+    if (!informe) {
+      throw new NotFoundException('Informe final no encontrado');
+    }
+
+    informe.horario = horario;
+    return this.repo.save(informe);
+  }
 }
