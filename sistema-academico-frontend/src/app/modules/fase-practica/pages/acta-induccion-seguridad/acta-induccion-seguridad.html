@@ -1,0 +1,87 @@
+<div class="toolbar no-print">
+
+    <button class="btn btn-outline-secondary" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </button>
+
+    <button class="btn btn-primary" (click)="descargarWord()">
+        <i class="bi bi-file-earmark-word-fill"></i>
+        Descargar Word
+    </button>
+
+</div>
+
+<div id="acta-induccion-seguridad" class="documento">
+
+    <app-document-header
+        [titulo]="'ACTA DE INDUCCIÓN DE SEGURIDAD'"
+        [codigo]="'DS-010311'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        <p class="text-center"><strong>{{ acta.lugarFecha }}</strong></p>
+
+        <div class="caja-encabezado">
+
+            <table class="tabla-datos">
+
+                <tr>
+                    <td class="label">ESTUDIANTE:</td>
+                    <td>{{ acta.estudiante.nombre }}</td>
+                    <td class="label">CÉDULA:</td>
+                    <td>{{ acta.estudiante.cedula }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">NIVEL:</td>
+                    <td>{{ acta.estudiante.nivel }}</td>
+                    <td class="label">CARRERA:</td>
+                    <td>{{ acta.estudiante.carrera }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">EMPRESA:</td>
+                    <td colspan="3">{{ acta.empresa.razonSocial }}</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+        <div class="caja-texto">
+
+            <p><strong>OBJETIVO:</strong> Informar al estudiante sobre las normas de seguridad y salud en el entorno laboral de la empresa formadora, así como las medidas preventivas a seguir durante la práctica.</p>
+
+            <p><strong>POR CUYO MEDIO SE HACE CONSTAR:</strong> que el/La estudiante mencionado/a ha recibido la inducción de seguridad correspondiente, habiendo sido informado/a sobre los siguientes puntos:</p>
+
+        </div>
+
+        <ul class="lista-legal">
+
+            @for (item of acta.textoLegal; track $index) {
+                <li>{{ item }}</li>
+            }
+
+        </ul>
+
+        <div class="caja-firmas">
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>ESTUDIANTE</span>
+                <p>{{ acta.estudiante.nombre }}</p>
+            </div>
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>TUTOR EMPRESARIAL</span>
+                <p>{{ acta.firmaEstudiante }}</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

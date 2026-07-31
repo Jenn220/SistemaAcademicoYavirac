@@ -5,6 +5,7 @@ import {
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -39,6 +40,7 @@ function registroVacio(): Registro {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     DocumentHeader
   ],
   templateUrl: './registro-asistencia.html',
@@ -52,6 +54,8 @@ export class RegistroAsistencia implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   registro: Registro = registroVacio();
+
+  editando = false;
 
   ngOnInit(): void {
 
@@ -141,4 +145,58 @@ export class RegistroAsistencia implements OnInit {
 
   }
 
+  agregarRegistro(): void {
+
+    this.registro.registros.push({
+      fecha: '',
+      horaIngreso: '',
+      almuerzo: '',
+      horaSalida: '',
+      horasDia: 0,
+      firma: '',
+      observaciones: ''
+    });
+
+    this.editando = true;
+    this.cdr.detectChanges();
+
+  }
+
+  eliminarRegistro(idx: number): void {
+
+    this.registro.registros.splice(idx, 1);
+    this.cdr.detectChanges();
+
+  }
+
+  guardarRegistro(): void {
+
+    const idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
+    this.documentos.guardarRegistroAsistencia(this.registro, idPractica).subscribe({
+
+      next: () => {
+
+        this.editando = false;
+        Swal.fire('Guardado', 'El registro de asistencia se guardó correctamente.', 'success');
+
+      },
+
+      error: (err) => {
+
+        console.error('❌ Error guardando registro de asistencia:', err);
+        Swal.fire('Error', 'No fue posible guardar el registro de asistencia.', 'error');
+
+      }
+
+    });
+
+  }
+
+  cancelarEdicion(): void {
+
+    this.editando = false;
+    this.cargarRegistro();
+
+  }
 }

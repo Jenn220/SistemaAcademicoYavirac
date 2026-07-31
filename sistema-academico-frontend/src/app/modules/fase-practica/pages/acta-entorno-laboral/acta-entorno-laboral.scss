@@ -1,0 +1,92 @@
+.documento {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.caja-encabezado {
+    margin: 20px 0;
+}
+
+.tabla-datos {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-datos .label {
+    font-weight: bold;
+    width: 180px;
+    padding: 4px 8px;
+}
+
+.tabla-datos td,
+.tabla-datos th {
+    padding: 4px 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabla-datos th {
+    background-color: #f5f5f5;
+    text-align: left;
+}
+
+.caja-texto {
+    margin: 20px 0;
+    line-height: 1.6;
+}
+
+.caja-texto p {
+    margin-bottom: 12px;
+}
+
+.caja-anexos {
+    margin: 20px 0;
+}
+
+.caja-anexos ol {
+    padding-left: 20px;
+}
+
+.caja-anexos li {
+    margin-bottom: 4px;
+}
+
+.caja-firmas {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+}
+
+.firma {
+    text-align: center;
+    width: 30%;
+}
+
+.firma .linea {
+    border-bottom: 1px solid #000;
+    margin-bottom: 4px;
+    height: 40px;
+}
+
+.firma span {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.firma p {
+    margin: 2px 0;
+    font-size: 0.85em;
+    color: #666;
+}
+
+@media print {
+    .toolbar {
+        display: none;
+    }
+
+    .documento {
+        max-width: none;
+        padding: 0;
+    }
+}

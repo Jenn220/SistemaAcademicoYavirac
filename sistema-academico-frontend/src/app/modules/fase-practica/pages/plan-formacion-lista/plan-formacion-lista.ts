@@ -15,7 +15,9 @@ type ModoPlan =
   | 'registro-asistencia'
   | 'informe-aprendizaje'
   | 'evaluacion-empresarial'
-  | 'evaluacion-instituto';
+  | 'evaluacion-instituto'
+  | 'acta-induccion-seguridad'
+  | 'acta-entorno-laboral';
 
 const DESTINOS: Record<ModoPlan, string> = {
   'marco': '/fase-practica/plan-marco',
@@ -26,6 +28,8 @@ const DESTINOS: Record<ModoPlan, string> = {
   'informe-aprendizaje': '/fase-practica/informe-aprendizaje',
   'evaluacion-empresarial': '/fase-practica/evaluacion-empresarial',
   'evaluacion-instituto': '/fase-practica/evaluacion-instituto',
+  'acta-induccion-seguridad': '/fase-practica/acta-induccion-seguridad',
+  'acta-entorno-laboral': '/fase-practica/acta-entorno-laboral',
 };
 
 const TITULOS: Record<ModoPlan, string> = {
@@ -37,6 +41,8 @@ const TITULOS: Record<ModoPlan, string> = {
   'informe-aprendizaje': 'Informe de Aprendizaje',
   'evaluacion-empresarial': 'Evaluación Empresarial',
   'evaluacion-instituto': 'Evaluación Instituto',
+  'acta-induccion-seguridad': 'Acta Inducción Seguridad',
+  'acta-entorno-laboral': 'Acta Entorno Laboral',
 };
 
 /**

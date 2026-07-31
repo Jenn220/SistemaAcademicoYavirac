@@ -13,3 +13,5 @@ export * from './evaluacion-empresarial.interface';
 export * from './evaluacion-instituto.interface';
 
 export * from './plan-formacion.interface';
+
+export * from './actas.interface';

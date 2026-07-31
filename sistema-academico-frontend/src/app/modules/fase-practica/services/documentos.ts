@@ -10,7 +10,9 @@ import {
   Curriculum,
   InformeAprendizajeDocumento,
   EvaluacionEmpresarial,
-  EvaluacionInstituto
+  EvaluacionInstituto,
+  ActaInduccionSeguridad,
+  ActaEntornoLaboral
 } from '../interfaces';
 
 @Injectable({
@@ -151,6 +153,36 @@ export class Documentos {
   guardarEvaluacionInstituto(contenido: EvaluacionInstituto, idPractica?: number): Observable<DocumentoGuardado> {
     return this.http.post<DocumentoGuardado>(
       `${this.API}/evaluacion-instituto`,
+      { contenido },
+      { params: this.paramsIdPractica(idPractica) }
+    );
+  }
+
+  getActaInduccionSeguridad(idPractica?: number): Observable<ActaInduccionSeguridad> {
+    return this.http.get<ActaInduccionSeguridad>(
+      `${this.API}/acta-induccion-seguridad`,
+      { params: this.paramsIdPractica(idPractica) }
+    );
+  }
+
+  guardarActaInduccionSeguridad(contenido: ActaInduccionSeguridad, idPractica?: number): Observable<DocumentoGuardado> {
+    return this.http.post<DocumentoGuardado>(
+      `${this.API}/acta-induccion-seguridad`,
+      { contenido },
+      { params: this.paramsIdPractica(idPractica) }
+    );
+  }
+
+  getActaEntornoLaboral(idPractica?: number): Observable<ActaEntornoLaboral> {
+    return this.http.get<ActaEntornoLaboral>(
+      `${this.API}/acta-entorno-laboral`,
+      { params: this.paramsIdPractica(idPractica) }
+    );
+  }
+
+  guardarActaEntornoLaboral(contenido: ActaEntornoLaboral, idPractica?: number): Observable<DocumentoGuardado> {
+    return this.http.post<DocumentoGuardado>(
+      `${this.API}/acta-entorno-laboral`,
       { contenido },
       { params: this.paramsIdPractica(idPractica) }
     );

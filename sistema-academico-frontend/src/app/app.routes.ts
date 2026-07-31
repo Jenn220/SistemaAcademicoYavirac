@@ -47,6 +47,14 @@ import {
   EvaluacionInstituto
 } from './modules/fase-practica/pages/evaluacion-instituto/evaluacion-instituto';
 
+import {
+  ActaInduccionSeguridadPage
+} from './modules/fase-practica/pages/acta-induccion-seguridad/acta-induccion-seguridad';
+
+import {
+  ActaEntornoLaboralPage
+} from './modules/fase-practica/pages/acta-entorno-laboral/acta-entorno-laboral';
+
 export const routes: Routes = [
 
   // =====================================================
@@ -119,6 +127,36 @@ export const routes: Routes = [
       {
         path: 'fase-practica/evaluacion-instituto',
         component: EvaluacionInstituto
+      },
+
+      // ===========================================
+      // Acta de Inducción de Seguridad (F10)
+      // ===========================================
+      {
+        path: 'fase-practica/acta-induccion-seguridad',
+        canActivate: [roleGuard],
+        data: { roles: ['ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL'] },
+        loadComponent: () =>
+          import(
+            './modules/fase-practica/pages/acta-induccion-seguridad/acta-induccion-seguridad'
+          ).then(
+            m => m.ActaInduccionSeguridadPage
+          )
+      },
+
+      // ===========================================
+      // Acta de Entorno Laboral Real (F11)
+      // ===========================================
+      {
+        path: 'fase-practica/acta-entorno-laboral',
+        canActivate: [roleGuard],
+        data: { roles: ['ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL'] },
+        loadComponent: () =>
+          import(
+            './modules/fase-practica/pages/acta-entorno-laboral/acta-entorno-laboral'
+          ).then(
+            m => m.ActaEntornoLaboralPage
+          )
       },
 
       // ===========================================

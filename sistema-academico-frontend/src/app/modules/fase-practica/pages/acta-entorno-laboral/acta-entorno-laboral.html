@@ -1,0 +1,139 @@
+<div class="toolbar no-print">
+
+    <button class="btn btn-outline-secondary" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </button>
+
+    <button class="btn btn-primary" (click)="descargarWord()">
+        <i class="bi bi-file-earmark-word-fill"></i>
+        Descargar Word
+    </button>
+
+</div>
+
+<div id="acta-entorno-laboral" class="documento">
+
+    <app-document-header
+        [titulo]="'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL'"
+        [codigo]="'DS-010401'">
+    </app-document-header>
+
+    <div class="contenido">
+
+        <p class="text-center"><strong>{{ acta.encabezado.fecha }}</strong></p>
+
+        <h3 class="text-center">{{ acta.encabezado.titulo }}</h3>
+
+        <div class="caja-encabezado">
+
+            <table class="tabla-datos">
+
+                <tr>
+                    <td class="label">INSTITUTO:</td>
+                    <td>{{ acta.encabezado.instituto }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">CARRERA:</td>
+                    <td>{{ acta.encabezado.carrera }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">PERÍODO ACADÉMICO:</td>
+                    <td>{{ acta.encabezado.periodoAcademico }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">ENTIDAD RECEPTORA:</td>
+                    <td>{{ acta.encabezado.entidadReceptora }}</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+        <div class="caja-texto">
+
+            @for (parrafo of acta.textoLegal; track $index) {
+                <p>{{ parrafo }}</p>
+            }
+
+        </div>
+
+        <div class="caja-anexos" [@if]="acta.anexos?.length">
+
+            <strong>ANEXOS:</strong>
+
+            <ol>
+                @for (anexo of acta.anexos; track $index) {
+                    <li>{{ anexo }}</li>
+                }
+            </ol>
+
+        </div>
+
+        @if (acta.estudiantes?.length) {
+
+        <h4>Listado de Estudiantes</h4>
+
+        <table class="tabla-datos">
+
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Nombre</th>
+                    <th>Cédula</th>
+                    <th>Nivel</th>
+                    <th>Nota</th>
+                    <th>Firma</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (est of acta.estudiantes; track $index) {
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ est.nombre }}</td>
+                        <td>{{ est.cedula }}</td>
+                        <td>{{ est.nivel }}</td>
+                        <td>{{ est.nota }}</td>
+                        <td>{{ est.firma }}</td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+        }
+
+        <div class="caja-firmas">
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>TUTOR EMPRESARIAL</span>
+                <p>{{ acta.firmas.tutorEmpresarial.nombre }}</p>
+                <p>Cédula: {{ acta.firmas.tutorEmpresarial.cedula }}</p>
+            </div>
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>COORDINADOR</span>
+                <p>{{ acta.firmas.coordinador.nombre }}</p>
+                <p>Cédula: {{ acta.firmas.coordinador.cedula }}</p>
+            </div>
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>TUTOR ACADÉMICO</span>
+                <p>{{ acta.firmas.tutorAcademico.nombre }}</p>
+                <p>Cédula: {{ acta.firmas.tutorAcademico.cedula }}</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
