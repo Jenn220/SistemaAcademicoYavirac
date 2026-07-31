@@ -124,7 +124,7 @@ export class PlanMarco implements OnInit {
       planes: this.planFormacion.obtenerPlanMarcoPorPractica(this.idPractica).pipe(catchError(() => of([] as PlanMarcoFormacion[])))
     }).subscribe({
 
-      next: ({ practica, planes, datos }) => {
+      next: ({ practica, planes, datos }: { practica: PracticaSelector | null; planes: PlanMarcoFormacion[]; datos: Record<string, any> }) => {
 
         const datosEstudiante = datos?.['estudiante'] ?? {};
         const datosCarrera = datos?.['carrera'] ?? {};
