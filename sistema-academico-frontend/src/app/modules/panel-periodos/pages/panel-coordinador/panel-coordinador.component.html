@@ -1,0 +1,94 @@
+<div class="panel-coordinador">
+  <h1 class="titulo">Cierre de Periodo Academico</h1>
+  <p class="subtitulo">Gestiona el cierre del periodo para las carreras donde eres coordinador.</p>
+
+  <div class="tabla-periodos">
+    <table>
+      <thead>
+        <tr>
+          <th>Periodo</th>
+          <th>Carrera</th>
+          <th>Fecha fin</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let p of periodos"
+          [class.seleccionado]="periodoSeleccionado?.idPeriodoCarrera === p.idPeriodoCarrera"
+        >
+          <td>{{ p.codigoPeriodo }}</td>
+          <td>{{ p.nombreCarrera }}</td>
+          <td>{{ p.fechaFin | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.activo]="p.estado === ESTADOS.ACTIVO"
+              [class.finalizado]="p.estado === ESTADOS.FINALIZADO"
+            >
+              {{ p.estado }}
+            </span>
+          </td>
+          <td><button class="btn-detalle" (click)="verResumen(p)">Ver detalle</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="detalle-cierre" *ngIf="periodoSeleccionado">
+    <h2>{{ periodoSeleccionado.codigoPeriodo }} - {{ periodoSeleccionado.nombreCarrera }}</h2>
+
+    <div class="resumen" *ngIf="resumen">
+      <div class="tarjeta">
+        <span class="numero">{{ resumen.totalOfertas }}</span>
+        <span class="etiqueta">Ofertas de materia</span>
+      </div>
+      <div class="tarjeta">
+        <span class="numero">{{ resumen.totalMatriculasDetalle }}</span>
+        <span class="etiqueta">Matriculas activas</span>
+      </div>
+      <div class="tarjeta">
+        <span class="numero">{{ resumen.totalVinculaciones }}</span>
+        <span class="etiqueta">Vinculaciones en curso</span>
+      </div>
+      <div class="tarjeta">
+        <span class="numero">{{ resumen.totalPracticas }}</span>
+        <span class="etiqueta">Practicas en curso</span>
+      </div>
+    </div>
+
+    <p class="aviso" *ngIf="periodoSeleccionado.estado === ESTADOS.FINALIZADO">
+      Este periodo ya fue cerrado.
+    </p>
+
+    <button class="btn-cerrar" *ngIf="puedeCerrar(periodoSeleccionado)" (click)="pedirConfirmacion()">
+      Cerrar Periodo
+    </button>
+    <p
+      class="aviso"
+      *ngIf="!puedeCerrar(periodoSeleccionado) && periodoSeleccionado.estado === ESTADOS.ACTIVO"
+    >
+      Solo el coordinador asignado a esta carrera y periodo puede cerrarlo.
+    </p>
+  </div>
+
+  <div class="modal-confirmacion" *ngIf="mostrarConfirmacion">
+    <div class="modal-contenido">
+      <h3>Confirmar cierre de periodo?</h3>
+      <p>
+        Todos los registros en curso (matriculas, vinculaciones, practicas) de
+        <strong>{{ periodoSeleccionado?.nombreCarrera }} - {{ periodoSeleccionado?.codigoPeriodo }}</strong>
+        pasaran a un estado terminal. Esta accion no se puede deshacer.
+      </p>
+      <div class="acciones">
+        <button class="btn-secundario" (click)="cancelarCierre()" [disabled]="cerrando">Cancelar</button>
+        <button class="btn-primario" (click)="confirmarCierre()" [disabled]="cerrando">
+          {{ cerrando ? 'Cerrando...' : 'Si, cerrar periodo' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <p class="mensaje-exito" *ngIf="mensaje">{{ mensaje }}</p>
+</div>
