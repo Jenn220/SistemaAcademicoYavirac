@@ -33,7 +33,10 @@ export class PanelCoordinadorComponent implements OnInit {
   cargarPeriodos(): void {
     this.cierrePeriodoService
       .obtenerPeriodosDelCoordinador(this.idCoordinadorActual)
-      .subscribe((periodos) => (this.periodos = periodos));
+      .subscribe({
+        next: (periodos) => { console.log('PERIODOS RECIBIDOS:', periodos); this.periodos = periodos; },
+        error: (err) => console.error('ERROR AL CARGAR PERIODOS:', err)
+      });
   }
 
   verResumen(periodo: PeriodoCarrera): void {
