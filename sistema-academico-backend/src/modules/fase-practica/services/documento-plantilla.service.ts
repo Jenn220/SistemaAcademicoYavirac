@@ -346,6 +346,7 @@ export class DocumentoPlantillaService {
       empresaBeneficiaria,
       periodoAcademico,
       cronograma,
+      idPractica,
     };
   }
 

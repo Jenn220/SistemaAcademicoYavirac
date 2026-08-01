@@ -24,6 +24,9 @@ export interface InformeAprendizajeEncabezado {
 
 export interface InformeAprendizajeSemana {
 
+    /** id_bitacora real si ya está guardada en la BD. */
+    id?:number;
+
     semana:number;
 
     fechaInicio:string;
@@ -55,5 +58,8 @@ export interface InformeAprendizajeDocumento {
     reflexionAprendizaje:string;
 
     observacionesEmpresa:string;
+
+    /** id_informe real si ya existe un informe guardado para esta práctica. */
+    idInforme?:number;
 
 }

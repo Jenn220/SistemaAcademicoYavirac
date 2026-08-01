@@ -57,6 +57,8 @@ export interface DatosMaestra {
   empresaBeneficiaria: DatosEmpresaBeneficiaria;
   periodoAcademico: PeriodoAcademico;
   cronograma: CronogramaFecha[];
+  /** Práctica resuelta por obtenerIdPractica — para que el front pueda usar el sistema real (informe/bitácoras, evaluaciones, CV) sin volver a resolverla. */
+  idPractica?: number;
 }
 
 export interface CartaCompromiso {
