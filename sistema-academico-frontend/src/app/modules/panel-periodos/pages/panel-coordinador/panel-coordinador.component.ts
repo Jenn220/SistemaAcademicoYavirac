@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PeriodoCarrera, ResumenCierrePeriodo } from '../../models/periodo-carrera.model';
 import { CierrePeriodoService } from '../../services/cierre-periodo.service';
@@ -24,7 +24,7 @@ export class PanelCoordinadorComponent implements OnInit {
 
   readonly ESTADOS = ESTADOS_PERIODO_CARRERA;
 
-  constructor(private cierrePeriodoService: CierrePeriodoService) {}
+  constructor(private cierrePeriodoService: CierrePeriodoService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarPeriodos();
@@ -34,7 +34,7 @@ export class PanelCoordinadorComponent implements OnInit {
     this.cierrePeriodoService
       .obtenerPeriodosDelCoordinador(this.idCoordinadorActual)
       .subscribe({
-        next: (periodos) => { console.log('PERIODOS RECIBIDOS:', periodos); this.periodos = periodos; },
+        next: (periodos) => { this.periodos = periodos; this.cdr.detectChanges(); },
         error: (err) => console.error('ERROR AL CARGAR PERIODOS:', err)
       });
   }
