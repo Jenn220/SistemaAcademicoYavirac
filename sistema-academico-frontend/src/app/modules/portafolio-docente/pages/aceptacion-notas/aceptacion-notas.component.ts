@@ -24,6 +24,7 @@ export class AceptacionNotasComponent implements OnInit {
   idOfertaAsignatura!: number;
   idPeriodo!: number;
   tipoReporteSeleccionado: string = TIPOS_REPORTE[0].valor;
+  tieneAporte2: boolean = false; // <-- Nuevo flag
 
   readonly cargando = signal(false);
   readonly guardando = signal(false);
@@ -54,10 +55,35 @@ export class AceptacionNotasComponent implements OnInit {
   ngOnInit(): void {
     this.idOfertaAsignatura = Number(this.route.snapshot.paramMap.get('idOfertaAsignatura'));
     this.idPeriodo = Number(this.route.snapshot.paramMap.get('idPeriodo'));
+    
+    // Lee el tipo desde los queryParams si existe (ej. ?tipo=APORTE_2)
+    const tipoQuery = this.route.snapshot.queryParamMap.get('tipo');
+    if (tipoQuery) {
+      this.tipoReporteSeleccionado = tipoQuery;
+    }
+
+    // Leer el flag tieneAporte2
+    const tieneAporte2Query = this.route.snapshot.queryParamMap.get('tieneAporte2');
+    this.tieneAporte2 = tieneAporte2Query === 'true';
+
+    // Validar si se puede cargar el reporte supletorio
+    if (this.tipoReporteSeleccionado === 'SUPLETORIO' && !this.tieneAporte2) {
+      this.error.set('No puedes generar el Examen Supletorio porque primero debes generar el reporte del 2do Parcial.');
+      this.noExisteReporte.set(false);
+      this.cargando.set(false);
+      return; // No cargar reporte
+    }
+
     this.cargarReporte();
   }
 
   cargarReporte(): void {
+    // Validación adicional por si se llama desde otro lugar
+    if (this.tipoReporteSeleccionado === 'SUPLETORIO' && !this.tieneAporte2) {
+      this.error.set('No puedes generar el Examen Supletorio porque primero debes generar el reporte del 2do Parcial.');
+      return;
+    }
+
     this.cargando.set(true);
     this.error.set(null);
     this.noExisteReporte.set(false);
@@ -84,6 +110,12 @@ export class AceptacionNotasComponent implements OnInit {
   }
 
   generarReporte(): void {
+    // Bloqueo antes de generar
+    if (this.tipoReporteSeleccionado === 'SUPLETORIO' && !this.tieneAporte2) {
+      this.error.set('No puedes generar el Examen Supletorio porque primero debes generar el reporte del 2do Parcial.');
+      return;
+    }
+
     this.cargando.set(true);
     this.error.set(null);
 
