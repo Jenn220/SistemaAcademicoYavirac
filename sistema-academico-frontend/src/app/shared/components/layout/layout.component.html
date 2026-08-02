@@ -49,6 +49,11 @@
            por el selector /fase-practica/plan-formacion -->
       @if (authService.tieneAlgunRol(['ESTUDIANTE'])) {
 
+      <a routerLink="/fase-practica/datos-maestra"
+         routerLinkActive="active">
+        ✏️ Mis Datos
+      </a>
+
       <a routerLink="/fase-practica/carta-compromiso"
          routerLinkActive="active">
         ✍️ Carta Compromiso
@@ -220,6 +225,15 @@
         <h1>Sistema Académico</h1>
       </div>
       <div class="topbar-right">
+        <div class="notificaciones-wrapper">
+          <button class="icon-btn notificaciones-btn" title="Notificaciones">
+            🔔
+            @if (cantidadNotificaciones() > 0) {
+              <span class="badge-notificacion">{{ cantidadNotificaciones() }}</span>
+            }
+          </button>
+        </div>
+
         <!-- Menú de Usuario con Dropdown -->
         <div class="user-menu-wrapper">
           <div class="user" (click)="toggleMenuUsuario()">

@@ -73,55 +73,58 @@ export class DocumentoController {
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
   async createCartaCompromiso(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getCartaCompromiso(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F01', 'Carta Compromiso', contenido);
+    return this.documentoService.guardarDocumento('F01', 'Carta Compromiso', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
   }
 
   @Post('curriculum')
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
   async createCurriculum(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getCurriculum(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F02', 'Curriculum Estandarizado', contenido);
+    return this.documentoService.guardarDocumento('F02', 'Curriculum Estandarizado', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
   }
 
   @Post('registro-asistencia')
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
   async createRegistroAsistencia(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getRegistroAsistencia(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F05', 'Registro de Asistencia', contenido);
+    console.log('Guardando registro de asistencia', { idPractica: this.parseIdPractica(idPractica), userId: req.user.sub, contenidoKeys: Object.keys(contenido || {}) });
+    const resultado = await this.documentoService.guardarDocumento('F05', 'Registro de Asistencia', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
+    console.log('Registro de asistencia guardado', { idDocumento: resultado.id_documento });
+    return resultado;
   }
 
   @Post('informe-aprendizaje')
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
   async createInformeAprendizaje(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getInformeAprendizaje(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F06', 'Informe de Aprendizaje', contenido);
+    return this.documentoService.guardarDocumento('F06', 'Informe de Aprendizaje', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
   }
 
   @Post('evaluacion-empresarial')
   @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
   async createEvaluacionEmpresarial(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getEvaluacionEmpresarial(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F07', 'Evaluación Empresarial', contenido);
+    return this.documentoService.guardarDocumento('F07', 'Evaluación Empresarial', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
   }
 
   @Post('evaluacion-instituto')
   @Roles('DOCENTE', 'COORDINADOR')
   async createEvaluacionInstituto(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getEvaluacionInstituto(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F08', 'Evaluación Instituto', contenido);
+    return this.documentoService.guardarDocumento('F08', 'Evaluación Instituto', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
   }
 
   @Post('acta-induccion-seguridad')
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
   async createActaInduccionSeguridad(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getActaInduccionSeguridad(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F10', 'Acta de Inducción de Seguridad', contenido);
+    return this.documentoService.guardarDocumento('F10', 'Acta de Inducción de Seguridad', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
   }
 
   @Post('acta-entorno-laboral')
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
   async createActaEntornoLaboral(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getActaEntornoLaboral(req.user, this.parseIdPractica(idPractica));
-    return this.documentoService.guardarDocumento('F11', 'Acta del Entorno Laboral Real', contenido);
+    return this.documentoService.guardarDocumento('F11', 'Acta del Entorno Laboral Real', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub, 'borrador');
   }
 }

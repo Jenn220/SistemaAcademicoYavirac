@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import { RegistroAsistencia as Registro } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+import { AuthService } from '../../../auth/services/auth.service';
 
 import { DocumentHeader } from '../../components/document-header/document-header';
 
@@ -52,14 +53,40 @@ export class RegistroAsistencia implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private auth = inject(AuthService);
 
   registro: Registro = registroVacio();
 
   editando = false;
+  idPractica: number | undefined;
+  esEstudiante = false;
 
   ngOnInit(): void {
 
-    this.cargarRegistro();
+    this.esEstudiante = this.auth.usuario()?.roles?.includes('ESTUDIANTE') ?? false;
+    this.cargarIdPractica();
+
+  }
+
+  private cargarIdPractica(): void {
+
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.cargarRegistro();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.cargarRegistro();
+      },
+      error: () => {
+        Swal.fire('Error', 'No fue posible obtener la práctica.', 'error');
+      }
+    });
 
   }
 
@@ -104,11 +131,11 @@ export class RegistroAsistencia implements OnInit {
 
   cargarRegistro(): void {
 
-    const idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+    if (!this.idPractica) return;
 
     forkJoin({
-      registro: this.documentos.obtenerRegistroAsistencia(idPractica),
-      datos: this.documentos.obtenerDatosMaestra(idPractica).pipe(catchError(() => of({} as Record<string, any>)))
+      registro: this.documentos.obtenerRegistroAsistencia(this.idPractica),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ registro, datos }) => {
@@ -147,6 +174,8 @@ export class RegistroAsistencia implements OnInit {
 
   agregarRegistro(): void {
 
+    if (!this.esEstudiante) return;
+
     this.registro.registros.push({
       fecha: '',
       horaIngreso: '',
@@ -164,6 +193,8 @@ export class RegistroAsistencia implements OnInit {
 
   eliminarRegistro(idx: number): void {
 
+    if (!this.esEstudiante) return;
+
     this.registro.registros.splice(idx, 1);
     this.cdr.detectChanges();
 
@@ -171,13 +202,14 @@ export class RegistroAsistencia implements OnInit {
 
   guardarRegistro(): void {
 
-    const idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+    if (!this.esEstudiante || !this.idPractica) return;
 
-    this.documentos.guardarRegistroAsistencia(this.registro, idPractica).subscribe({
+    this.documentos.guardarRegistroAsistencia(this.registro, this.idPractica).subscribe({
 
       next: () => {
 
         this.editando = false;
+        this.cargarRegistro();
         Swal.fire('Guardado', 'El registro de asistencia se guardó correctamente.', 'success');
 
       },
@@ -185,7 +217,8 @@ export class RegistroAsistencia implements OnInit {
       error: (err) => {
 
         console.error('❌ Error guardando registro de asistencia:', err);
-        Swal.fire('Error', 'No fue posible guardar el registro de asistencia.', 'error');
+        const mensaje = err?.error?.message || err.message || 'No fue posible guardar el registro de asistencia.';
+        Swal.fire('Error', mensaje, 'error');
 
       }
 
@@ -194,6 +227,8 @@ export class RegistroAsistencia implements OnInit {
   }
 
   cancelarEdicion(): void {
+
+    if (!this.esEstudiante) return;
 
     this.editando = false;
     this.cargarRegistro();

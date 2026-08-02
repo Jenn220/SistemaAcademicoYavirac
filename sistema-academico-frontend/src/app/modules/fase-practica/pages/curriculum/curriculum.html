@@ -20,6 +20,7 @@
 
     </button>
 
+    @if (esEstudiante) {
     <button
         class="btn btn-warning text-white"
         [disabled]="guardando"
@@ -27,9 +28,10 @@
 
         <i class="bi bi-save"></i>
 
-        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
 
     </button>
+    }
 
 </div>
 
@@ -39,7 +41,24 @@
 
     <app-document-header
         [titulo]="'FORMATO 02 CURRÍCULO ESTANDARIZADO'"
-        [codigo]="'010202'">
+        [codigo]="'010202'"
+        [estudianteNombre]="curriculum.datosPersonales.nombre"
+        [estudianteCedula]="curriculum.datosPersonales.cedula"
+        [carrera]="encabezado.carrera"
+        [nivel]="encabezado.nivel"
+        [periodo]="curriculum.periodoAcademico"
+        [nucleo]="encabezado.nucleo"
+        [tutorAcademico]="encabezado.tutorAcademico"
+        [coordinador]="encabezado.coordinador"
+        [empresa]="encabezado.empresa"
+        [tutorEmpresarial]="encabezado.tutorEmpresarial"
+        [proyecto]="encabezado.proyecto"
+        [cobertura]="encabezado.cobertura"
+        [plazo]="encabezado.plazo"
+        [fechaInicio]="encabezado.fechaInicio"
+        [fechaFin]="encabezado.fechaFin"
+        [telefonoEmergenciaNombre]="''"
+        [telefonoEmergenciaTelefono]="''">
     </app-document-header>
 
     <div class="contenido">
@@ -49,56 +68,6 @@
         <p class="text-center text-muted my-4">Cargando datos base...</p>
 
         } @else {
-
-        <div class="fila-info">
-
-            <div>
-                <strong>CÓDIGO:</strong>
-                <input type="text" class="campo" [(ngModel)]="curriculum.datosPersonales.cedula" name="codigo">
-            </div>
-
-            <div>
-                <strong>PERIODO ACADÉMICO:</strong>
-                <input type="text" class="campo" [(ngModel)]="curriculum.periodoAcademico" name="periodoAcademico" placeholder="2025-I">
-            </div>
-
-        </div>
-
-        <h4>1. DATOS PERSONALES</h4>
-
-        <table class="tabla-datos">
-
-            <tr>
-                <td class="label">Nombres y apellidos:</td>
-                <td><input type="text" class="campo" [(ngModel)]="curriculum.datosPersonales.nombre" name="nombre"></td>
-            </tr>
-
-            <tr>
-                <td class="label"># identificación:</td>
-                <td><input type="text" class="campo" [(ngModel)]="curriculum.datosPersonales.cedula" name="cedula2"></td>
-            </tr>
-
-            <tr>
-                <td class="label">Estado civil:</td>
-                <td><input type="text" class="campo" [(ngModel)]="curriculum.datosPersonales.estadoCivil" name="estadoCivil"></td>
-            </tr>
-
-            <tr>
-                <td class="label">Teléfono:</td>
-                <td><input type="text" class="campo" [(ngModel)]="curriculum.datosPersonales.telefono" name="telefono"></td>
-            </tr>
-
-            <tr>
-                <td class="label">Domicilio:</td>
-                <td><input type="text" class="campo" [(ngModel)]="curriculum.datosPersonales.domicilio" name="domicilio"></td>
-            </tr>
-
-            <tr>
-                <td class="label">Email institucional:</td>
-                <td><input type="text" class="campo" [(ngModel)]="curriculum.datosPersonales.emailInstitucional" name="emailInstitucional"></td>
-            </tr>
-
-        </table>
 
         <h4>2. DATOS ACADÉMICOS</h4>
 
@@ -123,8 +92,8 @@
                     <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="da-inst-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.tituloMencion" name="da-titulo-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.notaFinal" name="da-nota-{{ i }}"></td>
-                    <td class="no-print text-center">
-                        <button type="button" class="btn-quitar" (click)="quitarDatoAcademico(i)"><i class="bi bi-trash"></i></button>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarDatoAcademico(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
 
@@ -134,7 +103,7 @@
 
         </table>
 
-        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarDatoAcademico()">
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarDatoAcademico()" [disabled]="!esEstudiante">
             <i class="bi bi-plus-circle"></i> Agregar dato académico
         </button>
 
@@ -161,8 +130,8 @@
                     <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="exp-inst-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.cargo" name="exp-cargo-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.actividades" name="exp-act-{{ i }}"></td>
-                    <td class="no-print text-center">
-                        <button type="button" class="btn-quitar" (click)="quitarExperiencia(i)"><i class="bi bi-trash"></i></button>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarExperiencia(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
 
@@ -172,7 +141,7 @@
 
         </table>
 
-        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarExperiencia()">
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarExperiencia()" [disabled]="!esEstudiante">
             <i class="bi bi-plus-circle"></i> Agregar experiencia laboral
         </button>
 
@@ -199,8 +168,8 @@
                     <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="pd-inst-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.puestoAprendizaje" name="pd-puesto-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.actividades" name="pd-act-{{ i }}"></td>
-                    <td class="no-print text-center">
-                        <button type="button" class="btn-quitar" (click)="quitarPracticaDual(i)"><i class="bi bi-trash"></i></button>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarPracticaDual(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
 
@@ -210,7 +179,7 @@
 
         </table>
 
-        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarPracticaDual()">
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarPracticaDual()" [disabled]="!esEstudiante">
             <i class="bi bi-plus-circle"></i> Agregar práctica dual
         </button>
 
@@ -237,8 +206,8 @@
                     <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="ia-inst-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.logro" name="ia-logro-{{ i }}"></td>
                     <td><input type="text" class="campo" [(ngModel)]="fila.detalle" name="ia-detalle-{{ i }}"></td>
-                    <td class="no-print text-center">
-                        <button type="button" class="btn-quitar" (click)="quitarInformacionAdicional(i)"><i class="bi bi-trash"></i></button>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarInformacionAdicional(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
 
@@ -248,7 +217,7 @@
 
         </table>
 
-        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarInformacionAdicional()">
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarInformacionAdicional()" [disabled]="!esEstudiante">
             <i class="bi bi-plus-circle"></i> Agregar información adicional
         </button>
 

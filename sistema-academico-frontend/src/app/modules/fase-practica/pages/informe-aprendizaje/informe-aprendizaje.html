@@ -28,7 +28,7 @@
 
         <i class="bi bi-save"></i>
 
-        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
 
     </button>
     } @else {
@@ -43,58 +43,27 @@
 
     <app-document-header
         [titulo]="'FORMATO 06 BITÁCORA DE APRENDIZAJE DE FASE PRÁCTICA'"
-        [codigo]="'010206'">
+        [codigo]="'010206'"
+        [estudianteNombre]="informe.estudiante.nombre"
+        [estudianteCedula]="informe.estudiante.cedula"
+        [carrera]="informe.encabezado.carrera"
+        [nivel]="informe.encabezado.nivel"
+        [periodo]="informe.encabezado.cicloAcademico"
+        [nucleo]="informe.encabezado.nucleoEstructurante"
+        [tutorAcademico]="informe.encabezado.tutorAcademico"
+        [coordinador]="''"
+        [empresa]="informe.encabezado.empresaFormadora"
+        [tutorEmpresarial]="informe.encabezado.tutorEmpresarial"
+        [proyecto]="''"
+        [cobertura]="''"
+        [plazo]="''"
+        [fechaInicio]="informe.encabezado.fechaInicioFasePractica"
+        [fechaFin]="informe.encabezado.fechaFinFasePractica"
+        [telefonoEmergenciaNombre]="''"
+        [telefonoEmergenciaTelefono]="''">
     </app-document-header>
 
     <div class="contenido">
-
-        @if(cargando){
-
-        <p class="text-center text-muted my-4">Cargando datos base...</p>
-
-        } @else {
-
-        <table class="tabla-datos">
-
-            <tr>
-                <td class="label">EMPRESA FORMADORA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.empresaFormadora" name="empresaFormadora"></td>
-                <td class="label">NIVEL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.nivel" name="nivel"></td>
-            </tr>
-
-            <tr>
-                <td class="label">ESTUDIANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.estudiante.nombre" name="nombre"></td>
-                <td class="label">CICLO ACADÉMICO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.cicloAcademico" name="cicloAcademico"></td>
-            </tr>
-
-            <tr>
-                <td class="label">CÉDULA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.estudiante.cedula" name="cedula"></td>
-                <td class="label">F. INICIO / F. FIN FASE PRÁCTICA:</td>
-                <td>
-                    <input type="text" class="campo campo-mitad" [(ngModel)]="informe.encabezado.fechaInicioFasePractica" name="fechaInicio" placeholder="Inicio">
-                    <input type="text" class="campo campo-mitad" [(ngModel)]="informe.encabezado.fechaFinFasePractica" name="fechaFin" placeholder="Fin">
-                </td>
-            </tr>
-
-            <tr>
-                <td class="label">TUTOR(A) ACADÉMICO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.tutorAcademico" name="tutorAcademico"></td>
-                <td class="label">NÚCLEO ESTRUCTURANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.nucleoEstructurante" name="nucleoEstructurante"></td>
-            </tr>
-
-            <tr>
-                <td class="label">TUTOR(A) EMPRESARIAL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.tutorEmpresarial" name="tutorEmpresarial"></td>
-                <td class="label">CARRERA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.carrera" name="carrera"></td>
-            </tr>
-
-        </table>
 
         <div class="caja-objetivo">
 
@@ -168,8 +137,6 @@
             </div>
 
         </div>
-
-        }
 
     </div>
 

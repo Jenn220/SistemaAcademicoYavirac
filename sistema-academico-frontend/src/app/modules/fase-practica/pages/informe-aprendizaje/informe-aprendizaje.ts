@@ -124,7 +124,32 @@ export class InformeAprendizaje implements OnInit {
 
     this.cargando = true;
 
-    this.idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.ejecutarCargaInforme();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.ejecutarCargaInforme();
+      },
+      error: () => {
+        this.informe = informeVacio();
+        this.cargando = false;
+        this.cdr.detectChanges();
+        Swal.fire('Error', 'No fue posible cargar el informe de aprendizaje desde el servidor.', 'error');
+      }
+    });
+
+  }
+
+  private ejecutarCargaInforme(): void {
+
+    if (!this.idPractica) return;
 
     forkJoin({
       informe: this.documentos.obtenerInformeAprendizajeBase(this.idPractica),

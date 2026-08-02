@@ -71,6 +71,36 @@ export interface CurriculumInformacionAdicional {
 
 }
 
+export interface CurriculumEncabezado {
+
+    carrera:string;
+
+    nivel:string;
+
+    periodoAcademico:string;
+
+    nucleo:string;
+
+    tutorAcademico:string;
+
+    coordinador:string;
+
+    empresa:string;
+
+    tutorEmpresarial:string;
+
+    proyecto:string;
+
+    cobertura:string;
+
+    plazo:string;
+
+    fechaInicio:string;
+
+    fechaFin:string;
+
+}
+
 export interface Curriculum {
 
     periodoAcademico:string;
@@ -84,5 +114,7 @@ export interface Curriculum {
     practicasDuales:CurriculumPracticaDual[];
 
     informacionAdicional:CurriculumInformacionAdicional[];
+
+    encabezado:CurriculumEncabezado;
 
 }

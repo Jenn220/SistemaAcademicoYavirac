@@ -109,10 +109,25 @@ export class PlanMarco implements OnInit {
 
   ngOnInit(): void {
 
-    this.idPractica = Number(this.route.snapshot.paramMap.get('idPractica'));
-    this.plan = { id_practica: this.idPractica };
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
 
-    this.cargar();
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.plan = { id_practica: this.idPractica };
+      this.cargar();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.plan = { id_practica: this.idPractica };
+        this.cargar();
+      },
+      error: () => {
+        Swal.fire('Error', 'No fue posible obtener la práctica.', 'error');
+      }
+    });
 
   }
 

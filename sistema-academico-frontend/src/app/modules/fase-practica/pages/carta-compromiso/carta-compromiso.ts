@@ -11,11 +11,11 @@ import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { StudentPresentation } from '../../components/student-presentation/student-presentation';
-import { DocumentHeader } from '../../components/document-header/document-header';
 
 import { CartaCompromiso as Carta } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+import { AuthService } from '../../../auth/services/auth.service';
 
 function cartaVacia(): Carta {
   return {
@@ -37,7 +37,6 @@ function cartaVacia(): Carta {
   standalone: true,
   imports: [
     CommonModule,
-    DocumentHeader,
     StudentPresentation
   ],
   templateUrl: './carta-compromiso.html',
@@ -49,28 +48,51 @@ export class CartaCompromiso implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private auth = inject(AuthService);
 
   carta: Carta = cartaVacia();
+  guardando = false;
+  soloLectura = false;
+  idPractica: number | undefined;
 
   ngOnInit(): void {
 
-    this.cargarCarta();
+    this.cargarIdPractica();
 
   }
 
-  /**
-   * El endpoint propio de carta-compromiso no manda estudiante.carrera,
-   * estudiante.curso ni empresaAsignada, aunque el backend sí los tiene
-   * (los usa para armar el texto de cuerpo[0]). Se completan con
-   * /documentos/datos, que sí expone esos campos.
-   */
+  private cargarIdPractica(): void {
+
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.cargarCarta();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.cargarCarta();
+      },
+      error: () => {
+        Swal.fire('Error', 'No fue posible obtener la práctica.', 'error');
+      }
+    });
+
+  }
+
   cargarCarta(): void {
 
-    const idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+    if (!this.idPractica) return;
+
+    const usuario = this.auth.usuario();
+    this.soloLectura = !usuario?.roles?.includes('ESTUDIANTE');
 
     forkJoin({
-      carta: this.documentos.obtenerCartaCompromiso(idPractica),
-      datos: this.documentos.obtenerDatosMaestra(idPractica).pipe(catchError(() => of({} as Record<string, any>)))
+      carta: this.documentos.obtenerCartaCompromiso(this.idPractica),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ carta, datos }) => {
@@ -115,6 +137,45 @@ export class CartaCompromiso implements OnInit {
         this.cdr.detectChanges();
 
         Swal.fire('Error', 'No fue posible cargar la carta compromiso desde el servidor.', 'error');
+
+      }
+
+    });
+
+  }
+
+  guardarEnBD(): void {
+
+    if (!this.idPractica) {
+      Swal.fire('Error', 'No se pudo determinar la práctica.', 'error');
+      return;
+    }
+
+    this.guardando = true;
+
+    this.documentos.guardarCartaCompromiso(this.carta, this.idPractica).subscribe({
+
+      next: () => {
+
+        this.guardando = false;
+        this.cdr.detectChanges();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Guardado',
+          text: 'La carta compromiso se guardó correctamente.'
+        });
+
+      },
+
+      error: (err) => {
+
+        this.guardando = false;
+        this.cdr.detectChanges();
+
+        console.error('❌ Error guardando carta compromiso:', err);
+
+        Swal.fire('Error', 'No fue posible guardar la carta compromiso.', 'error');
 
       }
 

@@ -138,12 +138,39 @@ body {
   color: #5e6f88;
   cursor: pointer;
   transition: .3s;
+  position: relative;
 }
 
 .icon-btn:hover {
   background: #eaf1ff;
   color: #18386d;
   transform: translateY(-2px);
+}
+
+.notificaciones-btn {
+  font-size: 18px;
+}
+
+.badge-notificacion {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(231, 76, 60, .4);
+}
+
+.notificaciones-wrapper {
+  position: relative;
 }
 
 .avatar {

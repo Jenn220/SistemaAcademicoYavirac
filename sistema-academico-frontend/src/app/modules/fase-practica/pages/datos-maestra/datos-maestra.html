@@ -1,0 +1,186 @@
+<div class="datos-maestra-page">
+
+  <div class="toolbar no-print">
+    <button class="btn btn-outline-secondary" (click)="volver()">
+      <i class="bi bi-arrow-left"></i>
+      Volver
+    </button>
+
+    <button class="btn btn-warning text-white" *ngIf="!cargando" [disabled]="guardando || !esEstudiante" (click)="guardar()">
+      <i class="bi bi-save"></i>
+      {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
+  </div>
+
+  <div class="loading" *ngIf="cargando">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p>Cargando datos...</p>
+  </div>
+
+  <div *ngIf="!cargando">
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3>Datos Personales</h3>
+        <p class="text-muted">@if (esEstudiante) { Campos editables solo por el estudiante } @else { Solo lectura }</p>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nombre completo</label>
+            <input type="text" class="form-control" [value]="datos.nombre" disabled>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Cédula</label>
+            <input type="text" class="form-control" [value]="datos.cedula" disabled>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Teléfono</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.telefono" placeholder="Teléfono" [disabled]="!esEstudiante">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Correo electrónico</label>
+            <input type="email" class="form-control" [(ngModel)]="datos.correo" placeholder="correo@yavirac.edu.ec" [disabled]="!esEstudiante">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Estado civil</label>
+            <select class="form-select" [(ngModel)]="datos.estado_civil" [disabled]="!esEstudiante">
+              <option value="">Seleccionar...</option>
+              <option value="Soltero/a">Soltero/a</option>
+              <option value="Casado/a">Casado/a</option>
+              <option value="Divorciado/a">Divorciado/a</option>
+              <option value="Viudo/a">Viudo/a</option>
+              <option value="Unión libre">Unión libre</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Tipo de sangre</label>
+            <select class="form-select" [(ngModel)]="datos.tipo_sangre" [disabled]="!esEstudiante">
+              <option value="">Seleccionar...</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <label class="form-label">Domicilio</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="datos.domicilio" placeholder="Dirección de domicilio" [disabled]="!esEstudiante"></textarea>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Contacto de emergencia (nombre)</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.contacto_emergencia_nombre" placeholder="Nombre completo" [disabled]="!esEstudiante">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Contacto de emergencia (teléfono)</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.contacto_emergencia_telefono" placeholder="Teléfono" [disabled]="!esEstudiante">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3>Información Académica y Práctica</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Carrera</label>
+            <input type="text" class="form-control" [value]="datos.carrera" disabled>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nivel / Curso</label>
+            <input type="text" class="form-control" [value]="datos.nivel" disabled>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Periodo académico</label>
+            <input type="text" class="form-control" [value]="datos.periodo" disabled>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Núcleo estructurante</label>
+            <input type="text" class="form-control" [value]="datos.nucleo" disabled>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Tutor académico</label>
+            <input type="text" class="form-control" [value]="datos.tutor_academico" disabled>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Coordinador</label>
+            <input type="text" class="form-control" [value]="datos.coordinador" disabled>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Empresa formadora</label>
+            <input type="text" class="form-control" [value]="datos.empresa" disabled>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Tutor empresarial</label>
+            <input type="text" class="form-control" [value]="datos.tutor_empresarial" disabled>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Proyecto empresarial</label>
+            <input type="text" class="form-control" [value]="datos.proyecto" disabled>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Cobertura / Localización</label>
+            <input type="text" class="form-control" [value]="datos.cobertura" disabled>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Plazo de ejecución</label>
+            <input type="text" class="form-control" [value]="datos.plazo" disabled>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Fecha inicio fase práctica</label>
+            <input type="text" class="form-control" [value]="datos.fecha_inicio" disabled>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Fecha fin fase práctica</label>
+            <input type="text" class="form-control" [value]="datos.fecha_fin" disabled>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

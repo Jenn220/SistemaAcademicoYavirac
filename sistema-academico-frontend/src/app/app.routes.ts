@@ -55,6 +55,10 @@ import {
   ActaEntornoLaboralPage
 } from './modules/fase-practica/pages/acta-entorno-laboral/acta-entorno-laboral';
 
+import {
+  DatosMaestraPage
+} from './modules/fase-practica/pages/datos-maestra/datos-maestra';
+
 export const routes: Routes = [
 
   // =====================================================
@@ -237,6 +241,17 @@ export const routes: Routes = [
             './modules/fase-practica/pages/plan-rotacion/plan-rotacion'
           ).then(
             m => m.PlanRotacion
+          )
+      },
+      {
+        path: 'fase-practica/datos-maestra',
+        canActivate: [roleGuard],
+        data: { roles: ['ESTUDIANTE'] },
+        loadComponent: () =>
+          import(
+            './modules/fase-practica/pages/datos-maestra/datos-maestra'
+          ).then(
+            m => m.DatosMaestraPage
           )
       },
 

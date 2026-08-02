@@ -155,9 +155,34 @@ export class EvaluacionInstituto implements OnInit {
 
     const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
 
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.ejecutarCargaEvaluacion();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.ejecutarCargaEvaluacion();
+      },
+      error: () => {
+        this.evaluacion = evaluacionVacia();
+        this.cargando = false;
+        this.cdr.detectChanges();
+        Swal.fire('Error', 'No fue posible cargar la evaluación del instituto desde el servidor.', 'error');
+      }
+    });
+
+  }
+
+  private ejecutarCargaEvaluacion(): void {
+
+    if (!this.idPractica) return;
+
     forkJoin({
-      evaluacion: this.documentos.obtenerEvaluacionInstitutoBase(idPracticaRuta),
-      datos: this.documentos.obtenerDatosMaestra(idPracticaRuta).pipe(catchError(() => of({} as Record<string, any>)))
+      evaluacion: this.documentos.obtenerEvaluacionInstitutoBase(this.idPractica),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ evaluacion, datos }) => {

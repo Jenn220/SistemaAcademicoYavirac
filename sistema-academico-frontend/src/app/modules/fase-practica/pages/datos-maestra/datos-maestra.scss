@@ -1,0 +1,54 @@
+.datos-maestra-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e4ecf8;
+  box-shadow: 0 8px 24px rgba(18, 56, 124, .08);
+}
+
+.card-header {
+  padding: 24px 24px 0;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #18386d;
+}
+
+.card-body {
+  padding: 24px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px;
+}
+
+.loading p {
+  margin-top: 16px;
+  color: #6c757d;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #3a4a6b;
+  margin-bottom: 6px;
+}
+
+.form-control:disabled {
+  background-color: #f4f7fd;
+  opacity: 0.8;
+}

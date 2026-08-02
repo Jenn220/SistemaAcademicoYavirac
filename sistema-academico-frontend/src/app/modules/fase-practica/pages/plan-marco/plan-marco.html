@@ -13,7 +13,7 @@
     @if (!soloLectura) {
     <button class="btn btn-warning text-white" [disabled]="guardando" (click)="guardarEnBD()">
         <i class="bi bi-save"></i>
-        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
     </button>
     } @else {
     <span class="badge-solo-lectura">Modo solo lectura</span>
@@ -25,48 +25,27 @@
 
     <app-document-header
         [titulo]="'FORMATO 03 PLAN MARCO DE FORMACIÓN'"
-        [codigo]="'DS-010203-4'">
+        [codigo]="'DS-010203-4'"
+        [estudianteNombre]="encabezado.estudianteNombre"
+        [estudianteCedula]="''"
+        [carrera]="encabezado.carrera"
+        [nivel]="encabezado.nivel"
+        [periodo]="encabezado.periodo"
+        [nucleo]="encabezado.nucleoEstructuranteNombre"
+        [tutorAcademico]="encabezado.tutorAcademicoNombre"
+        [coordinador]="''"
+        [empresa]="encabezado.empresaFormadora"
+        [tutorEmpresarial]="encabezado.tutorEmpresarialNombre"
+        [proyecto]="''"
+        [cobertura]="encabezado.direccionEmpresa"
+        [plazo]="''"
+        [fechaInicio]="''"
+        [fechaFin]="''"
+        [telefonoEmergenciaNombre]="''"
+        [telefonoEmergenciaTelefono]="''">
     </app-document-header>
 
     <div class="contenido">
-
-        @if (cargando) {
-
-        <p class="text-center text-muted my-4">Cargando datos base...</p>
-
-        } @else {
-
-        <table class="tabla-datos">
-
-            <tr>
-                <td class="label">NOMBRE(S) DE ESTUDIANTE(S):</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.estudianteNombre" name="estudianteNombre" [disabled]="soloLectura"></td>
-                <td class="label">PERÍODO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.periodo" name="periodo" [disabled]="soloLectura"></td>
-            </tr>
-
-            <tr>
-                <td class="label">CARRERA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.carrera" name="carrera" [disabled]="soloLectura"></td>
-                <td class="label">NIVEL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.nivel" name="nivel" [disabled]="soloLectura"></td>
-            </tr>
-
-            <tr>
-                <td class="label">EMPRESA FORMADORA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.empresaFormadora" name="empresaFormadora" [disabled]="soloLectura"></td>
-                <td class="label">HORAS DE FORMACIÓN PRÁCTICA:</td>
-                <td><input type="number" class="campo" [(ngModel)]="plan.horas_formacion" name="horasFormacion" [disabled]="soloLectura"></td>
-            </tr>
-
-            <tr>
-                <td class="label">DIRECCIÓN EMPRESA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.direccionEmpresa" name="direccionEmpresa" [disabled]="soloLectura"></td>
-                <td class="label">NÚCLEO ESTRUCTURANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="encabezado.nucleoEstructuranteNombre" name="nucleoEstructurante" [disabled]="soloLectura"></td>
-            </tr>
-
-        </table>
 
         <div class="caja-niveles">
 
@@ -196,8 +175,6 @@
             </div>
 
         </div>
-
-        }
 
     </div>
 

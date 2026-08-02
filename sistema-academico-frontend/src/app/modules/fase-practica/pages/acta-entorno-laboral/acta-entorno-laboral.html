@@ -10,13 +10,37 @@
         Descargar Word
     </button>
 
+    @if (!soloLectura) {
+    <button class="btn btn-warning text-white" [disabled]="guardando" (click)="guardarEnBD()">
+        <i class="bi bi-save"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
+    }
+
 </div>
 
 <div id="acta-entorno-laboral" class="documento">
 
     <app-document-header
         [titulo]="'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL'"
-        [codigo]="'DS-010401'">
+        [codigo]="'DS-010401'"
+        [estudianteNombre]="''"
+        [estudianteCedula]="''"
+        [carrera]="acta.encabezado.carrera"
+        [nivel]="''"
+        [periodo]="acta.encabezado.periodoAcademico"
+        [nucleo]="''"
+        [tutorAcademico]="''"
+        [coordinador]="''"
+        [empresa]="acta.encabezado.entidadReceptora"
+        [tutorEmpresarial]="''"
+        [proyecto]="''"
+        [cobertura]="''"
+        [plazo]="''"
+        [fechaInicio]="''"
+        [fechaFin]="''"
+        [telefonoEmergenciaNombre]="''"
+        [telefonoEmergenciaTelefono]="''">
     </app-document-header>
 
     <div class="contenido">
@@ -24,34 +48,6 @@
         <p class="text-center"><strong>{{ acta.encabezado.fecha }}</strong></p>
 
         <h3 class="text-center">{{ acta.encabezado.titulo }}</h3>
-
-        <div class="caja-encabezado">
-
-            <table class="tabla-datos">
-
-                <tr>
-                    <td class="label">INSTITUTO:</td>
-                    <td>{{ acta.encabezado.instituto }}</td>
-                </tr>
-
-                <tr>
-                    <td class="label">CARRERA:</td>
-                    <td>{{ acta.encabezado.carrera }}</td>
-                </tr>
-
-                <tr>
-                    <td class="label">PERÍODO ACADÉMICO:</td>
-                    <td>{{ acta.encabezado.periodoAcademico }}</td>
-                </tr>
-
-                <tr>
-                    <td class="label">ENTIDAD RECEPTORA:</td>
-                    <td>{{ acta.encabezado.entidadReceptora }}</td>
-                </tr>
-
-            </table>
-
-        </div>
 
         <div class="caja-texto">
 

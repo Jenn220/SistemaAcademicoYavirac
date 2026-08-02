@@ -10,45 +10,42 @@
         Descargar Word
     </button>
 
+    @if (!soloLectura) {
+    <button class="btn btn-warning text-white" [disabled]="guardando" (click)="guardarEnBD()">
+        <i class="bi bi-save"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
+    }
+
 </div>
 
 <div id="acta-induccion-seguridad" class="documento">
 
     <app-document-header
         [titulo]="'ACTA DE INDUCCIÓN DE SEGURIDAD'"
-        [codigo]="'DS-010311'">
+        [codigo]="'DS-010311'"
+        [estudianteNombre]="acta.estudiante.nombre"
+        [estudianteCedula]="acta.estudiante.cedula"
+        [carrera]="acta.estudiante.carrera"
+        [nivel]="acta.estudiante.nivel"
+        [periodo]="''"
+        [nucleo]="''"
+        [tutorAcademico]="''"
+        [coordinador]="''"
+        [empresa]="acta.empresa.razonSocial"
+        [tutorEmpresarial]="''"
+        [proyecto]="''"
+        [cobertura]="''"
+        [plazo]="''"
+        [fechaInicio]="''"
+        [fechaFin]="''"
+        [telefonoEmergenciaNombre]="''"
+        [telefonoEmergenciaTelefono]="''">
     </app-document-header>
 
     <div class="contenido">
 
         <p class="text-center"><strong>{{ acta.lugarFecha }}</strong></p>
-
-        <div class="caja-encabezado">
-
-            <table class="tabla-datos">
-
-                <tr>
-                    <td class="label">ESTUDIANTE:</td>
-                    <td>{{ acta.estudiante.nombre }}</td>
-                    <td class="label">CÉDULA:</td>
-                    <td>{{ acta.estudiante.cedula }}</td>
-                </tr>
-
-                <tr>
-                    <td class="label">NIVEL:</td>
-                    <td>{{ acta.estudiante.nivel }}</td>
-                    <td class="label">CARRERA:</td>
-                    <td>{{ acta.estudiante.carrera }}</td>
-                </tr>
-
-                <tr>
-                    <td class="label">EMPRESA:</td>
-                    <td colspan="3">{{ acta.empresa.razonSocial }}</td>
-                </tr>
-
-            </table>
-
-        </div>
 
         <div class="caja-texto">
 

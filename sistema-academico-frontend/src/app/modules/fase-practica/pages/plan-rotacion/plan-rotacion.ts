@@ -111,9 +111,23 @@ export class PlanRotacion implements OnInit {
 
   ngOnInit(): void {
 
-    this.idPractica = Number(this.route.snapshot.paramMap.get('idPractica'));
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
 
-    this.cargar();
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.cargar();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.cargar();
+      },
+      error: () => {
+        Swal.fire('Error', 'No fue posible obtener la práctica.', 'error');
+      }
+    });
 
   }
 

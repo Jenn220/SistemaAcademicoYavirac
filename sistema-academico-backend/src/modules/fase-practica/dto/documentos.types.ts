@@ -216,7 +216,7 @@ export interface EvaluacionEmpresarial {
   notaFinalEmpresa: number;
   observaciones: string;
   /** Datos para que el front pueda leer/escribir contra el sistema real de evaluaciones. */
-  idPractica: number;
+  idPractica?: number;
   idEvaluacion: number | null;
   idRubrica: number | null;
 }
@@ -251,7 +251,7 @@ export interface EvaluacionInstituto {
   notaFinalConsolidada: number;
   observaciones: string;
   /** Datos para que el front pueda leer/escribir contra el sistema real de evaluaciones. */
-  idPractica: number;
+  idPractica?: number;
   idEvaluacion: number | null;
   idRubrica: number | null;
 }
