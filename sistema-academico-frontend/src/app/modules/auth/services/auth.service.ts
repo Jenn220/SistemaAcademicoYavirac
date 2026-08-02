@@ -21,7 +21,7 @@ export class AuthService {
   // Ajusta esta base si tu environment define otra convención
   // (por ejemplo environment.apiUrl + '/auth')
 
-private readonly apiUrl = 'http://localhost:3000/api/auth';
+private readonly apiUrl = '/api/auth';
 
   // ------------------------------------------------------------------
   // Estado de sesión reactivo (signals)

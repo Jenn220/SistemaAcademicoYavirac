@@ -48,18 +48,6 @@ import {
 
 export const routes: Routes = [
 
-  // =====================================================
-  // REDIRECCIÓN INICIAL
-  // Si entra a la raíz pura sin estar logueado, pasa por
-  // el guard del Layout que lo manda a /auth/login.
-  // =====================================================
-
-  // =====================================================
-  // AUTH
-  // Login, perfil, cambiar contraseña, panel de coordinador
-  // Fuera del LayoutShell a propósito: el login no debe
-  // mostrar navbar/sidebar.
-  // =====================================================
   {
     path: 'auth',
     loadChildren: () =>
@@ -68,20 +56,12 @@ export const routes: Routes = [
       )
   },
 
-  // =====================================================
-  // LAYOUT GENERAL
-  // Dashboard + Portafolio + Fase Práctica
-  // Protegido por authGuard
-  // =====================================================
   {
     path: '',
     component: LayoutShellComponent,
     canActivate: [authGuard],
     children: [
 
-      // ===========================================
-      // Dashboard (Ruta por defecto)
-      // ===========================================
       {
         path: '',
         component: Dashboard
@@ -92,9 +72,6 @@ export const routes: Routes = [
         component: Dashboard
       },
 
-      // ===========================================
-      // Fase Práctica
-      // ===========================================
       {
         path: 'fase-practica/carta-compromiso',
         component: CartaCompromiso
@@ -120,26 +97,6 @@ export const routes: Routes = [
         component: EvaluacionInstituto
       },
 
-      // ===========================================
-      // Portafolio Docente
-      //
-      // NOTA: ambas vistas necesitan saber SOBRE QUÉ
-      // oferta-asignatura trabajar, así que ahora reciben
-      // parámetros de ruta en vez de estar "sueltas".
-      // Se navega así (por ejemplo desde un futuro listado
-      // de "mis-ofertas"):
-      //
-      //   this.router.navigate([
-      //     '/portafolio-docente/informe-final',
-      //     oferta.id_oferta_asignatura
-      //   ]);
-      //
-      //   this.router.navigate([
-      //     '/portafolio-docente/aceptacion-notas',
-      //     oferta.id_oferta_asignatura,
-      //     oferta.id_periodo
-      //   ]);
-      // ===========================================
       {
         path: 'portafolio-docente',
         children: [
@@ -162,14 +119,14 @@ export const routes: Routes = [
               )
           },
           {
-  path: 'seguimiento-pea/:idOfertaAsignatura',
-  loadComponent: () =>
-    import(
-      './modules/portafolio-docente/pages/seguimiento-pea/seguimiento-pea.component'
-    ).then(
-      m => m.SeguimientoPeaComponent
-    )
-},
+            path: 'seguimiento-pea/:idOfertaAsignatura',
+            loadComponent: () =>
+              import(
+                './modules/portafolio-docente/pages/seguimiento-pea/seguimiento-pea.component'
+              ).then(
+                m => m.SeguimientoPeaComponent
+              )
+          },
           {
             path: 'aceptacion-notas/:idOfertaAsignatura/:idPeriodo',
             loadComponent: () =>
@@ -182,9 +139,6 @@ export const routes: Routes = [
         ]
       },
 
-      // ===========================================
-      // VINCULACIÓN
-      // ===========================================
       {
         path: 'vinculacion',
         children: [
@@ -243,13 +197,20 @@ export const routes: Routes = [
               )
           }
         ]
+      },
+
+      {
+        path: 'coordinacion/cierre-periodo',
+        loadComponent: () =>
+          import(
+            './modules/panel-periodos/pages/panel-coordinador/panel-coordinador.component'
+          ).then(
+            m => m.PanelCoordinadorComponent
+          )
       }
     ]
   },
 
-  // =====================================================
-  // 404
-  // =====================================================
   {
     path: '**',
     redirectTo: 'auth/login'
