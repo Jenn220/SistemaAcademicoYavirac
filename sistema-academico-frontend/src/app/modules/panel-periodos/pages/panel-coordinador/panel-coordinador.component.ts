@@ -44,7 +44,10 @@ export class PanelCoordinadorComponent implements OnInit {
     this.resumen = null;
     this.cierrePeriodoService
       .obtenerResumenCierre(periodo.idPeriodoCarrera)
-      .subscribe((r) => (this.resumen = r));
+      .subscribe((r) => {
+        this.resumen = r;
+        this.cdr.detectChanges();
+      });
   }
 
   pedirConfirmacion(): void {
