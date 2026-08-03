@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 import { ActaInduccionSeguridad } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+import { AuthService } from '../../../auth/services/auth.service';
 
 import { DocumentHeader } from '../../components/document-header/document-header';
 
@@ -39,20 +40,46 @@ export class ActaInduccionSeguridadPage implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private auth = inject(AuthService);
 
   acta: ActaInduccionSeguridad = actaInduccionVacia();
+  guardando = false;
+  soloLectura = false;
+  idPractica: number | undefined;
 
   ngOnInit(): void {
-    this.cargarActa();
+    const usuario = this.auth.usuario();
+    this.soloLectura = !usuario?.roles?.includes('ESTUDIANTE');
+    this.cargarIdPractica();
+  }
+
+  private cargarIdPractica(): void {
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.cargarActa();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.cargarActa();
+      },
+      error: () => {
+        Swal.fire('Error', 'No fue posible obtener la práctica.', 'error');
+      }
+    });
   }
 
   private cargarActa(): void {
 
-    const idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+    if (!this.idPractica) return;
 
     forkJoin({
-      acta: this.documentos.getActaInduccionSeguridad(idPractica).pipe(catchError(() => of({} as ActaInduccionSeguridad))),
-      datos: this.documentos.obtenerDatosMaestra(idPractica).pipe(catchError(() => of({} as Record<string, any>)))
+      acta: this.documentos.getActaInduccionSeguridad(this.idPractica).pipe(catchError(() => of({} as ActaInduccionSeguridad))),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ acta, datos }) => {
@@ -73,6 +100,45 @@ export class ActaInduccionSeguridadPage implements OnInit {
       }
 
     });
+  }
+
+  guardarEnBD(): void {
+
+    if (!this.idPractica) {
+      Swal.fire('Error', 'No se pudo determinar la práctica.', 'error');
+      return;
+    }
+
+    this.guardando = true;
+
+    this.documentos.guardarActaInduccionSeguridad(this.acta, this.idPractica).subscribe({
+
+      next: () => {
+
+        this.guardando = false;
+        this.cdr.detectChanges();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Guardado',
+          text: 'El acta de inducción de seguridad se guardó correctamente.'
+        });
+
+      },
+
+      error: (err) => {
+
+        this.guardando = false;
+        this.cdr.detectChanges();
+
+        console.error('❌ Error guardando acta de inducción:', err);
+
+        Swal.fire('Error', 'No fue posible guardar el acta de inducción de seguridad.', 'error');
+
+      }
+
+    });
+
   }
 
   private completarConDatosMaestra(acta: ActaInduccionSeguridad, datos: Record<string, any>): void {
@@ -103,7 +169,7 @@ export class ActaInduccionSeguridadPage implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'induccion' } });
+    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'acta-induccion-seguridad' } });
   }
 
   descargarWord(): void {

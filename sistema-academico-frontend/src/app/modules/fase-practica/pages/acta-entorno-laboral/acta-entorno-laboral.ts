@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 import { ActaEntornoLaboral } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
+import { AuthService } from '../../../auth/services/auth.service';
 
 import { DocumentHeader } from '../../components/document-header/document-header';
 
@@ -57,20 +58,46 @@ export class ActaEntornoLaboralPage implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private auth = inject(AuthService);
 
   acta: ActaEntornoLaboral = actaEntornoVacia();
+  guardando = false;
+  soloLectura = false;
+  idPractica: number | undefined;
 
   ngOnInit(): void {
-    this.cargarActa();
+    const usuario = this.auth.usuario();
+    this.soloLectura = !usuario?.roles?.includes('ESTUDIANTE');
+    this.cargarIdPractica();
+  }
+
+  private cargarIdPractica(): void {
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.cargarActa();
+      return;
+    }
+
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.cargarActa();
+      },
+      error: () => {
+        Swal.fire('Error', 'No fue posible obtener la práctica.', 'error');
+      }
+    });
   }
 
   private cargarActa(): void {
 
-    const idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+    if (!this.idPractica) return;
 
     forkJoin({
-      acta: this.documentos.getActaEntornoLaboral(idPractica).pipe(catchError(() => of({} as ActaEntornoLaboral))),
-      datos: this.documentos.obtenerDatosMaestra(idPractica).pipe(catchError(() => of({} as Record<string, any>)))
+      acta: this.documentos.getActaEntornoLaboral(this.idPractica).pipe(catchError(() => of({} as ActaEntornoLaboral))),
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
       next: ({ acta, datos }) => {
@@ -91,6 +118,45 @@ export class ActaEntornoLaboralPage implements OnInit {
       }
 
     });
+  }
+
+  guardarEnBD(): void {
+
+    if (!this.idPractica) {
+      Swal.fire('Error', 'No se pudo determinar la práctica.', 'error');
+      return;
+    }
+
+    this.guardando = true;
+
+    this.documentos.guardarActaEntornoLaboral(this.acta, this.idPractica).subscribe({
+
+      next: () => {
+
+        this.guardando = false;
+        this.cdr.detectChanges();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Guardado',
+          text: 'El acta de entorno laboral se guardó correctamente.'
+        });
+
+      },
+
+      error: (err) => {
+
+        this.guardando = false;
+        this.cdr.detectChanges();
+
+        console.error('❌ Error guardando acta de entorno laboral:', err);
+
+        Swal.fire('Error', 'No fue posible guardar el acta de entorno laboral.', 'error');
+
+      }
+
+    });
+
   }
 
   private completarConDatosMaestra(acta: ActaEntornoLaboral, datos: Record<string, any>): void {
@@ -124,7 +190,7 @@ export class ActaEntornoLaboralPage implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'entorno' } });
+    this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'acta-entorno-laboral' } });
   }
 
   descargarWord(): void {

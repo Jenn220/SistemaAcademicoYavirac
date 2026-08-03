@@ -140,7 +140,12 @@ export class PracticaController {
     }));
   }
 
+  // Informe de Aprendizaje / Bitácora Semanal: ESTUDIANTE escribe su
+  // reflexión y sus bitácoras; TUTOR_EMPRESARIAL escribe
+  // observaciones_empresa (mismo registro). DOCENTE/COORDINADOR solo
+  // consultan (GET queda abierto a los 4 roles de la clase).
   @Post('informe-aprendizaje')
+  @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
   createInformeAprendizaje(@Body() dto: CreateInformeAprendizajeDto) {
     return this.practicaService.createInformeAprendizaje(dto);
   }
@@ -151,11 +156,13 @@ export class PracticaController {
   }
 
   @Patch('informe-aprendizaje/:id')
+  @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
   updateInformeAprendizaje(@Param('id') id: string, @Body() dto: UpdateInformeAprendizajeDto) {
     return this.practicaService.updateInformeAprendizaje(Number(id), dto);
   }
 
   @Delete('informe-aprendizaje/:id')
+  @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
   removeInformeAprendizaje(@Param('id') id: string) {
     return this.practicaService.removeInformeAprendizaje(Number(id)).then(() => ({
       deleted: true,
@@ -187,6 +194,7 @@ export class PracticaController {
   }
 
   @Post('bitacora-semanal')
+  @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
   createBitacoraSemanal(@Body() dto: CreateBitacoraSemanalDto) {
     return this.practicaService.createBitacoraSemanal(dto);
   }
@@ -197,11 +205,13 @@ export class PracticaController {
   }
 
   @Patch('bitacora-semanal/:id')
+  @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
   updateBitacoraSemanal(@Param('id') id: string, @Body() dto: UpdateBitacoraSemanalDto) {
     return this.practicaService.updateBitacoraSemanal(Number(id), dto);
   }
 
   @Delete('bitacora-semanal/:id')
+  @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
   removeBitacoraSemanal(@Param('id') id: string) {
     return this.practicaService.removeBitacoraSemanal(Number(id)).then(() => ({
       deleted: true,

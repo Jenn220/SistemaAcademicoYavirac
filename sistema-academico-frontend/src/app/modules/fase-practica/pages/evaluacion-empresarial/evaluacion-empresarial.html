@@ -28,7 +28,7 @@
 
         <i class="bi bi-save"></i>
 
-        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
 
     </button>
     } @else {
@@ -43,64 +43,33 @@
 
     <app-document-header
         [titulo]="'FORMATO 07 INFORME DE EVALUACIÓN POR PARTE DE LA ENTIDAD FORMADORA'"
-        [codigo]="'010207'">
+        [codigo]="'010207'"
+        [estudianteNombre]="evaluacion.estudiante.nombre"
+        [estudianteCedula]="evaluacion.estudiante.cedula"
+        [carrera]="evaluacion.encabezado.carrera"
+        [nivel]="evaluacion.encabezado.nivel"
+        [periodo]="evaluacion.encabezado.cicloAcademico"
+        [nucleo]="evaluacion.encabezado.nucleoEstructurante"
+        [tutorAcademico]="evaluacion.encabezado.tutorAcademico"
+        [coordinador]="''"
+        [empresa]="evaluacion.encabezado.empresaFormadora"
+        [tutorEmpresarial]="evaluacion.encabezado.tutorEmpresarial"
+        [proyecto]="''"
+        [cobertura]="''"
+        [plazo]="''"
+        [fechaInicio]="evaluacion.encabezado.fechaInicioFasePractica"
+        [fechaFin]="evaluacion.encabezado.fechaFinFasePractica"
+        [telefonoEmergenciaNombre]="''"
+        [telefonoEmergenciaTelefono]="''">
     </app-document-header>
 
     <div class="contenido">
-
-        @if(cargando){
-
-        <p class="text-center text-muted my-4">Cargando datos base...</p>
-
-        } @else {
-
-        <table class="tabla-datos">
-
-            <tr>
-                <td class="label">EMPRESA FORMADORA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.empresaFormadora" name="empresaFormadora"></td>
-                <td class="label">NIVEL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.nivel" name="nivel"></td>
-            </tr>
-
-            <tr>
-                <td class="label">ESTUDIANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.estudiante.nombre" name="nombre"></td>
-                <td class="label">CICLO ACADÉMICO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.cicloAcademico" name="cicloAcademico"></td>
-            </tr>
-
-            <tr>
-                <td class="label">CÉDULA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.estudiante.cedula" name="cedula"></td>
-                <td class="label">F. INICIO / F. FIN FASE PRÁCTICA:</td>
-                <td>
-                    <input type="text" class="campo campo-mitad" [(ngModel)]="evaluacion.encabezado.fechaInicioFasePractica" name="fechaInicio" placeholder="Inicio">
-                    <input type="text" class="campo campo-mitad" [(ngModel)]="evaluacion.encabezado.fechaFinFasePractica" name="fechaFin" placeholder="Fin">
-                </td>
-            </tr>
-
-            <tr>
-                <td class="label">TUTOR(A) ACADÉMICO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.tutorAcademico" name="tutorAcademico"></td>
-                <td class="label">NÚCLEO ESTRUCTURANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.nucleoEstructurante" name="nucleoEstructurante"></td>
-            </tr>
-
-            <tr>
-                <td class="label">TUTOR(A) EMPRESARIAL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.tutorEmpresarial" name="tutorEmpresarial"></td>
-                <td class="label">CARRERA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.carrera" name="carrera"></td>
-            </tr>
-
-        </table>
 
         <div class="caja-objetivo">
 
             <strong>OBJETIVO DEL NÚCLEO ESTRUCTURANTE PARA LA FASE PRÁCTICA</strong>
 
-            <input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.objetivoNucleoEstructurante" name="objetivo">
+            <input type="text" class="campo" [(ngModel)]="evaluacion.encabezado.objetivoNucleoEstructurante" name="objetivo" [disabled]="true">
 
         </div>
 
@@ -232,8 +201,6 @@
             <textarea class="campo campo-textarea" rows="3" [(ngModel)]="evaluacion.observaciones" name="observaciones" [disabled]="soloLectura"></textarea>
 
         </div>
-
-        }
 
     </div>
 

@@ -15,52 +15,54 @@ export class InformeFinalPg implements IInformeFinalRepository {
   ) {}
 
   async findByDocenteAndOferta(
-    idDocente: number,
-    idOfertaAsignatura: number,
-  ): Promise<InformeFinalResponseDto | null> {
-    const result = await this.dataSource.query(
-      `
-      SELECT
-        d.nombres || ' ' || d.apellidos AS nombre_docente,
-        a.nombre                        AS nombre_asignatura,
-        p.nombre                        AS paralelo,
-        pif.horario,
-        pa.nombre                       AS periodo,
-        pif.fecha_firma_docente,
-        pif.fecha_firma_coordinador,
-        co.nombres || ' ' || co.apellidos AS nombre_coordinador
-      FROM portafolio_informe_final pif
-      JOIN oferta_asignatura oa ON pif.id_oferta_asignatura = oa.id_oferta_asignatura
-      JOIN docente           d  ON oa.id_docente         = d.id_docente
-      JOIN asignatura        a  ON oa.id_asignatura       = a.id_asignatura
-      JOIN paralelo          p  ON oa.id_paralelo         = p.id_paralelo
-      JOIN periodo_carrera   pc ON oa.id_periodo_carrera  = pc.id_periodo_carrera
-      JOIN periodo_academico pa ON pc.id_periodo          = pa.id_periodo
-      LEFT JOIN docente      co ON pc.id_coordinador      = co.id_docente
-      WHERE pif.id_oferta_asignatura = $1 AND oa.id_docente = $2
-      `,
-      [idOfertaAsignatura, idDocente],
-    );
+  idDocente: number,
+  idOfertaAsignatura: number,
+): Promise<InformeFinalResponseDto | null> {
+  const result = await this.dataSource.query(
+    `
+    SELECT
+      pif.id_informe_final,              -- ← NUEVO
+      d.nombres || ' ' || d.apellidos AS nombre_docente,
+      a.nombre                        AS nombre_asignatura,
+      p.nombre                        AS paralelo,
+      pif.horario,
+      pa.nombre                       AS periodo,
+      pif.fecha_firma_docente,
+      pif.fecha_firma_coordinador,
+      co.nombres || ' ' || co.apellidos AS nombre_coordinador
+    FROM portafolio_informe_final pif
+    JOIN oferta_asignatura oa ON pif.id_oferta_asignatura = oa.id_oferta_asignatura
+    JOIN docente           d  ON oa.id_docente         = d.id_docente
+    JOIN asignatura        a  ON oa.id_asignatura       = a.id_asignatura
+    JOIN paralelo          p  ON oa.id_paralelo         = p.id_paralelo
+    JOIN periodo_carrera   pc ON oa.id_periodo_carrera  = pc.id_periodo_carrera
+    JOIN periodo_academico pa ON pc.id_periodo          = pa.id_periodo
+    LEFT JOIN docente      co ON pc.id_coordinador      = co.id_docente
+    WHERE pif.id_oferta_asignatura = $1 AND oa.id_docente = $2
+    `,
+    [idOfertaAsignatura, idDocente],
+  );
 
-    if (!result.length) return null;
+  if (!result.length) return null;
 
-    const row = result[0];
-    return {
-      informe: {
-        nombre_docente:    row.nombre_docente,
-        nombre_asignatura: row.nombre_asignatura,
-        paralelo:          row.paralelo,
-        horario:           row.horario,
-        periodo:           row.periodo,
-      },
-      firmas: {
-        docente:                  row.nombre_docente,
-        coordinador:              row.nombre_coordinador,
-        fecha_firma_docente:      row.fecha_firma_docente,
-        fecha_firma_coordinador:  row.fecha_firma_coordinador,
-      },
-    };
-  }
+  const row = result[0];
+  return {
+    informe: {
+      id_informe_final: row.id_informe_final,   // ← NUEVO
+      nombre_docente:    row.nombre_docente,
+      nombre_asignatura: row.nombre_asignatura,
+      paralelo:          row.paralelo,
+      horario:           row.horario,
+      periodo:           row.periodo,
+    },
+    firmas: {
+      docente:                  row.nombre_docente,
+      coordinador:              row.nombre_coordinador,
+      fecha_firma_docente:      row.fecha_firma_docente,
+      fecha_firma_coordinador:  row.fecha_firma_coordinador,
+    },
+  };
+}
 
   async create(dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal> {
     const oferta = await this.dataSource.query(
@@ -84,6 +86,16 @@ export class InformeFinalPg implements IInformeFinalRepository {
       idOfertaAsignatura: oferta[0].id_oferta_asignatura,
       horario: dto.horario,
     });
+    return this.repo.save(informe);
+  }
+
+  async updateHorario(idInformeFinal: number, horario: string): Promise<PortafolioInformeFinal> {
+    const informe = await this.repo.findOneBy({ idInformeFinal });
+    if (!informe) {
+      throw new NotFoundException('Informe final no encontrado');
+    }
+
+    informe.horario = horario;
     return this.repo.save(informe);
   }
 }

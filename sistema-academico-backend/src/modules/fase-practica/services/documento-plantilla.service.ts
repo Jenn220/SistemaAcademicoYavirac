@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Inject } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,6 +13,8 @@ import { CvDatoAcademicoEntity } from '../domain/cv-dato-academico.entity';
 import { CvExperienciaLaboralEntity } from '../domain/cv-experiencia-laboral.entity';
 import { CvPracticaDualEntity } from '../domain/cv-practica-dual.entity';
 import { NucleoEstructuranteEntity } from '../domain/nucleo-estructurante.entity';
+import { DocumentoEntity } from '../domain/documento.entity';
+import { DOCUMENTO_REPOSITORY } from '../ports/documento.repository.port';
 import {
   DatosEstudiante,
   DatosCarrera,
@@ -62,8 +64,18 @@ export class DocumentoPlantillaService {
     private readonly cvPracticaDualRepository: Repository<CvPracticaDualEntity>,
     @InjectRepository(NucleoEstructuranteEntity)
     private readonly nucleoRepository: Repository<NucleoEstructuranteEntity>,
+    @Inject(DOCUMENTO_REPOSITORY)
+    private readonly documentoRepository: Repository<DocumentoEntity>,
     private readonly dataSource: DataSource,
   ) {}
+
+  private async cargarContenidoGuardado(idPractica: number, codigoFormato: string): Promise<any> {
+    const guardado = await this.documentoRepository.findOne({
+      where: { id_practica: idPractica, codigo_formato: codigoFormato },
+      order: { id_documento: 'DESC' },
+    });
+    return guardado?.contenido ?? null;
+  }
 
   /**
    * Resuelve el id_practica que le corresponde consultar al usuario logueado.
@@ -346,6 +358,7 @@ export class DocumentoPlantillaService {
       empresaBeneficiaria,
       periodoAcademico,
       cronograma,
+      idPractica,
     };
   }
 
@@ -398,7 +411,19 @@ export class DocumentoPlantillaService {
   }
 
   async getCartaCompromiso(usuario: any, idPracticaSolicitado?: number): Promise<CartaCompromiso> {
-    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F01');
+      if (guardado) return guardado as CartaCompromiso;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria } = datos;
 
     return {
@@ -439,7 +464,19 @@ export class DocumentoPlantillaService {
   }
 
   async getCurriculum(usuario: any, idPracticaSolicitado?: number): Promise<Curriculum> {
-    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F02');
+      if (guardado) return guardado as Curriculum;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante } = datos;
 
     const datosAcademicos = await this.cvDatoAcademicoRepository.find({
@@ -486,7 +523,19 @@ export class DocumentoPlantillaService {
   }
 
   async getRegistroAsistencia(usuario: any, idPracticaSolicitado?: number): Promise<RegistroAsistencia> {
-    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F05');
+      if (guardado) return guardado as RegistroAsistencia;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera, periodoAcademico } = datos;
 
     const registros = await this.registroDiarioRepository.find({
@@ -531,7 +580,19 @@ export class DocumentoPlantillaService {
   }
 
   async getInformeAprendizaje(usuario: any, idPracticaSolicitado?: number): Promise<InformeAprendizaje> {
-    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F06');
+      if (guardado) return guardado as InformeAprendizaje;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
     const { empresaBeneficiaria, periodoAcademico, carrera } = datos;
 
     const encabezado: InformeAprendizajeEncabezado = {
@@ -548,9 +609,8 @@ export class DocumentoPlantillaService {
       totalSemanas: 8,
     };
 
-    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
     const informe = await this.informeRepository.findOne({
-      where: { id_practica: idPractica },
+      where: { id_practica: idPractica! },
     });
 
     const bitacoras = await this.bitacoraRepository.find({
@@ -579,13 +639,23 @@ export class DocumentoPlantillaService {
   }
 
   async getEvaluacionEmpresarial(usuario: any, idPracticaSolicitado?: number): Promise<EvaluacionEmpresarial> {
-    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F07');
+      if (guardado) return guardado as EvaluacionEmpresarial;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
 
-    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
-
     const evaluaciones = await this.evaluacionRepository.find({
-      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
+      where: { id_practica: idPractica!, tipo_evaluador: 'EMPRESA' },
     });
 
     const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
@@ -674,19 +744,29 @@ export class DocumentoPlantillaService {
   }
 
   async getEvaluacionInstituto(usuario: any, idPracticaSolicitado?: number): Promise<EvaluacionInstituto> {
-    const datos = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F08');
+      if (guardado) return guardado as EvaluacionInstituto;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
 
-    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
-
     const evaluaciones = await this.evaluacionRepository.find({
-      where: { id_practica: idPractica, tipo_evaluador: 'INSTITUTO' },
+      where: { id_practica: idPractica!, tipo_evaluador: 'INSTITUTO' },
     });
 
     // EI-05: la nota de empresa debe venir de la evaluación tipo EMPRESA, no
     // de un promedio de las evaluaciones INSTITUTO (bug detectado en QA).
     const evaluacionesEmpresa = await this.evaluacionRepository.find({
-      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
+      where: { id_practica: idPractica!, tipo_evaluador: 'EMPRESA' },
     });
     const evaluacionEmpresaPrincipal = evaluacionesEmpresa[0];
     // TypeORM devuelve las columnas numeric como string: sin el Number(...)
@@ -759,6 +839,12 @@ export class DocumentoPlantillaService {
   async getActaInduccionSeguridad(usuario: any, idPracticaSolicitado?: number): Promise<ActaInduccionSeguridad> {
     try {
       const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+
+      if (idPractica) {
+        const guardado = await this.cargarContenidoGuardado(idPractica, 'F10');
+        if (guardado) return guardado as ActaInduccionSeguridad;
+      }
+
       const practica = await this.practicaRepository.findOne({
         where: { id_practica: idPractica },
         relations: ['empresa', 'tutor_empresarial'],
@@ -889,6 +975,34 @@ export class DocumentoPlantillaService {
 
   async getActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number): Promise<ActaEntornoLaboral> {
     try {
+      let idPractica: number | undefined;
+
+      if (usuario.idEstudiante) {
+        const matriculaRows = await this.dataSource.query(
+          `SELECT p.id_practica
+           FROM practica_estudiante p
+           JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+           JOIN matricula m ON m.id_matricula = md.id_matricula
+           WHERE m.id_estudiante = $1
+           ORDER BY p.id_practica DESC
+           LIMIT 1`,
+          [usuario.idEstudiante],
+        );
+
+        if (matriculaRows.length > 0) {
+          idPractica = matriculaRows[0].id_practica;
+        }
+      }
+
+      if (!idPractica) {
+        idPractica = idPracticaSolicitado ?? (await this.obtenerIdPractica(usuario, idPracticaSolicitado));
+      }
+
+      if (idPractica) {
+        const guardado = await this.cargarContenidoGuardado(idPractica, 'F11');
+        if (guardado) return guardado as ActaEntornoLaboral;
+      }
+
       let idEstudiante = usuario.idEstudiante;
       let matricula: any[] = [];
 

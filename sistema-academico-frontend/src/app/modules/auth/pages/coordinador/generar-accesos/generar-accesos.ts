@@ -1,9 +1,15 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { GenerarAccesosResponse, TipoGenerarAccesos } from '../../../models';
+
+export interface PeriodoAcademico {
+  id_periodo: number;
+  nombre: string;
+  codigo: string;
+}
 
 @Component({
   selector: 'app-generar-accesos',
@@ -16,33 +22,27 @@ export class GenerarAccesos {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
 
+  readonly periodos = signal<PeriodoAcademico[]>([]);
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
   readonly resultado = signal<GenerarAccesosResponse | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     tipo: this.fb.nonNullable.control<TipoGenerarAccesos>('ESTUDIANTE', Validators.required),
-    id_periodo: this.fb.control<number | null>(null),
+    id_periodo: this.fb.control<number | null>(null, Validators.required),
   });
 
-  readonly requierePeriodo = computed(() => this.form.controls.tipo.value === 'ESTUDIANTE');
-
   constructor() {
-    this.form.controls.tipo.valueChanges.subscribe((tipo) => {
-      const idPeriodo = this.form.controls.id_periodo;
-      if (tipo === 'ESTUDIANTE') {
-        idPeriodo.setValidators([Validators.required]);
-      } else {
-        idPeriodo.clearValidators();
-        idPeriodo.setValue(null);
-      }
-      idPeriodo.updateValueAndValidity();
+    this.authService.obtenerPeriodosActivos().subscribe({
+      next: (data) => this.periodos.set(data),
+      error: () => this.error.set('No se pudieron cargar los períodos académicos activos.'),
     });
   }
 
   enviar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error.set('No se pudieron generar los accesos. Intenta nuevamente.');
       return;
     }
 
@@ -55,16 +55,19 @@ export class GenerarAccesos {
     this.authService
       .generarAccesos({
         tipo,
-        id_periodo: tipo === 'ESTUDIANTE' ? id_periodo ?? undefined : undefined,
+        id_periodo: id_periodo!,
       })
       .subscribe({
         next: (respuesta) => {
           this.cargando.set(false);
           this.resultado.set(respuesta);
         },
-        error: () => {
+        error: (err) => {
           this.cargando.set(false);
-          this.error.set('No se pudieron generar los accesos. Intenta nuevamente.');
+          const msg = Array.isArray(err?.error?.message)
+            ? err.error.message.join(', ')
+            : err?.error?.message || 'No se pudieron generar los accesos. Intenta nuevamente.';
+          this.error.set(msg);
         },
       });
   }

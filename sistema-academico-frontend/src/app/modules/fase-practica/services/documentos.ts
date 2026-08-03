@@ -49,6 +49,10 @@ export class Documentos {
     );
   }
 
+  obtenerMiPractica(): Observable<{ id_practica: number }> {
+    return this.http.get<{ id_practica: number }>(`${environment.apiUrl}/api/fase-practica/mi-practica`);
+  }
+
   obtenerCartaCompromiso(idPractica?: number): Observable<CartaCompromiso> {
     return this.http.get<CartaCompromiso>(
       `${this.API}/carta-compromiso`,
@@ -186,5 +190,9 @@ export class Documentos {
       { contenido },
       { params: this.paramsIdPractica(idPractica) }
     );
+  }
+
+  actualizarDatosEstudiante(datos: Record<string, any>): Observable<any> {
+    return this.http.patch<any>(`${environment.apiUrl}/api/fase-practica/perfil`, datos);
   }
 }

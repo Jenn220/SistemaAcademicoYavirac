@@ -20,4 +20,8 @@ export class InformeFinalService {
   async createInformeFinal(dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal> {
     return this.informeFinalRepo.create(dto);
   }
+
+  async actualizarHorario(idInformeFinal: number, horario: string): Promise<PortafolioInformeFinal> {
+    return this.informeFinalRepo.updateHorario(idInformeFinal, horario);
+  }
 }

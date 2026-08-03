@@ -1,8 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreatePortafolioDatosPruebaRonniVilla1785000000000 implements MigrationInterface {
-
     public async up(queryRunner: QueryRunner): Promise<void> {
+        // Ejecutar el bloque PL/pgSQL con la corrección de la secuencia
         await queryRunner.query(`
             DO $$
             DECLARE
@@ -21,9 +21,22 @@ export class CreatePortafolioDatosPruebaRonniVilla1785000000000 implements Migra
                 v_id_reporte_notas bigint;
                 v_id_rol_coordinador bigint;
                 v_id_rol_docente bigint;
+                v_id_rol_estudiante bigint;
+                v_id_rol_empresa bigint;
+                v_id_estudiante bigint;
+                v_id_empresa_colibri bigint;
+                v_id_empresa_kfc bigint;
+                v_id_empresa_correo bigint;
                 v_id_usuario bigint;
                 v_id_usuario_docente1 bigint;
+                v_id_usuario_estudiante bigint;
+                v_id_usuario_empresa_colibri bigint;
+                v_id_usuario_empresa_kfc bigint;
+                v_id_usuario_empresa_correo bigint;
             BEGIN
+                -- ========== FIX: Sincronizar secuencia de empresa ==========
+                PERFORM setval('empresa_id_empresa_seq', COALESCE((SELECT MAX(id_empresa) FROM empresa), 1));
+
                 -- 1. Crear/Actualizar el docente principal (Ronni Villa)
                 INSERT INTO public.docente (cedula, nombres, apellidos, correo, telefono, estado)
                 VALUES ('1750000199', 'Ronni', 'Villa', 'rav.villa@yavirac.edu.ec', '0999000002', 'ACTIVO')
@@ -52,6 +65,9 @@ export class CreatePortafolioDatosPruebaRonniVilla1785000000000 implements Migra
                 IF v_id_docente_profesor IS NULL THEN
                     RAISE EXCEPTION 'No existe el docente con cedula 1803980844. Verifica los datos de prueba previos.';
                 END IF;
+
+                -- 2.1 Obtener un estudiante existente para vincular al usuario de prueba
+                SELECT id_estudiante INTO v_id_estudiante FROM public.estudiante LIMIT 1;
 
                 -- 3. Crear/actualizar usuario Ronni Villa con hash '123456'
                 INSERT INTO public.usuario (
@@ -97,25 +113,154 @@ export class CreatePortafolioDatosPruebaRonniVilla1785000000000 implements Migra
                     bloqueado = false
                 RETURNING id_usuario INTO v_id_usuario_docente1;
 
+                -- 3.2 Crear/actualizar usuario estudiante con hash '123456' (vinculado a un estudiante existente)
+                INSERT INTO public.usuario (
+                    correo, password_hash, estado, id_estudiante, debe_cambiar_password, intentos_fallidos, bloqueado
+                )
+                VALUES (
+                    'estudiante@yavirac.edu.ec',
+                    '$2a$10$qtzW2ox1tH/P7f32NPTs4uNq5GxfYzpEKiUDLj9GOA8C8D3ft0i8q',
+                    'ACTIVO',
+                    v_id_estudiante,
+                    false,
+                    0,
+                    false
+                )
+                ON CONFLICT (correo) DO UPDATE SET
+                    password_hash = '$2a$10$qtzW2ox1tH/P7f32NPTs4uNq5GxfYzpEKiUDLj9GOA8C8D3ft0i8q',
+                    estado = 'ACTIVO',
+                    id_estudiante = EXCLUDED.id_estudiante,
+                    debe_cambiar_password = false,
+                    intentos_fallidos = 0,
+                    bloqueado = false
+                RETURNING id_usuario INTO v_id_usuario_estudiante;
+
+                -- 3.3 Crear/actualizar 3 empresas de prueba
+                -- Empresa A: login = razon social "ALAS DE COLIBRI", password = RUC 1791234567001
+                INSERT INTO public.empresa (ruc, razon_social, direccion, estado)
+                VALUES ('1791234567001', 'ALAS DE COLIBRI', 'Quito', 'ACTIVO')
+                ON CONFLICT (ruc) DO UPDATE SET
+                    razon_social = EXCLUDED.razon_social,
+                    direccion = EXCLUDED.direccion,
+                    estado = EXCLUDED.estado
+                RETURNING id_empresa INTO v_id_empresa_colibri;
+
+                INSERT INTO public.usuario (
+                    correo, password_hash, estado, id_empresa, debe_cambiar_password, intentos_fallidos, bloqueado
+                )
+                VALUES (
+                    'ALAS DE COLIBRI',
+                    '$2a$10$3g5I5VFFlulxrcPm7NmzculaZfxICdRsRVkTltEqf1JiWFFVhUgOS',
+                    'ACTIVO',
+                    v_id_empresa_colibri,
+                    false,
+                    0,
+                    false
+                )
+                ON CONFLICT (correo) DO UPDATE SET
+                    password_hash = EXCLUDED.password_hash,
+                    estado = 'ACTIVO',
+                    id_empresa = EXCLUDED.id_empresa,
+                    debe_cambiar_password = false,
+                    intentos_fallidos = 0,
+                    bloqueado = false
+                RETURNING id_usuario INTO v_id_usuario_empresa_colibri;
+
+                -- Empresa B: login = razon social "GRUPOKFC", password = RUC 1792345678001
+                INSERT INTO public.empresa (ruc, razon_social, direccion, estado)
+                VALUES ('1792345678001', 'GRUPOKFC', 'Quito', 'ACTIVO')
+                ON CONFLICT (ruc) DO UPDATE SET
+                    razon_social = EXCLUDED.razon_social,
+                    direccion = EXCLUDED.direccion,
+                    estado = EXCLUDED.estado
+                RETURNING id_empresa INTO v_id_empresa_kfc;
+
+                INSERT INTO public.usuario (
+                    correo, password_hash, estado, id_empresa, debe_cambiar_password, intentos_fallidos, bloqueado
+                )
+                VALUES (
+                    'GRUPOKFC',
+                    '$2a$10$kvxT.R8FC2INJwLbV8o/LObAk9QTlyvnynHc3KrS1PUeLY5yEj36.',
+                    'ACTIVO',
+                    v_id_empresa_kfc,
+                    false,
+                    0,
+                    false
+                )
+                ON CONFLICT (correo) DO UPDATE SET
+                    password_hash = EXCLUDED.password_hash,
+                    estado = 'ACTIVO',
+                    id_empresa = EXCLUDED.id_empresa,
+                    debe_cambiar_password = false,
+                    intentos_fallidos = 0,
+                    bloqueado = false
+                RETURNING id_usuario INTO v_id_usuario_empresa_kfc;
+
+                -- Empresa C: login = correo inventado "contacto@empresaprueba.com", password = RUC 1793456789001
+                INSERT INTO public.empresa (ruc, razon_social, direccion, estado)
+                VALUES ('1793456789001', 'Empresa Correo Prueba S.A.', 'Quito', 'ACTIVO')
+                ON CONFLICT (ruc) DO UPDATE SET
+                    razon_social = EXCLUDED.razon_social,
+                    direccion = EXCLUDED.direccion,
+                    estado = EXCLUDED.estado
+                RETURNING id_empresa INTO v_id_empresa_correo;
+
+                INSERT INTO public.usuario (
+                    correo, password_hash, estado, id_empresa, debe_cambiar_password, intentos_fallidos, bloqueado
+                )
+                VALUES (
+                    'contacto@empresaprueba.com',
+                    '$2a$10$6E1Po6DvwgkubB57VMu8heZ2SB1/RQGbSmDVwIuYsXza82.uTeGyG',
+                    'ACTIVO',
+                    v_id_empresa_correo,
+                    false,
+                    0,
+                    false
+                )
+                ON CONFLICT (correo) DO UPDATE SET
+                    password_hash = EXCLUDED.password_hash,
+                    estado = 'ACTIVO',
+                    id_empresa = EXCLUDED.id_empresa,
+                    debe_cambiar_password = false,
+                    intentos_fallidos = 0,
+                    bloqueado = false
+                RETURNING id_usuario INTO v_id_usuario_empresa_correo;
+
                 -- 4. Asignar roles
                 SELECT id_rol INTO v_id_rol_coordinador FROM public.rol WHERE nombre = 'COORDINADOR';
                 SELECT id_rol INTO v_id_rol_docente FROM public.rol WHERE nombre = 'DOCENTE';
+                SELECT id_rol INTO v_id_rol_estudiante FROM public.rol WHERE nombre = 'ESTUDIANTE';
+                SELECT id_rol INTO v_id_rol_empresa FROM public.rol WHERE nombre = 'TUTOR_EMPRESARIAL';
 
-                IF v_id_rol_coordinador IS NULL OR v_id_rol_docente IS NULL THEN
-                    RAISE EXCEPTION 'Faltan roles (COORDINADOR o DOCENTE) en la tabla rol.';
+                IF v_id_rol_coordinador IS NULL OR v_id_rol_docente IS NULL OR v_id_rol_estudiante IS NULL OR v_id_rol_empresa IS NULL THEN
+                    RAISE EXCEPTION 'Faltan roles (COORDINADOR, DOCENTE, ESTUDIANTE o TUTOR_EMPRESARIAL) en la tabla rol.';
                 END IF;
 
                 -- Roles para Ronni Villa
                 INSERT INTO public.usuario_rol (id_usuario, id_rol)
-                VALUES 
+                VALUES
                     (v_id_usuario, v_id_rol_coordinador),
                     (v_id_usuario, v_id_rol_docente)
                 ON CONFLICT DO NOTHING;
 
                 -- Rol para docente1 (Solo DOCENTE)
                 INSERT INTO public.usuario_rol (id_usuario, id_rol)
-                VALUES 
+                VALUES
                     (v_id_usuario_docente1, v_id_rol_docente)
+                ON CONFLICT DO NOTHING;
+
+                -- Rol para estudiante (Solo ESTUDIANTE)
+                INSERT INTO public.usuario_rol (id_usuario, id_rol)
+                VALUES
+                    (v_id_usuario_estudiante, v_id_rol_estudiante)
+                ON CONFLICT DO NOTHING;
+
+                -- Roles para las 3 empresas de prueba (Solo TUTOR_EMPRESARIAL)
+                INSERT INTO public.usuario_rol (id_usuario, id_rol)
+                VALUES
+                    (v_id_usuario_empresa_colibri, v_id_rol_empresa),
+                    (v_id_usuario_empresa_kfc, v_id_rol_empresa),
+                    (v_id_usuario_empresa_correo, v_id_rol_empresa)
                 ON CONFLICT DO NOTHING;
 
                 -- 5. Obtener catalogos base
@@ -194,64 +339,77 @@ export class CreatePortafolioDatosPruebaRonniVilla1785000000000 implements Migra
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        // Opcional: revertir los datos insertados (eliminar registros según criterio)
+        // Se recomienda no borrar datos de producción, pero para pruebas se puede implementar.
+        // Aquí un ejemplo de limpieza (eliminar solo los registros creados en esta migración)
         await queryRunner.query(`
-            DO $$
-            DECLARE
-                v_id_docente_coordinador bigint;
-                v_id_docente_sin_materias bigint;
-                v_id_usuario bigint;
-                v_id_usuario_docente1 bigint;
-            BEGIN
-                SELECT id_docente INTO v_id_docente_coordinador FROM public.docente WHERE cedula = '1750000199';
-                SELECT id_docente INTO v_id_docente_sin_materias FROM public.docente WHERE cedula = '1750000999';
+            DELETE FROM public.portafolio_aceptacion_estudiante
+            WHERE id_reporte_notas IN (
+                SELECT id_reporte_notas FROM public.portafolio_reporte_notas
+                WHERE id_oferta_asignatura IN (
+                    SELECT id_oferta_asignatura FROM public.oferta_asignatura
+                    WHERE id_docente IN (
+                        SELECT id_docente FROM public.docente WHERE cedula IN ('1750000199', '1750000999')
+                    )
+                )
+            );
 
-                -- Limpieza Ronni Villa
-                IF v_id_docente_coordinador IS NOT NULL THEN
-                    UPDATE public.periodo_carrera
-                    SET id_coordinador = NULL
-                    WHERE id_coordinador = v_id_docente_coordinador;
+            DELETE FROM public.portafolio_reporte_notas
+            WHERE id_oferta_asignatura IN (
+                SELECT id_oferta_asignatura FROM public.oferta_asignatura
+                WHERE id_docente IN (
+                    SELECT id_docente FROM public.docente WHERE cedula IN ('1750000199', '1750000999')
+                )
+            );
 
-                    DELETE FROM public.portafolio_aceptacion_estudiante
-                    WHERE id_matricula_detalle IN (
-                        SELECT md.id_matricula_detalle FROM public.matricula_detalle md
-                        JOIN public.oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
-                        WHERE oa.id_docente = v_id_docente_coordinador
-                    );
+            DELETE FROM public.matricula_detalle
+            WHERE id_oferta_asignatura IN (
+                SELECT id_oferta_asignatura FROM public.oferta_asignatura
+                WHERE id_docente IN (
+                    SELECT id_docente FROM public.docente WHERE cedula IN ('1750000199', '1750000999')
+                )
+            );
 
-                    DELETE FROM public.portafolio_reporte_notas
-                    WHERE id_oferta_asignatura IN (
-                        SELECT id_oferta_asignatura FROM public.oferta_asignatura
-                        WHERE id_docente = v_id_docente_coordinador
-                    );
+            DELETE FROM public.oferta_asignatura
+            WHERE id_docente IN (
+                SELECT id_docente FROM public.docente WHERE cedula IN ('1750000199', '1750000999')
+            );
 
-                    DELETE FROM public.matricula_detalle
-                    WHERE id_oferta_asignatura IN (
-                        SELECT id_oferta_asignatura FROM public.oferta_asignatura
-                        WHERE id_docente = v_id_docente_coordinador
-                    );
+            DELETE FROM public.usuario_rol
+            WHERE id_usuario IN (
+                SELECT id_usuario FROM public.usuario
+                WHERE correo IN (
+                    'rav.villa@yavirac.edu.ec',
+                    'docente1@yavirac.edu.ec',
+                    'estudiante@yavirac.edu.ec',
+                    'ALAS DE COLIBRI',
+                    'GRUPOKFC',
+                    'contacto@empresaprueba.com'
+                )
+            );
 
-                    DELETE FROM public.oferta_asignatura WHERE id_docente = v_id_docente_coordinador;
+            DELETE FROM public.usuario
+            WHERE correo IN (
+                'rav.villa@yavirac.edu.ec',
+                'docente1@yavirac.edu.ec',
+                'estudiante@yavirac.edu.ec',
+                'ALAS DE COLIBRI',
+                'GRUPOKFC',
+                'contacto@empresaprueba.com'
+            );
 
-                    SELECT id_usuario INTO v_id_usuario FROM public.usuario WHERE correo = 'rav.villa@yavirac.edu.ec';
-                    IF v_id_usuario IS NOT NULL THEN
-                        DELETE FROM public.usuario_rol WHERE id_usuario = v_id_usuario;
-                        DELETE FROM public.usuario WHERE id_usuario = v_id_usuario;
-                    END IF;
+            DELETE FROM public.empresa
+            WHERE ruc IN ('1791234567001', '1792345678001', '1793456789001');
 
-                    DELETE FROM public.docente WHERE id_docente = v_id_docente_coordinador;
-                END IF;
+            DELETE FROM public.docente
+            WHERE cedula IN ('1750000199', '1750000999');
 
-                -- Limpieza docente1
-                IF v_id_docente_sin_materias IS NOT NULL THEN
-                    SELECT id_usuario INTO v_id_usuario_docente1 FROM public.usuario WHERE correo = 'docente1@yavirac.edu.ec';
-                    IF v_id_usuario_docente1 IS NOT NULL THEN
-                        DELETE FROM public.usuario_rol WHERE id_usuario = v_id_usuario_docente1;
-                        DELETE FROM public.usuario WHERE id_usuario = v_id_usuario_docente1;
-                    END IF;
-
-                    DELETE FROM public.docente WHERE id_docente = v_id_docente_sin_materias;
-                END IF;
-            END $$;
+            -- Restaurar el coordinador a NULL si es necesario
+            UPDATE public.periodo_carrera
+            SET id_coordinador = NULL
+            WHERE id_coordinador IN (
+                SELECT id_docente FROM public.docente WHERE cedula = '1750000199'
+            );
         `);
     }
 }

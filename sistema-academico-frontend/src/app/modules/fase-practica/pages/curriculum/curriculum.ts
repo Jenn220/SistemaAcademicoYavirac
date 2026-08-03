@@ -25,7 +25,22 @@ function curriculumVacio(): CurriculumModel {
     datosAcademicos: [],
     experienciaLaboral: [],
     practicasDuales: [],
-    informacionAdicional: []
+    informacionAdicional: [],
+    encabezado: {
+      carrera: '',
+      nivel: '',
+      periodoAcademico: '',
+      nucleo: '',
+      tutorAcademico: '',
+      coordinador: '',
+      empresa: '',
+      tutorEmpresarial: '',
+      proyecto: '',
+      cobertura: '',
+      plazo: '',
+      fechaInicio: '',
+      fechaFin: ''
+    }
   };
 }
 
@@ -65,6 +80,25 @@ export class Curriculum implements OnInit {
   cargando = false;
 
   guardando = false;
+
+  get esEstudiante(): boolean {
+    return this.authService.tieneAlgunRol(['ESTUDIANTE']);
+  }
+
+  encabezado = {
+    carrera: '',
+    nivel: '',
+    nucleo: '',
+    tutorAcademico: '',
+    coordinador: '',
+    empresa: '',
+    tutorEmpresarial: '',
+    proyecto: '',
+    cobertura: '',
+    plazo: '',
+    fechaInicio: '',
+    fechaFin: ''
+  };
 
   ngOnInit(): void {
 
@@ -131,7 +165,22 @@ export class Curriculum implements OnInit {
         ...logros.map((logro) => ({ anio: '', institucion: '', logro, detalle: '' })),
         ...idiomas.map((idioma) => ({ anio: '', institucion: '', logro: 'Idioma', detalle: idioma })),
         ...habilidades.length ? [{ anio: '', institucion: '', logro: 'Habilidades técnicas', detalle: habilidades.join(', ') }] : []
-      ]
+      ],
+      encabezado: {
+        carrera: datosEstudiante.carrera ?? '',
+        nivel: datosEstudiante.nivel ?? datosEstudiante.curso ?? '',
+        periodoAcademico: datosPeriodo.nombre ?? '',
+        nucleo: '',
+        tutorAcademico: '',
+        coordinador: '',
+        empresa: '',
+        tutorEmpresarial: '',
+        proyecto: '',
+        cobertura: '',
+        plazo: '',
+        fechaInicio: '',
+        fechaFin: ''
+      }
     };
 
   }
@@ -140,30 +189,80 @@ export class Curriculum implements OnInit {
 
     this.cargando = true;
 
-    this.idPractica = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
+    const idPracticaRuta = Number(this.route.snapshot.paramMap.get('idPractica')) || undefined;
 
-    forkJoin({
-      curriculum: this.documentos.obtenerCurriculumBase(this.idPractica),
-      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
-    }).subscribe({
+    if (idPracticaRuta) {
+      this.idPractica = idPracticaRuta;
+      this.ejecutarCargaCurriculum();
+      return;
+    }
 
-      next: ({ curriculum, datos }) => {
-
-        this.idEstudianteVisto = datos?.['estudiante']?.['idEstudiante'] ?? null;
-        this.curriculum = this.mapearBase(curriculum, datos);
-        this.cargarCvReal();
-
+    this.documentos.obtenerMiPractica().subscribe({
+      next: (resp) => {
+        this.idPractica = resp.id_practica;
+        this.ejecutarCargaCurriculum();
       },
-
       error: () => {
-
         this.curriculum = curriculumVacio();
         this.cargando = false;
         this.cdr.detectChanges();
-
         Swal.fire('Error', 'No fue posible cargar el currículo desde el servidor.', 'error');
-
       }
+    });
+
+  }
+
+  private ejecutarCargaCurriculum(): void {
+
+    if (!this.idPractica) return;
+
+    this.documentos.obtenerDatosMaestra(this.idPractica).pipe(
+      catchError(() => of({} as Record<string, any>))
+    ).subscribe((datos) => {
+      const carrera = datos?.['carrera'] ?? {};
+      const proyecto = datos?.['proyectoEmpresarial'] ?? {};
+      const empresa = datos?.['empresaBeneficiaria'] ?? {};
+      const periodo = datos?.['periodoAcademico'] ?? {};
+      const estudiante = datos?.['estudiante'] ?? {};
+
+      this.encabezado = {
+        carrera: carrera.nombre ?? estudiante.carrera ?? '',
+        nivel: estudiante.nivel ?? estudiante.curso ?? '',
+        nucleo: carrera.nucleoEstructurante ?? '',
+        tutorAcademico: carrera.tutorAcademico ?? '',
+        coordinador: carrera.coordinador ?? '',
+        empresa: empresa.razonSocial ?? proyecto.empresaAsignada ?? '',
+        tutorEmpresarial: empresa.tutorEmpresarial ?? '',
+        proyecto: proyecto.nombre ?? '',
+        cobertura: proyecto.cobertura ?? '',
+        plazo: proyecto.plazo ?? '',
+        fechaInicio: proyecto.fechaInicio ?? '',
+        fechaFin: proyecto.fechaFin ?? ''
+      };
+
+      forkJoin({
+        curriculum: this.documentos.obtenerCurriculumBase(this.idPractica),
+        datos: of(datos)
+      }).subscribe({
+
+        next: ({ curriculum }) => {
+
+          this.curriculum = this.mapearBase(curriculum, datos);
+          this.cargarCvReal();
+
+        },
+
+        error: () => {
+
+          this.curriculum = curriculumVacio();
+          this.cargando = false;
+          this.cdr.detectChanges();
+
+          Swal.fire('Error', 'No fue posible cargar el currículo desde el servidor.', 'error');
+
+        }
+
+      });
 
     });
 
@@ -225,11 +324,15 @@ export class Curriculum implements OnInit {
 
   agregarDatoAcademico(): void {
 
+    if (!this.esEstudiante) return;
+
     this.curriculum.datosAcademicos.push({ anio: '', institucion: '', tituloMencion: '', notaFinal: '' });
 
   }
 
   quitarDatoAcademico(i: number): void {
+
+    if (!this.esEstudiante) return;
 
     const item = this.curriculum.datosAcademicos[i];
 
@@ -250,11 +353,15 @@ export class Curriculum implements OnInit {
 
   agregarExperiencia(): void {
 
+    if (!this.esEstudiante) return;
+
     this.curriculum.experienciaLaboral.push({ anio: '', institucion: '', cargo: '', actividades: '' });
 
   }
 
   quitarExperiencia(i: number): void {
+
+    if (!this.esEstudiante) return;
 
     const item = this.curriculum.experienciaLaboral[i];
 
@@ -275,11 +382,15 @@ export class Curriculum implements OnInit {
 
   agregarPracticaDual(): void {
 
+    if (!this.esEstudiante) return;
+
     this.curriculum.practicasDuales.push({ anio: '', institucion: '', puestoAprendizaje: '', actividades: '' });
 
   }
 
   quitarPracticaDual(i: number): void {
+
+    if (!this.esEstudiante) return;
 
     const item = this.curriculum.practicasDuales[i];
 
@@ -300,11 +411,15 @@ export class Curriculum implements OnInit {
 
   agregarInformacionAdicional(): void {
 
+    if (!this.esEstudiante) return;
+
     this.curriculum.informacionAdicional.push({ anio: '', institucion: '', logro: '', detalle: '' });
 
   }
 
   quitarInformacionAdicional(i: number): void {
+
+    if (!this.esEstudiante) return;
 
     this.curriculum.informacionAdicional.splice(i, 1);
 
@@ -318,7 +433,7 @@ export class Curriculum implements OnInit {
 
   guardarEnBD(): void {
 
-    if (this.guardando) return;
+    if (this.guardando || !this.esEstudiante) return;
 
     if (!this.curriculum.datosPersonales.nombre || !this.curriculum.datosPersonales.cedula) {
 
@@ -421,7 +536,6 @@ export class Curriculum implements OnInit {
     }).subscribe({
 
       next: () => {
-        this.cargarCvReal();
         finalizar();
       },
 

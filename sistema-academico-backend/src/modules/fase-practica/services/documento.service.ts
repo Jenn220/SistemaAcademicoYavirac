@@ -3,6 +3,7 @@ import { Inject } from '@nestjs/common';
 import { DOCUMENTO_REPOSITORY, IDocumentoRepository } from '../ports/documento.repository.port';
 import { DocumentoEntity } from '../domain/documento.entity';
 import { DocumentoPlantillaService } from './documento-plantilla.service';
+import { NotificacionService } from './notificacion.service';
 
 @Injectable()
 export class DocumentoService {
@@ -10,14 +11,26 @@ export class DocumentoService {
     @Inject(DOCUMENTO_REPOSITORY)
     private readonly documentoRepository: IDocumentoRepository,
     private readonly plantillaService: DocumentoPlantillaService,
+    private readonly notificacionService: NotificacionService,
   ) {}
 
   async guardarDocumento(
     codigo: string,
     titulo: string,
     contenido: any,
+    idPractica?: number,
+    idEstudiante?: number,
+    idUsuario?: number,
+    estado?: string,
   ): Promise<DocumentoEntity> {
-    return this.documentoRepository.guardarDocumento(codigo, titulo, contenido);
+    try {
+      const documento = await this.documentoRepository.guardarDocumento(codigo, titulo, contenido, idPractica, idEstudiante, idUsuario, estado);
+      console.log('Documento guardado', { codigo, idPractica, idDocumento: documento.id_documento });
+      return documento;
+    } catch (error: any) {
+      console.error('Error guardando documento', { codigo, idPractica, error: error?.message || error });
+      throw error;
+    }
   }
 
   getDatosMaestra(usuario: any, idPractica?: number) {

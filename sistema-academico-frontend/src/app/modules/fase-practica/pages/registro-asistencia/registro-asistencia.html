@@ -13,6 +13,17 @@
     </button>
 
     <button
+        class="btn btn-primary"
+        (click)="descargarWord()">
+
+        <i class="bi bi-file-earmark-word-fill"></i>
+
+        Descargar Word
+
+    </button>
+
+    @if (esEstudiante) {
+    <button
         class="btn btn-success"
         *ngIf="!editando"
         (click)="agregarRegistro()">
@@ -44,16 +55,7 @@
         Cancelar
 
     </button>
-
-    <button
-        class="btn btn-primary"
-        (click)="descargarWord()">
-
-        <i class="bi bi-file-earmark-word-fill"></i>
-
-        Descargar Word
-
-    </button>
+    }
 
 </div>
 
@@ -63,154 +65,26 @@
 
     <app-document-header
         [titulo]="'FORMATO 05 ACTA DE ASISTENCIA'"
-        [codigo]="'010205'">
+        [codigo]="'010205'"
+        [estudianteNombre]="registro.estudiante.nombre"
+        [estudianteCedula]="registro.estudiante.cedula"
+        [carrera]="registro.carrera"
+        [nivel]="registro.curso"
+        [periodo]="registro.periodoAcademico"
+        [nucleo]="registro.nucleoEstructurante"
+        [tutorAcademico]="registro.tutorAcademico"
+        [tutorEmpresarial]="registro.tutorEmpresarial"
+        [empresa]="registro.empresa"
+        [proyecto]="''"
+        [cobertura]="''"
+        [plazo]="''"
+        [fechaInicio]="''"
+        [fechaFin]="''"
+        [telefonoEmergenciaNombre]="registro.contactoEmergenciaNombre"
+        [telefonoEmergenciaTelefono]="registro.contactoEmergenciaTelefono">
     </app-document-header>
 
     <div class="contenido">
-
-        <table class="datos-estudiante">
-
-            <tr>
-
-                <td>
-
-                    <strong>Empresa Formadora:</strong>
-
-                    {{ registro.empresa }}
-
-                </td>
-
-                <td>
-
-                    <strong>Carrera:</strong>
-
-                    {{ registro.carrera }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Tutor(a) Académico:</strong>
-
-                    {{ registro.tutorAcademico }}
-
-                </td>
-
-                <td>
-
-                    <strong>Período Académico:</strong>
-
-                    {{ registro.periodoAcademico }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Tutor(a) Empresarial:</strong>
-
-                    {{ registro.tutorEmpresarial }}
-
-                </td>
-
-                <td>
-
-                    <strong>Nivel:</strong>
-
-                    {{ registro.curso }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Nombre del Estudiante:</strong>
-
-                    {{ registro.estudiante.nombre }}
-
-                </td>
-
-                <td>
-
-                    <strong>Núcleo Estructurante:</strong>
-
-                    {{ registro.nucleoEstructurante }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>E-mail Institucional:</strong>
-
-                    {{ registro.estudiante.email }}
-
-                </td>
-
-                <td>
-
-                    <strong>Teléfono de Emergencia:</strong>
-
-                    {{ registro.contactoEmergenciaTelefono }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Teléfono / Móvil:</strong>
-
-                    {{ registro.estudiante.telefono }}
-
-                </td>
-
-                <td>
-
-                    <strong>Contacto de Emergencia:</strong>
-
-                    {{ registro.contactoEmergenciaNombre }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Cédula:</strong>
-
-                    {{ registro.estudiante.cedula }}
-
-                </td>
-
-                <td>
-
-                    <strong>Tipo de Sangre:</strong>
-
-                    {{ registro.estudiante.tipoSangre }}
-
-                </td>
-
-            </tr>
-
-        </table>
 
         <table class="tabla-asistencia">
 
@@ -239,55 +113,51 @@
 
                     <td>{{ i + 1 }}</td>
                     <td>
-                      @if(editando){
+                      @if(esEstudiante && editando){
                         <input type="date" class="form-control form-control-sm" [(ngModel)]="item.fecha" />
                       } @else {
                         {{item.fecha}}
                       }
                     </td>
                     <td>
-                      @if(editando){
+                      @if(esEstudiante && editando){
                         <input type="time" class="form-control form-control-sm" [(ngModel)]="item.horaIngreso" />
                       } @else {
                         {{item.horaIngreso}}
                       }
                     </td>
                     <td>
-                      @if(editando){
+                      @if(esEstudiante && editando){
                         <input type="time" class="form-control form-control-sm" [(ngModel)]="item.almuerzo" />
                       } @else {
                         {{item.almuerzo}}
                       }
                     </td>
                     <td>
-                      @if(editando){
+                      @if(esEstudiante && editando){
                         <input type="time" class="form-control form-control-sm" [(ngModel)]="item.horaSalida" />
                       } @else {
                         {{item.horaSalida}}
                       }
                     </td>
                     <td>
-                      @if(editando){
-                        <input type="number" class="form-control form-control-sm" [(ngModel)]="item.horasDia" />
+                      @if(esEstudiante && editando){
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="item.horasDia" min="0" max="10" />
                       } @else {
                         {{item.horasDia}}
                       }
                     </td>
                     <td>
-                      @if(editando){
-                        <input type="text" class="form-control form-control-sm" [(ngModel)]="item.firma" />
-                      } @else {
-                        {{item.firma}}
-                      }
+                      &nbsp;
                     </td>
                     <td>
-                      @if(editando){
+                      @if(esEstudiante && editando){
                         <input type="text" class="form-control form-control-sm" [(ngModel)]="item.observaciones" />
                       } @else {
                         {{item.observaciones}}
                       }
                     </td>
-                    <td *ngIf="editando">
+                    <td *ngIf="esEstudiante && editando">
                       <button class="btn btn-sm btn-danger" (click)="eliminarRegistro(i)">
                         <i class="bi bi-trash"></i>
                       </button>

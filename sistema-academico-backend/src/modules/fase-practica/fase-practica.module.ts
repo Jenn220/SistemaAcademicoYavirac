@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TutorEmpresarialEntity } from './domain/tutor-empresarial.entity';
 import { NucleoEstructuranteEntity } from './domain/nucleo-estructurante.entity';
+import { NotificacionEntity } from './domain/notificacion.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PracticaController } from './controllers/practica.controller';
 import { EmpresaController } from './controllers/empresa.controller';
@@ -17,6 +18,7 @@ import { PlanMarcoController } from './controllers/plan-marco.controller';
 import { ItemPlanMarcoController } from './controllers/item-plan-marco.controller';
 import { PerfilEstudianteController } from './controllers/perfil-estudiante.controller';
 import { EvaluacionPlanMarcoController } from './controllers/evaluacion-plan-marco.controller';
+import { NotificacionController } from './controllers/notificacion.controller';
 import { BitacoraSemanalEntity } from './domain/bitacora-semanal.entity';
 import { CvDatoAcademicoEntity } from './domain/cv-dato-academico.entity';
 import { CvExperienciaLaboralEntity } from './domain/cv-experiencia-laboral.entity';
@@ -57,6 +59,7 @@ import { PlanRotacionSemanaService } from './services/plan-rotacion-semana.servi
 import { PlanMarcoService } from './services/plan-marco.service';
 import { ItemPlanMarcoService } from './services/item-plan-marco.service';
 import { EvaluacionPlanMarcoService } from './services/evaluacion-plan-marco.service';
+import { NotificacionService } from './services/notificacion.service';
 import { InformeFasePracticaPg } from './adapters/informe-fase-practica.pg';
 import {
   INFORME_FASE_PRACTICA_REPOSITORY,
@@ -98,6 +101,8 @@ import { DETALLE_EVALUACION_REPOSITORY } from './ports/detalle-evaluacion.reposi
 import { DetalleEvaluacionPg } from './adapters/detalle-evaluacion.pg';
 import { ITEM_RUBRICA_REPOSITORY } from './ports/item-rubrica.repository.port';
 import { ItemRubricaPg } from './adapters/item-rubrica.pg';
+import { NOTIFICACION_REPOSITORY } from './ports/notificacion.repository.port';
+import { NotificacionPg } from './adapters/notificacion.pg';
 
 @Module({
   imports: [
@@ -123,6 +128,7 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       ItemRubricaEntity,
       TutorEmpresarialEntity,
       NucleoEstructuranteEntity,
+      NotificacionEntity,
     ]),
   ],
   controllers: [
@@ -141,6 +147,7 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       ItemPlanMarcoController,
       PerfilEstudianteController,
       EvaluacionPlanMarcoController,
+      NotificacionController,
   ],
   providers: [
     PracticaService,
@@ -248,6 +255,11 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
     EvaluacionCalculoService,
     EvaluacionEmpresaService,
     EvaluacionInstitutoService,
+    NotificacionService,
+    {
+      provide: NOTIFICACION_REPOSITORY,
+      useClass: NotificacionPg,
+    },
   ],
 })
 export class FasePracticaModule {}
