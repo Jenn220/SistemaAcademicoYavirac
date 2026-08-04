@@ -7,19 +7,23 @@ export class CreateAsistenciaTutorDto {
 
   @IsDateString()
   @IsNotEmpty()
-  fecha: string; // Formato esperado por Postgres: 'YYYY-MM-DD'
+  fecha: string;
 
   @IsString()
   @IsNotEmpty()
-  hora_inicio: string; // Formato esperado: 'HH:MM:SS' o 'HH:MM'
+  hora_inicio: string;
 
   @IsString()
   @IsNotEmpty()
-  hora_fin: string; // Formato esperado: 'HH:MM:SS' o 'HH:MM'
+  hora_fin: string;
 
   @IsNumber()
+  @IsOptional() // 🟢 Opcional: el servicio recalcula automáticamente las horas
+  horas_total?: number;
+
+  @IsString()
   @IsNotEmpty()
-  horas_total: number; // Acepta decimales, ej: 2.50
+  actividad_realizada: string;
 
   @IsString()
   @IsOptional()
