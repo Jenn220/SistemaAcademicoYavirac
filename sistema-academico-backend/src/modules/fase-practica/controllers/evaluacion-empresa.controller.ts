@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { EvaluacionEmpresaService } from '../services/evaluacion-empresa.service';
 import { EvaluacionCalculoService } from '../services/evaluacion-calculo.service';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
@@ -14,8 +14,8 @@ export class EvaluacionEmpresaController {
 
   @Post('evaluaciones-empresa')
   @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  create(@Body() dto: CreateEvaluacionEmpresaDto) {
-    return this.service.create(dto);
+  create(@Req() req: any, @Body() dto: CreateEvaluacionEmpresaDto) {
+    return this.service.create(req.user, dto);
   }
 
   @Get('evaluaciones-empresa/practica/:idPractica')
@@ -32,14 +32,14 @@ export class EvaluacionEmpresaController {
 
   @Patch('evaluaciones-empresa/:id')
   @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  update(@Param('id') id: string, @Body() dto: UpdateEvaluacionEmpresaDto) {
-    return this.service.update(Number(id), dto);
+  update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateEvaluacionEmpresaDto) {
+    return this.service.update(req.user, Number(id), dto);
   }
 
   @Delete('evaluaciones-empresa/:id')
   @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  remove(@Param('id') id: string) {
-    return this.service.remove(Number(id)).then(() => ({ deleted: true, id: Number(id) }));
+  remove(@Req() req: any, @Param('id') id: string) {
+    return this.service.remove(req.user, Number(id)).then(() => ({ deleted: true, id: Number(id) }));
   }
 
   @Post('evaluaciones-empresa/:id/calcular')

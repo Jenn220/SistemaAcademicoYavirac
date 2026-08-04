@@ -88,8 +88,9 @@ export class PracticaController {
   }
 
   @Post('registro-diario')
-  createRegistroDiario(@Body() dto: CreateRegistroDiarioDto) {
-    return this.practicaService.createRegistroDiario(dto);
+  @Roles('ESTUDIANTE')
+  createRegistroDiario(@Req() req: any, @Body() dto: CreateRegistroDiarioDto) {
+    return this.practicaService.createRegistroDiario(req.user, dto);
   }
 
   @Get('registro-diario/practica/:id')
@@ -98,13 +99,15 @@ export class PracticaController {
   }
 
   @Patch('registro-diario/:id')
-  updateRegistroDiario(@Param('id') id: string, @Body() dto: UpdateRegistroDiarioDto) {
-    return this.practicaService.updateRegistroDiario(Number(id), dto);
+  @Roles('ESTUDIANTE')
+  updateRegistroDiario(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateRegistroDiarioDto) {
+    return this.practicaService.updateRegistroDiario(req.user, Number(id), dto);
   }
 
   @Delete('registro-diario/:id')
-  removeRegistroDiario(@Param('id') id: string) {
-    return this.practicaService.removeRegistroDiario(Number(id)).then(() => ({
+  @Roles('ESTUDIANTE')
+  removeRegistroDiario(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.removeRegistroDiario(req.user, Number(id)).then(() => ({
       deleted: true,
       id_registro_diario: Number(id),
     }));
@@ -115,8 +118,8 @@ export class PracticaController {
   // para que DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL puedan verlo.
   @Post('plan-rotacion')
   @Roles('ESTUDIANTE')
-  createPlanRotacion(@Body() dto: CreatePlanRotacionDto) {
-    return this.practicaService.createPlanRotacion(dto);
+  createPlanRotacion(@Req() req: any, @Body() dto: CreatePlanRotacionDto) {
+    return this.practicaService.createPlanRotacion(req.user, dto);
   }
 
   @Get('plan-rotacion/practica/:id')
@@ -127,14 +130,14 @@ export class PracticaController {
 
   @Patch('plan-rotacion/:id')
   @Roles('ESTUDIANTE')
-  updatePlanRotacion(@Param('id') id: string, @Body() dto: UpdatePlanRotacionDto) {
-    return this.practicaService.updatePlanRotacion(Number(id), dto);
+  updatePlanRotacion(@Req() req: any, @Param('id') id: string, @Body() dto: UpdatePlanRotacionDto) {
+    return this.practicaService.updatePlanRotacion(req.user, Number(id), dto);
   }
 
   @Delete('plan-rotacion/:id')
   @Roles('ESTUDIANTE')
-  removePlanRotacion(@Param('id') id: string) {
-    return this.practicaService.removePlanRotacion(Number(id)).then(() => ({
+  removePlanRotacion(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.removePlanRotacion(req.user, Number(id)).then(() => ({
       deleted: true,
       id_plan_rotacion: Number(id),
     }));
@@ -146,8 +149,8 @@ export class PracticaController {
   // consultan (GET queda abierto a los 4 roles de la clase).
   @Post('informe-aprendizaje')
   @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
-  createInformeAprendizaje(@Body() dto: CreateInformeAprendizajeDto) {
-    return this.practicaService.createInformeAprendizaje(dto);
+  createInformeAprendizaje(@Req() req: any, @Body() dto: CreateInformeAprendizajeDto) {
+    return this.practicaService.createInformeAprendizaje(req.user, dto);
   }
 
   @Get('informe-aprendizaje/practica/:id')
@@ -157,22 +160,23 @@ export class PracticaController {
 
   @Patch('informe-aprendizaje/:id')
   @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
-  updateInformeAprendizaje(@Param('id') id: string, @Body() dto: UpdateInformeAprendizajeDto) {
-    return this.practicaService.updateInformeAprendizaje(Number(id), dto);
+  updateInformeAprendizaje(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateInformeAprendizajeDto) {
+    return this.practicaService.updateInformeAprendizaje(req.user, Number(id), dto);
   }
 
   @Delete('informe-aprendizaje/:id')
   @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
-  removeInformeAprendizaje(@Param('id') id: string) {
-    return this.practicaService.removeInformeAprendizaje(Number(id)).then(() => ({
+  removeInformeAprendizaje(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.removeInformeAprendizaje(req.user, Number(id)).then(() => ({
       deleted: true,
       id_informe: Number(id),
     }));
   }
 
   @Post('evaluacion')
-  createEvaluacion(@Body() dto: CreateEvaluacionPracticaDto) {
-    return this.practicaService.createEvaluacionPractica(dto);
+  @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
+  createEvaluacion(@Req() req: any, @Body() dto: CreateEvaluacionPracticaDto) {
+    return this.practicaService.createEvaluacionPractica(req.user, dto);
   }
 
   @Get('evaluacion/practica/:id')
@@ -181,13 +185,15 @@ export class PracticaController {
   }
 
   @Patch('evaluacion/:id')
-  updateEvaluacion(@Param('id') id: string, @Body() dto: UpdateEvaluacionPracticaDto) {
-    return this.practicaService.updateEvaluacionPractica(Number(id), dto);
+  @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
+  updateEvaluacion(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateEvaluacionPracticaDto) {
+    return this.practicaService.updateEvaluacionPractica(req.user, Number(id), dto);
   }
 
   @Delete('evaluacion/:id')
-  removeEvaluacion(@Param('id') id: string) {
-    return this.practicaService.removeEvaluacionPractica(Number(id)).then(() => ({
+  @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
+  removeEvaluacion(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.removeEvaluacionPractica(req.user, Number(id)).then(() => ({
       deleted: true,
       id_evaluacion: Number(id),
     }));
@@ -195,8 +201,8 @@ export class PracticaController {
 
   @Post('bitacora-semanal')
   @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
-  createBitacoraSemanal(@Body() dto: CreateBitacoraSemanalDto) {
-    return this.practicaService.createBitacoraSemanal(dto);
+  createBitacoraSemanal(@Req() req: any, @Body() dto: CreateBitacoraSemanalDto) {
+    return this.practicaService.createBitacoraSemanal(req.user, dto);
   }
 
   @Get('bitacora-semanal/informe/:id')
@@ -206,20 +212,21 @@ export class PracticaController {
 
   @Patch('bitacora-semanal/:id')
   @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
-  updateBitacoraSemanal(@Param('id') id: string, @Body() dto: UpdateBitacoraSemanalDto) {
-    return this.practicaService.updateBitacoraSemanal(Number(id), dto);
+  updateBitacoraSemanal(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateBitacoraSemanalDto) {
+    return this.practicaService.updateBitacoraSemanal(req.user, Number(id), dto);
   }
 
   @Delete('bitacora-semanal/:id')
   @Roles('ESTUDIANTE', 'TUTOR_EMPRESARIAL')
-  removeBitacoraSemanal(@Param('id') id: string) {
-    return this.practicaService.removeBitacoraSemanal(Number(id)).then(() => ({
+  removeBitacoraSemanal(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.removeBitacoraSemanal(req.user, Number(id)).then(() => ({
       deleted: true,
       id_bitacora: Number(id),
     }));
   }
 
   @Post('rubrica')
+  @Roles('DOCENTE')
   createRubrica(@Body() dto: CreateRubricaDto) {
     return this.practicaService.createRubrica(dto);
   }
@@ -230,11 +237,13 @@ export class PracticaController {
   }
 
   @Patch('rubrica/:id')
+  @Roles('DOCENTE')
   updateRubrica(@Param('id') id: string, @Body() dto: UpdateRubricaDto) {
     return this.practicaService.updateRubrica(Number(id), dto);
   }
 
   @Delete('rubrica/:id')
+  @Roles('DOCENTE')
   removeRubrica(@Param('id') id: string) {
     return this.practicaService.removeRubrica(Number(id)).then(() => ({
       deleted: true,

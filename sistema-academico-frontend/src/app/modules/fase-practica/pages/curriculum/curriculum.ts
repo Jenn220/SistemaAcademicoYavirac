@@ -143,12 +143,12 @@ export class Curriculum implements OnInit {
         domicilio: dp.domicilio || datosEstudiante.domicilio || '',
         emailInstitucional: dp.emailInstitucional || datosEstudiante.email || ''
       },
-      datosAcademicos: da?.institucion ? [{
+      datosAcademicos: (da || []).map((item: any) => ({
         anio: '',
-        institucion: da.institucion ?? '',
-        tituloMencion: da.carrera ?? '',
-        notaFinal: da.promedio ?? ''
-      }] : [],
+        institucion: item.institucion ?? '',
+        tituloMencion: item.carrera ?? '',
+        notaFinal: item.promedio ?? ''
+      })),
       experienciaLaboral: experiencia.map((item) => ({
         anio: item.periodo ?? '',
         institucion: item.empresa ?? '',

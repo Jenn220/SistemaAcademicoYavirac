@@ -197,15 +197,15 @@ import { NotificacionPg } from './adapters/notificacion.pg';
       useClass: RubricaPg,
     },
     ItemRubricaService,
-    {
-      provide: ITEM_RUBRICA_REPOSITORY,
-      useClass: ItemRubricaPg,
-    },
-    DetalleEvaluacionService,
-    {
-      provide: DETALLE_EVALUACION_REPOSITORY,
-      useClass: DetalleEvaluacionPg,
-    },
+     {
+       provide: ITEM_RUBRICA_REPOSITORY,
+       useClass: ItemRubricaPg,
+     },
+      {
+        provide: DETALLE_EVALUACION_REPOSITORY,
+        useClass: DetalleEvaluacionPg,
+      },
+      DetalleEvaluacionService,
       PlanRotacionSemanaService,
       {
         provide: PLAN_ROTACION_SEMANA_REPOSITORY,
@@ -243,14 +243,6 @@ import { NotificacionPg } from './adapters/notificacion.pg';
     {
       provide: CV_PRACTICA_DUAL_REPOSITORY,
       useClass: CvPracticaDualPg,
-    },
-    {
-      provide: DETALLE_EVALUACION_REPOSITORY,
-      useClass: DetalleEvaluacionPg,
-    },
-    {
-      provide: ITEM_RUBRICA_REPOSITORY,
-      useClass: ItemRubricaPg,
     },
     EvaluacionCalculoService,
     EvaluacionEmpresaService,

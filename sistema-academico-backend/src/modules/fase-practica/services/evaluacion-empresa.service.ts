@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
 import { DetalleEvaluacionEntity } from '../domain/detalle-evaluacion.entity';
 import { ItemRubricaEntity } from '../domain/item-rubrica.entity';
@@ -17,9 +18,27 @@ export class EvaluacionEmpresaService {
     private readonly detalleRepository: Repository<DetalleEvaluacionEntity>,
     @InjectRepository(ItemRubricaEntity)
     private readonly itemRubricaRepository: Repository<ItemRubricaEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async create(dto: CreateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
+  private async esDuenoDePractica(usuario: any, idPractica: number): Promise<void> {
+    if (usuario.rol !== 'ESTUDIANTE') {
+      return;
+    }
+    const esDueno = await this.dataSource.query(
+      `SELECT 1 FROM matricula_detalle md
+       JOIN matricula m ON m.id_matricula = md.id_matricula
+       JOIN practica_estudiante pe ON pe.id_matricula_detalle = md.id_matricula_detalle
+       WHERE pe.id_practica = $1 AND m.id_estudiante = $2`,
+      [idPractica, usuario.id_usuario],
+    );
+    if (!esDueno || esDueno.length === 0) {
+      throw new NotFoundException('No tienes permiso para acceder a esta evaluación');
+    }
+  }
+
+  async create(usuario: any, dto: CreateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
+    await this.esDuenoDePractica(usuario, dto.id_practica);
     const evaluacion = this.evaluacionRepository.create({
       id_practica: dto.id_practica,
       id_rubrica: dto.id_evaluacion_plan_marco,
@@ -78,9 +97,11 @@ export class EvaluacionEmpresaService {
     } as EvaluacionEmpresaResponseDto;
   }
 
-  async update(id: number, dto: UpdateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
+  async update(usuario: any, id: number, dto: UpdateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
+
+    await this.esDuenoDePractica(usuario, evaluacion.id_practica);
 
     Object.assign(evaluacion, {
       nota_final_calculada: dto.calificacion,
@@ -99,9 +120,10 @@ export class EvaluacionEmpresaService {
     } as EvaluacionEmpresaResponseDto;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(usuario: any, id: number): Promise<void> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
+    await this.esDuenoDePractica(usuario, evaluacion.id_practica);
     await this.evaluacionRepository.remove(evaluacion);
   }
 }

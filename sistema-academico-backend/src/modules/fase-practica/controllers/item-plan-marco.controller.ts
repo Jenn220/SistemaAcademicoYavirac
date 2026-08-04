@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ItemPlanMarcoService } from '../services/item-plan-marco.service';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -14,8 +14,8 @@ export class ItemPlanMarcoController {
 
   @Post('plan-marco/:idPlanMarco/items')
   @Roles('ESTUDIANTE')
-  create(@Param('idPlanMarco') idPlanMarco: string, @Body() dto: CreateItemPlanMarcoDto) {
-    return this.itemPlanMarcoService.create({ ...dto, id_plan_marco: Number(idPlanMarco) });
+  create(@Req() req: any, @Param('idPlanMarco') idPlanMarco: string, @Body() dto: CreateItemPlanMarcoDto) {
+    return this.itemPlanMarcoService.create(req.user, { ...dto, id_plan_marco: Number(idPlanMarco) });
   }
 
   @Get('plan-marco/:idPlanMarco/items')
@@ -32,13 +32,13 @@ export class ItemPlanMarcoController {
 
   @Patch('items-plan-marco/:id')
   @Roles('ESTUDIANTE')
-  update(@Param('id') id: string, @Body() dto: UpdateItemPlanMarcoDto) {
-    return this.itemPlanMarcoService.update(Number(id), dto);
+  update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateItemPlanMarcoDto) {
+    return this.itemPlanMarcoService.update(req.user, Number(id), dto);
   }
 
   @Delete('items-plan-marco/:id')
   @Roles('ESTUDIANTE')
-  remove(@Param('id') id: string) {
-    return this.itemPlanMarcoService.remove(Number(id)).then(() => ({ deleted: true, id_item_pm: Number(id) }));
+  remove(@Req() req: any, @Param('id') id: string) {
+    return this.itemPlanMarcoService.remove(req.user, Number(id)).then(() => ({ deleted: true, id_item_pm: Number(id) }));
   }
 }

@@ -587,10 +587,26 @@ export class DocumentoPlantillaService {
       idPractica = undefined;
     }
 
-    if (idPractica) {
-      const guardado = await this.cargarContenidoGuardado(idPractica, 'F06');
-      if (guardado) return guardado as InformeAprendizaje;
+    if (!idPractica) {
+      return {
+        estudiante: { nombre: '', cedula: '', email: '', telefono: '', tipoSangre: '' },
+        empresa: '',
+        carrera: '',
+        curso: '',
+        periodoAcademico: '',
+        nucleoEstructurante: '',
+        tutorAcademico: '',
+        tutorEmpresarial: '',
+        contactoEmergenciaNombre: '',
+        contactoEmergenciaTelefono: '',
+        registros: [],
+        horasAutonomas: 0,
+        subtotalHorasPractica: 0
+      } as any;
     }
+
+    const guardado = await this.cargarContenidoGuardado(idPractica, 'F06');
+    if (guardado) return guardado as InformeAprendizaje;
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { empresaBeneficiaria, periodoAcademico, carrera } = datos;
@@ -610,7 +626,7 @@ export class DocumentoPlantillaService {
     };
 
     const informe = await this.informeRepository.findOne({
-      where: { id_practica: idPractica! },
+      where: { id_practica: idPractica },
     });
 
     const bitacoras = await this.bitacoraRepository.find({
@@ -646,16 +662,32 @@ export class DocumentoPlantillaService {
       idPractica = undefined;
     }
 
-    if (idPractica) {
-      const guardado = await this.cargarContenidoGuardado(idPractica, 'F07');
-      if (guardado) return guardado as EvaluacionEmpresarial;
+    if (!idPractica) {
+      return {
+        estudiante: { nombre: '', cedula: '' },
+        empresa: '',
+        tutorEmpresarial: '',
+        nivel: '',
+        cicloAcademico: '',
+        nucleoEstructurante: '',
+        carrera: '',
+        fechaInicio: '',
+        fechaFin: '',
+        criterios: [],
+        defensaProyecto: '',
+        promedioCriterios: 0,
+        notaPonderadaSobre7: 0,
+      } as any;
     }
+
+    const guardado = await this.cargarContenidoGuardado(idPractica, 'F07');
+    if (guardado) return guardado as EvaluacionEmpresarial;
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
 
     const evaluaciones = await this.evaluacionRepository.find({
-      where: { id_practica: idPractica!, tipo_evaluador: 'EMPRESA' },
+      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
     });
 
     const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
@@ -751,22 +783,37 @@ export class DocumentoPlantillaService {
       idPractica = undefined;
     }
 
-    if (idPractica) {
-      const guardado = await this.cargarContenidoGuardado(idPractica, 'F08');
-      if (guardado) return guardado as EvaluacionInstituto;
+    if (!idPractica) {
+      return {
+        estudiante: { nombre: '', cedula: '' },
+        empresa: '',
+        tutorEmpresarial: '',
+        nivel: '',
+        cicloAcademico: '',
+        nucleoEstructurante: '',
+        carrera: '',
+        fechaInicio: '',
+        fechaFin: '',
+        criterios: [],
+        defensaProyecto: '',
+        promedioCriterios: 0,
+        notaPonderadaSobre7: 0,
+        notaFinalConsolidada: 0,
+      } as any;
     }
+
+    const guardado = await this.cargarContenidoGuardado(idPractica, 'F08');
+    if (guardado) return guardado as EvaluacionInstituto;
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
 
     const evaluaciones = await this.evaluacionRepository.find({
-      where: { id_practica: idPractica!, tipo_evaluador: 'INSTITUTO' },
+      where: { id_practica: idPractica, tipo_evaluador: 'INSTITUTO' },
     });
 
-    // EI-05: la nota de empresa debe venir de la evaluación tipo EMPRESA, no
-    // de un promedio de las evaluaciones INSTITUTO (bug detectado en QA).
     const evaluacionesEmpresa = await this.evaluacionRepository.find({
-      where: { id_practica: idPractica!, tipo_evaluador: 'EMPRESA' },
+      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
     });
     const evaluacionEmpresaPrincipal = evaluacionesEmpresa[0];
     // TypeORM devuelve las columnas numeric como string: sin el Number(...)

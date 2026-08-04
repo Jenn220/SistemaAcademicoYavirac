@@ -141,16 +141,7 @@ export class PlanMarco implements OnInit {
       datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
     }).subscribe({
 
-<<<<<<< HEAD
-      next: ({ practica, planes, datos }: { practica: PracticaSelector | null; planes: PlanMarcoFormacion[]; datos: Record<string, any> }) => {
-
-        const datosEstudiante = datos?.['estudiante'] ?? {};
-        const datosCarrera = datos?.['carrera'] ?? {};
-        const datosPeriodo = datos?.['periodoAcademico'] ?? {};
-        const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
-=======
       next: ({ practica, planes, datos }) => {
->>>>>>> feature/fase-practica-front
 
         if (practica) {
           this.encabezado.empresaFormadora = practica.empresa?.razon_social ?? '';
@@ -160,10 +151,6 @@ export class PlanMarco implements OnInit {
             : '';
         }
 
-        // El resto del encabezado (estudiante, carrera, nivel, período,
-        // núcleo estructurante, tutor académico) no vive en PracticaSelector
-        // — se completa con /documentos/datos, igual que el resto de
-        // formatos del módulo (curriculum, informe-aprendizaje, etc.).
         const datosEstudiante = datos?.['estudiante'] ?? {};
         const datosCarrera = datos?.['carrera'] ?? {};
         const datosPeriodo = datos?.['periodoAcademico'] ?? {};

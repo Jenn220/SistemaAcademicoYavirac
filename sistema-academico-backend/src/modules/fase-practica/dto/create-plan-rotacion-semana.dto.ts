@@ -1,9 +1,8 @@
-import { IsNumber, Min, IsOptional } from 'class-validator';
+import { IsNumber, Min } from 'class-validator';
 
 export class CreatePlanRotacionSemanaDto {
-  @IsOptional()
   @IsNumber()
-  id_plan_rotacion?: number;
+  id_plan_rotacion: number;
 
   @IsNumber()
   @Min(1)

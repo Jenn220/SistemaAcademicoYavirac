@@ -1,9 +1,8 @@
 import { IsNumber, IsOptional, IsString, MaxLength, Max } from 'class-validator';
 
 export class CreateDetalleEvaluacionDto {
-  @IsOptional()
   @IsNumber()
-  id_evaluacion?: number;
+  id_evaluacion!: number;
 
   @IsNumber()
   id_item!: number;

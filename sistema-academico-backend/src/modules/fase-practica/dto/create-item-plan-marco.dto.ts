@@ -1,9 +1,8 @@
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateItemPlanMarcoDto {
-  @IsOptional()
   @IsInt()
-  id_plan_marco?: number;
+  id_plan_marco: number;
 
   @IsString()
   resultado_aprendizaje: string;
