@@ -118,8 +118,8 @@ export class CartaCompromiso implements OnInit {
           compromisosConfidencialidad: res?.['compromisosConfidencialidad'] ?? [],
           cierre: res?.['cierre'] ?? [],
           estudiante: {
-            nombre: estudiante.nombre ?? '',
-            cedula: estudiante.cedula ?? '',
+            nombre: datosEstudiante.nombre ?? estudiante.nombre ?? '',
+            cedula: datosEstudiante.cedula ?? estudiante.cedula ?? '',
             carrera: estudiante.carrera ?? datosEstudiante.carrera ?? '',
             curso: estudiante.curso ?? datosEstudiante.curso ?? ''
           },
