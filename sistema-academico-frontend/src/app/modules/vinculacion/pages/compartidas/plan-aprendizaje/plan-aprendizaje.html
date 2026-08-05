@@ -1,0 +1,78 @@
+<div class="container" *ngIf="!loading && !error && data">
+  <!-- Cabecera -->
+  <div class="cabecera">
+    <h2>PLAN DE APRENDIZAJE Y SEGUIMIENTO</h2>
+    <div class="datos">
+      <p><strong>Fundación:</strong> {{ data.cabecera.fundacion }}</p>
+      <p><strong>Estudiante:</strong> {{ data.cabecera.estudiante }}</p>
+      <p><strong>Cédula:</strong> {{ data.cabecera.cedula }}</p>
+      <p><strong>Nivel:</strong> {{ data.cabecera.nivel }}</p>
+      <p><strong>Asignatura 1:</strong> {{ data.cabecera.asignatura_1 }}</p>
+      <p><strong>Asignatura 2:</strong> {{ data.cabecera.asignatura_2 }}</p>
+      <p><strong>Ciclo:</strong> {{ data.cabecera.ciclo_academico }}</p>
+      <p><strong>Inicia:</strong> {{ data.cabecera.inicia }}</p>
+      <p><strong>Finaliza:</strong> {{ data.cabecera.finaliza }}</p>
+      <p><strong>Docente Tutor:</strong> {{ data.cabecera.docente_tutor }}</p>
+      <p><strong>Proyecto:</strong> {{ data.cabecera.titulo_proyecto }}</p>
+    </div>
+  </div>
+
+  <!-- Tabla de actividades -->
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>SEMANA</th>
+        <th>FECHA</th>
+        <th>ACTIVIDADES</th>
+        <th>RESULTADOS DEL APRENDIZAJE</th>
+        <th *ngIf="isEstudiante">ACCIÓN</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let act of data.informe_actividades; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ act.fecha }}</td>
+        <td>{{ act.actividad }}</td>
+        <td>
+          <span *ngIf="editandoIndice !== i">{{ act.resultado_aprendizaje }}</span>
+          <textarea *ngIf="editandoIndice === i" [(ngModel)]="resultadoEdit" rows="2" class="textarea-edit"></textarea>
+        </td>
+        <td *ngIf="isEstudiante">
+          <ng-container *ngIf="editandoIndice !== i">
+            <button (click)="editarResultado(i)" class="btn-edit">✏️</button>
+          </ng-container>
+          <ng-container *ngIf="editandoIndice === i">
+            <button (click)="guardarResultado(i)" class="btn-save">💾</button>
+            <button (click)="cancelarEdicion()" class="btn-cancel">❌</button>
+          </ng-container>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Reflexión -->
+  <div class="reflexion">
+    <p><strong>Reflexión sobre el aprendizaje alcanzado:</strong></p>
+    <p>{{ reflexion }}</p>
+  </div>
+
+  <!-- Avance de proyecto (solo lectura) -->
+  <div class="avance">
+    <h4>Avance del proyecto</h4>
+    <ul>
+      <li>1. Título del Proyecto (10%) - 10%</li>
+      <li>2. Antecedentes (10%) - 10%</li>
+      <li>3. Marco Teórico (10%) - 10%</li>
+      <li>4. Metodología (10%) - 10%</li>
+      <li>5. Resultados (10%) - 10%</li>
+      <li>6. Conclusiones y recomendaciones (10%) - 10%</li>
+      <li>7. Referencias bibliográficas (10%) - 10%</li>
+      <li>8. Anexos (10%) - 10%</li>
+      <li>9. Entrega de proyecto final (20%) - 20%</li>
+    </ul>
+    <p><strong>Total:</strong> 100%</p>
+  </div>
+</div>
+
+<div class="loading" *ngIf="loading">Cargando...</div>
+<div class="error" *ngIf="error">{{ error }}</div>

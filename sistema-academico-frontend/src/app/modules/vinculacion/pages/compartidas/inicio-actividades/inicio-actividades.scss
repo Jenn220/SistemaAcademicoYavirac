@@ -1,0 +1,134 @@
+.inicio-actividades-container {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.documento {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 48px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #edf2fb;
+}
+
+.encabezado {
+  text-align: center;
+  border-bottom: 2px solid #163d8c;
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+
+  .logo img {
+    max-height: 80px;
+    margin-bottom: 16px;
+  }
+
+  .titulo {
+    h1 {
+      font-size: 18px;
+      color: #163d8c;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    h2 {
+      font-size: 16px;
+      color: #ff7b22;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+}
+
+.contenido {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #2d3748;
+
+  .seccion {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #f9fbff;
+    border-radius: 8px;
+    border-left: 4px solid #163d8c;
+
+    p {
+      margin: 8px 0;
+    }
+
+    strong {
+      color: #163d8c;
+    }
+  }
+
+  .datos-adicionales {
+    background: #f0f4fc;
+    border-left-color: #ff7b22;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+  }
+
+  .anexos {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-left-color: #163d8c;
+
+    h3 {
+      font-size: 15px;
+      color: #163d8c;
+      margin: 0 0 16px;
+    }
+
+    .anexos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+
+      .anexo-item {
+        text-align: center;
+
+        .placeholder-imagen {
+          background: #f0f4fc;
+          border: 1px dashed #b0c4de;
+          border-radius: 8px;
+          height: 150px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #8a95a8;
+          font-size: 13px;
+          margin-bottom: 8px;
+        }
+
+        p {
+          font-size: 13px;
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  .firma {
+    background: #fff;
+    border: none;
+    text-align: right;
+    margin-top: 40px;
+    padding: 16px 0 0;
+    border-top: 1px solid #e2e8f0;
+
+    p {
+      margin: 4px 0;
+    }
+
+    strong {
+      color: #163d8c;
+    }
+  }
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  color: #5e6f88;
+}
