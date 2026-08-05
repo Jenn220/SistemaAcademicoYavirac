@@ -10,6 +10,12 @@ export class PlanRotacionSemanaEntity {
   @Column({ name: 'id_plan_rotacion', type: 'bigint' })
   id_plan_rotacion!: number;
 
+  @Column({ name: 'id_item_pm', type: 'bigint', nullable: true })
+  id_item_pm?: number;
+
   @Column({ name: 'semana', type: 'int' })
   semana!: number;
+
+  @Column({ name: 'es_defensa_proyecto', type: 'boolean', nullable: true })
+  es_defensa_proyecto?: boolean;
 }

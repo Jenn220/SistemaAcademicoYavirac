@@ -1125,8 +1125,9 @@ export class DocumentoPlantillaService {
          JOIN nivel n ON n.id_nivel = a.id_nivel
          JOIN practica_estudiante p ON p.id_matricula_detalle = md.id_matricula_detalle
          WHERE m.id_carrera = $1 AND m.id_periodo = $2 AND m.estado = 'ACTIVA'
+           AND m.id_estudiante = $3
          ORDER BY e.apellidos, e.nombres`,
-        [idCarrera, idPeriodo],
+        [idCarrera, idPeriodo, idEstudiante],
       );
 
       const estudiantesConNota = await Promise.all(

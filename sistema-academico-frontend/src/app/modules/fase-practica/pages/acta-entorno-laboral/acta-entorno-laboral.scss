@@ -90,3 +90,21 @@
         padding: 0;
     }
 }
+
+.formulario-companero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.formulario-companero input {
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.formulario-companero button {
+    padding: 6px 12px;
+}

@@ -5,6 +5,7 @@ import {
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -23,9 +24,15 @@ function actaEntornoVacia(): ActaEntornoLaboral {
       instituto: 'INSTITUTO TÉCNICO YAVIRAC',
       titulo: 'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL',
       fecha: '',
+      estudianteNombre: '',
+      estudianteCedula: '',
       carrera: '',
+      nivel: '',
       periodoAcademico: '',
-      entidadReceptora: ''
+      entidadReceptora: '',
+      tutorAcademico: '',
+      coordinador: '',
+      tutorEmpresarial: ''
     },
     textoLegal: [],
     anexos: [
@@ -48,7 +55,7 @@ function actaEntornoVacia(): ActaEntornoLaboral {
 @Component({
   selector: 'app-acta-entorno-laboral',
   standalone: true,
-  imports: [CommonModule, DocumentHeader],
+  imports: [CommonModule, FormsModule, DocumentHeader],
   templateUrl: './acta-entorno-laboral.html',
   styleUrl: './acta-entorno-laboral.scss'
 })
@@ -64,6 +71,8 @@ export class ActaEntornoLaboralPage implements OnInit {
   guardando = false;
   soloLectura = false;
   idPractica: number | undefined;
+  mostrarFormularioCompanero = false;
+  nuevoCompanero: { nombre: string; cedula: string; nivel: string } = { nombre: '', cedula: '', nivel: '' };
 
   ngOnInit(): void {
     const usuario = this.auth.usuario();
@@ -102,11 +111,7 @@ export class ActaEntornoLaboralPage implements OnInit {
 
       next: ({ acta, datos }) => {
 
-        if (acta && acta.estudiantes?.length) {
-          this.acta = acta;
-        } else {
-          this.completarConDatosMaestra(acta, datos);
-        }
+        this.completarConDatosMaestra(acta, datos);
         this.cdr.detectChanges();
 
       },
@@ -166,14 +171,25 @@ export class ActaEntornoLaboralPage implements OnInit {
     const datosPeriodo = datos?.['periodoAcademico'] ?? {};
     const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
 
+    console.log('datosMaestra en acta-entorno-laboral:', datos);
+    console.log('datosEstudiante:', datosEstudiante);
+    console.log('datosCarrera:', datosCarrera);
+    console.log('datosPeriodo:', datosPeriodo);
+    console.log('datosEmpresa:', datosEmpresa);
+
     this.acta = {
       ...acta,
       encabezado: {
         ...acta.encabezado,
-        fecha: acta.encabezado.fecha || new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
+        estudianteNombre: datosEstudiante.nombre ?? '',
+        estudianteCedula: datosEstudiante.cedula ?? '',
         carrera: datosEstudiante.carrera ?? datosCarrera.nucleoEstructurante ?? '',
+        nivel: datosEstudiante.nivel ?? '',
         periodoAcademico: datosPeriodo.nombre ?? '',
-        entidadReceptora: datosEmpresa.razonSocial ?? ''
+        entidadReceptora: datosEmpresa.razonSocial ?? '',
+        tutorAcademico: datosCarrera.tutorAcademico ?? '',
+        coordinador: datosCarrera.coordinador ?? '',
+        tutorEmpresarial: datosEmpresa.tutorEmpresarial ?? ''
       },
       textoLegal: acta.textoLegal?.length ? acta.textoLegal : [
         'Por medio de la presente se deja constancia de que la estudiante ha cumplido con el programa de formación práctica en el entorno laboral real, de acuerdo con los objetivos y actividades programadas.',
@@ -186,6 +202,7 @@ export class ActaEntornoLaboralPage implements OnInit {
         tutorAcademico: { nombre: datosCarrera.tutorAcademico ?? '', cedula: '' }
       }
     };
+    console.log('acta final en acta-entorno-laboral:', this.acta);
     this.cdr.detectChanges();
   }
 
@@ -195,5 +212,25 @@ export class ActaEntornoLaboralPage implements OnInit {
 
   descargarWord(): void {
     exportarDocumentoWord('acta-entorno-laboral', 'Acta_Entorno_Laboral', 'portrait');
+  }
+
+  agregarCompanero(): void {
+    if (!this.nuevoCompanero.nombre || !this.nuevoCompanero.cedula || !this.nuevoCompanero.nivel) {
+      Swal.fire('Faltan datos', 'Completa al menos nombre, cédula y nivel del compañero.', 'warning');
+      return;
+    }
+
+    this.acta.estudiantes.push({
+      no: this.acta.estudiantes.length + 1,
+      nombre: this.nuevoCompanero.nombre,
+      cedula: this.nuevoCompanero.cedula,
+      nivel: this.nuevoCompanero.nivel,
+      nota: '',
+      firma: ''
+    });
+
+    this.nuevoCompanero = { nombre: '', cedula: '', nivel: '' };
+    this.mostrarFormularioCompanero = false;
+    this.cdr.detectChanges();
   }
 }

@@ -360,7 +360,19 @@ export class PlanMarco implements OnInit {
 
   private guardarItems(idPlanMarco: number): void {
 
-    const operaciones = this.items.map((item) => {
+    const itemsValidos = this.items.filter((item) => {
+      const resultado = (item.resultado_aprendizaje ?? '').trim();
+      return resultado.length > 0;
+    });
+
+    if (itemsValidos.length === 0) {
+      Swal.fire('Sin resultados de aprendizaje', 'Agrega al menos un resultado de aprendizaje antes de guardar.', 'warning');
+      this.guardando = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const operaciones = itemsValidos.map((item) => {
 
       const dto = {
         resultado_aprendizaje: item.resultado_aprendizaje,
@@ -391,10 +403,25 @@ export class PlanMarco implements OnInit {
 
       },
 
-      error: () => {
+      error: (err) => {
         this.guardando = false;
         this.cdr.detectChanges();
-        Swal.fire('Error', 'El Plan Marco se guardó, pero hubo un problema guardando los resultados de aprendizaje.', 'error');
+        console.error('Error guardando items del Plan Marco:', err);
+        let mensaje = 'No fue posible guardar los resultados de aprendizaje.';
+        if (err?.error) {
+          if (typeof err.error === 'string') {
+            mensaje = err.error;
+          } else if (Array.isArray(err.error.message)) {
+            mensaje = err.error.message.join(', ');
+          } else if (err.error.message) {
+            mensaje = typeof err.error.message === 'string' ? err.error.message : JSON.stringify(err.error.message);
+          } else if (err.message) {
+            mensaje = err.message;
+          }
+        } else if (err?.message) {
+          mensaje = err.message;
+        }
+        Swal.fire('Error al guardar', mensaje, 'error');
       }
 
     });
@@ -411,6 +438,7 @@ export class PlanMarco implements OnInit {
       this.guardando = false;
       this.cdr.detectChanges();
       Swal.fire('Plan Marco guardado', 'Los resultados de aprendizaje se guardaron correctamente.', 'success');
+      this.sincronizarPlanRotacion();
       return;
     }
 
@@ -428,16 +456,33 @@ export class PlanMarco implements OnInit {
         this.guardando = false;
         this.cdr.detectChanges();
         Swal.fire('Plan Marco guardado', 'Los resultados de aprendizaje y niveles reales se guardaron correctamente.', 'success');
+        this.sincronizarPlanRotacion();
       },
 
       error: () => {
         this.guardando = false;
         this.cdr.detectChanges();
         Swal.fire('Guardado parcial', 'Los resultados de aprendizaje se guardaron, pero hubo un problema guardando el nivel real alcanzado.', 'warning');
+        this.sincronizarPlanRotacion();
       }
 
     });
 
+  }
+
+  private sincronizarPlanRotacion(): void {
+    if (!this.plan.id_plan_marco) {
+      return;
+    }
+
+    this.planFormacion.sincronizarPlanRotacion(this.plan.id_plan_marco).subscribe({
+      next: () => {
+        console.log('Plan de Rotación sincronizado correctamente');
+      },
+      error: (err) => {
+        console.error('Error sincronizando Plan de Rotación:', err);
+      }
+    });
   }
 
 }

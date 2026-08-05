@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import { ItemPlanMarcoService } from '../services/item-plan-marco.service';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -15,7 +15,11 @@ export class ItemPlanMarcoController {
   @Post('plan-marco/:idPlanMarco/items')
   @Roles('ESTUDIANTE')
   create(@Req() req: any, @Param('idPlanMarco') idPlanMarco: string, @Body() dto: CreateItemPlanMarcoDto) {
-    return this.itemPlanMarcoService.create(req.user, { ...dto, id_plan_marco: Number(idPlanMarco) });
+    const idPlanMarcoNumber = Number(idPlanMarco);
+    if (!Number.isInteger(idPlanMarcoNumber) || idPlanMarcoNumber <= 0) {
+      throw new BadRequestException('id_plan_marco debe ser un número entero válido');
+    }
+    return this.itemPlanMarcoService.create(req.user, { ...dto, id_plan_marco: idPlanMarcoNumber });
   }
 
   @Get('plan-marco/:idPlanMarco/items')

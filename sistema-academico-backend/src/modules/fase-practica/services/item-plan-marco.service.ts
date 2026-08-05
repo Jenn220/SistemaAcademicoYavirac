@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ITEM_PLAN_MARCO_REPOSITORY, IItemPlanMarcoRepository } from '../ports/item-plan-marco.repository.port';
@@ -41,9 +41,17 @@ export class ItemPlanMarcoService {
   }
 
   async create(usuario: any, dto: CreateItemPlanMarcoDto) {
-    const idPractica = await this.obtenerIdPracticaDesdePlanMarco(dto.id_plan_marco);
-    await this.esDuenoDePractica(usuario, idPractica);
-    return this.itemPlanMarcoRepo.create(dto);
+    try {
+      if (!dto.id_plan_marco) {
+        throw new BadRequestException('id_plan_marco es requerido para crear el ítem del plan marco');
+      }
+      const idPractica = await this.obtenerIdPracticaDesdePlanMarco(dto.id_plan_marco);
+      await this.esDuenoDePractica(usuario, idPractica);
+      return this.itemPlanMarcoRepo.create(dto);
+    } catch (error: any) {
+      console.error('Error creando item plan marco:', JSON.stringify({ dto, error: error?.message || error }));
+      throw error;
+    }
   }
 
   async findByPlanMarco(idPlanMarco: number, skip?: number, take?: number) {

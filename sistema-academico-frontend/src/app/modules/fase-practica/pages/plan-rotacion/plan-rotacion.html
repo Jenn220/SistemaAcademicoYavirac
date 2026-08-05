@@ -42,26 +42,11 @@
         [fechaInicio]="''"
         [fechaFin]="''"
         [telefonoEmergenciaNombre]="''"
-        [telefonoEmergenciaTelefono]="''">
+        [telefonoEmergenciaTelefono]="''"
+        [direccionEmpresa]="encabezado.direccionEmpresa">
     </app-document-header>
 
     <div class="contenido">
-
-        @if (!soloLectura) {
-        <div class="controles-semanas no-print">
-
-            <span>Semanas mostradas: {{ numeroSemanas }}</span>
-
-            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="quitarSemana()">
-                <i class="bi bi-dash-lg"></i>
-            </button>
-
-            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="agregarSemana()">
-                <i class="bi bi-plus-lg"></i>
-            </button>
-
-        </div>
-        }
 
         <table class="tabla-rotacion">
 
@@ -90,10 +75,10 @@
                     @for (semana of columnasSemanas; track semana) {
                     <td
                         class="celda-semana"
-                        [class.activa]="fila.semanasActivas.has(semana)"
+                        [class.activa]="fila.semanasActivas[semana - 1]"
                         [class.deshabilitada]="soloLectura"
                         (click)="toggleSemana(fila, semana)">
-                        @if (fila.semanasActivas.has(semana)) { X }
+                        @if (fila.semanasActivas[semana - 1]) { X }
                     </td>
                     }
 

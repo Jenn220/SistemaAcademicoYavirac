@@ -42,4 +42,10 @@ export class PlanMarcoController {
   remove(@Req() req: any, @Param('id') id: string) {
     return this.planMarcoService.remove(req.user, Number(id)).then(() => ({ deleted: true, id_plan_marco: Number(id) }));
   }
+
+  @Post('plan-marco/:id/sincronizar-rotacion')
+  @Roles('ESTUDIANTE')
+  sincronizarPlanRotacion(@Req() req: any, @Param('id') id: string) {
+    return this.planMarcoService.sincronizarPlanRotacion(Number(id));
+  }
 }

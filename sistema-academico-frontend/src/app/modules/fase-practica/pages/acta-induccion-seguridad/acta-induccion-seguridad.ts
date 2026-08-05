@@ -23,7 +23,12 @@ function actaInduccionVacia(): ActaInduccionSeguridad {
     estudiante: { nombre: '', cedula: '', nivel: '', carrera: '' },
     empresa: { razonSocial: '' },
     textoLegal: [],
-    firmaEstudiante: ''
+    firmaEstudiante: '',
+    periodo: '',
+    nucleo: '',
+    tutorAcademico: '',
+    coordinador: '',
+    tutorEmpresarial: ''
   };
 }
 
@@ -145,6 +150,7 @@ export class ActaInduccionSeguridadPage implements OnInit {
 
     const datosEstudiante = datos?.['estudiante'] ?? {};
     const datosCarrera = datos?.['carrera'] ?? {};
+    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
     const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
 
     this.acta = {
@@ -157,6 +163,11 @@ export class ActaInduccionSeguridadPage implements OnInit {
         carrera: datosEstudiante.carrera ?? datosCarrera.nucleoEstructurante ?? ''
       },
       empresa: { razonSocial: datosEmpresa.razonSocial ?? '' },
+      periodo: datosPeriodo.nombre ?? '',
+      nucleo: datosCarrera.nucleoEstructurante ?? '',
+      tutorAcademico: datosCarrera.tutorAcademico ?? '',
+      coordinador: datosCarrera.coordinador ?? '',
+      tutorEmpresarial: datosEmpresa.tutorEmpresarial ?? '',
       textoLegal: acta.textoLegal?.length ? acta.textoLegal : [
         '1. Se informa al estudiante sobre los riesgos inherentes al entorno laboral.',
         '2. Se dan a conocer las medidas de prevención y protección personal.',

@@ -17,6 +17,25 @@
     </button>
     }
 
+    @if (!soloLectura) {
+    <button class="btn btn-success text-white" (click)="mostrarFormularioCompanero = !mostrarFormularioCompanero">
+        <i class="bi bi-person-plus"></i>
+        {{ mostrarFormularioCompanero ? 'Ocultar formulario' : 'Agregar compañero' }}
+    </button>
+    }
+
+    @if (mostrarFormularioCompanero) {
+    <div class="formulario-companero">
+        <h5>Agregar compañero</h5>
+        <input type="text" [(ngModel)]="nuevoCompanero.nombre" placeholder="Nombre completo" [disabled]="guardando">
+        <input type="text" [(ngModel)]="nuevoCompanero.cedula" placeholder="Cédula" [disabled]="guardando">
+        <input type="text" [(ngModel)]="nuevoCompanero.nivel" placeholder="Nivel" [disabled]="guardando">
+        <button class="btn btn-primary" [disabled]="guardando" (click)="agregarCompanero()">
+            <i class="bi bi-plus"></i> Agregar
+        </button>
+    </div>
+    }
+
 </div>
 
 <div id="acta-entorno-laboral" class="documento">
@@ -24,16 +43,16 @@
     <app-document-header
         [titulo]="'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL'"
         [codigo]="'DS-010401'"
-        [estudianteNombre]="''"
-        [estudianteCedula]="''"
+        [estudianteNombre]="acta.encabezado.estudianteNombre"
+        [estudianteCedula]="acta.encabezado.estudianteCedula"
         [carrera]="acta.encabezado.carrera"
-        [nivel]="''"
+        [nivel]="acta.encabezado.nivel"
         [periodo]="acta.encabezado.periodoAcademico"
         [nucleo]="''"
-        [tutorAcademico]="''"
-        [coordinador]="''"
+        [tutorAcademico]="acta.encabezado.tutorAcademico"
+        [coordinador]="acta.encabezado.coordinador"
         [empresa]="acta.encabezado.entidadReceptora"
-        [tutorEmpresarial]="''"
+        [tutorEmpresarial]="acta.encabezado.tutorEmpresarial"
         [proyecto]="''"
         [cobertura]="''"
         [plazo]="''"
@@ -57,7 +76,7 @@
 
         </div>
 
-        <div class="caja-anexos" [@if]="acta.anexos?.length">
+        <div class="caja-anexos" *ngIf="acta.anexos?.length">
 
             <strong>ANEXOS:</strong>
 

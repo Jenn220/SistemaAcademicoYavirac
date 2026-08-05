@@ -123,4 +123,16 @@ export class PlanFormacion {
   eliminarSemana(id: number): Observable<{ deleted: boolean; id_rotacion_semana: number }> {
     return this.http.delete<{ deleted: boolean; id_rotacion_semana: number }>(`${this.API}/plan-rotacion-semanas/${id}`);
   }
+
+  guardarMatrizSemanas(idPlanRotacion: number, semanas: any[]): Observable<any[]> {
+    return this.http.post<any[]>(`${this.API}/plan-rotacion/${idPlanRotacion}/matriz`, semanas);
+  }
+
+  sincronizarPlanRotacion(idPlanMarco: number): Observable<void> {
+    return this.http.post<void>(`${this.API}/plan-marco/${idPlanMarco}/sincronizar-rotacion`, {});
+  }
+
+  obtenerPlanRotacionPorPractica(idPractica: number): Observable<PlanRotacion[]> {
+    return this.http.get<PlanRotacion[]>(`${this.API}/plan-rotacion/practica/${idPractica}`);
+  }
 }

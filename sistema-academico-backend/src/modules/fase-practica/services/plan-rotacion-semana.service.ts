@@ -47,7 +47,11 @@ export class PlanRotacionSemanaService {
     if (existentes.length >= 8) {
       throw new BadRequestException('El plan de rotación no puede tener más de 8 semanas.');
     }
-    return this.repo.create(dto);
+    const data: any = dto;
+    if (dto.es_defensa_proyecto) {
+      data.id_item_pm = null;
+    }
+    return this.repo.create(data);
   }
 
   async findByPlanRotacion(idPlanRotacion: number): Promise<PlanRotacionSemanaEntity[]> {
@@ -74,5 +78,23 @@ export class PlanRotacionSemanaService {
     const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(entity.id_plan_rotacion);
     await this.esDuenoDePractica(usuario, idPractica);
     return this.repo.remove(id);
+  }
+
+  async guardarMatrizSemanas(usuario: any, idPlanRotacion: number, semanas: { id_item_pm?: number; semana: number; es_defensa_proyecto?: boolean }[]): Promise<PlanRotacionSemanaEntity[]> {
+    const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(idPlanRotacion);
+    await this.esDuenoDePractica(usuario, idPractica);
+    await this.repo.deleteByPlanRotacion(idPlanRotacion);
+    const resultados: PlanRotacionSemanaEntity[] = [];
+    for (const s of semanas) {
+      const data: any = {
+        id_plan_rotacion: idPlanRotacion,
+        semana: s.semana,
+        id_item_pm: s.es_defensa_proyecto ? null : s.id_item_pm,
+        es_defensa_proyecto: s.es_defensa_proyecto || false,
+      };
+      const creada = await this.repo.create(data);
+      resultados.push(creada);
+    }
+    return resultados;
   }
 }

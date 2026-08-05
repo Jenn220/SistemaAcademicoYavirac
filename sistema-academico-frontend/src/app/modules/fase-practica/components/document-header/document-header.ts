@@ -1,9 +1,10 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-document-header',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './document-header.html',
   styleUrl: './document-header.scss'
 })
@@ -23,6 +24,7 @@ export class DocumentHeader {
   @Input() tutorAcademico = '';
   @Input() coordinador = '';
   @Input() empresa = '';
+  @Input() direccionEmpresa = '';
   @Input() tutorEmpresarial = '';
   @Input() proyecto = '';
   @Input() cobertura = '';

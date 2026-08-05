@@ -18,6 +18,12 @@ export class PlanRotacionSemanaController {
     return this.service.create(req.user, { ...dto, id_plan_rotacion: Number(idPlanRotacion) });
   }
 
+  @Post('plan-rotacion/:idPlanRotacion/matriz')
+  @Roles('ESTUDIANTE')
+  guardarMatriz(@Req() req: any, @Param('idPlanRotacion') idPlanRotacion: string, @Body() semanas: any[]) {
+    return this.service.guardarMatrizSemanas(req.user, Number(idPlanRotacion), semanas);
+  }
+
   @Get('plan-rotacion/:idPlanRotacion/semanas')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
   findByPlanRotacion(@Param('idPlanRotacion') idPlanRotacion: string) {

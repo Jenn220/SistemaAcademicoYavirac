@@ -56,6 +56,8 @@ export interface ItemPlanMarco {
   nivel_real_alcanzado?: number;
   /** id_evaluacion_pm si ya existe una evaluación guardada para este ítem. */
   id_evaluacion_pm?: number;
+  /** Marca especial para la fila "Defensa de Proyecto empresarial". */
+  es_defensa_proyecto?: boolean;
 }
 
 export interface EvaluacionPlanMarco {
@@ -76,4 +78,6 @@ export interface PlanRotacionSemana {
   id_rotacion_semana?: number;
   id_plan_rotacion: number;
   semana: number;
+  id_item_pm?: number;
+  es_defensa_proyecto?: boolean;
 }
