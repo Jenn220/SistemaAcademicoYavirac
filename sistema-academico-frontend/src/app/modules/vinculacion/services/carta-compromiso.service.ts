@@ -1,4 +1,3 @@
-// modules/vinculacion/services/carta-compromiso.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -9,7 +8,7 @@ import { CartaCompromiso } from '../models/carta-compromiso.model';
   providedIn: 'root'
 })
 export class CartaCompromisoService {
-  private apiUrl = environment.apiUrl + '/vinculacion/acta-compromiso';
+  private apiUrl = environment.apiUrl + '/api/vinculacion/acta-compromiso';  // 👈 AGREGAR /api
 
   constructor(private http: HttpClient) {}
 

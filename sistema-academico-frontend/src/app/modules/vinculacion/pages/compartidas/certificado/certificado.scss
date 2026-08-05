@@ -81,3 +81,12 @@
 .btn-secondary:hover {
   background: #ccc;
 }
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+.error {
+  color: #dc3545;
+}

@@ -1,4 +1,3 @@
-// modules/vinculacion/models/certificado.model.ts
 export interface Certificado {
   fecha_emision: string;
   estudiante: string;

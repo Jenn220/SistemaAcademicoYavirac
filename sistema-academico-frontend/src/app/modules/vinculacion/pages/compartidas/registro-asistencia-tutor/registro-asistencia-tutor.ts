@@ -1,11 +1,10 @@
-// modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { RegistroAsistenciaTutorService } from '../../../services/registro-asistencia-tutor.service';
 import { AuthService } from '../../../../auth/services/auth.service';
-import { AsistenciaTutorResponse, AsistenciaTutor } from '../../../models/registro-asistencia-tutor.model';
+import { AsistenciaTutorResponse, AsistenciaTutor, CreateAsistenciaTutorDto, UpdateAsistenciaTutorDto } from '../../../models/registro-asistencia-tutor.model';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -23,29 +22,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   data: AsistenciaTutorResponse | null = null;
   loading = true;
   error: string | null = null;
-  isEstudiante = false;
-  isDocente = false;
-  idVinculacion: number | null = null;
-
-  // Variables para edición
-  editandoId: number | null = null;
-  editandoActividad: Partial<AsistenciaTutor> = {};
-  observacionEdit: string = '';
   puedeEditar = false;
+  idVinculacion: number = 0;
 
-  // Nueva actividad
-  nuevaActividad: Partial<AsistenciaTutor> = {
+  editandoId: number | null = null;
+  editandoActividad: UpdateAsistenciaTutorDto = {};
+
+  nuevaActividad: CreateAsistenciaTutorDto = {
+    id_vinculacion: 0,
     fecha: '',
-    hora_entrada: '',
-    hora_salida: '',
-    actividad_realizada: ''
+    hora_inicio: '',
+    hora_fin: '',
+    actividad_realizada: '',
+    observaciones: ''
   };
   mostrandoFormulario = false;
 
   ngOnInit(): void {
-    const roles = this.authService.roles();
-  // Aquí defines quién puede editar (DOCENTE, COORDINADOR, TUTOR_EMPRESARIAL)
-  this.puedeEditar = this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL']);
+    this.puedeEditar = this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL']);
 
     this.route.params.subscribe(params => {
       if (params['id']) {
@@ -60,13 +54,11 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
-    const id = this.idVinculacion ?? 0;
-    this.service.obtenerReporte(id)
+    this.service.obtenerReporte(this.idVinculacion)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data) => {
           this.data = data;
-          this.observacionEdit = data.totales.observaciones || '';
         },
         error: (err) => {
           this.error = 'No se pudo cargar el registro de asistencia del tutor.';
@@ -75,11 +67,16 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       });
   }
 
-  // ================== CRUD para actividades (estudiante) ==================
-
   mostrarFormulario(): void {
     this.mostrandoFormulario = true;
-    this.nuevaActividad = { fecha: '', hora_entrada: '', hora_salida: '', actividad_realizada: '' };
+    this.nuevaActividad = {
+      id_vinculacion: this.idVinculacion,
+      fecha: '',
+      hora_inicio: '',
+      hora_fin: '',
+      actividad_realizada: '',
+      observaciones: ''
+    };
   }
 
   cancelarNuevo(): void {
@@ -87,19 +84,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   agregarActividad(): void {
-    if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_entrada || !this.nuevaActividad.hora_salida) {
+    if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_inicio || !this.nuevaActividad.hora_fin) {
       alert('Complete fecha, hora entrada y salida.');
       return;
     }
-    const payload = {
-      id_vinculacion: this.idVinculacion || 0,
-      fecha: this.nuevaActividad.fecha,
-      hora_inicio: this.nuevaActividad.hora_entrada,
-      hora_fin: this.nuevaActividad.hora_salida,
-      actividad_realizada: this.nuevaActividad.actividad_realizada || ''
-    };
     this.loading = true;
-    this.service.crearAsistencia(payload)
+    this.service.crearAsistencia(this.nuevaActividad)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {
@@ -115,7 +105,9 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
   editarActividad(act: AsistenciaTutor): void {
     this.editandoId = act.id;
-    this.editandoActividad = { ...act };
+    this.editandoActividad = {
+      actividad_realizada: act.actividad_realizada
+    };
   }
 
   cancelarEdicion(): void {
@@ -125,13 +117,8 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
   guardarEdicion(): void {
     if (!this.editandoId) return;
-    // El estudiante solo puede editar actividad_realizada
-    const payload: any = {
-      actividad_realizada: this.editandoActividad.actividad_realizada
-    };
-    // Si es docente, podría editar otros campos, pero según el flujo solo observaciones
     this.loading = true;
-    this.service.actualizarAsistencia(this.editandoId, payload)
+    this.service.actualizarAsistencia(this.editandoId, this.editandoActividad)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {
@@ -159,17 +146,5 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           console.error(err);
         }
       });
-  }
-
-  // ================== Guardar observaciones (docente) ==================
-
-  guardarObservaciones(): void {
-    if (!this.idVinculacion) return;
-    // Aquí necesitamos un endpoint para guardar observación. 
-    // No existe en el backend, así que lo simularemos o mostraremos un mensaje.
-    // Según lo que vimos, no hay un PATCH para observaciones en asistencia-tutor.
-    // Por ahora, mostramos un mensaje.
-    alert('Funcionalidad en desarrollo: guardar observaciones. (Backend pendiente)');
-    // Si existiera, haríamos un PATCH a /vinculacion/asistencia-tutor/:id con { observaciones: this.observacionEdit }
   }
 }

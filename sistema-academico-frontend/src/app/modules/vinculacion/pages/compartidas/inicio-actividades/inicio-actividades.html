@@ -5,7 +5,6 @@
     <div class="error">{{ error }}</div>
   } @else if (data) {
     <div class="documento">
-      <!-- Encabezado del documento -->
       <div class="encabezado">
         <div class="logo">
           <img src="assets/images/logo-yavirac.png" alt="Yavirac">
@@ -16,7 +15,6 @@
         </div>
       </div>
 
-      <!-- Contenido del documento -->
       <div class="contenido">
         <div class="seccion">
           <p><strong>A:</strong> {{ data.coordinador }}</p>
@@ -60,7 +58,6 @@
           <p><strong>Tutor Entidad Receptora:</strong> {{ data.tutor_entidad }}</p>
         </div>
 
-        <!-- Anexos -->
         <div class="seccion anexos">
           <h3>Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación</h3>
           <div class="anexos-grid">
@@ -83,7 +80,6 @@
           </div>
         </div>
 
-        <!-- Firma -->
         <div class="seccion firma">
           <p>Atentamente,</p>
           <br><br><br>

@@ -1,10 +1,10 @@
-// modules/vinculacion/pages/docente/seleccionar-estudiante/seleccionar-estudiante.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { AuthService } from '../../../../auth/services/auth.service';
+import { EstudianteDocente } from '../../../models/vinculacion.model';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -19,16 +19,15 @@ export class SeleccionarEstudianteComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  estudiantes: any[] = [];
-  filtered: any[] = [];
+  estudiantes: EstudianteDocente[] = [];
+  filtered: EstudianteDocente[] = [];
   loading = true;
   error: string | null = null;
   terminoBusqueda: string = '';
 
   ngOnInit(): void {
-    // 🔥 Verificar rol usando el método existente
-    if (!this.authService.tieneAlgunRol(['DOCENTE'])) {
-      this.error = '⚠️ No tienes permisos de docente para ver esta pantalla.';
+    if (!this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR'])) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla.';
       this.loading = false;
       return;
     }
@@ -41,23 +40,13 @@ export class SeleccionarEstudianteComponent implements OnInit {
     this.service.obtenerEstudiantesAsignados()
       .pipe(finalize(() => this.loading = false))
       .subscribe({
-        next: (data: any[]) => {
-          this.estudiantes = data.map(item => ({
-            id_vinculacion: item.id_vinculacion || item.id,
-            nombre: item.estudiante_nombre || item.estudiante || 'N/A',
-            cedula: item.cedula || 'N/A',
-            empresa: item.entidad_beneficiaria || item.empresa || 'N/A',
-            tutor_empresarial: item.tutor_entidad || item.tutor || 'N/A'
-          }));
-          this.filtered = this.estudiantes;
+        next: (data) => {
+          this.estudiantes = data;
+          this.filtered = data;
         },
-        error: (err: any) => {
-          if (err.status === 404 || err.status === 403) {
-            this.error = '⚠️ El backend no está respondiendo correctamente. Verifica que el servidor esté corriendo y que el endpoint /vinculacion/informe-final esté disponible.';
-          } else {
-            this.error = 'Ocurrió un error al cargar los estudiantes. Por favor, intenta nuevamente.';
-          }
-          console.warn('Error controlado:', err);
+        error: (err) => {
+          this.error = 'No se pudieron cargar los estudiantes.';
+          console.error(err);
         }
       });
   }
@@ -69,9 +58,10 @@ export class SeleccionarEstudianteComponent implements OnInit {
       return;
     }
     this.filtered = this.estudiantes.filter(est =>
-      est.nombre?.toLowerCase().includes(term) ||
+      est.estudiante?.toLowerCase().includes(term) ||
       est.cedula?.includes(term) ||
-      est.empresa?.toLowerCase().includes(term)
+      est.entidad_beneficiaria?.toLowerCase().includes(term) ||
+      est.carrera?.toLowerCase().includes(term)
     );
   }
 

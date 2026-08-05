@@ -1,4 +1,3 @@
-// modules/vinculacion/services/certificado.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -9,7 +8,7 @@ import { Certificado } from '../models/certificado.model';
   providedIn: 'root'
 })
 export class CertificadoService {
-  private apiUrl = environment.apiUrl + '/vinculacion/certificado';
+  private apiUrl = environment.apiUrl + '/api/vinculacion/certificado';  // 👈 AGREGAR /api
 
   constructor(private http: HttpClient) {}
 

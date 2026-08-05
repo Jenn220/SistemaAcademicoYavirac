@@ -108,3 +108,12 @@
   .btn-save { background: #28a745; color: white; }
   .btn-cancel { background: #6c757d; color: white; }
 }
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+.error {
+  color: #dc3545;
+}

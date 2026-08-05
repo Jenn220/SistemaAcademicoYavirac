@@ -1,4 +1,3 @@
-// modules/vinculacion/models/informe-final.model.ts
 export interface ActividadInforme {
   fecha: string;
   actividades: string;

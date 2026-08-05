@@ -34,25 +34,6 @@
     }
   }
 
-  .reflexion {
-    margin-top: 2rem;
-    padding: 1rem;
-    background: #f9faff;
-    border-radius: 4px;
-  }
-
-  .avance {
-    margin-top: 2rem;
-    ul {
-      list-style: none;
-      padding: 0;
-      li {
-        padding: 0.3rem 0;
-        border-bottom: 1px solid #eee;
-      }
-    }
-  }
-
   .btn-edit, .btn-save, .btn-cancel {
     padding: 0.2rem 0.6rem;
     border: none;
@@ -62,4 +43,13 @@
   .btn-edit { background: #ffc107; color: #333; }
   .btn-save { background: #28a745; color: white; }
   .btn-cancel { background: #6c757d; color: white; }
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+.error {
+  color: #dc3545;
 }

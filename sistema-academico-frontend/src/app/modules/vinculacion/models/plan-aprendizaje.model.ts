@@ -1,4 +1,3 @@
-// modules/vinculacion/models/plan-aprendizaje.model.ts
 export interface ActividadPlan {
   id: number;
   fecha: string;

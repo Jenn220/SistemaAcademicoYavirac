@@ -1,4 +1,3 @@
-// modules/vinculacion/pages/compartidas/certificado/certificado.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,10 +25,9 @@ export class CertificadoComponent implements OnInit {
   loading = true;
   error: string | null = null;
   isEstudiante = false;
-  idVinculacion: number | null = null;
+  idVinculacion: number = 0;
   editando = false;
 
-  // Campos editables
   proyectoEdit: string = '';
   fechaInicioEdit: string = '';
   fechaFinEdit: string = '';
@@ -41,7 +39,7 @@ export class CertificadoComponent implements OnInit {
       if (params['id']) {
         this.idVinculacion = +params['id'];
       } else {
-        this.idVinculacion = 0; // estudiante
+        this.idVinculacion = 0;
       }
       this.cargarDatos();
     });
@@ -50,8 +48,7 @@ export class CertificadoComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
-    const id = this.idVinculacion ?? 0;
-    this.certificadoService.obtenerCertificado(id)
+    this.certificadoService.obtenerCertificado(this.idVinculacion)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data) => {
@@ -72,24 +69,19 @@ export class CertificadoComponent implements OnInit {
     this.loading = true;
     const payload = {
       nombre_proyecto: this.proyectoEdit,
-      fecha_inicio: this.fechaInicioEdit,
-      fecha_fin: this.fechaFinEdit
+      fecha_inicio: this.fechaInicioEdit
     };
-    // Usamos el servicio de inicio-actividades para actualizar
-    this.inicioService.actualizarInicioActividades(this.idVinculacion || 0, payload)
+    this.inicioService.actualizarInicioActividades(this.idVinculacion, payload)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {
-          // Actualizar los datos en pantalla
           if (this.certificado) {
             this.certificado.proyecto = this.proyectoEdit;
             this.certificado.fecha_inicio = this.fechaInicioEdit;
-            this.certificado.fecha_fin = this.fechaFinEdit;
           }
           this.editando = false;
-          alert('Datos actualizados correctamente.');
         },
-        error: (err: any) => {
+        error: (err) => {
           this.error = 'Error al guardar los cambios.';
           console.error(err);
         }
@@ -99,7 +91,6 @@ export class CertificadoComponent implements OnInit {
   toggleEdit(): void {
     this.editando = !this.editando;
     if (!this.editando && this.certificado) {
-      // Restaurar valores originales si cancela
       this.proyectoEdit = this.certificado.proyecto || '';
       this.fechaInicioEdit = this.certificado.fecha_inicio || '';
       this.fechaFinEdit = this.certificado.fecha_fin || '';

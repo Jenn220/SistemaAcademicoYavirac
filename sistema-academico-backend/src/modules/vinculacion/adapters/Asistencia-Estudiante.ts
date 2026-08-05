@@ -5,47 +5,42 @@ import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.en
 import { CreateActividadEstudianteDto } from '../dto/create-actividad-estudiante.dto';
 import { UpdateActividadEstudianteDto } from '../dto/update-actividad-estudiante.dto';
 import { VinculacionActividadEstudiante } from '../domain/vinculacion_actividad_estudiante.entity';
+import { IVinculacionAsistenciaEstudiantePort } from '../ports/asistencia-estudiante.port';
+import { CreateObservacionDto } from '../dto/create-observacion.dto';
 
 @Injectable()
-export class VinculacionAsistenciaEstudianteAdapter {
+export class VinculacionAsistenciaEstudianteAdapter implements IVinculacionAsistenciaEstudiantePort {
   constructor(
     @InjectRepository(VinculacionEstudianteEntity)
     private readonly repoEstudiante: Repository<VinculacionEstudianteEntity>,
-
     @InjectRepository(VinculacionActividadEstudiante)
     private readonly repoActividad: Repository<VinculacionActividadEstudiante>,
   ) {}
-
-  // =========================================================================
-  // 🟢 MÉTODOS CRUD
-  // =========================================================================
 
   async crearActividadEstudiante(datos: any): Promise<VinculacionActividadEstudiante> {
     const datosParaGuardar = {
       ...datos,
       id_vinculacion: datos.id_vinculacion.toString(),
     };
-
     const nueva = this.repoActividad.create(datosParaGuardar as any);
     const resultado = await this.repoActividad.save(nueva);
-
     return Array.isArray(resultado) ? resultado[0] : resultado;
   }
-async buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante | null> {
-  return await this.repoActividad.findOne({
-    where: { id_actividad_estudiante: idActividad.toString() } as any,
-  });
-}
+
+  async buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante | null> {
+    return await this.repoActividad.findOne({
+      where: { id_actividad_estudiante: idActividad.toString() } as any,
+    });
+  }
+
   async actualizarActividadEstudiante(
     id: number, 
     datos: any
   ): Promise<VinculacionActividadEstudiante | null> {
     const idString = id.toString();
-
     const registro = await this.repoActividad.findOne({
       where: { id_actividad_estudiante: idString } as any,
     });
-
     if (!registro) return null;
 
     const { id_vinculacion, ...restoDatos } = datos;
@@ -65,19 +60,12 @@ async buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante |
     const whereCondition: Record<string, any> = {
       id_actividad_estudiante: idActividad.toString(),
     };
-
-    // 🟢 NORMALIZACIÓN A STRING: Garantiza coherencia con el tipo de dato en la BD
     if (idVinculacionPropia !== undefined && idVinculacionPropia !== null) {
       whereCondition.id_vinculacion = idVinculacionPropia.toString();
     }
-
     const resultado = await this.repoActividad.delete(whereCondition as any);
     return (resultado.affected ?? 0) > 0;
   }
-
-  // =========================================================================
-  // 🔎 CONSULTAS DE APOYO Y VALIDACIÓN
-  // =========================================================================
 
   async buscarPorFechaYVinculacion(
     id_vinculacion: number | string, 
@@ -91,7 +79,6 @@ async buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante |
     });
   }
 
-  // 🟢 CONSULTA RECOMENDADA: Obtiene el id_vinculacion mediante el ID del usuario/estudiante
   async obtenerIdVinculacionPorEstudiante(idUsuario: number | string): Promise<string | null> {
     const query = `
       SELECT vinc.id_vinculacion 
@@ -105,10 +92,6 @@ async buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante |
     const res = await this.repoEstudiante.query(query, [idUsuario.toString()]);
     return res.length > 0 ? res[0].id_vinculacion : null;
   }
-
-  // =========================================================================
-  // 📊 CONSULTA RAW REPORTE
-  // =========================================================================
 
   async obtenerAsistenciaEstudianteRaw(idVinculacion: number): Promise<any[]> {
     const query = `
@@ -129,7 +112,14 @@ async buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante |
         act.hora_inicio,
         act.hora_fin,
         act.horas_total,
-        act.actividades_realizadas AS descripcion
+        act.actividades_realizadas AS descripcion,
+        (
+          SELECT observacion 
+          FROM vinculacion_reporte_observacion 
+          WHERE id_vinculacion = vinc.id_vinculacion 
+            AND tipo_reporte = 'ASISTENCIA_ESTUDIANTE' 
+          LIMIT 1
+        ) AS observacion_reporte
       FROM vinculacion_estudiante vinc
       LEFT JOIN periodo_academico per ON vinc.id_periodo = per.id_periodo
       LEFT JOIN matricula_detalle mat ON vinc.id_matricula_detalle = mat.id_matricula_detalle
@@ -143,21 +133,20 @@ async buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante |
       WHERE vinc.id_vinculacion::text = $1::text
       ORDER BY act.fecha ASC, act.hora_inicio ASC;
     `;
-
     return await this.repoEstudiante.query(query, [idVinculacion.toString()]);
   }
-  async guardarObservacion(dto: { id_vinculacion: number; tipo_reporte: string; observacion: string }) {
-  const query = `
-    INSERT INTO vinculacion_observaciones (id_vinculacion, tipo_reporte, observacion)
-    VALUES ($1, $2, $3)
-    ON CONFLICT (id_vinculacion, tipo_reporte) 
-    DO UPDATE SET observacion = EXCLUDED.observacion;
-  `;
-  
-  return await this.repoEstudiante.query(query, [
-    dto.id_vinculacion,
-    dto.tipo_reporte,
-    dto.observacion,
-  ]);
-}
+
+  async guardarObservacion(dto: CreateObservacionDto): Promise<any> {
+    const query = `
+      INSERT INTO vinculacion_reporte_observacion (id_vinculacion, tipo_reporte, observacion)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (id_vinculacion, tipo_reporte) 
+      DO UPDATE SET observacion = EXCLUDED.observacion;
+    `;
+    return await this.repoEstudiante.query(query, [
+      dto.id_vinculacion,
+      dto.tipo_reporte,
+      dto.observacion,
+    ]);
+  }
 }

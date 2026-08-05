@@ -22,7 +22,6 @@ export class AsistenciaTutorService {
     private readonly repository: IVinculacionAsistenciaTutorPort,
   ) {}
 
-  // 🧮 Auxiliar: Calcula las horas entre dos horas "HH:mm:ss" o "HH:mm"
   private calcularDiferenciaHoras(horaInicio: string, horaFin: string): number {
     const [hInicio, mInicio] = horaInicio.split(':').map(Number);
     const [hFin, mFin] = horaFin.split(':').map(Number);
@@ -36,10 +35,6 @@ export class AsistenciaTutorService {
 
     return parseFloat(((finMinutos - inicioMinutos) / 60).toFixed(2));
   }
-
-  // =========================================================================
-  // 📊 MÉTODOS DE CONSULTA Y REPORTES
-  // =========================================================================
 
   async obtenerAsistenciasTutorPorDocente(idDocente: number) {
     try {
@@ -87,10 +82,11 @@ export class AsistenciaTutorService {
           };
         });
 
-const sumaTotalHoras = actividades.reduce(
-  (acc: number, act: { total_horas: number }) => acc + act.total_horas,
-  0
-);
+      const sumaTotalHoras = actividades.reduce(
+        (acc: number, act: { total_horas: number }) => acc + act.total_horas,
+        0
+      );
+
       const coordinador = primerRegistro.coordinador_carrera?.trim();
 
       return {
@@ -116,13 +112,8 @@ const sumaTotalHoras = actividades.reduce(
     }
   }
 
-  // =========================================================================
-  // 👨‍🏫 GESTIÓN CRUD DE REGISTROS DE ASISTENCIA DEL TUTOR
-  // =========================================================================
-
   async crearAsistenciaTutor(datos: CreateAsistenciaTutorDto) {
     try {
-      // 1. Validar que la fecha no esté duplicada para esta vinculación
       if (datos.id_vinculacion) {
         const existeFecha = await this.repository.buscarPorFechaYVinculacion(
           datos.id_vinculacion,
@@ -136,16 +127,14 @@ const sumaTotalHoras = actividades.reduce(
         }
       }
 
-      // 2. Calcular automáticamente la diferencia de horas
       const horasCalculadas = this.calcularDiferenciaHoras(datos.hora_inicio, datos.hora_fin);
 
-      // 3. Formatear payload con las horas calculadas
       const datosAInsertar = {
         ...datos,
         horas_total: horasCalculadas,
       };
 
-      const resultado = await this.repository.crearAsistenciaTutor(datosAInsertar); 
+      const resultado = await this.repository.crearAsistenciaTutor(datosAInsertar);
       return { 
         statusCode: 201, 
         message: 'Registro de asistencia creado exitosamente', 
@@ -166,72 +155,68 @@ const sumaTotalHoras = actividades.reduce(
     }
   }
 
-async actualizarAsistenciaTutor(id: number, datos: UpdateAsistenciaTutorDto) {
-  try {
-    // 1. Obtener registro existente
-    const registroActual = await this.repository.buscarPorId(id);
-    if (!registroActual) {
-      throw new NotFoundException(`El registro de asistencia con ID ${id} no existe.`);
-    }
-
-    const idVinculacion = datos.id_vinculacion || registroActual.id_vinculacion;
-
-    // Formatear la fecha actual a YYYY-MM-DD para evitar conflicto de tipos (string vs Date)
-    const fechaActualStr = registroActual.fecha instanceof Date
-      ? registroActual.fecha.toISOString().split('T')[0]
-      : String(registroActual.fecha).split('T')[0];
-
-    // 2. Validar duplicado de fecha si se cambia
-    if (datos.fecha && datos.fecha !== fechaActualStr) {
-      const existeFecha = await this.repository.buscarPorFechaYVinculacion(
-        idVinculacion,
-        datos.fecha
-      );
-
-      if (existeFecha && String(existeFecha.id_asistencia_tutor) !== String(id)) {
-        throw new ConflictException(
-          `Ya existe un registro de asistencia del tutor para la fecha ${datos.fecha}`
-        );
+  async actualizarAsistenciaTutor(id: number, datos: UpdateAsistenciaTutorDto) {
+    try {
+      const registroActual = await this.repository.buscarPorId(id);
+      if (!registroActual) {
+        throw new NotFoundException(`El registro de asistencia con ID ${id} no existe.`);
       }
+
+      const idVinculacion = datos.id_vinculacion || registroActual.id_vinculacion;
+
+      const fechaActualStr = registroActual.fecha instanceof Date
+        ? registroActual.fecha.toISOString().split('T')[0]
+        : String(registroActual.fecha).split('T')[0];
+
+      if (datos.fecha && datos.fecha !== fechaActualStr) {
+        const existeFecha = await this.repository.buscarPorFechaYVinculacion(
+          idVinculacion,
+          datos.fecha
+        );
+
+        if (existeFecha && String(existeFecha.id_asistencia_tutor) !== String(id)) {
+          throw new ConflictException(
+            `Ya existe un registro de asistencia del tutor para la fecha ${datos.fecha}`
+          );
+        }
+      }
+
+      const horaInicio = datos.hora_inicio || registroActual.hora_inicio;
+      const horaFin = datos.hora_fin || registroActual.hora_fin;
+
+      let horasCalculadas: number | undefined = undefined;
+      if (horaInicio && horaFin) {
+        horasCalculadas = this.calcularDiferenciaHoras(horaInicio, horaFin);
+      }
+
+      const datosAActualizar = {
+        ...datos,
+        ...(horasCalculadas !== undefined && { horas_total: horasCalculadas }),
+      };
+
+      const resultado = await this.repository.actualizarAsistenciaTutor(id, datosAActualizar);
+
+      return { 
+        statusCode: 200, 
+        message: 'Asistencia actualizada exitosamente', 
+        data: resultado 
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException || 
+          error instanceof BadRequestException || 
+          error instanceof ConflictException) {
+        throw error;
+      }
+      
+      const mensaje = error instanceof Error ? error.message : String(error);
+
+      if (mensaje.includes('llave duplicada') || mensaje.includes('unique constraint') || mensaje.includes('23505')) {
+        throw new ConflictException('Ya existe un registro con estos datos para la fecha especificada.');
+      }
+
+      throw new InternalServerErrorException(`Error interno al actualizar la asistencia: ${mensaje}`);
     }
-
-    // 3. Recálculo inteligente de horas
-    const horaInicio = datos.hora_inicio || registroActual.hora_inicio;
-    const horaFin = datos.hora_fin || registroActual.hora_fin;
-
-    let horasCalculadas: number | undefined = undefined;
-    if (horaInicio && horaFin) {
-      horasCalculadas = this.calcularDiferenciaHoras(horaInicio, horaFin);
-    }
-
-    const datosAActualizar = {
-      ...datos,
-      ...(horasCalculadas !== undefined && { horas_total: horasCalculadas }),
-    };
-
-    const resultado = await this.repository.actualizarAsistenciaTutor(id, datosAActualizar);
-
-    return { 
-      statusCode: 200, 
-      message: 'Asistencia actualizada exitosamente', 
-      data: resultado 
-    };
-  } catch (error) {
-    if (error instanceof NotFoundException || 
-        error instanceof BadRequestException || 
-        error instanceof ConflictException) {
-      throw error;
-    }
-    
-    const mensaje = error instanceof Error ? error.message : String(error);
-
-    if (mensaje.includes('llave duplicada') || mensaje.includes('unique constraint') || mensaje.includes('23505')) {
-      throw new ConflictException('Ya existe un registro con estos datos para la fecha especificada.');
-    }
-
-    throw new InternalServerErrorException(`Error interno al actualizar la asistencia: ${mensaje}`);
   }
-}
 
   async eliminarAsistenciaTutor(id: number) {
     try {

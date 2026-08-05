@@ -3,7 +3,7 @@
   <div class="busqueda">
     <input 
       type="text" 
-      placeholder="Buscar por nombre, cédula o empresa..." 
+      placeholder="Buscar por nombre, cédula, carrera o entidad..." 
       [(ngModel)]="terminoBusqueda"
       (input)="buscar()"
     />
@@ -11,11 +11,14 @@
 
   <div class="lista" *ngIf="!loading && !error">
     <div class="tarjeta" *ngFor="let est of filtered" (click)="seleccionarEstudiante(est.id_vinculacion)">
-      <div class="nombre">{{ est.nombre }}</div>
+      <div class="nombre">{{ est.estudiante }}</div>
       <div class="detalles">
         <span><strong>Cédula:</strong> {{ est.cedula }}</span>
-        <span><strong>Empresa:</strong> {{ est.empresa || 'N/A' }}</span>
-        <span><strong>Tutor empresarial:</strong> {{ est.tutor_empresarial || 'N/A' }}</span>
+        <span><strong>Carrera:</strong> {{ est.carrera }}</span>
+        <span><strong>Proyecto:</strong> {{ est.nombre_proyecto }}</span>
+        <span><strong>Entidad:</strong> {{ est.entidad_beneficiaria }}</span>
+        <span><strong>Nota:</strong> {{ est.nota_final ?? 'Sin calificar' }}</span>
+        <span><strong>Estado:</strong> {{ est.estado_informe }}</span>
       </div>
     </div>
     <div *ngIf="filtered.length === 0" class="sin-resultados">No se encontraron estudiantes.</div>

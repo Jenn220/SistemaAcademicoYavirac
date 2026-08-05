@@ -1,15 +1,18 @@
-// modules/vinculacion/services/registro-asistencia-tutor.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { AsistenciaTutorResponse, AsistenciaTutor } from '../models/registro-asistencia-tutor.model';
+import { 
+  AsistenciaTutorResponse, 
+  CreateAsistenciaTutorDto,
+  UpdateAsistenciaTutorDto
+} from '../models/registro-asistencia-tutor.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RegistroAsistenciaTutorService {
-  private apiUrl = environment.apiUrl + '/vinculacion/asistencia-tutor';
+  private apiUrl = environment.apiUrl + '/api/vinculacion/asistencia-tutor';  // 👈 AGREGAR /api
 
   constructor(private http: HttpClient) {}
 
@@ -17,11 +20,11 @@ export class RegistroAsistenciaTutorService {
     return this.http.get<AsistenciaTutorResponse>(`${this.apiUrl}/${idVinculacion}`);
   }
 
-  crearAsistencia(datos: any): Observable<any> {
+  crearAsistencia(datos: CreateAsistenciaTutorDto): Observable<any> {
     return this.http.post(`${this.apiUrl}`, datos);
   }
 
-  actualizarAsistencia(id: number, datos: any): Observable<any> {
+  actualizarAsistencia(id: number, datos: UpdateAsistenciaTutorDto): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${id}`, datos);
   }
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { InicioActividadesService } from '../../../services/inicio-actividades.service';
 import { InicioActividadesResponse } from '../../../models';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-inicio-actividades',
@@ -18,15 +19,13 @@ export class InicioActividadesComponent implements OnInit {
   data: InicioActividadesResponse | null = null;
   isLoading = true;
   error: string | null = null;
-  idVinculacion: number | null = null;
+  idVinculacion: number = 0;
 
   ngOnInit(): void {
-    // Obtener ID de vinculación de la URL (para docente) o usar el del estudiante
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.idVinculacion = +params['id'];
       } else {
-        // Para estudiante, el backend resuelve el ID automáticamente, pasamos 0
         this.idVinculacion = 0;
       }
       this.cargarDatos();
@@ -36,16 +35,16 @@ export class InicioActividadesComponent implements OnInit {
   cargarDatos(): void {
     this.isLoading = true;
     this.error = null;
-    this.service.obtenerInicioActividades(this.idVinculacion!).subscribe({
-      next: (response) => {
-        this.data = response;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error al cargar Inicio Actividades:', err);
-        this.error = 'No se pudieron cargar los datos.';
-        this.isLoading = false;
-      }
-    });
+    this.service.obtenerInicioActividades(this.idVinculacion)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (response) => {
+          this.data = response;
+        },
+        error: (err) => {
+          console.error('Error al cargar Inicio Actividades:', err);
+          this.error = 'No se pudieron cargar los datos.';
+        }
+      });
   }
 }

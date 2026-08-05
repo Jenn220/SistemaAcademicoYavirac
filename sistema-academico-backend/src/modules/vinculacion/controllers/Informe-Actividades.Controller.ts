@@ -1,22 +1,20 @@
 import { 
   Controller, 
   Get, 
-  Patch, // 👈 Se agregó Patch
-  Body,  // 👈 Se agregó Body
+  Patch,
+  Body,
   Param, 
   ParseIntPipe, 
   Req, 
-  UseGuards 
+  UseGuards,
+  NotFoundException
 } from '@nestjs/common';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 
-// Servicios
 import { AuthVinculacionService } from '../services/auth-vinculacion.service';
 import { InformeActividadesService } from '../services/informe-actividades.service';
-
-// DTO 👈 Importa tu DTO
 import { UpdateResultadoAprendizajeDto } from '../dto/update-resultado-aprendizaje.dto';
 
 @UseGuards(JwtGuard, RolesGuard)
@@ -37,7 +35,6 @@ export class InformeActividadesController {
     return await this.informeActividadesService.obtenerInformeActividades(idFinal);
   }
 
-  // 🔴 AQUÍ ESTÁ LO QUE FALTABA: Endpoint para actualizar resultado de aprendizaje
   @Patch('actividad/:idActividad')
   @Roles('ESTUDIANTE', 'COORDINADOR')
   async actualizarResultadoAprendizaje(
@@ -45,8 +42,14 @@ export class InformeActividadesController {
     @Body() dto: UpdateResultadoAprendizajeDto,
     @Req() req: any,
   ) {
-    // 🔒 Resolvemos el id_vinculacion con el servicio de autenticación
-const idVinculacionReal = await this.authService.resolverIdVinculacionLectura(req, 0);
+    // ✅ Obtener la actividad para saber su id_vinculacion
+    const actividad = await this.informeActividadesService.obtenerActividadPorId(idActividad);
+    if (!actividad) {
+      throw new NotFoundException(`Actividad con ID ${idActividad} no encontrada`);
+    }
+
+    // Resolver la vinculación del usuario autenticado
+    const idVinculacionReal = await this.authService.resolverIdVinculacionLectura(req, Number(actividad.id_vinculacion));
 
     return await this.informeActividadesService.actualizarResultadoAprendizaje(
       idActividad,

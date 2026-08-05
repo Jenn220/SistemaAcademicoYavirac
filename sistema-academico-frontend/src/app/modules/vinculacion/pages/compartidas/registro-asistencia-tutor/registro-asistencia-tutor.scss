@@ -35,13 +35,6 @@
     padding: 1rem;
     background: #f4f7fd;
     border-radius: 4px;
-    .textarea-obs {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      margin: 0.5rem 0;
-    }
   }
 
   .acciones { margin-top: 1.5rem; display: flex; gap: 1rem; }
@@ -76,4 +69,13 @@
   .btn-delete { background: #dc3545; color: white; }
   .btn-save { background: #28a745; color: white; }
   .btn-cancel { background: #6c757d; color: white; }
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+.error {
+  color: #dc3545;
 }

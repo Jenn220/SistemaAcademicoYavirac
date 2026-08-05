@@ -1,11 +1,10 @@
-// modules/vinculacion/pages/compartidas/control-asistencia/control-asistencia.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ControlAsistenciaService } from '../../../services/control-asistencia.service';
 import { AuthService } from '../../../../auth/services/auth.service';
-import { AsistenciaEstudianteResponse, ActividadEstudiante } from '../../../models/control-asistencia.model';
+import { AsistenciaEstudianteResponse, ActividadEstudiante, CreateActividadEstudianteDto, UpdateActividadEstudianteDto } from '../../../models/control-asistencia.model';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -24,20 +23,20 @@ export class ControlAsistenciaComponent implements OnInit {
   loading = true;
   error: string | null = null;
   isEstudiante = false;
-  idVinculacion: number | null = null;
+  idVinculacion: number = 0;
 
-  // Para nueva actividad
-  nuevaActividad: Partial<ActividadEstudiante> = {
+  nuevaActividad: CreateActividadEstudianteDto = {
     fecha: '',
-    hora_entrada: '',
-    hora_salida: '',
-    descripcion: ''
+    hora_inicio: '',
+    hora_fin: '',
+    actividades_realizadas: '',
+    observacion: '',
+    resultado_aprendizaje: ''
   };
   mostrandoFormulario = false;
 
-  // Para edición
   editandoId: number | null = null;
-  editandoActividad: Partial<ActividadEstudiante> = {};
+  editandoActividad: UpdateActividadEstudianteDto = {};
 
   ngOnInit(): void {
     this.isEstudiante = this.authService.roles().includes('ESTUDIANTE');
@@ -55,8 +54,7 @@ export class ControlAsistenciaComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
-    const id = this.idVinculacion ?? 0;
-    this.asistenciaService.obtenerAsistencia(id)
+    this.asistenciaService.obtenerAsistencia(this.idVinculacion)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data) => {
@@ -69,11 +67,16 @@ export class ControlAsistenciaComponent implements OnInit {
       });
   }
 
-  // ================== CRUD ==================
-
   mostrarFormulario(): void {
     this.mostrandoFormulario = true;
-    this.nuevaActividad = { fecha: '', hora_entrada: '', hora_salida: '', descripcion: '' };
+    this.nuevaActividad = { 
+      fecha: '', 
+      hora_inicio: '', 
+      hora_fin: '', 
+      actividades_realizadas: '',
+      observacion: '',
+      resultado_aprendizaje: ''
+    };
   }
 
   cancelarNuevo(): void {
@@ -81,16 +84,13 @@ export class ControlAsistenciaComponent implements OnInit {
   }
 
   agregarActividad(): void {
-    if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_entrada || !this.nuevaActividad.hora_salida) {
+    if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_inicio || !this.nuevaActividad.hora_fin) {
       alert('Complete fecha, hora entrada y salida.');
       return;
     }
     const payload = {
-      id_vinculacion: this.idVinculacion || 0,
-      fecha: this.nuevaActividad.fecha,
-      hora_inicio: this.nuevaActividad.hora_entrada,
-      hora_fin: this.nuevaActividad.hora_salida,
-      actividades_realizadas: this.nuevaActividad.descripcion || ''
+      ...this.nuevaActividad,
+      id_vinculacion: this.idVinculacion
     };
     this.loading = true;
     this.asistenciaService.crearActividad(payload)
@@ -109,7 +109,12 @@ export class ControlAsistenciaComponent implements OnInit {
 
   editarActividad(actividad: ActividadEstudiante): void {
     this.editandoId = actividad.id;
-    this.editandoActividad = { ...actividad };
+    this.editandoActividad = {
+      fecha: actividad.fecha,
+      hora_inicio: actividad.hora_entrada,
+      hora_fin: actividad.hora_salida,
+      actividades_realizadas: actividad.descripcion
+    };
   }
 
   cancelarEdicion(): void {
@@ -119,14 +124,8 @@ export class ControlAsistenciaComponent implements OnInit {
 
   guardarEdicion(): void {
     if (!this.editandoId) return;
-    const payload: any = {
-      fecha: this.editandoActividad.fecha,
-      hora_inicio: this.editandoActividad.hora_entrada,
-      hora_fin: this.editandoActividad.hora_salida,
-      actividades_realizadas: this.editandoActividad.descripcion
-    };
     this.loading = true;
-    this.asistenciaService.actualizarActividad(this.editandoId, payload)
+    this.asistenciaService.actualizarActividad(this.editandoId, this.editandoActividad)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {

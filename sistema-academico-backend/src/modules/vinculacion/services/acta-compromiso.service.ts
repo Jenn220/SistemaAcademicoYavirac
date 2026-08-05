@@ -1,6 +1,4 @@
 import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common';
-
-// 👈 Importamos el nuevo puerto e interfaz
 import { 
   VINCULACION_ACTA_PORT, 
   IVinculacionActaPort 
@@ -16,7 +14,7 @@ export class ActaCompromisoService {
   async obtenerActaCompromiso(idVinculacion: number) {
     try {
       const data = await this.repository.obtainActaCompromisoRaw(idVinculacion);
-      if (!data) return null; 
+      if (!data) return null;
 
       return {
         titulo: "ACTA COMPROMISO DE PARTICIPACIÓN EN VINCULACIÓN CON LA COMUNIDAD",

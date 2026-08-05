@@ -14,7 +14,7 @@ export interface VinculacionEstudiante {
 }
 
 export interface EstudianteDocente {
-  id_vinculacion: string;
+  id_vinculacion: number;
   estudiante: string;
   cedula: string;
   carrera: string;

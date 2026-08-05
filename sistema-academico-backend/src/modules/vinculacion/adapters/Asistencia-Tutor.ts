@@ -12,24 +12,17 @@ export class AsistenciaTutorAdapter implements IVinculacionAsistenciaTutorPort {
   constructor(
     @InjectRepository(VinculacionEstudianteEntity)
     private readonly repoEstudiante: Repository<VinculacionEstudianteEntity>,
-
     @InjectRepository(VinculacionAsistenciaTutor)
     private readonly repoAsistencia: Repository<VinculacionAsistenciaTutor>,
   ) {}
-
-  // =========================================================================
-  // 🟢 MÉTODOS CRUD
-  // =========================================================================
 
   async crearAsistenciaTutor(datos: any): Promise<VinculacionAsistenciaTutor> {
     const datosParaGuardar = {
       ...datos,
       id_vinculacion: Number(datos.id_vinculacion),
     };
-
     const nuevaEntidad = this.repoAsistencia.create(datosParaGuardar as any);
     const resultado = await this.repoAsistencia.save(nuevaEntidad);
-
     return Array.isArray(resultado) ? resultado[0] : resultado;
   }
 
@@ -40,7 +33,6 @@ export class AsistenciaTutorAdapter implements IVinculacionAsistenciaTutorPort {
     const registroExistente = await this.repoAsistencia.findOne({
       where: { id_asistencia_tutor: id },
     });
-
     if (!registroExistente) return null;
 
     const datosAActualizar: any = { ...datos };
@@ -57,31 +49,23 @@ export class AsistenciaTutorAdapter implements IVinculacionAsistenciaTutorPort {
     return (resultado.affected ?? 0) > 0;
   }
 
-  // =========================================================================
-  // 🔎 CONSULTAS DE APOYO Y VALIDACIÓN
-  // =========================================================================
-
   async buscarPorId(id: number): Promise<VinculacionAsistenciaTutor | null> {
     return await this.repoAsistencia.findOne({
       where: { id_asistencia_tutor: id },
     });
   }
 
-async buscarPorFechaYVinculacion(
-  idVinculacion: number,
-  fecha: string,
-): Promise<VinculacionAsistenciaTutor | null> {
-  return await this.repoAsistencia.findOne({
-    where: {
-      id_vinculacion: Number(idVinculacion),
-      fecha: new Date(fecha), // 👈 Convertimos el string a Date
-    },
-  });
-}
-
-  // =========================================================================
-  // 📊 MÉTODOS RAW REPORTE Y CONSULTAS
-  // =========================================================================
+  async buscarPorFechaYVinculacion(
+    idVinculacion: number,
+    fecha: string,
+  ): Promise<VinculacionAsistenciaTutor | null> {
+    return await this.repoAsistencia.findOne({
+      where: {
+        id_vinculacion: Number(idVinculacion),
+        fecha: new Date(fecha),
+      },
+    });
+  }
 
   async obtainReporteAsistenciaTutorRaw(idVinculacion: number): Promise<any[]> {
     const query = `
@@ -121,7 +105,6 @@ async buscarPorFechaYVinculacion(
       WHERE vinc.id_vinculacion = $1
       ORDER BY ast.fecha ASC;
     `;
-    
     return await this.repoEstudiante.query(query, [idVinculacion]);
   }
 
@@ -157,7 +140,6 @@ async buscarPorFechaYVinculacion(
         per.nombre
       ORDER BY est.apellidos ASC;
     `;
-
     return await this.repoEstudiante.query(query, [idDocente]);
   }
 }

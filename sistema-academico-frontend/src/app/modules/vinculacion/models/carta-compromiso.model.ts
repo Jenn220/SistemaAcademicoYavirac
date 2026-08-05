@@ -1,4 +1,3 @@
-// modules/vinculacion/models/carta-compromiso.model.ts
 export interface CartaCompromiso {
   titulo: string;
   instituto: string;

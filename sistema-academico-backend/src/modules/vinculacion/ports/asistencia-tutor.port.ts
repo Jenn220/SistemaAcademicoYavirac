@@ -5,16 +5,11 @@ import { UpdateAsistenciaTutorDto } from '../dto/update-asistencia-tutor.dto';
 export const VINCULACION_ASISTENCIA_TUTOR_PORT = 'VINCULACION_ASISTENCIA_TUTOR_PORT';
 
 export interface IVinculacionAsistenciaTutorPort {
-  // 📊 Métodos de Consulta y Reportes
   obtainAsistenciasTutorPorDocenteRaw(idDocente: number): Promise<any>;
   obtainReporteAsistenciaTutorRaw(idVinculacion: number): Promise<any>;
-
-  // 👨‍🏫 Métodos CRUD
   crearAsistenciaTutor(datos: CreateAsistenciaTutorDto): Promise<any>;
   actualizarAsistenciaTutor(id: number, datos: UpdateAsistenciaTutorDto): Promise<any>;
   eliminarAsistenciaTutor(id: number): Promise<any>;
-
   buscarPorId(id: number): Promise<VinculacionAsistenciaTutor | null>;
   buscarPorFechaYVinculacion(idVinculacion: number, fecha: string): Promise<VinculacionAsistenciaTutor | null>;
-
 }

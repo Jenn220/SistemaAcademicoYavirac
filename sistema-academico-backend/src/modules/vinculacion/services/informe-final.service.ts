@@ -95,18 +95,18 @@ export class InformeFinalService {
       }
     };
   }
-  async listarInformesPorDocente(idDocente: number) {
-  const listado = await this.repository.listarInformesEstudiantesPorDocente(idDocente);
 
-  return listado.map((item) => ({
-    id_vinculacion: item.id_vinculacion,
-    estudiante: item.estudiante,
-    cedula: item.cedula,
-    carrera: item.carrera,
-    nombre_proyecto: item.nombre_proyecto,
-    entidad_beneficiaria: item.entidad_beneficiaria,
-    nota_final: item.nota_final ? parseFloat(item.nota_final) : null,
-    estado_informe: item.estado_informe,
-  }));
-}
+  async listarInformesPorDocente(idDocente: number) {
+    const listado = await this.repository.listarInformesEstudiantesPorDocente(idDocente);
+    return listado.map((item) => ({
+      id_vinculacion: item.id_vinculacion,
+      estudiante: item.estudiante,
+      cedula: item.cedula,
+      carrera: item.carrera,
+      nombre_proyecto: item.nombre_proyecto,
+      entidad_beneficiaria: item.entidad_beneficiaria,
+      nota_final: item.nota_final ? parseFloat(item.nota_final) : null,
+      estado_informe: item.estado_informe,
+    }));
+  }
 }

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
 import { IVinculacionInicioActividadesPort } from '../ports/inicio-actividades-tutor.port';
+import { UpdateInicioActividadesDto } from '../dto/update-inicio-actividades.dto';
 
 @Injectable()
 export class InicioActividadesTutorAdapter implements IVinculacionInicioActividadesPort {
@@ -36,32 +37,22 @@ export class InicioActividadesTutorAdapter implements IVinculacionInicioActivida
         vinc.fecha_inicio AS fecha_proyecto,
         car.nombre AS carrera,
         inf.actividad_macro AS descripcion_actividades,
-
-        -- 👇 Entidad receptora unificada
         COALESCE(er.nombre_entidad, emp.razon_social, 'Sin Institución Asignada') AS entidad_beneficiaria,
         er.tutor_entidad_receptora AS tutor_entidad,
-
-        -- 👇 Obtención limpia del coordinador evitando espacios vacíos
         COALESCE(
           NULLIF(TRIM(CONCAT(coord.nombres, ' ', coord.apellidos)), ''), 
           'Sin Coordinador Asignado'
         ) AS coordinador
-
       FROM vinculacion_estudiante vinc
       INNER JOIN docente doc ON vinc.id_docente = doc.id_docente
       INNER JOIN matricula_detalle mat ON vinc.id_matricula_detalle = mat.id_matricula_detalle
       INNER JOIN matricula m ON mat.id_matricula = m.id_matricula
       INNER JOIN carrera car ON m.id_carrera = car.id_carrera
       LEFT JOIN vinculacion_informe inf ON vinc.id_vinculacion = inf.id_vinculacion
-
-      -- 👇 Integración de Entidad Receptora y Empresa
       LEFT JOIN empresa emp ON vinc.id_empresa = emp.id_empresa
       LEFT JOIN vinculacion_entidad_receptora er ON vinc.id_entidad_receptora = er.id_entidad
-
-      -- 👇 Unión para traer al coordinador de la carrera en ese período
       LEFT JOIN periodo_carrera pc ON pc.id_periodo = vinc.id_periodo AND pc.id_carrera = m.id_carrera
       LEFT JOIN docente coord ON pc.id_coordinador = coord.id_docente
-
       WHERE vinc.id_vinculacion = $1
       LIMIT 1;
     `;
@@ -75,7 +66,6 @@ export class InicioActividadesTutorAdapter implements IVinculacionInicioActivida
   ): Promise<boolean> {
     const { nombre_proyecto, fecha_inicio } = datos;
 
-    // 1. Actualizar datos en vinculacion_estudiante
     if (nombre_proyecto !== undefined || fecha_inicio !== undefined) {
       const updateVincQuery = `
         UPDATE vinculacion_estudiante
@@ -90,8 +80,6 @@ export class InicioActividadesTutorAdapter implements IVinculacionInicioActivida
         idVinculacion,
       ]);
     }
-
-    // 👈 Retorno explícito para cumplir con Promise<boolean>
-    return true; 
+    return true;
   }
 }

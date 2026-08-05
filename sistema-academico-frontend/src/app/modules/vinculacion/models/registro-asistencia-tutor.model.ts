@@ -1,4 +1,3 @@
-// modules/vinculacion/models/registro-asistencia-tutor.model.ts
 export interface AsistenciaTutor {
   id: number;
   fecha: string;
@@ -21,4 +20,21 @@ export interface AsistenciaTutorResponse {
     observaciones: string;
     coordinador_carrera: string;
   };
+}
+
+export interface CreateAsistenciaTutorDto {
+  id_vinculacion: number;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  actividad_realizada: string;
+  observaciones?: string;
+}
+
+export interface UpdateAsistenciaTutorDto {
+  fecha?: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  actividad_realizada?: string;
+  observaciones?: string;
 }

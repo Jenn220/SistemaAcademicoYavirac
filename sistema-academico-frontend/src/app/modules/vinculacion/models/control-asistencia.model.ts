@@ -1,4 +1,3 @@
-// modules/vinculacion/models/control-asistencia.model.ts
 export interface ActividadEstudiante {
   id: number;
   fecha: string;
@@ -25,4 +24,22 @@ export interface AsistenciaEstudianteResponse {
     total_horas: number;
     observaciones: string;
   };
+}
+
+export interface CreateActividadEstudianteDto {
+  id_vinculacion?: number;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  actividades_realizadas: string;
+  observacion?: string;
+  resultado_aprendizaje?: string;
+}
+
+export interface UpdateActividadEstudianteDto {
+  fecha?: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  actividades_realizadas?: string;
+  resultado_aprendizaje?: string;
 }

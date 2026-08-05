@@ -1,5 +1,4 @@
 <div class="asistencia-container" *ngIf="!loading && !error && data">
-  <!-- Cabecera -->
   <div class="cabecera">
     <h2>CONTROL DE ASISTENCIA Y SEGUIMIENTO DE VINCULACIÓN CON LA COMUNIDAD</h2>
     <div class="datos">
@@ -13,7 +12,6 @@
     </div>
   </div>
 
-  <!-- Tabla de actividades -->
   <table class="tabla-actividades">
     <thead>
       <tr>
@@ -33,16 +31,16 @@
         </td>
         <td>
           <span *ngIf="editandoId !== act.id">{{ act.hora_entrada }}</span>
-          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_entrada" />
+          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" />
         </td>
         <td>
           <span *ngIf="editandoId !== act.id">{{ act.hora_salida }}</span>
-          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_salida" />
+          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" />
         </td>
         <td>{{ act.total_horas | number:'1.2-2' }}</td>
         <td>
           <span *ngIf="editandoId !== act.id">{{ act.descripcion }}</span>
-          <input *ngIf="editandoId === act.id" type="text" [(ngModel)]="editandoActividad.descripcion" />
+          <input *ngIf="editandoId === act.id" type="text" [(ngModel)]="editandoActividad.actividades_realizadas" />
         </td>
         <td *ngIf="isEstudiante">
           <ng-container *ngIf="editandoId !== act.id">
@@ -65,26 +63,26 @@
     </tfoot>
   </table>
 
-  <!-- Observaciones -->
   <div class="observaciones">
     <p><strong>OBSERVACIONES:</strong> {{ data.totales.observaciones || 'Ninguna' }}</p>
   </div>
 
-  <!-- Botón agregar (solo estudiante) -->
   <div class="acciones" *ngIf="isEstudiante">
     <button *ngIf="!mostrandoFormulario" (click)="mostrarFormulario()" class="btn-add">+ Agregar actividad</button>
   </div>
 
-  <!-- Formulario para nueva actividad -->
   <div class="nueva-actividad" *ngIf="mostrandoFormulario">
     <h3>Nueva actividad</h3>
     <div class="form-row">
       <label>Fecha: <input type="date" [(ngModel)]="nuevaActividad.fecha" /></label>
-      <label>Hora entrada: <input type="time" [(ngModel)]="nuevaActividad.hora_entrada" /></label>
-      <label>Hora salida: <input type="time" [(ngModel)]="nuevaActividad.hora_salida" /></label>
+      <label>Hora entrada: <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" /></label>
+      <label>Hora salida: <input type="time" [(ngModel)]="nuevaActividad.hora_fin" /></label>
     </div>
     <div class="form-row">
-      <label>Actividad realizada: <input type="text" [(ngModel)]="nuevaActividad.descripcion" /></label>
+      <label>Actividad realizada: <input type="text" [(ngModel)]="nuevaActividad.actividades_realizadas" /></label>
+    </div>
+    <div class="form-row">
+      <label>Observación: <input type="text" [(ngModel)]="nuevaActividad.observacion" /></label>
     </div>
     <div class="form-actions">
       <button (click)="agregarActividad()" class="btn-save">Guardar</button>

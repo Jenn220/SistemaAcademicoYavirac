@@ -9,3 +9,8 @@ export interface InicioActividadesResponse {
   tutor_entidad: string;
   descripcion_actividades: string;
 }
+
+export interface UpdateInicioActividadesDto {
+  nombre_proyecto?: string;
+  fecha_inicio?: string;
+}

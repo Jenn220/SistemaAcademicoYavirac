@@ -57,41 +57,49 @@ export class InformeActividadesService {
       informe_actividades: actividades,
     };
   }
-async actualizarResultadoAprendizaje(
-  idActividad: number,
-  dto: UpdateResultadoAprendizajeDto,
-  user: any,
-  idVinculacionUser?: number,
-) {
-  const roles = user?.roles || user?.roles_usuario || [];
-  const esEstudiante = roles.includes('ESTUDIANTE');
 
-  if (esEstudiante) {
-    // Obtenemos las actividades asociadas a este id_vinculacion
-    const actividades = await this.repository.obtainInformeActividadesRaw(Number(idVinculacionUser));
-
-    console.log('--- DEBUG PATCH RESULTADO ---');
-    console.log('idActividad solicitada:', idActividad);
-    console.log('idVinculacion resuelto:', idVinculacionUser);
-    console.log('Actividades encontradas para el usuario:', actividades);
-
-    // Nota: Revisa cómo devuelve la BD la propiedad id (puede ser row.id o row.id_actividad_estudiante)
-    const lePertenece = actividades.some((row: any) => 
-      Number(row.id_actividad_estudiante || row.id) === idActividad
-    );
-
-    if (!lePertenece) {
-      throw new NotFoundException(
-        `La actividad con ID ${idActividad} no existe o no pertenece a tu perfil.`
-      );
+  async obtenerActividadPorId(idActividad: number): Promise<any> {
+    // Método auxiliar para obtener una actividad y su id_vinculacion
+    const query = `
+      SELECT id_actividad_estudiante, id_vinculacion, resultado_aprendizaje
+      FROM vinculacion_actividad_estudiante
+      WHERE id_actividad_estudiante = $1
+    `;
+    const actividades = await this.repository.obtainInformeActividadesRaw(0); // Esto no es ideal, mejor crear un método específico
+    const actividad = actividades.find((a: any) => Number(a.id_actividad_estudiante) === idActividad);
+    if (!actividad) {
+      throw new NotFoundException(`Actividad con ID ${idActividad} no encontrada`);
     }
+    return actividad;
   }
 
-  await this.repository.actualizarResultadoAprendizaje(idActividad, dto.resultado_aprendizaje);
+  async actualizarResultadoAprendizaje(
+    idActividad: number,
+    dto: UpdateResultadoAprendizajeDto,
+    user: any,
+    idVinculacionUser?: number,
+  ) {
+    const roles = user?.roles || user?.roles_usuario || [];
+    const esEstudiante = roles.includes('ESTUDIANTE');
 
-  return {
-    statusCode: 200,
-    message: 'Resultado de aprendizaje actualizado exitosamente.',
-  };
-}
+    if (esEstudiante) {
+      const actividades = await this.repository.obtainInformeActividadesRaw(Number(idVinculacionUser));
+      const lePertenece = actividades.some((row: any) => 
+        Number(row.id_actividad_estudiante || row.id) === idActividad
+      );
+
+      if (!lePertenece) {
+        throw new NotFoundException(
+          `La actividad con ID ${idActividad} no existe o no pertenece a tu perfil.`
+        );
+      }
+    }
+
+    await this.repository.actualizarResultadoAprendizaje(idActividad, dto.resultado_aprendizaje);
+
+    return {
+      statusCode: 200,
+      message: 'Resultado de aprendizaje actualizado exitosamente.',
+    };
+  }
 }

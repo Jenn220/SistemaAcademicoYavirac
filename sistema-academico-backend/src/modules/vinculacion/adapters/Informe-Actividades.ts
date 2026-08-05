@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
+import { IInformeActividadesPort } from '../ports/informe-actividades.port';
 
 @Injectable()
-export class InformeActividadesAdapter {
-
+export class InformeActividadesAdapter implements IInformeActividadesPort {
   constructor(
     @InjectRepository(VinculacionEstudianteEntity)
     private readonly repo: Repository<VinculacionEstudianteEntity>,
@@ -14,10 +14,8 @@ export class InformeActividadesAdapter {
   async obtainInformeActividadesRaw(idVinculacion: number): Promise<any[]> {
     const query = `
       SELECT 
-        act.id_actividad_estudiante AS id_actividad_estudiante, -- 👈 Corregido: 'act' en lugar de 'a'
+        act.id_actividad_estudiante AS id_actividad_estudiante,
         emp.razon_social AS entidad_beneficiaria,
-        
-        -- Extraemos el 'nombre' del nivel a través de la primera asignatura matriculada
         (
           SELECT n.nombre 
           FROM matricula_detalle md
@@ -27,7 +25,6 @@ export class InformeActividadesAdapter {
           WHERE md.id_matricula = m.id_matricula
           LIMIT 1
         ) AS nivel,
-        
         CONCAT(est.nombres, ' ', est.apellidos) AS estudiante,
         est.cedula AS cedula_identidad,
         per.nombre AS ciclo_academico,
@@ -68,7 +65,6 @@ export class InformeActividadesAdapter {
       SET resultado_aprendizaje = $1
       WHERE id_actividad_estudiante = $2
     `;
-
     return await this.repo.query(query, [resultadoAprendizaje, idActividad]);
   }
 }

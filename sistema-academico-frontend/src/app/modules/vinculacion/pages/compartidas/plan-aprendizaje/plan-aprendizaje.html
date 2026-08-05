@@ -1,5 +1,4 @@
 <div class="container" *ngIf="!loading && !error && data">
-  <!-- Cabecera -->
   <div class="cabecera">
     <h2>PLAN DE APRENDIZAJE Y SEGUIMIENTO</h2>
     <div class="datos">
@@ -17,7 +16,6 @@
     </div>
   </div>
 
-  <!-- Tabla de actividades -->
   <table class="tabla">
     <thead>
       <tr>
@@ -49,29 +47,6 @@
       </tr>
     </tbody>
   </table>
-
-  <!-- Reflexión -->
-  <div class="reflexion">
-    <p><strong>Reflexión sobre el aprendizaje alcanzado:</strong></p>
-    <p>{{ reflexion }}</p>
-  </div>
-
-  <!-- Avance de proyecto (solo lectura) -->
-  <div class="avance">
-    <h4>Avance del proyecto</h4>
-    <ul>
-      <li>1. Título del Proyecto (10%) - 10%</li>
-      <li>2. Antecedentes (10%) - 10%</li>
-      <li>3. Marco Teórico (10%) - 10%</li>
-      <li>4. Metodología (10%) - 10%</li>
-      <li>5. Resultados (10%) - 10%</li>
-      <li>6. Conclusiones y recomendaciones (10%) - 10%</li>
-      <li>7. Referencias bibliográficas (10%) - 10%</li>
-      <li>8. Anexos (10%) - 10%</li>
-      <li>9. Entrega de proyecto final (20%) - 20%</li>
-    </ul>
-    <p><strong>Total:</strong> 100%</p>
-  </div>
 </div>
 
 <div class="loading" *ngIf="loading">Cargando...</div>
