@@ -299,9 +299,9 @@ export class DocumentoPlantillaService {
       : null;
 
     const carrera: DatosCarrera = {
-      coordinador: coordinadorNombre,
-      tutorAcademico: tutorAcademicoNombre,
-      nucleoEstructurante: nucleo?.nombre ?? '',
+      coordinador: practica?.nombre_coordinador ?? coordinadorNombre,
+      tutorAcademico: practica?.nombre_tutor_academico ?? tutorAcademicoNombre,
+      nucleoEstructurante: practica?.nombre_nucleo ?? nucleo?.nombre ?? '',
       objetivoNucleoEstructurante: nucleo?.objetivo ?? '',
     };
 
@@ -309,22 +309,22 @@ export class DocumentoPlantillaService {
       nombre: practica?.nombre_proyecto ?? '',
       cobertura: practica?.cobertura_localizacion ?? '',
       plazo: practica?.plazo_ejecucion ?? '',
-      empresaAsignada: empresa?.razon_social ?? '',
+      empresaAsignada: practica?.nombre_empresa ?? empresa?.razon_social ?? '',
       fechaInicio: fechaInicioFase || (practica?.fecha_inicio ?? ''),
       fechaFin: fechaFinFase || (practica?.fecha_fin ?? ''),
     };
 
     const empresaBeneficiaria: DatosEmpresaBeneficiaria = {
-      razonSocial: empresa?.razon_social ?? '',
+      razonSocial: practica?.nombre_empresa ?? empresa?.razon_social ?? '',
       representanteLegal: empresa?.representante_legal ?? '',
-      tutorEmpresarial: tutorEmpresarial ? `${tutorEmpresarial.nombres} ${tutorEmpresarial.apellidos}` : '',
+      tutorEmpresarial: practica?.nombre_tutor_empresarial ?? (tutorEmpresarial ? `${tutorEmpresarial.nombres} ${tutorEmpresarial.apellidos}` : ''),
       direccion: empresa?.direccion ?? '',
       ubicacion: '',
     };
 
     const periodoAcademico: PeriodoAcademico = {
       codigo: periodoCodigo,
-      nombre: periodoNombre,
+      nombre: practica?.nombre_periodo ?? periodoNombre,
       fechaInicio: periodoInicio,
       fechaFin: periodoFin,
     };
@@ -341,10 +341,12 @@ export class DocumentoPlantillaService {
       estudiante: {
         idEstudiante: estudiante?.id_estudiante ?? null,
         nombre: estudiante ? `${estudiante.nombres} ${estudiante.apellidos}` : '',
+        nombres: estudiante?.nombres ?? '',
+        apellidos: estudiante?.apellidos ?? '',
         cedula: estudiante?.cedula ?? '',
-        carrera: carreraNombre,
-        curso: nivelNombre,
-        nivel: nivelNombre,
+         carrera: practica?.nombre_carrera ?? carreraNombre,
+         curso: practica?.nombre_nivel ?? nivelNombre,
+         nivel: practica?.nombre_nivel ?? nivelNombre,
         email: estudiante?.correo ?? '',
         telefono: estudiante?.telefono ?? '',
         estadoCivil: estudiante?.estado_civil ?? '',
@@ -352,6 +354,8 @@ export class DocumentoPlantillaService {
         domicilio: estudiante?.domicilio ?? '',
         contactoEmergenciaNombre: estudiante?.contacto_emergencia_nombre ?? '',
         contactoEmergenciaTelefono: estudiante?.contacto_emergencia_telefono ?? '',
+        hornada: practica?.hornada ?? '',
+        paralelo: practica?.paralelo ?? '',
       },
       carrera,
       proyectoEmpresarial,
@@ -367,6 +371,8 @@ export class DocumentoPlantillaService {
       estudiante: {
         idEstudiante: null,
         nombre: '',
+        nombres: '',
+        apellidos: '',
         cedula: '',
         carrera: '',
         curso: '',
@@ -378,6 +384,8 @@ export class DocumentoPlantillaService {
         domicilio: '',
         contactoEmergenciaNombre: '',
         contactoEmergenciaTelefono: '',
+        hornada: '',
+        paralelo: '',
       },
       carrera: {
         coordinador: '',
@@ -429,14 +437,13 @@ export class DocumentoPlantillaService {
     return {
       encabezado: `D.M. Quito, ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
       cuerpo: [
-        `Yo, ${estudiante.nombre} con C.C. ${estudiante.cedula} estudiante de ${estudiante.curso} de la carrera ${estudiante.carrera} en modalidad dual, DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC, asignado/a a ${empresaBeneficiaria.razonSocial}`,
         'De acuerdo con el proyecto de carrera aprobado y vigente, en cumplimiento del currículo de la carrera, y en el marco del convenio firmado, me presento y, expreso mi interés y predisposición de realizar prácticas de formación dual, con el fin de cumplir con la planificación, ejecución, control y evaluación del proceso de desarrollo de las competencias laborales como estudiante de la carrera.',
         'Soy una persona que cumple con el perfil de ingreso de la carrera, y busco aprender y desarrollar los conocimientos, habilidades-destrezas y actitudes del perfil de egreso, y lograr las competencias como profesional de mi carrera.',
         'Por lo cual, solicito su aceptación para realizar mi proceso de formación práctica en el entorno laboral real en modalidad dual.',
         'A la vez que, me comprometo con acatar la normativa general vigente con las obligaciones establecidas en el Artículo 16 (Obligaciones generales del estudiante en modalidad dual) del Reglamento para Carreras y Programas en Modalidad de Formación Dual vigente, así como también, la normativa interna de la entidad formadora y, la normativa del Instituto.',
         'Reconociendo y aceptando entre otras prohibiciones expresas durante la Fase Práctica, las que se determinan a continuación:',
         'También me comprometo en:',
-        'Y así mismo, me comprometo en elaborar y presentar todos los documentos necesarios para validar el proceso de formación en modalidad dual, de acuerdo con lo establecido por la entidad receptora formadora y/o el Instituto, los cuáles deberán estar correctamente llenados y firmados.',
+        'Y así mismo, me comprometo en elaborar y presentar todos los documentos necesarios para validar el proceso de formación en modalidad dual, de acuerdo con lo establecido por la entidad receptora formadora y/o el Instituto, los cuáles deberán estar correctamente llenos y firmados.',
         'El incumplimiento a lo comprometido con la entidad receptora formadora y/o del Instituto, será causal para la toma de medidas disciplinarias conforme a las responsabilidades del proceso de formación en modalidad dual .',
         'De no dar cumplimiento con lo antes citado, puede conllevar bajo el debido proceso a la pérdida de la fase práctica.',
         'De manera libre y voluntaria acepto lo expresado y firmo como esta acta compromiso como constancia.',

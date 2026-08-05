@@ -1,6 +1,8 @@
 export interface DatosEstudiante {
   idEstudiante: number | null;
   nombre: string;
+  nombres: string;
+  apellidos: string;
   cedula: string;
   carrera: string;
   curso: string;
@@ -12,6 +14,8 @@ export interface DatosEstudiante {
   domicilio: string;
   contactoEmergenciaNombre: string;
   contactoEmergenciaTelefono: string;
+  hornada: string;
+  paralelo: string;
 }
 
 export interface DatosCarrera {

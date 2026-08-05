@@ -11,6 +11,7 @@ import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { StudentPresentation } from '../../components/student-presentation/student-presentation';
+import { DocumentHeader } from '../../components/document-header/document-header';
 
 import { CartaCompromiso as Carta } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
@@ -37,7 +38,8 @@ function cartaVacia(): Carta {
   standalone: true,
   imports: [
     CommonModule,
-    StudentPresentation
+    StudentPresentation,
+    DocumentHeader
   ],
   templateUrl: './carta-compromiso.html',
   styleUrl: './carta-compromiso.scss'
@@ -51,6 +53,7 @@ export class CartaCompromiso implements OnInit {
   private auth = inject(AuthService);
 
   carta: Carta = cartaVacia();
+  datosMaestros: any = {};
   guardando = false;
   soloLectura = false;
   idPractica: number | undefined;
@@ -96,6 +99,8 @@ export class CartaCompromiso implements OnInit {
     }).subscribe({
 
       next: ({ carta, datos }) => {
+
+        this.datosMaestros = datos ?? {};
 
         const res = carta as unknown as Record<string, any>;
         const estudiante = res?.['estudiante'] ?? {};

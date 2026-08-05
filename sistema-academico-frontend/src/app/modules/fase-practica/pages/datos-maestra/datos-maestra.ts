@@ -33,7 +33,8 @@ export class DatosMaestraPage implements OnInit {
   esEstudiante = false;
 
   datos = {
-    nombre: '',
+    nombres: '',
+    apellidos: '',
     cedula: '',
     telefono: '',
     correo: '',
@@ -55,9 +56,14 @@ export class DatosMaestraPage implements OnInit {
     plazo: '',
     fecha_inicio: '',
     fecha_fin: '',
+    hornada: '',
+    paralelo: '',
   };
 
   readonly camposEditables: Record<string, string> = {
+    nombres: 'Nombres',
+    apellidos: 'Apellidos',
+    cedula: 'Cédula',
     telefono: 'Teléfono',
     correo: 'Correo electrónico',
     estado_civil: 'Estado civil',
@@ -65,6 +71,21 @@ export class DatosMaestraPage implements OnInit {
     domicilio: 'Domicilio',
     contacto_emergencia_nombre: 'Contacto emergencia (nombre)',
     contacto_emergencia_telefono: 'Contacto emergencia (teléfono)',
+    carrera: 'Carrera',
+    nivel: 'Nivel / Curso',
+    periodo: 'Periodo académico',
+    nucleo: 'Núcleo estructurante',
+    tutor_academico: 'Tutor académico',
+    coordinador: 'Coordinador',
+    empresa: 'Empresa formadora',
+    tutor_empresarial: 'Tutor empresarial',
+    proyecto: 'Proyecto empresarial',
+    cobertura: 'Cobertura / Localización',
+    plazo: 'Plazo de ejecución',
+    fecha_inicio: 'Fecha inicio fase práctica',
+    fecha_fin: 'Fecha fin fase práctica',
+    hornada: 'Hornada',
+    paralelo: 'Paralelo',
   };
 
   ngOnInit(): void {
@@ -147,7 +168,8 @@ export class DatosMaestraPage implements OnInit {
     const periodo = datos?.periodoAcademico ?? {};
 
     this.datos = {
-      nombre: estudiante.nombre ?? '',
+      nombres: estudiante.nombres ?? '',
+      apellidos: estudiante.apellidos ?? '',
       cedula: estudiante.cedula ?? '',
       telefono: estudiante.telefono ?? '',
       correo: estudiante.correo ?? estudiante.email ?? '',
@@ -169,6 +191,8 @@ export class DatosMaestraPage implements OnInit {
       plazo: proyecto.plazo ?? '',
       fecha_inicio: proyecto.fechaInicio ?? '',
       fecha_fin: proyecto.fechaFin ?? '',
+      hornada: estudiante.hornada ?? '',
+      paralelo: estudiante.paralelo ?? '',
     };
     this.cargando = false;
     this.cdr.detectChanges();
@@ -178,7 +202,35 @@ export class DatosMaestraPage implements OnInit {
     if (!this.esEstudiante) return;
     this.guardando = true;
 
-    this.documentos.actualizarDatosEstudiante(this.datos).subscribe({
+    const datosParaGuardar: Record<string, any> = {
+      nombres: this.datos.nombres,
+      apellidos: this.datos.apellidos,
+      cedula: this.datos.cedula,
+      telefono: this.datos.telefono,
+      correo: this.datos.correo,
+      estado_civil: this.datos.estado_civil,
+      tipo_sangre: this.datos.tipo_sangre,
+      domicilio: this.datos.domicilio,
+      contacto_emergencia_nombre: this.datos.contacto_emergencia_nombre,
+      contacto_emergencia_telefono: this.datos.contacto_emergencia_telefono,
+      carrera: this.datos.carrera,
+      nivel: this.datos.nivel,
+      periodo: this.datos.periodo,
+      nucleo: this.datos.nucleo,
+      tutor_academico: this.datos.tutor_academico,
+      coordinador: this.datos.coordinador,
+      empresa: this.datos.empresa,
+      tutor_empresarial: this.datos.tutor_empresarial,
+      proyecto: this.datos.proyecto,
+      cobertura: this.datos.cobertura,
+      plazo: this.datos.plazo,
+      fecha_inicio: this.datos.fecha_inicio,
+      fecha_fin: this.datos.fecha_fin,
+      hornada: this.datos.hornada,
+      paralelo: this.datos.paralelo,
+    };
+
+    this.documentos.actualizarDatosEstudiante(datosParaGuardar).subscribe({
       next: () => {
         this.guardando = false;
         Swal.fire({

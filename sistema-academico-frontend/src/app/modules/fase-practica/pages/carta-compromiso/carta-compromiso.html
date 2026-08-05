@@ -26,7 +26,30 @@
 
     <div class="contenido">
 
-        <app-student-presentation
+        <app-document-header
+        [mostrarDatos]="false"
+        [titulo]="'FORMATO 01 CARTA DE COMPROMISO'"
+        [codigo]="'DS-010203-1'"
+        [estudianteNombre]="datosMaestros?.estudiante?.nombre ?? ''"
+        [estudianteCedula]="datosMaestros?.estudiante?.cedula ?? ''"
+        [carrera]="datosMaestros?.estudiante?.carrera ?? ''"
+        [nivel]="datosMaestros?.estudiante?.nivel ?? datosMaestros?.estudiante?.curso ?? ''"
+        [periodo]="datosMaestros?.periodoAcademico?.nombre ?? ''"
+        [nucleo]="datosMaestros?.carrera?.nucleoEstructurante ?? ''"
+        [tutorAcademico]="datosMaestros?.carrera?.tutorAcademico ?? ''"
+        [coordinador]="datosMaestros?.carrera?.coordinador ?? ''"
+        [empresa]="datosMaestros?.empresaBeneficiaria?.razonSocial ?? datosMaestros?.proyectoEmpresarial?.empresaAsignada ?? ''"
+        [tutorEmpresarial]="datosMaestros?.empresaBeneficiaria?.tutorEmpresarial ?? ''"
+        [proyecto]="datosMaestros?.proyectoEmpresarial?.nombre ?? ''"
+        [cobertura]="datosMaestros?.proyectoEmpresarial?.cobertura ?? ''"
+        [plazo]="datosMaestros?.proyectoEmpresarial?.plazo ?? ''"
+        [fechaInicio]="datosMaestros?.proyectoEmpresarial?.fechaInicio ?? ''"
+        [fechaFin]="datosMaestros?.proyectoEmpresarial?.fechaFin ?? ''"
+        [telefonoEmergenciaNombre]="datosMaestros?.estudiante?.contactoEmergenciaNombre ?? ''"
+        [telefonoEmergenciaTelefono]="datosMaestros?.estudiante?.contactoEmergenciaTelefono ?? ''">
+    </app-document-header>
+
+    <app-student-presentation
             [carta]="carta">
         </app-student-presentation>
         

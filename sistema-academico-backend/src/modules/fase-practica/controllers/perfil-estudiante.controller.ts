@@ -49,9 +49,75 @@ export class PerfilEstudianteController {
 
   @Patch('perfil')
   async actualizarPerfil(@Req() req: any, @Body() dto: ActualizarDatosEstudianteDto) {
-    const estudiante = await this.repo.findOne({ where: { id_estudiante: req.user.idEstudiante } });
-    if (!estudiante) return null;
-    Object.assign(estudiante, dto);
-    return this.repo.save(estudiante);
+    const idEstudiante = req.user.idEstudiante;
+    if (!idEstudiante) return null;
+
+    const estudiante = await this.repo.findOne({ where: { id_estudiante: idEstudiante } });
+    if (estudiante) {
+      Object.assign(estudiante, dto);
+      await this.repo.save(estudiante);
+    }
+
+    const mapeoPractica: Record<string, string> = {
+      carrera: 'nombre_carrera',
+      nivel: 'nombre_nivel',
+      periodo: 'nombre_periodo',
+      nucleo: 'nombre_nucleo',
+      tutor_academico: 'nombre_tutor_academico',
+      coordinador: 'nombre_coordinador',
+      empresa: 'nombre_empresa',
+      tutor_empresarial: 'nombre_tutor_empresarial',
+      proyecto: 'nombre_proyecto',
+      cobertura: 'cobertura_localizacion',
+      plazo: 'plazo_ejecucion',
+      fecha_inicio: 'fecha_inicio',
+      fecha_fin: 'fecha_fin',
+      hornada: 'hornada',
+      paralelo: 'paralelo',
+    };
+
+    const dtoRecord = dto as Record<string, any>;
+    const columnasPermitidas = Object.values(mapeoPractica);
+    const valoresPractica: Record<string, any> = {};
+    for (const [dtoKey, colName] of Object.entries(mapeoPractica)) {
+      if (dtoRecord[dtoKey] !== undefined && dtoRecord[dtoKey] !== null && dtoRecord[dtoKey] !== '') {
+        valoresPractica[colName] = dtoRecord[dtoKey];
+      }
+    }
+
+    if (Object.keys(valoresPractica).length > 0) {
+      const rows = await this.dataSource.query(
+        `SELECT p.id_practica
+         FROM practica_estudiante p
+         JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE m.id_estudiante = $1
+         ORDER BY p.id_practica DESC
+         LIMIT 1`,
+        [idEstudiante],
+      );
+
+      if (rows.length > 0) {
+        const idPractica = rows[0].id_practica;
+        const setClauses = Object.keys(valoresPractica)
+          .filter(col => columnasPermitidas.includes(col))
+          .map((col, idx) => `${col} = $${idx + 1}`)
+          .join(', ');
+
+        if (setClauses) {
+          const values = Object.keys(valoresPractica)
+            .filter(col => columnasPermitidas.includes(col))
+            .map(col => valoresPractica[col]);
+          values.push(idPractica);
+
+          await this.dataSource.query(
+            `UPDATE practica_estudiante SET ${setClauses} WHERE id_practica = $${values.length}`,
+            values,
+          );
+        }
+      }
+    }
+
+    return { ok: true };
   }
 }

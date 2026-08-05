@@ -12,6 +12,8 @@ export class DocumentHeader {
   @Input() titulo = '';
   @Input() codigo = '';
 
+  @Input() mostrarDatos = true;
+
   @Input() estudianteNombre = '';
   @Input() estudianteCedula = '';
   @Input() carrera = '';
