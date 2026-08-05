@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VinculacionService } from '../../../services/vinculacion.service';
+import { AuthService } from '../../../../auth/services/auth.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -15,6 +16,7 @@ import { finalize } from 'rxjs/operators';
 })
 export class SeleccionarEstudianteComponent implements OnInit {
   private service = inject(VinculacionService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   estudiantes: any[] = [];
@@ -24,6 +26,12 @@ export class SeleccionarEstudianteComponent implements OnInit {
   terminoBusqueda: string = '';
 
   ngOnInit(): void {
+    // 🔥 Verificar rol usando el método existente
+    if (!this.authService.tieneAlgunRol(['DOCENTE'])) {
+      this.error = '⚠️ No tienes permisos de docente para ver esta pantalla.';
+      this.loading = false;
+      return;
+    }
     this.cargarEstudiantes();
   }
 
@@ -34,7 +42,6 @@ export class SeleccionarEstudianteComponent implements OnInit {
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data: any[]) => {
-          // Mapeamos la respuesta del endpoint /vinculacion/informe-final
           this.estudiantes = data.map(item => ({
             id_vinculacion: item.id_vinculacion || item.id,
             nombre: item.estudiante_nombre || item.estudiante || 'N/A',
@@ -45,8 +52,12 @@ export class SeleccionarEstudianteComponent implements OnInit {
           this.filtered = this.estudiantes;
         },
         error: (err: any) => {
-          this.error = 'No se pudieron cargar los estudiantes.';
-          console.error(err);
+          if (err.status === 404 || err.status === 403) {
+            this.error = '⚠️ El backend no está respondiendo correctamente. Verifica que el servidor esté corriendo y que el endpoint /vinculacion/informe-final esté disponible.';
+          } else {
+            this.error = 'Ocurrió un error al cargar los estudiantes. Por favor, intenta nuevamente.';
+          }
+          console.warn('Error controlado:', err);
         }
       });
   }

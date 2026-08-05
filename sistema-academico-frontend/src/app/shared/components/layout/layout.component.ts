@@ -19,21 +19,23 @@ export class LayoutShellComponent {
 
   menuUsuarioAbierto = signal(false);
 
-  // Signal computado para obtener el nombre del usuario o su correo como alternativa
   nombreUsuario = computed(() => {
     const u = this.authService.usuario();
     if (!u) return 'Usuario';
     return (u as any).nombreCompleto || (u as any).nombre || u.correo || 'Usuario';
   });
 
-  // Signal computado para obtener y formatear el rol (ej: "COORDINADOR" -> "Coordinador")
   rolUsuario = computed(() => {
     const roles = this.authService.roles();
     if (!roles || roles.length === 0) return 'Sin Rol';
-
     const primerRol = roles[0];
     return primerRol.charAt(0).toUpperCase() + primerRol.slice(1).toLowerCase();
   });
+
+  // Método para verificar roles en el HTML
+  tieneRol(rol: string): boolean {
+    return this.authService.roles().includes(rol);
+  }
 
   toggleMenuUsuario(): void {
     this.menuUsuarioAbierto.update(v => !v);
@@ -45,17 +47,11 @@ export class LayoutShellComponent {
 
   cerrarSesion(): void {
     this.cerrarMenuUsuario();
-
-    // 1. Limpiamos cualquier token o sesión guardada
     localStorage.clear();
     sessionStorage.clear();
-
-    // 2. Si el servicio tiene método logout, lo ejecutamos
     if (this.authService && typeof this.authService.logout === 'function') {
       this.authService.logout();
     }
-
-    // 3. Redirección forzada e inmediata al Login
     this.router.navigateByUrl('/auth/login', { replaceUrl: true });
   }
 }

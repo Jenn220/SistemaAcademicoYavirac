@@ -1,102 +1,55 @@
 import { Routes } from '@angular/router';
 
-// ==============================
-// Layout General
-// ==============================
-import {
-  LayoutShellComponent
-} from './shared/components/layout/layout.component';
+// Layout
+import { LayoutShellComponent } from './shared/components/layout/layout.component';
 
-// ==============================
-// Auth
-// ==============================
+// Auth Guard
 import { authGuard } from './modules/auth/guards/auth.guard';
+import { roleGuard } from './modules/auth/guards/role.guard'; // 🔥 NUEVA IMPORTACIÓN
 
-// ==============================
 // Dashboard
-// ==============================
-import {
-  Dashboard
-} from './modules/dashboard';
+import { Dashboard } from './modules/dashboard';
 
-// ==============================
 // Fase Práctica
-// ==============================
-import {
-  CartaCompromiso
-} from './modules/fase-practica/pages/carta-compromiso/carta-compromiso';
-
-import {
-  RegistroAsistencia
-} from './modules/fase-practica/pages/registro-asistencia/registro-asistencia';
-
-import {
-  Curriculum
-} from './modules/fase-practica/pages/curriculum/curriculum';
-
-import {
-  InformeAprendizaje
-} from './modules/fase-practica/pages/informe-aprendizaje/informe-aprendizaje';
-
-import {
-  EvaluacionEmpresarial
-} from './modules/fase-practica/pages/evaluacion-empresarial/evaluacion-empresarial';
-
-import {
-  EvaluacionInstituto
-} from './modules/fase-practica/pages/evaluacion-instituto/evaluacion-instituto';
+import { CartaCompromiso } from './modules/fase-practica/pages/carta-compromiso/carta-compromiso';
+import { RegistroAsistencia } from './modules/fase-practica/pages/registro-asistencia/registro-asistencia';
+import { Curriculum } from './modules/fase-practica/pages/curriculum/curriculum';
+import { InformeAprendizaje } from './modules/fase-practica/pages/informe-aprendizaje/informe-aprendizaje';
+import { EvaluacionEmpresarial } from './modules/fase-practica/pages/evaluacion-empresarial/evaluacion-empresarial';
+import { EvaluacionInstituto } from './modules/fase-practica/pages/evaluacion-instituto/evaluacion-instituto';
 
 export const routes: Routes = [
-
+  // Auth
   {
     path: 'auth',
     loadChildren: () =>
-      import('./modules/auth/auth.routes').then(
-        m => m.AUTH_ROUTES
-      )
+      import('./modules/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
 
+  // Layout protegido
   {
     path: '',
     component: LayoutShellComponent,
     canActivate: [authGuard],
     children: [
+      // Dashboard
+      { path: '', component: Dashboard },
+      { path: 'dashboard', component: Dashboard },
 
+      // Fase Práctica
       {
-        path: '',
-        component: Dashboard
-      },
-
-      {
-        path: 'dashboard',
-        component: Dashboard
-      },
-
-      {
-        path: 'fase-practica/carta-compromiso',
-        component: CartaCompromiso
-      },
-      {
-        path: 'fase-practica/registro-asistencia',
-        component: RegistroAsistencia
-      },
-      {
-        path: 'fase-practica/curriculum',
-        component: Curriculum
-      },
-      {
-        path: 'fase-practica/informe-aprendizaje',
-        component: InformeAprendizaje
-      },
-      {
-        path: 'fase-practica/evaluacion-empresarial',
-        component: EvaluacionEmpresarial
-      },
-      {
-        path: 'fase-practica/evaluacion-instituto',
-        component: EvaluacionInstituto
+        path: 'fase-practica',
+        children: [
+          { path: 'carta-compromiso', component: CartaCompromiso },
+          { path: 'registro-asistencia', component: RegistroAsistencia },
+          { path: 'curriculum', component: Curriculum },
+          { path: 'informe-aprendizaje', component: InformeAprendizaje },
+          { path: 'evaluacion-empresarial', component: EvaluacionEmpresarial },
+          { path: 'evaluacion-instituto', component: EvaluacionInstituto },
+        ],
       },
 
+      // Portafolio Docente
       {
         path: 'portafolio-docente',
         children: [
@@ -105,114 +58,152 @@ export const routes: Routes = [
             loadComponent: () =>
               import(
                 './modules/portafolio-docente/pages/lista-portafolio/lista-portafolio.component'
-              ).then(
-                m => m.ListaPortafolioComponent
-              )
+              ).then((m) => m.ListaPortafolioComponent),
           },
           {
             path: 'informe-final/:idOfertaAsignatura',
             loadComponent: () =>
               import(
                 './modules/portafolio-docente/pages/detalle-portafolio/informe-final.component'
-              ).then(
-                m => m.InformeFinalComponent
-              )
+              ).then((m) => m.InformeFinalComponent),
           },
           {
             path: 'seguimiento-pea/:idOfertaAsignatura',
             loadComponent: () =>
               import(
                 './modules/portafolio-docente/pages/seguimiento-pea/seguimiento-pea.component'
-              ).then(
-                m => m.SeguimientoPeaComponent
-              )
+              ).then((m) => m.SeguimientoPeaComponent),
           },
           {
             path: 'aceptacion-notas/:idOfertaAsignatura/:idPeriodo',
             loadComponent: () =>
               import(
                 './modules/portafolio-docente/pages/aceptacion-notas/aceptacion-notas.component'
-              ).then(
-                m => m.AceptacionNotasComponent
-              )
-          }
-        ]
+              ).then((m) => m.AceptacionNotasComponent),
+          },
+        ],
       },
 
+      // VINCULACIÓN (ESTUDIANTE y DOCENTE) - CON PROTECCIÓN DE ROLES
       {
         path: 'vinculacion',
         children: [
+          // Estudiante - solo rol ESTUDIANTE
+          {
+            path: 'estudiante',
+            canActivate: [roleGuard],
+            data: { roles: ['ESTUDIANTE'] },
+            children: [
+              {
+                path: 'inicio-actividades',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/inicio-actividades/inicio-actividades'
+                  ).then((m) => m.InicioActividadesComponent),
+              },
+              {
+                path: 'carta-compromiso',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/carta-compromiso/carta-compromiso'
+                  ).then((m) => m.CartaCompromisoComponent),
+              },
+              {
+                path: 'control-asistencia',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/control-asistencia/control-asistencia'
+                  ).then((m) => m.ControlAsistenciaComponent),
+              },
+              {
+                path: 'registro-asistencia-tutor',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor'
+                  ).then((m) => m.RegistroAsistenciaTutorComponent),
+              },
+              {
+                path: 'plan-aprendizaje',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/plan-aprendizaje/plan-aprendizaje'
+                  ).then((m) => m.PlanAprendizajeComponent),
+              },
+              {
+                path: 'certificado',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/certificado/certificado'
+                  ).then((m) => m.CertificadoComponent),
+              },
+              {
+                path: 'informe-final',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/informe-final/informe-final'
+                  ).then((m) => m.InformeFinalComponent),
+              },
+              {
+                path: '',
+                redirectTo: 'inicio-actividades',
+                pathMatch: 'full',
+              },
+            ],
+          },
+          // Docente - solo rol DOCENTE
+          {
+            path: 'docente',
+            canActivate: [roleGuard],
+            data: { roles: ['DOCENTE'] },
+            children: [
+              {
+                path: 'seleccionar',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/docente/seleccionar-estudiante/seleccionar-estudiante'
+                  ).then((m) => m.SeleccionarEstudianteComponent),
+              },
+              {
+                path: 'estudiante/:id/registro-asistencia-tutor',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor'
+                  ).then((m) => m.RegistroAsistenciaTutorComponent),
+              },
+              {
+                path: 'estudiante/:id/informe-final',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/informe-final/informe-final'
+                  ).then((m) => m.InformeFinalComponent),
+              },
+              {
+                path: '',
+                redirectTo: 'seleccionar',
+                pathMatch: 'full',
+              },
+            ],
+          },
+          // Redirección por defecto
           {
             path: '',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/lista-vinculacion/lista-vinculacion.component'
-              ).then(
-                m => m.ListaVinculacionComponent
-              )
+            redirectTo: 'estudiante',
+            pathMatch: 'full',
           },
-          {
-            path: 'nuevo',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/nuevo-vinculacion/nuevo-vinculacion.component'
-              ).then(
-                m => m.NuevoVinculacionComponent
-              )
-          },
-          {
-            path: 'actividades',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/actividades-vinculacion/actividades-vinculacion.component'
-              ).then(
-                m => m.ActividadesVinculacionComponent
-              )
-          },
-          {
-            path: 'asistencia',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/asistencia-tutor/asistencia-tutor.component'
-              ).then(
-                m => m.AsistenciaTutorComponent
-              )
-          },
-          {
-            path: 'informes',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/informes-vinculacion/informes-vinculacion.component'
-              ).then(
-                m => m.InformesVinculacionComponent
-              )
-          },
-          {
-            path: ':id',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/detalle-vinculacion/detalle-vinculacion.component'
-              ).then(
-                m => m.DetalleVinculacionComponent
-              )
-          }
-        ]
+        ],
       },
 
+      // Coordinación
       {
         path: 'coordinacion/cierre-periodo',
         loadComponent: () =>
           import(
             './modules/panel-periodos/pages/panel-coordinador/panel-coordinador.component'
-          ).then(
-            m => m.PanelCoordinadorComponent
-          )
-      }
-    ]
+          ).then((m) => m.PanelCoordinadorComponent),
+      },
+    ],
   },
 
-  {
-    path: '**',
-    redirectTo: 'auth/login'
-  }
+  // 404
+  { path: '**', redirectTo: 'auth/login' },
 ];

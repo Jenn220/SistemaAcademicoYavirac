@@ -8,125 +8,59 @@
 
     <div class="menu">
 
-      <div class="menu-title">
-        Inicio
-      </div>
-
+      <div class="menu-title">Inicio</div>
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
         🏠 Bienvenida
       </a>
 
-
-      <div class="menu-title">
-        Portafolio Docente
-      </div>
-
+      <div class="menu-title">Portafolio Docente</div>
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'informe-final'}"
          routerLinkActive="active">
         💼 Informe Final
       </a>
-
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'aceptacion-notas'}"
          routerLinkActive="active">
         ✅ Aceptación de Notas
       </a>
-
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'seguimiento-pea'}"
          routerLinkActive="active">
         🗂️ Seguimiento PEA
       </a>
 
-      <div class="menu-title">
-        Fase Práctica
-      </div>
+      <div class="menu-title">Fase Práctica</div>
+      <a routerLink="/fase-practica/carta-compromiso" routerLinkActive="active">✍️ Carta Compromiso</a>
+      <a routerLink="/fase-practica/registro-asistencia" routerLinkActive="active">📅 Registro Asistencia</a>
+      <a routerLink="/fase-practica/curriculum" routerLinkActive="active">🧾 Currículo</a>
+      <a routerLink="/fase-practica/informe-aprendizaje" routerLinkActive="active">📝 Informe Aprendizaje</a>
+      <a routerLink="/fase-practica/evaluacion-empresarial" routerLinkActive="active">🏢 Evaluación Empresarial</a>
+      <a routerLink="/fase-practica/evaluacion-instituto" routerLinkActive="active">🏫 Evaluación Instituto</a>
 
-      <a routerLink="/fase-practica/carta-compromiso"
-         routerLinkActive="active">
-        ✍️ Carta Compromiso
-      </a>
+      <!-- VINCULACIÓN CON LA SOCIEDAD (según rol) -->
+      @if (tieneRol('ESTUDIANTE')) {
+        <div class="menu-title">Vinculación con la sociedad</div>
+        <a routerLink="/vinculacion/estudiante/inicio-actividades" routerLinkActive="active">📄 Inicio Act.</a>
+        <a routerLink="/vinculacion/estudiante/carta-compromiso" routerLinkActive="active">📄 Carta Compromiso</a>
+        <a routerLink="/vinculacion/estudiante/control-asistencia" routerLinkActive="active">📊 Control Asistencia</a>
+        <a routerLink="/vinculacion/estudiante/registro-asistencia-tutor" routerLinkActive="active">📊 Registro Asistencia Tutor</a>
+        <a routerLink="/vinculacion/estudiante/plan-aprendizaje" routerLinkActive="active">📊 Plan Aprendizaje</a>
+        <a routerLink="/vinculacion/estudiante/certificado" routerLinkActive="active">📄 Certificado</a>
+        <a routerLink="/vinculacion/estudiante/informe-final" routerLinkActive="active">📄 Informe Final</a>
+      }
 
-      <a routerLink="/fase-practica/registro-asistencia"
-         routerLinkActive="active">
-        📅 Registro Asistencia
-      </a>
+      @if (tieneRol('DOCENTE')) {
+        <div class="menu-title">Vinculación con la sociedad</div>
+        <a routerLink="/vinculacion/docente/seleccionar" routerLinkActive="active">👨‍🏫 Seleccionar Estudiante</a>
+      }
 
-      <a routerLink="/fase-practica/curriculum"
-         routerLinkActive="active">
-        🧾 Currículo
-      </a>
-
-      <a routerLink="/fase-practica/informe-aprendizaje"
-         routerLinkActive="active">
-        📝 Informe Aprendizaje
-      </a>
-
-      <a routerLink="/fase-practica/evaluacion-empresarial"
-         routerLinkActive="active">
-        🏢 Evaluación Empresarial
-      </a>
-
-      <a routerLink="/fase-practica/evaluacion-instituto"
-         routerLinkActive="active">
-        🏫 Evaluación Instituto
-      </a>
-
-      <!-- Sección Vinculación con la sociedad -->
-      <div class="menu-title">Vinculación con la sociedad</div>
-
-      <a routerLink="/vinculacion" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         🤝 Vinculación
-      </a>
-
-      <a routerLink="/vinculacion/actividades" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         📋 Actividades
-      </a>
-
-      <a routerLink="/vinculacion/asistencia" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         👨‍🏫 Asistencia Tutor
-      </a>
-
-      <a routerLink="/vinculacion/informes" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         📊 Informes
-      </a>
-
-      <a routerLink="/vinculacion/nuevo" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         🚀 Nuevo Proyecto
-      </a>
-
-      <!-- Sección Coordinación -->
       <div class="menu-title">Coordinación</div>
+      <a routerLink="/coordinacion/cierre-periodo" routerLinkActive="active">🔒 Cierre de Período</a>
 
-      <a routerLink="/coordinacion/cierre-periodo"
-         routerLinkActive="active"
-         [routerLinkActiveOptions]="{exact:true}">
-         🔒 Cierre de Período
-      </a>
-
-      <!-- Nueva Sección: Gestión de Accesos -->
       <div class="menu-title">Gestión de Accesos</div>
-
-      <a routerLink="/auth/coordinador/desbloquear" 
-         routerLinkActive="active">
-         🔄 Resetear Contraseña
-      </a>
-
-      <a routerLink="/auth/coordinador/generar-accesos" 
-         routerLinkActive="active">
-         👤 Ingresar
-      </a>
+      <a routerLink="/auth/coordinador/desbloquear" routerLinkActive="active">🔄 Resetear Contraseña</a>
+      <a routerLink="/auth/coordinador/generar-accesos" routerLinkActive="active">👤 Ingresar</a>
 
     </div>
 
@@ -140,7 +74,6 @@
         <h1>Sistema Académico</h1>
       </div>
       <div class="topbar-right">
-        <!-- Menú de Usuario con Dropdown -->
         <div class="user-menu-wrapper">
           <div class="user" (click)="toggleMenuUsuario()">
             <div class="avatar">
@@ -165,7 +98,6 @@
             </div>
           }
         </div>
-
       </div>
     </div>
 

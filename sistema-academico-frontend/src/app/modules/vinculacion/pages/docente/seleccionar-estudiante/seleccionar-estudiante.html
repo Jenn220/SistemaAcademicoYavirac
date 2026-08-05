@@ -22,5 +22,8 @@
   </div>
 
   <div class="loading" *ngIf="loading">Cargando estudiantes...</div>
-  <div class="error" *ngIf="error">{{ error }}</div>
+  <div class="error" *ngIf="error">
+    {{ error }}
+    <button (click)="cargarEstudiantes()" class="btn-reintentar">Reintentar</button>
+  </div>
 </div>
