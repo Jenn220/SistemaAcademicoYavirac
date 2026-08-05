@@ -22,12 +22,23 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   data: AsistenciaTutorResponse | null = null;
   loading = true;
   error: string | null = null;
-  puedeEditar = false;
   idVinculacion: number = 0;
 
+  // Roles
+  isEstudiante = false;
+  isDocente = false;
+  isCoordinador = false;
+  isTutorEmpresarial = false;
+
+  // Variables para edición
   editandoId: number | null = null;
   editandoActividad: UpdateAsistenciaTutorDto = {};
 
+  // Observaciones (SOLO DOCENTE puede editar)
+  observacionEdit: string = '';
+  editandoObservacion = false;
+
+  // Nueva actividad (ESTUDIANTE puede crear)
   nuevaActividad: CreateAsistenciaTutorDto = {
     id_vinculacion: 0,
     fecha: '',
@@ -39,14 +50,21 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   mostrandoFormulario = false;
 
   ngOnInit(): void {
-    this.puedeEditar = this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL']);
+    const roles = this.authService.roles();
+    this.isEstudiante = roles.includes('ESTUDIANTE');
+    this.isDocente = roles.includes('DOCENTE');
+    this.isCoordinador = roles.includes('COORDINADOR');
+    this.isTutorEmpresarial = roles.includes('TUTOR_EMPRESARIAL');
+
+    // Si es COORDINADOR, no puede ver esta pantalla
+    if (this.isCoordinador) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla.';
+      this.loading = false;
+      return;
+    }
 
     this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.idVinculacion = +params['id'];
-      } else {
-        this.idVinculacion = 0;
-      }
+      this.idVinculacion = params['id'] ? +params['id'] : 0;
       this.cargarDatos();
     });
   }
@@ -59,6 +77,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.data = data;
+          this.observacionEdit = data.totales.observaciones || '';
         },
         error: (err) => {
           this.error = 'No se pudo cargar el registro de asistencia del tutor.';
@@ -67,7 +86,9 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       });
   }
 
+  // ========== CRUD ACTIVIDADES (SOLO ESTUDIANTE) ==========
   mostrarFormulario(): void {
+    if (!this.isEstudiante) return;
     this.mostrandoFormulario = true;
     this.nuevaActividad = {
       id_vinculacion: this.idVinculacion,
@@ -84,6 +105,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   agregarActividad(): void {
+    if (!this.isEstudiante) return;
     if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_inicio || !this.nuevaActividad.hora_fin) {
       alert('Complete fecha, hora entrada y salida.');
       return;
@@ -104,8 +126,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   editarActividad(act: AsistenciaTutor): void {
+    if (!this.isEstudiante) return;
     this.editandoId = act.id;
     this.editandoActividad = {
+      fecha: act.fecha,
+      hora_inicio: act.hora_entrada,
+      hora_fin: act.hora_salida,
       actividad_realizada: act.actividad_realizada
     };
   }
@@ -116,7 +142,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   guardarEdicion(): void {
-    if (!this.editandoId) return;
+    if (!this.isEstudiante || !this.editandoId) return;
     this.loading = true;
     this.service.actualizarAsistencia(this.editandoId, this.editandoActividad)
       .pipe(finalize(() => this.loading = false))
@@ -133,6 +159,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   eliminarActividad(id: number): void {
+    if (!this.isEstudiante) return;
     if (!confirm('¿Eliminar esta actividad?')) return;
     this.loading = true;
     this.service.eliminarAsistencia(id)
@@ -146,5 +173,15 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           console.error(err);
         }
       });
+  }
+
+  // ========== OBSERVACIONES (SOLO DOCENTE) ==========
+  toggleEditObservacion(): void {
+    if (!this.isDocente) return;
+    this.editandoObservacion = !this.editandoObservacion;
+    if (!this.editandoObservacion && this.data) {
+      // Guardar observación - Aquí se puede agregar un endpoint si existe
+      alert('Observación guardada localmente. (Endpoint pendiente para guardar en BD)');
+    }
   }
 }

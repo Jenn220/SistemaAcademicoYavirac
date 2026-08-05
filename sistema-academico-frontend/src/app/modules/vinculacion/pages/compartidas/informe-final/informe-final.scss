@@ -29,13 +29,87 @@
       th { background: #f4f7fd; font-weight: 600; }
       tfoot td { font-weight: 600; background: #f9f9f9; }
     }
+    .acciones {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .textarea-edit {
+      width: 100%;
+      padding: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin: 0.3rem 0;
+    }
   }
 
   .evaluacion {
     background: #f9faff;
     padding: 1rem;
     border-radius: 4px;
+    .form-row {
+      margin: 0.5rem 0;
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        font-weight: 600;
+      }
+      input, textarea {
+        width: 100%;
+        padding: 0.3rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+    }
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
   }
+
+  .anexos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+    .anexo-item {
+      text-align: center;
+      .placeholder-imagen {
+        background: #f0f4fc;
+        border: 1px dashed #b0c4de;
+        border-radius: 8px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8a95a8;
+        font-size: 14px;
+        margin-bottom: 0.5rem;
+      }
+      p {
+        font-size: 13px;
+        margin: 0;
+      }
+    }
+  }
+
+  .btn-edit, .btn-save, .btn-cancel {
+    padding: 0.3rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-edit { background: #ffc107; color: #333; }
+  .btn-save { background: #28a745; color: white; }
+  .btn-cancel { background: #6c757d; color: white; }
 }
 
 .loading, .error {

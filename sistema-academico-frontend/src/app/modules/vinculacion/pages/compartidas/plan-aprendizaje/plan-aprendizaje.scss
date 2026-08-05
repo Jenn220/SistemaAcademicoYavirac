@@ -34,6 +34,48 @@
     }
   }
 
+  .tabla-avance {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th { background: #f4f7fd; font-weight: 600; }
+    tfoot td { font-weight: 600; background: #f9f9f9; }
+    .input-avance {
+      width: 80px;
+      padding: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  }
+
+  .reflexion {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f9faff;
+    border-radius: 4px;
+    .textarea-edit {
+      width: 100%;
+      padding: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+    }
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+    }
+  }
+
+  .avance {
+    margin-top: 2rem;
+    h4 { color: #163d8c; }
+  }
+
   .btn-edit, .btn-save, .btn-cancel {
     padding: 0.2rem 0.6rem;
     border: none;

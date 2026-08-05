@@ -1,92 +1,91 @@
 <div class="inicio-actividades-container">
-  @if (isLoading) {
-    <div class="loading">Cargando...</div>
-  } @else if (error) {
-    <div class="error">{{ error }}</div>
-  } @else if (data) {
-    <div class="documento">
-      <div class="encabezado">
-        <div class="logo">
-          <img src="assets/images/logo-yavirac.png" alt="Yavirac">
-        </div>
-        <div class="titulo">
-          <h1>INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"</h1>
-          <h2>INICIO DE ACTIVIDADES DEL TUTOR</h2>
-        </div>
+  <div *ngIf="isLoading" class="loading">Cargando...</div>
+  
+  <div *ngIf="!isLoading && error" class="error">{{ error }}</div>
+  
+  <div *ngIf="!isLoading && !error && data" class="documento">
+    <div class="encabezado">
+      <div class="logo">
+        <img src="assets/images/logo-yavirac.png" alt="Yavirac">
       </div>
-
-      <div class="contenido">
-        <div class="seccion">
-          <p><strong>A:</strong> {{ data.coordinador }}</p>
-          <p>Coordinador de Carrera</p>
-        </div>
-
-        <div class="seccion">
-          <p><strong>De:</strong> {{ data.tutor_nombre }}</p>
-          <p>Tutor del Proyecto</p>
-        </div>
-
-        <div class="seccion">
-          <p><strong>Asunto:</strong> Informe de inicio de actividades del Proyecto:</p>
-          <p>{{ data.proyecto_nombre }}</p>
-        </div>
-
-        <div class="seccion">
-          <p><strong>Fecha:</strong> {{ data.fecha_inicio | date:'dd/MM/yyyy' }}</p>
-        </div>
-
-        <div class="seccion">
-          <p>
-            Yo, <strong>{{ data.tutor_nombre }}</strong> con C.I. Nro. {{ data.tutor_cedula }}
-            tengo a bien informar que siguiendo con el cronograma de actividades establecido
-            en el proyecto de vinculación:
-          </p>
-          <p><strong>{{ data.proyecto_nombre }}</strong></p>
-          <p>
-            Informo que el día de hoy {{ data.fecha_inicio | date:'dd/MM/yyyy' }} del año en curso,
-            se procedió a dar inicio con el desarrollo del mismo.
-          </p>
-        </div>
-
-        <div class="seccion">
-          <p>{{ data.descripcion_actividades }}</p>
-        </div>
-
-        <div class="seccion datos-adicionales">
-          <p><strong>Carrera:</strong> {{ data.carrera }}</p>
-          <p><strong>Entidad Beneficiaria:</strong> {{ data.entidad_beneficiaria }}</p>
-          <p><strong>Tutor Entidad Receptora:</strong> {{ data.tutor_entidad }}</p>
-        </div>
-
-        <div class="seccion anexos">
-          <h3>Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación</h3>
-          <div class="anexos-grid">
-            <div class="anexo-item">
-              <div class="placeholder-imagen"></div>
-              <p>Figura 1: Primera reunión de inducción vinculación.</p>
-            </div>
-            <div class="anexo-item">
-              <div class="placeholder-imagen"></div>
-              <p>Figura 2: Socialización de actividades.</p>
-            </div>
-            <div class="anexo-item">
-              <div class="placeholder-imagen"></div>
-              <p>Figura 3: Explicación del alcance del proyecto.</p>
-            </div>
-            <div class="anexo-item">
-              <div class="placeholder-imagen"></div>
-              <p>Figura 4: Primer día de actividades en la Fundación.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="seccion firma">
-          <p>Atentamente,</p>
-          <br><br><br>
-          <p><strong>{{ data.tutor_nombre }}</strong></p>
-          <p>TUTOR DEL PROYECTO</p>
-        </div>
+      <div class="titulo">
+        <h1>INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"</h1>
+        <h2>INICIO DE ACTIVIDADES DEL TUTOR</h2>
       </div>
     </div>
-  }
+
+    <div class="contenido">
+      <div class="seccion">
+        <p><strong>A:</strong> {{ data.coordinador }}</p>
+        <p>Coordinador de Carrera</p>
+      </div>
+
+      <div class="seccion">
+        <p><strong>De:</strong> {{ data.tutor_nombre }}</p>
+        <p>Tutor del Proyecto</p>
+      </div>
+
+      <div class="seccion">
+        <p><strong>Asunto:</strong> Informe de inicio de actividades del Proyecto:</p>
+        <p>{{ data.proyecto_nombre }}</p>
+      </div>
+
+      <div class="seccion">
+        <p><strong>Fecha:</strong> {{ data.fecha_inicio | date:'dd/MM/yyyy' }}</p>
+      </div>
+
+      <div class="seccion">
+        <p>
+          Yo, <strong>{{ data.tutor_nombre }}</strong> con C.I. Nro. {{ data.tutor_cedula }}
+          tengo a bien informar que siguiendo con el cronograma de actividades establecido en el proyecto de vinculación:
+        </p>
+        <p><strong>{{ data.proyecto_nombre }}</strong></p>
+        <p>
+          Informo que el día de hoy {{ data.fecha_inicio | date:'dd/MM/yyyy' }} del año en curso,
+          se procedió a dar inicio con el desarrollo del mismo.
+        </p>
+      </div>
+
+      <div class="seccion">
+        <p>{{ data.descripcion_actividades }}</p>
+      </div>
+
+      <div class="seccion datos-adicionales">
+        <p><strong>Carrera:</strong> {{ data.carrera }}</p>
+        <p><strong>Entidad Beneficiaria:</strong> {{ data.entidad_beneficiaria }}</p>
+        <p><strong>Tutor Entidad Receptora:</strong> {{ data.tutor_entidad }}</p>
+      </div>
+
+      <div class="seccion anexos">
+        <h3>Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación</h3>
+        <div class="anexos-grid">
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 1: Primera reunión de inducción vinculación.</p>
+          </div>
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 2: Socialización de actividades.</p>
+          </div>
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 3: Explicación del alcance del proyecto.</p>
+          </div>
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 4: Primer día de actividades en la Fundación.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="seccion firma">
+        <p>Atentamente,</p>
+        <br><br><br>
+        <p><strong>{{ data.tutor_nombre }}</strong></p>
+        <p>TUTOR DEL PROYECTO</p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && !error && !data" class="sin-datos">No hay datos disponibles</div>
 </div>

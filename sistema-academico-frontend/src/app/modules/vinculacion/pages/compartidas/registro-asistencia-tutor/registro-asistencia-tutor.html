@@ -17,20 +17,29 @@
         <th>HORA SALIDA</th>
         <th>TOTAL HORAS</th>
         <th>ACTIVIDAD REALIZADA</th>
-        <th *ngIf="puedeEditar">ACCIONES</th>
+        <th *ngIf="isEstudiante">ACCIONES</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let act of data.actividades">
-        <td>{{ act.fecha }}</td>
-        <td>{{ act.hora_entrada }}</td>
-        <td>{{ act.hora_salida }}</td>
+        <td>
+          <span *ngIf="editandoId !== act.id || !isEstudiante">{{ act.fecha }}</span>
+          <input *ngIf="editandoId === act.id && isEstudiante" type="date" [(ngModel)]="editandoActividad.fecha" />
+        </td>
+        <td>
+          <span *ngIf="editandoId !== act.id || !isEstudiante">{{ act.hora_entrada }}</span>
+          <input *ngIf="editandoId === act.id && isEstudiante" type="time" [(ngModel)]="editandoActividad.hora_inicio" />
+        </td>
+        <td>
+          <span *ngIf="editandoId !== act.id || !isEstudiante">{{ act.hora_salida }}</span>
+          <input *ngIf="editandoId === act.id && isEstudiante" type="time" [(ngModel)]="editandoActividad.hora_fin" />
+        </td>
         <td>{{ act.total_horas | number:'1.2-2' }}</td>
         <td>
-          <span *ngIf="editandoId !== act.id">{{ act.actividad_realizada }}</span>
-          <input *ngIf="editandoId === act.id" type="text" [(ngModel)]="editandoActividad.actividad_realizada" />
+          <span *ngIf="editandoId !== act.id || !isEstudiante">{{ act.actividad_realizada }}</span>
+          <input *ngIf="editandoId === act.id && isEstudiante" type="text" [(ngModel)]="editandoActividad.actividad_realizada" />
         </td>
-        <td *ngIf="puedeEditar">
+        <td *ngIf="isEstudiante">
           <ng-container *ngIf="editandoId !== act.id">
             <button (click)="editarActividad(act)" class="btn-edit">✏️</button>
             <button (click)="eliminarActividad(act.id)" class="btn-delete">🗑️</button>
@@ -51,16 +60,35 @@
     </tfoot>
   </table>
 
+  <!-- OBSERVACIONES - SOLO DOCENTE PUEDE EDITAR -->
   <div class="observaciones">
-    <p><strong>OBSERVACIONES:</strong> {{ data.totales.observaciones || 'Ninguna' }}</p>
+    <p><strong>OBSERVACIONES:</strong></p>
+    <div *ngIf="isDocente">
+      <div *ngIf="!editandoObservacion">
+        <p>{{ data.totales.observaciones || 'Ninguna' }}</p>
+        <button (click)="toggleEditObservacion()" class="btn-edit">✏️ Editar observación</button>
+      </div>
+      <div *ngIf="editandoObservacion">
+        <textarea [(ngModel)]="observacionEdit" rows="3" class="textarea-obs"></textarea>
+        <div class="form-actions">
+          <button (click)="toggleEditObservacion()" class="btn-save">💾 Guardar</button>
+          <button (click)="editandoObservacion = false; observacionEdit = data.totales.observaciones || ''" class="btn-cancel">❌ Cancelar</button>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!isDocente">
+      <p>{{ data.totales.observaciones || 'Ninguna' }}</p>
+    </div>
     <p><strong>Coordinador:</strong> {{ data.totales.coordinador_carrera }}</p>
   </div>
 
-  <div class="acciones" *ngIf="puedeEditar">
+  <!-- BOTÓN AGREGAR - SOLO ESTUDIANTE -->
+  <div class="acciones" *ngIf="isEstudiante">
     <button *ngIf="!mostrandoFormulario" (click)="mostrarFormulario()" class="btn-add">+ Agregar actividad</button>
   </div>
 
-  <div class="nueva-actividad" *ngIf="mostrandoFormulario">
+  <!-- FORMULARIO NUEVA ACTIVIDAD - SOLO ESTUDIANTE -->
+  <div class="nueva-actividad" *ngIf="mostrandoFormulario && isEstudiante">
     <h3>Nueva actividad</h3>
     <div class="form-row">
       <label>Fecha: <input type="date" [(ngModel)]="nuevaActividad.fecha" /></label>

@@ -25,14 +25,18 @@ export class CartaCompromisoComponent implements OnInit {
   idVinculacion: number = 0;
 
   ngOnInit(): void {
-    this.isEstudiante = this.authService.roles().includes('ESTUDIANTE');
+    // SOLO ESTUDIANTE puede ver esta pantalla
+    const roles = this.authService.roles();
+    this.isEstudiante = roles.includes('ESTUDIANTE');
+
+    if (!this.isEstudiante) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
+      this.loading = false;
+      return;
+    }
 
     this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.idVinculacion = +params['id'];
-      } else {
-        this.idVinculacion = 0;
-      }
+      this.idVinculacion = params['id'] ? +params['id'] : 0;
       this.cargarDatos();
     });
   }

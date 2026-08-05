@@ -26,8 +26,9 @@ export class SeleccionarEstudianteComponent implements OnInit {
   terminoBusqueda: string = '';
 
   ngOnInit(): void {
-    if (!this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR'])) {
-      this.error = '⚠️ No tienes permisos para ver esta pantalla.';
+    // SOLO DOCENTE puede ver esta pantalla
+    if (!this.authService.tieneAlgunRol(['DOCENTE'])) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo docentes pueden acceder.';
       this.loading = false;
       return;
     }

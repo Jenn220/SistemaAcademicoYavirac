@@ -25,18 +25,35 @@ export class PlanAprendizajeComponent implements OnInit {
   isEstudiante = false;
   idVinculacion: number = 0;
 
+  // Edición de resultados de aprendizaje
   editandoIndice: number | null = null;
   resultadoEdit: string = '';
 
+  // Edición de reflexión
+  reflexionEdit: string = '';
+  editandoReflexion = false;
+
+  // Edición de avances del proyecto
+  avances: { tema: string; seccion: string; avance: number }[] = [];
+  editandoAvanceIndex: number | null = null;
+  avanceEdit: number = 0;
+
+  // Flag para controlar si es la primera carga
+  private primeraCarga = true;
+
   ngOnInit(): void {
-    this.isEstudiante = this.authService.roles().includes('ESTUDIANTE');
+    // SOLO ESTUDIANTE puede ver esta pantalla
+    const roles = this.authService.roles();
+    this.isEstudiante = roles.includes('ESTUDIANTE');
+
+    if (!this.isEstudiante) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
+      this.loading = false;
+      return;
+    }
 
     this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.idVinculacion = +params['id'];
-      } else {
-        this.idVinculacion = 0;
-      }
+      this.idVinculacion = params['id'] ? +params['id'] : 0;
       this.cargarDatos();
     });
   }
@@ -49,6 +66,23 @@ export class PlanAprendizajeComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.data = data;
+          // Inicializar reflexión solo en la primera carga
+          if (this.primeraCarga) {
+            this.reflexionEdit = 'Los estudiantes desarrollaron algunas habilidades blandas como: comunicación en equipo, coordinación de actividades, planificación de actividades.';
+            this.primeraCarga = false;
+          }
+          // Inicializar avances
+          this.avances = [
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '1. Título del Proyecto (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '2. Antecedentes (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '3. Marco Teórico (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '4. Metodología (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '5. Resultados (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '6. Conclusiones y recomendaciones (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '7. Referencias bibliográficas (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '8. Anexos (10%)', avance: 0.1 },
+            { tema: data.cabecera?.titulo_proyecto || '', seccion: '9. Entrega de proyecto final (20%)', avance: 0.2 }
+          ];
         },
         error: (err) => {
           this.error = 'No se pudo cargar el plan de aprendizaje.';
@@ -57,13 +91,14 @@ export class PlanAprendizajeComponent implements OnInit {
       });
   }
 
+  // ========== RESULTADOS DE APRENDIZAJE ==========
   editarResultado(index: number): void {
     if (!this.data) return;
     this.editandoIndice = index;
     this.resultadoEdit = this.data.informe_actividades[index].resultado_aprendizaje || '';
   }
 
-  cancelarEdicion(): void {
+  cancelarEdicionResultado(): void {
     this.editandoIndice = null;
     this.resultadoEdit = '';
   }
@@ -81,12 +116,43 @@ export class PlanAprendizajeComponent implements OnInit {
       .subscribe({
         next: () => {
           actividad.resultado_aprendizaje = this.resultadoEdit;
-          this.cancelarEdicion();
+          this.cancelarEdicionResultado();
         },
         error: (err) => {
           this.error = 'Error al actualizar resultado.';
           console.error(err);
         }
       });
+  }
+
+  // ========== REFLEXIÓN ==========
+  toggleEditReflexion(): void {
+    this.editandoReflexion = !this.editandoReflexion;
+    if (!this.editandoReflexion) {
+      // Guardar reflexión (localmente, sin endpoint)
+      // Aquí se puede agregar un endpoint si existe en el backend
+      alert('Reflexión actualizada localmente. (Endpoint pendiente para guardar en BD)');
+    }
+  }
+
+  // ========== AVANCES ==========
+  editarAvance(index: number): void {
+    this.editandoAvanceIndex = index;
+    this.avanceEdit = this.avances[index].avance;
+  }
+
+  cancelarEdicionAvance(): void {
+    this.editandoAvanceIndex = null;
+    this.avanceEdit = 0;
+  }
+
+  guardarAvance(index: number): void {
+    this.avances[index].avance = this.avanceEdit;
+    this.cancelarEdicionAvance();
+    // Aquí se puede agregar un endpoint si existe en el backend
+  }
+
+  getTotalAvance(): number {
+    return this.avances.reduce((acc, a) => acc + a.avance, 0);
   }
 }

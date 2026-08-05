@@ -3,6 +3,7 @@
     <h1>Informe final de actividades de vinculación con la comunidad</h1>
   </div>
 
+  <!-- 1. DATOS GENERALES -->
   <section class="section">
     <h2>1. DATOS GENERALES DEL PROYECTO</h2>
     <div class="grid-2">
@@ -24,6 +25,7 @@
     </div>
   </section>
 
+  <!-- 2. RESUMEN DE ACTIVIDADES -->
   <section class="section">
     <h2>2. RESUMEN DE ACTIVIDADES REALIZADAS</h2>
     <table class="tabla">
@@ -31,7 +33,7 @@
         <tr><th>Nro.</th><th>Fecha</th><th>Actividades</th><th>Horas</th><th>Observaciones</th></tr>
       </thead>
       <tbody>
-        <tr *ngFor="let act of data.resumen_actividades; let i = index">
+        <tr *ngFor="let act of (editandoActividades ? actividadesEdit : data.resumen_actividades); let i = index">
           <td>{{ i+1 }}</td>
           <td>{{ act.fecha }}</td>
           <td>{{ act.actividades }}</td>
@@ -43,8 +45,13 @@
         <tr><td colspan="3"><strong>Total Horas Cumplidas</strong></td><td><strong>{{ data.total_horas_cumplidas }}</strong></td><td></td></tr>
       </tfoot>
     </table>
+    <div class="acciones" *ngIf="isEstudiante">
+      <button (click)="toggleEditActividades()" class="btn-edit">{{ editandoActividades ? 'Cancelar' : '✏️ Editar actividades' }}</button>
+      <button *ngIf="editandoActividades" (click)="guardarActividades()" class="btn-save">💾 Guardar</button>
+    </div>
   </section>
 
+  <!-- 3. OBJETIVOS -->
   <section class="section">
     <h2>3. REGISTRO DE AVANCE Y SEGUIMIENTO DE LOS OBJETIVOS</h2>
     <table class="tabla">
@@ -52,7 +59,7 @@
         <tr><th>Objetivos</th><th>Actividades</th><th>Avance %</th><th>Resultados</th></tr>
       </thead>
       <tbody>
-        <tr *ngFor="let obj of data.objetivos_proyecto">
+        <tr *ngFor="let obj of (editandoObjetivos ? objetivosEdit : data.objetivos_proyecto)">
           <td>{{ obj.objetivo }}</td>
           <td>{{ obj.actividades }}</td>
           <td>{{ obj.avance }}</td>
@@ -60,19 +67,73 @@
         </tr>
       </tbody>
     </table>
+    <div class="acciones" *ngIf="isEstudiante">
+      <button (click)="toggleEditObjetivos()" class="btn-edit">{{ editandoObjetivos ? 'Cancelar' : '✏️ Editar objetivos' }}</button>
+      <button *ngIf="editandoObjetivos" (click)="guardarObjetivos()" class="btn-save">💾 Guardar</button>
+    </div>
   </section>
 
+  <!-- 4. REFLEXIÓN -->
   <section class="section">
     <h2>4. REFLEXIÓN DEL ESTUDIANTE</h2>
-    <p>{{ data.reflexion_estudiante }}</p>
+    <div *ngIf="!editandoReflexion || !isEstudiante">
+      <p>{{ data.reflexion_estudiante }}</p>
+      <div *ngIf="isEstudiante">
+        <button (click)="toggleEditReflexion()" class="btn-edit">✏️ Editar reflexión</button>
+      </div>
+    </div>
+    <div *ngIf="editandoReflexion && isEstudiante">
+      <textarea [(ngModel)]="reflexionEdit" rows="4" class="textarea-edit"></textarea>
+      <div class="form-actions">
+        <button (click)="toggleEditReflexion()" class="btn-save">💾 Guardar</button>
+        <button (click)="editandoReflexion = false; reflexionEdit = data.reflexion_estudiante || ''" class="btn-cancel">❌ Cancelar</button>
+      </div>
+    </div>
   </section>
 
+  <!-- 5. EVALUACIÓN FINAL (SOLO DOCENTE PUEDE EDITAR) -->
   <section class="section evaluacion">
     <h2>5. EVALUACIÓN FINAL DEL TUTOR ACADÉMICO</h2>
-    <p><strong>Nota final:</strong> {{ data.evaluacion_final.nota_final || 'Sin calificar' }}</p>
-    <p><strong>Nota en letras:</strong> {{ data.evaluacion_final.nota_letras || 'N/A' }}</p>
-    <p><strong>Observaciones:</strong> {{ data.evaluacion_final.observaciones || 'Sin observaciones' }}</p>
-    <p><strong>Coordinador:</strong> {{ data.evaluacion_final.coordinador }}</p>
+    
+    <!-- Modo vista (para todos) -->
+    <div *ngIf="!editandoEvaluacion">
+      <p><strong>Nota final:</strong> {{ data.evaluacion_final.nota_final || 'Sin calificar' }}</p>
+      <p><strong>Nota en letras:</strong> {{ data.evaluacion_final.nota_letras || 'N/A' }}</p>
+      <p><strong>Observaciones:</strong> {{ data.evaluacion_final.observaciones || 'Sin observaciones' }}</p>
+      <p><strong>Coordinador:</strong> {{ data.evaluacion_final.coordinador }}</p>
+      <div *ngIf="isDocente">
+        <button (click)="toggleEditEvaluacion()" class="btn-edit">✏️ Editar evaluación</button>
+      </div>
+    </div>
+
+    <!-- Modo edición (solo docente) -->
+    <div *ngIf="editandoEvaluacion && isDocente">
+      <div class="form-row">
+        <label>Nota final: <input type="number" [(ngModel)]="evaluacionEdit.nota_final" step="0.01" min="0" max="10" /></label>
+      </div>
+      <div class="form-row">
+        <label>Nota en letras: <input type="text" [(ngModel)]="evaluacionEdit.nota_letras" /></label>
+      </div>
+      <div class="form-row">
+        <label>Observaciones: <textarea [(ngModel)]="evaluacionEdit.observaciones" rows="3"></textarea></label>
+      </div>
+      <div class="form-actions">
+        <button (click)="toggleEditEvaluacion()" class="btn-save">💾 Guardar</button>
+        <button (click)="editandoEvaluacion = false; evaluacionEdit = { nota_final: data.evaluacion_final.nota_final || '', nota_letras: data.evaluacion_final.nota_letras || '', observaciones: data.evaluacion_final.observaciones || '' }" class="btn-cancel">❌ Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANEXOS -->
+  <section class="section">
+    <h2>ANEXOS</h2>
+    <p>Evidencia del producto final: anexos, fotografía o escaneado de las evidencias del resultado final del curso. Incluya 6 imágenes y aplique las normas APA 7ma. Edición</p>
+    <div class="anexos-grid">
+      <div class="anexo-item" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="placeholder-imagen">Figura {{ i }}</div>
+        <p>Descripción de la figura {{ i }}</p>
+      </div>
+    </div>
   </section>
 </div>
 

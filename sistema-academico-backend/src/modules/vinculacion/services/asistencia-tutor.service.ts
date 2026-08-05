@@ -6,6 +6,9 @@ import {
   BadRequestException, 
   ConflictException 
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
 
 import { 
   VINCULACION_ASISTENCIA_TUTOR_PORT, 
@@ -20,8 +23,11 @@ export class AsistenciaTutorService {
   constructor(
     @Inject(VINCULACION_ASISTENCIA_TUTOR_PORT) 
     private readonly repository: IVinculacionAsistenciaTutorPort,
+    @InjectRepository(VinculacionEstudianteEntity)
+    private readonly vinculacionRepo: Repository<VinculacionEstudianteEntity>,
   ) {}
 
+  // ========== CALCULAR DIFERENCIA DE HORAS ==========
   private calcularDiferenciaHoras(horaInicio: string, horaFin: string): number {
     const [hInicio, mInicio] = horaInicio.split(':').map(Number);
     const [hFin, mFin] = horaFin.split(':').map(Number);
@@ -36,6 +42,23 @@ export class AsistenciaTutorService {
     return parseFloat(((finMinutos - inicioMinutos) / 60).toFixed(2));
   }
 
+  // ========== OBTENER VINCULACIÓN POR ESTUDIANTE ==========
+  async obtenerVinculacionPorEstudiante(idEstudiante: number): Promise<VinculacionEstudianteEntity | null> {
+    const query = `
+      SELECT vinc.*
+      FROM vinculacion_estudiante vinc
+      INNER JOIN matricula_detalle md ON md.id_matricula_detalle = vinc.id_matricula_detalle
+      INNER JOIN matricula m ON m.id_matricula = md.id_matricula
+      WHERE m.id_estudiante = $1
+        AND vinc.estado = 'EN_CURSO'
+      ORDER BY vinc.id_vinculacion DESC
+      LIMIT 1
+    `;
+    const results = await this.vinculacionRepo.query(query, [idEstudiante]);
+    return results.length > 0 ? results[0] : null;
+  }
+
+  // ========== OBTENER ASISTENCIAS POR DOCENTE ==========
   async obtenerAsistenciasTutorPorDocente(idDocente: number) {
     try {
       const data = await this.repository.obtainAsistenciasTutorPorDocenteRaw(idDocente);
@@ -48,6 +71,7 @@ export class AsistenciaTutorService {
     }
   }
 
+  // ========== OBTENER REPORTE DE ASISTENCIA ==========
   async obtenerReporteAsistenciaTutor(idVinculacion: number) {
     try {
       const resultados = await this.repository.obtainReporteAsistenciaTutorRaw(idVinculacion);
@@ -112,6 +136,7 @@ export class AsistenciaTutorService {
     }
   }
 
+  // ========== CREAR ASISTENCIA TUTOR ==========
   async crearAsistenciaTutor(datos: CreateAsistenciaTutorDto) {
     try {
       if (datos.id_vinculacion) {
@@ -155,6 +180,7 @@ export class AsistenciaTutorService {
     }
   }
 
+  // ========== ACTUALIZAR ASISTENCIA TUTOR ==========
   async actualizarAsistenciaTutor(id: number, datos: UpdateAsistenciaTutorDto) {
     try {
       const registroActual = await this.repository.buscarPorId(id);
@@ -218,6 +244,7 @@ export class AsistenciaTutorService {
     }
   }
 
+  // ========== ELIMINAR ASISTENCIA TUTOR ==========
   async eliminarAsistenciaTutor(id: number) {
     try {
       const eliminado = await this.repository.eliminarAsistenciaTutor(id);

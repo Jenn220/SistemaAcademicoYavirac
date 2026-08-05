@@ -33,14 +33,18 @@ export class CertificadoComponent implements OnInit {
   fechaFinEdit: string = '';
 
   ngOnInit(): void {
-    this.isEstudiante = this.authService.roles().includes('ESTUDIANTE');
+    // SOLO ESTUDIANTE puede ver esta pantalla
+    const roles = this.authService.roles();
+    this.isEstudiante = roles.includes('ESTUDIANTE');
+
+    if (!this.isEstudiante) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
+      this.loading = false;
+      return;
+    }
 
     this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.idVinculacion = +params['id'];
-      } else {
-        this.idVinculacion = 0;
-      }
+      this.idVinculacion = params['id'] ? +params['id'] : 0;
       this.cargarDatos();
     });
   }
@@ -67,10 +71,10 @@ export class CertificadoComponent implements OnInit {
   guardarCambios(): void {
     if (!this.certificado) return;
     this.loading = true;
-    const payload = {
-      nombre_proyecto: this.proyectoEdit,
-      fecha_inicio: this.fechaInicioEdit
-    };
+    const payload: any = {};
+    if (this.proyectoEdit) payload.nombre_proyecto = this.proyectoEdit;
+    if (this.fechaInicioEdit) payload.fecha_inicio = this.fechaInicioEdit;
+
     this.inicioService.actualizarInicioActividades(this.idVinculacion, payload)
       .pipe(finalize(() => this.loading = false))
       .subscribe({

@@ -20,7 +20,7 @@
         <th>HORA SALIDA</th>
         <th>TOTAL HORAS</th>
         <th>ACTIVIDAD REALIZADA</th>
-        <th *ngIf="isEstudiante">ACCIONES</th>
+        <th>ACCIONES</th>
       </tr>
     </thead>
     <tbody>
@@ -42,7 +42,7 @@
           <span *ngIf="editandoId !== act.id">{{ act.descripcion }}</span>
           <input *ngIf="editandoId === act.id" type="text" [(ngModel)]="editandoActividad.actividades_realizadas" />
         </td>
-        <td *ngIf="isEstudiante">
+        <td>
           <ng-container *ngIf="editandoId !== act.id">
             <button (click)="editarActividad(act)" class="btn-edit">✏️</button>
             <button (click)="eliminarActividad(act.id)" class="btn-delete">🗑️</button>
@@ -67,7 +67,7 @@
     <p><strong>OBSERVACIONES:</strong> {{ data.totales.observaciones || 'Ninguna' }}</p>
   </div>
 
-  <div class="acciones" *ngIf="isEstudiante">
+  <div class="acciones">
     <button *ngIf="!mostrandoFormulario" (click)="mostrarFormulario()" class="btn-add">+ Agregar actividad</button>
   </div>
 
