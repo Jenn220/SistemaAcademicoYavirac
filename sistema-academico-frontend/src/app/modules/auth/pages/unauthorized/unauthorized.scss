@@ -1,1 +1,145 @@
-@use '../../styles/auth-theme';
+.unauthorized-container {
+  position: fixed;
+  inset: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #08387c;
+  background-image: url('/assets/images/noautorisado.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.unauthorized-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 20px;
+  padding: 2.25rem 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+.card-header {
+  width: 100%;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+
+  .system-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0b2545;
+  }
+
+  .system-subtitle {
+    margin: 0.35rem 0 0;
+    font-size: 0.925rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+}
+
+.icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+
+  .lock-icon {
+    width: 28px;
+    height: 28px;
+    stroke: #ef4444;
+  }
+}
+
+.unauthorized-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0b2545;
+  margin: 0 0 0.75rem 0;
+}
+
+.unauthorized-desc {
+  font-size: 0.925rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 1.75rem 0;
+  max-width: 340px;
+}
+
+.actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.btn {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  box-sizing: border-box;
+
+  .btn-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.btn-primary {
+  background-color: #0b3c7b;
+  color: #ffffff;
+  border: none;
+
+  .btn-icon {
+    stroke: #ffffff;
+  }
+
+  &:hover {
+    background-color: #082d5c;
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #0b3c7b;
+  border: 1.5px solid #0b3c7b;
+
+  .btn-icon {
+    stroke: #0b3c7b;
+  }
+
+  &:hover {
+    background-color: #f0f4f8;
+  }
+}

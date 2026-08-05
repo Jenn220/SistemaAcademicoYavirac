@@ -76,6 +76,13 @@
       cursor: not-allowed;
     }
   }
+  .btn-cancelar {
+  background: #64748b !important;
+
+  &:hover {
+    background: #475569 !important;
+  }
+}
 }
 
 // ---------------------------------------------------------------------

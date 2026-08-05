@@ -21,7 +21,7 @@ export class AuthService {
   // Ajusta esta base si tu environment define otra convención
   // (por ejemplo environment.apiUrl + '/auth')
 
-private readonly apiUrl = 'http://localhost:3000/api/auth';
+private readonly apiUrl = '/api/auth';
 
   // ------------------------------------------------------------------
   // Estado de sesión reactivo (signals)
@@ -47,6 +47,12 @@ private readonly apiUrl = 'http://localhost:3000/api/auth';
       tap((respuesta) => this.guardarSesion(respuesta)),
     );
   }
+
+  obtenerPeriodosActivos(): Observable<{ id_periodo: number; nombre: string; codigo: string }[]> {
+  return this.http.get<{ id_periodo: number; nombre: string; codigo: string }[]>(
+    `${this.apiUrl}/periodos-activos`
+  );
+}
 
   me(): Observable<MeResponse> {
     return this.http.get<MeResponse>(`${this.apiUrl}/me`);

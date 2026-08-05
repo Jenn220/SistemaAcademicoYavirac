@@ -16,6 +16,7 @@
         🏠 Bienvenida
       </a>
 
+
       <div class="menu-title">
         Portafolio Docente
       </div>
@@ -73,43 +74,63 @@
       </a>
 
       <!-- Sección Vinculación con la sociedad -->
-      <!-- Mostrar solo si el rol es ESTUDIANTE o DOCENTE -->
-      @if (tieneRol('ESTUDIANTE')) {
-        <div class="menu-title">Vinculación con la sociedad</div>
-        <!-- Enlaces para estudiante (7 opciones) -->
-        <a routerLink="/vinculacion/estudiante/inicio-actividades" routerLinkActive="active">📄 Inicio Act.</a>
-        <a routerLink="/vinculacion/estudiante/carta-compromiso" routerLinkActive="active">📄 Carta Compromiso</a>
-        <a routerLink="/vinculacion/estudiante/control-asistencia" routerLinkActive="active">📊 Control Asistencia</a>
-        <a routerLink="/vinculacion/estudiante/registro-asistencia-tutor" routerLinkActive="active">📊 Registro Asistencia Tutor</a>
-        <a routerLink="/vinculacion/estudiante/plan-aprendizaje" routerLinkActive="active">📊 Plan Aprendizaje</a>
-        <a routerLink="/vinculacion/estudiante/certificado" routerLinkActive="active">📄 Certificado</a>
-        <a routerLink="/vinculacion/estudiante/informe-final" routerLinkActive="active">📄 Informe Final</a>
-      }
+      <div class="menu-title">Vinculación con la sociedad</div>
 
-      @if (tieneRol('DOCENTE')) {
-        <div class="menu-title">Vinculación con la sociedad</div>
-        <!-- Solo una opción para docente: seleccionar estudiante -->
-        <a routerLink="/vinculacion/docente/seleccionar" routerLinkActive="active">👨‍🏫 Seleccionar Estudiante</a>
-      }
+      <a routerLink="/vinculacion" 
+         routerLinkActive="active" 
+         [routerLinkActiveOptions]="{exact:true}">
+         🤝 Vinculación
+      </a>
 
-      <!-- Para EMPRESA o COORDINADOR no mostramos nada -->
+      <a routerLink="/vinculacion/actividades" 
+         routerLinkActive="active" 
+         [routerLinkActiveOptions]="{exact:true}">
+         📋 Actividades
+      </a>
+
+      <a routerLink="/vinculacion/asistencia" 
+         routerLinkActive="active" 
+         [routerLinkActiveOptions]="{exact:true}">
+         👨‍🏫 Asistencia Tutor
+      </a>
+
+      <a routerLink="/vinculacion/informes" 
+         routerLinkActive="active" 
+         [routerLinkActiveOptions]="{exact:true}">
+         📊 Informes
+      </a>
+
+      <a routerLink="/vinculacion/nuevo" 
+         routerLinkActive="active" 
+         [routerLinkActiveOptions]="{exact:true}">
+         🚀 Nuevo Proyecto
+      </a>
+
+      <!-- Sección Coordinación -->
+      <div class="menu-title">Coordinación</div>
+
+      <a routerLink="/coordinacion/cierre-periodo"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact:true}">
+         🔒 Cierre de Período
+      </a>
 
       <!-- Nueva Sección: Gestión de Accesos -->
       <div class="menu-title">Gestión de Accesos</div>
 
-      <a routerLink="/auth/coordinador/desbloquear"
+      <a routerLink="/auth/coordinador/desbloquear" 
          routerLinkActive="active">
          🔄 Resetear Contraseña
       </a>
 
-      <a routerLink="/auth/coordinador/generar-accesos"
+      <a routerLink="/auth/coordinador/generar-accesos" 
          routerLinkActive="active">
          👤 Ingresar
       </a>
 
-    </div> <!-- cierre del menú -->
+    </div>
 
-  </aside> <!-- cierre del sidebar -->
+  </aside>
 
   <main class="main-content">
 
@@ -119,37 +140,37 @@
         <h1>Sistema Académico</h1>
       </div>
       <div class="topbar-right">
-        <button class="icon-btn">🔔</button>
-        <button class="icon-btn">⚙️</button>
-
         <!-- Menú de Usuario con Dropdown -->
-        <div class="user" (click)="toggleMenuUsuario()">
-          <div class="avatar">
-            <img src="assets/icons/usuario.png" alt="Avatar">
+        <div class="user-menu-wrapper">
+          <div class="user" (click)="toggleMenuUsuario()">
+            <div class="avatar">
+              <img src="assets/icons/usuario.png" alt="Avatar">
+            </div>
+            <div class="user-info">
+              <span class="name">{{ nombreUsuario() }}</span>
+              <span class="role">{{ rolUsuario() }}</span>
+            </div>
+            <span class="arrow" [class.rotated]="menuUsuarioAbierto()">▼</span>
           </div>
-          <div class="user-info">
-            <span class="name">{{ nombreUsuario() }}</span>
-            <span class="role">{{ rolPrincipal() }}</span>
-          </div>
-          <span class="arrow" [class.rotated]="menuUsuarioAbierto()">▼</span>
+
+          @if (menuUsuarioAbierto()) {
+            <div class="user-dropdown">
+              <a routerLink="/auth/cambiar-password" (click)="cerrarMenuUsuario()" class="dropdown-item">
+                🔑 Cambiar Contraseña
+              </a>
+              <hr class="dropdown-divider" />
+              <button (click)="cerrarSesion()" class="dropdown-item dropdown-item--danger">
+                🚪 Cerrar Sesión
+              </button>
+            </div>
+          }
         </div>
 
-        @if (menuUsuarioAbierto()) {
-          <div class="user-dropdown">
-            <a routerLink="/auth/cambiar-password" (click)="cerrarMenuUsuario()" class="dropdown-item">
-              🔑 Cambiar Contraseña
-            </a>
-            <hr class="dropdown-divider" />
-            <button (click)="cerrarSesion()" class="dropdown-item dropdown-item--danger">
-              🚪 Cerrar Sesión
-            </button>
-          </div>
-        }
-      </div> <!-- cierre de topbar-right -->
-    </div> <!-- cierre de topbar -->
+      </div>
+    </div>
 
     <router-outlet></router-outlet>
 
-  </main> <!-- cierre de main-content -->
+  </main>
 
-</div> <!-- cierre de layout -->
+</div>

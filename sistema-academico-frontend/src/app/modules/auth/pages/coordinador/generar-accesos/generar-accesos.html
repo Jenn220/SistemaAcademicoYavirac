@@ -3,7 +3,6 @@
 
   <div class="auth-card auth-card--wide">
     <div class="auth-brand">
-      <!-- Cambiado el div.auth-brand__badge por la imagen del logo -->
       <img src="assets/images/logo-yavirac.png" alt="Logo Yavirac" class="auth-brand__logo" />
       <div class="auth-brand__text">
         <h1 class="auth-brand__title">Generar accesos</h1>
@@ -31,20 +30,20 @@
         </select>
       </div>
 
-      @if (requierePeriodo()) {
-        <div class="auth-field">
-          <label for="id_periodo">ID del período académico</label>
-          <input
-            id="id_periodo"
-            type="number"
-            formControlName="id_periodo"
-            placeholder="Ej: 1"
-          />
-          @if (form.controls.id_periodo.invalid && form.controls.id_periodo.touched) {
-            <div class="auth-field__error">Debes indicar el período para estudiantes.</div>
+      <div class="auth-field">
+        <label for="id_periodo">Período académico</label>
+        <select id="id_periodo" formControlName="id_periodo">
+          <option [ngValue]="null" disabled selected>Seleccione un período...</option>
+          @for (periodo of periodos(); track periodo.id_periodo) {
+            <option [ngValue]="periodo.id_periodo">
+              {{ periodo.nombre }} ({{ periodo.codigo }})
+            </option>
           }
-        </div>
-      }
+        </select>
+        @if (form.controls.id_periodo.invalid && form.controls.id_periodo.touched) {
+          <div class="auth-field__error">Debes seleccionar un período académico.</div>
+        }
+      </div>
 
       <div class="auth-actions">
         <button type="submit" class="auth-button" [disabled]="cargando()">

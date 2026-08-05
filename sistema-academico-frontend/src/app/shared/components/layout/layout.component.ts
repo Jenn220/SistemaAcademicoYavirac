@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, inject, computed } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../modules/auth/services/auth.service';
 
@@ -19,29 +19,21 @@ export class LayoutShellComponent {
 
   menuUsuarioAbierto = signal(false);
 
-  // Usar las señales del AuthService (son readonly)
-  readonly usuario = this.authService.usuario;
-  readonly roles = this.authService.roles;
-
-  // Computed para mostrar el nombre y rol en la barra superior
+  // Signal computado para obtener el nombre del usuario o su correo como alternativa
   nombreUsuario = computed(() => {
-    const user = this.usuario();
-    return user?.correo || 'Usuario';
+    const u = this.authService.usuario();
+    if (!u) return 'Usuario';
+    return (u as any).nombreCompleto || (u as any).nombre || u.correo || 'Usuario';
   });
 
-  rolPrincipal = computed(() => {
-    const roles = this.roles();
-    if (roles.includes('DOCENTE')) return 'Docente';
-    if (roles.includes('ESTUDIANTE')) return 'Estudiante';
-    if (roles.includes('COORDINADOR')) return 'Coordinador';
-    if (roles.includes('TUTOR_EMPRESARIAL')) return 'Tutor Empresarial';
-    return 'Usuario';
-  });
+  // Signal computado para obtener y formatear el rol (ej: "COORDINADOR" -> "Coordinador")
+  rolUsuario = computed(() => {
+    const roles = this.authService.roles();
+    if (!roles || roles.length === 0) return 'Sin Rol';
 
-  // Método para verificar si el usuario tiene un rol específico
-  tieneRol(rol: string): boolean {
-    return this.roles().includes(rol);
-  }
+    const primerRol = roles[0];
+    return primerRol.charAt(0).toUpperCase() + primerRol.slice(1).toLowerCase();
+  });
 
   toggleMenuUsuario(): void {
     this.menuUsuarioAbierto.update(v => !v);
@@ -53,7 +45,17 @@ export class LayoutShellComponent {
 
   cerrarSesion(): void {
     this.cerrarMenuUsuario();
-    this.authService.logout();
+
+    // 1. Limpiamos cualquier token o sesión guardada
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 2. Si el servicio tiene método logout, lo ejecutamos
+    if (this.authService && typeof this.authService.logout === 'function') {
+      this.authService.logout();
+    }
+
+    // 3. Redirección forzada e inmediata al Login
     this.router.navigateByUrl('/auth/login', { replaceUrl: true });
   }
 }
