@@ -1,6 +1,4 @@
-// 📁 src/app/modules/vinculacion/pages/compartidas/inicio-actividades/inicio-actividades.ts
-
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { InicioActividadesService } from '../../../services/inicio-actividades.service';
@@ -21,9 +19,10 @@ export class InicioActividadesComponent implements OnInit {
   private service = inject(InicioActividadesService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
+  private cdr = inject(ChangeDetectorRef);
 
   data: InicioActividadesResponse | null = null;
-  isLoading = true;  // ✅ Inicia en true
+  isLoading = true;
   error: string | null = null;
   idVinculacion: number = 0;
   isEstudiante = false;
@@ -34,28 +33,28 @@ export class InicioActividadesComponent implements OnInit {
 
     if (!this.isEstudiante) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
-      this.isLoading = false;  // ✅ IMPORTANTE: poner false si hay error
+      this.isLoading = false;
+      this.cdr.markForCheck();
       return;
     }
 
-    // ✅ OBTENER ID DE LA URL O DEL USUARIO
     const idParam = this.route.snapshot.params['id'];
     
     if (idParam && idParam > 0) {
       this.idVinculacion = Number(idParam);
       this.cargarDatos();
     } else {
-      // Obtener vinculación activa del estudiante
       this.obtenerVinculacionActiva();
     }
   }
 
   obtenerVinculacionActiva(): void {
     this.isLoading = true;
+    this.cdr.markForCheck();
     this.vinculacionService.obtenerVinculacionActiva()
       .pipe(finalize(() => {
-        // ✅ Asegurar que isLoading se ponga en false siempre
         this.isLoading = false;
+        this.cdr.markForCheck();
       }))
       .subscribe({
         next: (response) => {
@@ -64,11 +63,13 @@ export class InicioActividadesComponent implements OnInit {
             this.cargarDatos();
           } else {
             this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.cdr.markForCheck();
           }
         },
         error: (err) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -76,22 +77,25 @@ export class InicioActividadesComponent implements OnInit {
   cargarDatos(): void {
     this.isLoading = true;
     this.error = null;
+    this.cdr.markForCheck();
     
     console.log('🔵 Cargando Inicio Actividades para vinculación:', this.idVinculacion);
     
     this.service.obtenerInicioActividades(this.idVinculacion)
       .pipe(finalize(() => {
-        // ✅ Asegurar que isLoading se ponga en false siempre
         this.isLoading = false;
+        this.cdr.markForCheck();
       }))
       .subscribe({
         next: (response) => {
           console.log('📦 Datos de Inicio Actividades recibidos:', response);
           this.data = response;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al cargar Inicio Actividades:', err);
           this.error = 'No se pudieron cargar los datos.';
+          this.cdr.markForCheck();
         }
       });
   }

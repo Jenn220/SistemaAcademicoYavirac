@@ -5,7 +5,7 @@ import { LayoutShellComponent } from './shared/components/layout/layout.componen
 
 // Auth Guard
 import { authGuard } from './modules/auth/guards/auth.guard';
-import { roleGuard } from './modules/auth/guards/role.guard'; // 🔥 NUEVA IMPORTACIÓN
+import { roleGuard } from './modules/auth/guards/role.guard';
 
 // Dashboard
 import { Dashboard } from './modules/dashboard';
@@ -98,49 +98,49 @@ export const routes: Routes = [
                 path: 'inicio-actividades',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/inicio-actividades/inicio-actividades'
+                    './modules/vinculacion/pages/compartidas/inicio-actividades/inicio-actividades.component'
                   ).then((m) => m.InicioActividadesComponent),
               },
               {
                 path: 'carta-compromiso',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/carta-compromiso/carta-compromiso'
+                    './modules/vinculacion/pages/compartidas/carta-compromiso/carta-compromiso.component'
                   ).then((m) => m.CartaCompromisoComponent),
               },
               {
                 path: 'control-asistencia',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/control-asistencia/control-asistencia'
+                    './modules/vinculacion/pages/compartidas/control-asistencia/control-asistencia.component'
                   ).then((m) => m.ControlAsistenciaComponent),
               },
               {
                 path: 'registro-asistencia-tutor',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor'
+                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor.component'
                   ).then((m) => m.RegistroAsistenciaTutorComponent),
               },
               {
                 path: 'plan-aprendizaje',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/plan-aprendizaje/plan-aprendizaje'
+                    './modules/vinculacion/pages/compartidas/plan-aprendizaje/plan-aprendizaje.component'
                   ).then((m) => m.PlanAprendizajeComponent),
               },
               {
                 path: 'certificado',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/certificado/certificado'
+                    './modules/vinculacion/pages/compartidas/certificado/certificado.component'
                   ).then((m) => m.CertificadoComponent),
               },
               {
                 path: 'informe-final',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/informe-final/informe-final'
+                    './modules/vinculacion/pages/compartidas/informe-final/informe-final.component'
                   ).then((m) => m.InformeFinalComponent),
               },
               {
@@ -160,21 +160,21 @@ export const routes: Routes = [
                 path: 'seleccionar',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/docente/seleccionar-estudiante/seleccionar-estudiante'
+                    './modules/vinculacion/pages/docente/seleccionar-estudiante/seleccionar-estudiante.component'
                   ).then((m) => m.SeleccionarEstudianteComponent),
               },
               {
                 path: 'estudiante/:id/registro-asistencia-tutor',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor'
+                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor.component'
                   ).then((m) => m.RegistroAsistenciaTutorComponent),
               },
               {
                 path: 'estudiante/:id/informe-final',
                 loadComponent: () =>
                   import(
-                    './modules/vinculacion/pages/compartidas/informe-final/informe-final'
+                    './modules/vinculacion/pages/compartidas/informe-final/informe-final.component'
                   ).then((m) => m.InformeFinalComponent),
               },
               {

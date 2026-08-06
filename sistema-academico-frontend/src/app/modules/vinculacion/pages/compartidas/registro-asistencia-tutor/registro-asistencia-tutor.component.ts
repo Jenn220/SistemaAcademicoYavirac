@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,27 +20,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   private service = inject(RegistroAsistenciaTutorService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
+  private cdr = inject(ChangeDetectorRef);
 
   data: AsistenciaTutorResponse | null = null;
   loading = true;
   error: string | null = null;
   idVinculacion: number = 0;
 
-  // Roles
   isEstudiante = false;
   isDocente = false;
   isCoordinador = false;
   isTutorEmpresarial = false;
 
-  // Variables para edición
   editandoId: number | null = null;
   editandoActividad: UpdateAsistenciaTutorDto = {};
 
-  // Observaciones (SOLO DOCENTE puede editar)
   observacionEdit: string = '';
   editandoObservacion = false;
 
-  // Nueva actividad (ESTUDIANTE puede crear)
   nuevaActividad: CreateAsistenciaTutorDto = {
     id_vinculacion: 0,
     fecha: '',
@@ -58,10 +55,10 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     this.isCoordinador = roles.includes('COORDINADOR');
     this.isTutorEmpresarial = roles.includes('TUTOR_EMPRESARIAL');
 
-    // Si es COORDINADOR, no puede ver esta pantalla
     if (this.isCoordinador) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla.';
       this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -72,23 +69,23 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         this.idVinculacion = idParam;
         this.cargarDatos();
       } else if (this.isEstudiante) {
-        // ✅ Si es estudiante y no viene ID, obtener vinculación activa
         this.obtenerVinculacionActiva();
       } else if (this.isDocente && idParam === 0) {
-        // Si es docente y no viene ID, mostrar error
         this.error = 'Debe seleccionar un estudiante primero.';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
 
-  /**
-   * ✅ Obtener vinculación activa del estudiante autenticado
-   */
   obtenerVinculacionActiva(): void {
     this.loading = true;
+    this.cdr.markForCheck();
     this.vinculacionService.obtenerVinculacionActiva()
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (response) => {
           if (response && response.id_vinculacion) {
@@ -96,11 +93,13 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
             this.cargarDatos();
           } else {
             this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.cdr.markForCheck();
           }
         },
         error: (err) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -108,24 +107,29 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
     console.log('🔵 Cargando Registro Asistencia Tutor para vinculación:', this.idVinculacion);
     
     this.service.obtenerReporte(this.idVinculacion)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (data) => {
           console.log('📦 Datos de Asistencia Tutor recibidos:', data);
           this.data = data;
           this.observacionEdit = data.totales.observaciones || '';
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al cargar Asistencia Tutor:', err);
           this.error = 'No se pudo cargar el registro de asistencia del tutor.';
+          this.cdr.markForCheck();
         }
       });
   }
 
-  // ========== CRUD ACTIVIDADES (SOLO ESTUDIANTE) ==========
   mostrarFormulario(): void {
     if (!this.isEstudiante) return;
     this.mostrandoFormulario = true;
@@ -137,10 +141,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       actividad_realizada: '',
       observaciones: ''
     };
+    this.cdr.markForCheck();
   }
 
   cancelarNuevo(): void {
     this.mostrandoFormulario = false;
+    this.cdr.markForCheck();
   }
 
   agregarActividad(): void {
@@ -150,8 +156,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       return;
     }
     this.loading = true;
+    this.cdr.markForCheck();
     this.service.crearAsistencia(this.nuevaActividad)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.cargarDatos();
@@ -160,6 +170,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         error: (err) => {
           console.error('❌ Error al agregar actividad:', err);
           this.error = 'Error al agregar actividad.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -173,18 +184,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       hora_fin: act.hora_salida,
       actividad_realizada: act.actividad_realizada
     };
+    this.cdr.markForCheck();
   }
 
   cancelarEdicion(): void {
     this.editandoId = null;
     this.editandoActividad = {};
+    this.cdr.markForCheck();
   }
 
   guardarEdicion(): void {
     if (!this.isEstudiante || !this.editandoId) return;
     this.loading = true;
+    this.cdr.markForCheck();
     this.service.actualizarAsistencia(this.editandoId, this.editandoActividad)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.cargarDatos();
@@ -193,6 +210,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         error: (err) => {
           console.error('❌ Error al actualizar actividad:', err);
           this.error = 'Error al actualizar actividad.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -201,8 +219,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     if (!this.isEstudiante) return;
     if (!confirm('¿Eliminar esta actividad?')) return;
     this.loading = true;
+    this.cdr.markForCheck();
     this.service.eliminarAsistencia(id)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.cargarDatos();
@@ -210,16 +232,17 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         error: (err) => {
           console.error('❌ Error al eliminar actividad:', err);
           this.error = 'Error al eliminar actividad.';
+          this.cdr.markForCheck();
         }
       });
   }
 
-  // ========== OBSERVACIONES (SOLO DOCENTE) ==========
   toggleEditObservacion(): void {
     if (!this.isDocente) return;
     this.editandoObservacion = !this.editandoObservacion;
     if (!this.editandoObservacion && this.data) {
       alert('Observación guardada localmente. (Endpoint pendiente para guardar en BD)');
     }
+    this.cdr.markForCheck();
   }
 }

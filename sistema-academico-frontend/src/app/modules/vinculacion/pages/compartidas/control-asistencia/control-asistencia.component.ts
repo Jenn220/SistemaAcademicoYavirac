@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -6,8 +6,7 @@ import { ControlAsistenciaService } from '../../../services/control-asistencia.s
 import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { AsistenciaEstudianteResponse, ActividadEstudiante, CreateActividadEstudianteDto, UpdateActividadEstudianteDto } from '../../../models/control-asistencia.model';
-import { finalize, switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-control-asistencia',
@@ -21,6 +20,7 @@ export class ControlAsistenciaComponent implements OnInit {
   private asistenciaService = inject(ControlAsistenciaService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
+  private cdr = inject(ChangeDetectorRef);
 
   data: AsistenciaEstudianteResponse | null = null;
   loading = true;
@@ -48,6 +48,7 @@ export class ControlAsistenciaComponent implements OnInit {
     if (!this.isEstudiante) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
       this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -58,19 +59,19 @@ export class ControlAsistenciaComponent implements OnInit {
         this.idVinculacion = idParam;
         this.cargarDatos();
       } else {
-        // ✅ Si no viene ID en la URL, obtener vinculación activa del estudiante
         this.obtenerVinculacionActiva();
       }
     });
   }
 
-  /**
-   * ✅ Obtener vinculación activa del estudiante autenticado
-   */
   obtenerVinculacionActiva(): void {
     this.loading = true;
+    this.cdr.markForCheck();
     this.vinculacionService.obtenerVinculacionActiva()
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (response) => {
           if (response && response.id_vinculacion) {
@@ -78,11 +79,13 @@ export class ControlAsistenciaComponent implements OnInit {
             this.cargarDatos();
           } else {
             this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.cdr.markForCheck();
           }
         },
         error: (err) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -90,18 +93,24 @@ export class ControlAsistenciaComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
     console.log('🔵 Cargando asistencia para vinculación:', this.idVinculacion);
     
     this.asistenciaService.obtenerAsistencia(this.idVinculacion)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (data) => {
           console.log('📦 Datos de asistencia recibidos:', data);
           this.data = data;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al cargar asistencia:', err);
           this.error = 'No se pudo cargar el control de asistencia.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -116,10 +125,12 @@ export class ControlAsistenciaComponent implements OnInit {
       observacion: '',
       resultado_aprendizaje: ''
     };
+    this.cdr.markForCheck();
   }
 
   cancelarNuevo(): void {
     this.mostrandoFormulario = false;
+    this.cdr.markForCheck();
   }
 
   agregarActividad(): void {
@@ -132,8 +143,12 @@ export class ControlAsistenciaComponent implements OnInit {
       id_vinculacion: this.idVinculacion
     };
     this.loading = true;
+    this.cdr.markForCheck();
     this.asistenciaService.crearActividad(payload)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.cargarDatos();
@@ -142,6 +157,7 @@ export class ControlAsistenciaComponent implements OnInit {
         error: (err) => {
           console.error('❌ Error al agregar actividad:', err);
           this.error = 'Error al agregar actividad.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -154,18 +170,24 @@ export class ControlAsistenciaComponent implements OnInit {
       hora_fin: actividad.hora_salida,
       actividades_realizadas: actividad.descripcion
     };
+    this.cdr.markForCheck();
   }
 
   cancelarEdicion(): void {
     this.editandoId = null;
     this.editandoActividad = {};
+    this.cdr.markForCheck();
   }
 
   guardarEdicion(): void {
     if (!this.editandoId) return;
     this.loading = true;
+    this.cdr.markForCheck();
     this.asistenciaService.actualizarActividad(this.editandoId, this.editandoActividad)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.cargarDatos();
@@ -174,6 +196,7 @@ export class ControlAsistenciaComponent implements OnInit {
         error: (err) => {
           console.error('❌ Error al actualizar actividad:', err);
           this.error = 'Error al actualizar actividad.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -181,8 +204,12 @@ export class ControlAsistenciaComponent implements OnInit {
   eliminarActividad(id: number): void {
     if (!confirm('¿Eliminar esta actividad?')) return;
     this.loading = true;
+    this.cdr.markForCheck();
     this.asistenciaService.eliminarActividad(id)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.cargarDatos();
@@ -190,6 +217,7 @@ export class ControlAsistenciaComponent implements OnInit {
         error: (err) => {
           console.error('❌ Error al eliminar actividad:', err);
           this.error = 'Error al eliminar actividad.';
+          this.cdr.markForCheck();
         }
       });
   }

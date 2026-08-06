@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,6 +20,7 @@ export class PlanAprendizajeComponent implements OnInit {
   private service = inject(PlanAprendizajeService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
+  private cdr = inject(ChangeDetectorRef);
 
   data: PlanAprendizaje | null = null;
   loading = true;
@@ -27,20 +28,16 @@ export class PlanAprendizajeComponent implements OnInit {
   isEstudiante = false;
   idVinculacion: number = 0;
 
-  // Edición de resultados de aprendizaje
   editandoIndice: number | null = null;
   resultadoEdit: string = '';
 
-  // Edición de reflexión
   reflexionEdit: string = '';
   editandoReflexion = false;
 
-  // Edición de avances del proyecto
   avances: { tema: string; seccion: string; avance: number }[] = [];
   editandoAvanceIndex: number | null = null;
   avanceEdit: number = 0;
 
-  // Flag para controlar si es la primera carga
   private primeraCarga = true;
 
   ngOnInit(): void {
@@ -50,6 +47,7 @@ export class PlanAprendizajeComponent implements OnInit {
     if (!this.isEstudiante) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
       this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -60,19 +58,19 @@ export class PlanAprendizajeComponent implements OnInit {
         this.idVinculacion = idParam;
         this.cargarDatos();
       } else {
-        // ✅ Si no viene ID en la URL, obtener vinculación activa del estudiante
         this.obtenerVinculacionActiva();
       }
     });
   }
 
-  /**
-   * ✅ Obtener vinculación activa del estudiante autenticado
-   */
   obtenerVinculacionActiva(): void {
     this.loading = true;
+    this.cdr.markForCheck();
     this.vinculacionService.obtenerVinculacionActiva()
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (response) => {
           if (response && response.id_vinculacion) {
@@ -80,11 +78,13 @@ export class PlanAprendizajeComponent implements OnInit {
             this.cargarDatos();
           } else {
             this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.cdr.markForCheck();
           }
         },
         error: (err) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -92,20 +92,22 @@ export class PlanAprendizajeComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
     console.log('🔵 Cargando Plan de Aprendizaje para vinculación:', this.idVinculacion);
     
     this.service.obtenerPlan(this.idVinculacion)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (data) => {
           console.log('📦 Datos de Plan de Aprendizaje recibidos:', data);
           this.data = data;
-          // Inicializar reflexión solo en la primera carga
           if (this.primeraCarga) {
             this.reflexionEdit = 'Los estudiantes desarrollaron algunas habilidades blandas como: comunicación en equipo, coordinación de actividades, planificación de actividades.';
             this.primeraCarga = false;
           }
-          // Inicializar avances
           this.avances = [
             { tema: data.cabecera?.titulo_proyecto || '', seccion: '1. Título del Proyecto (10%)', avance: 0.1 },
             { tema: data.cabecera?.titulo_proyecto || '', seccion: '2. Antecedentes (10%)', avance: 0.1 },
@@ -117,24 +119,27 @@ export class PlanAprendizajeComponent implements OnInit {
             { tema: data.cabecera?.titulo_proyecto || '', seccion: '8. Anexos (10%)', avance: 0.1 },
             { tema: data.cabecera?.titulo_proyecto || '', seccion: '9. Entrega de proyecto final (20%)', avance: 0.2 }
           ];
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al cargar Plan de Aprendizaje:', err);
           this.error = 'No se pudo cargar el plan de aprendizaje.';
+          this.cdr.markForCheck();
         }
       });
   }
 
-  // ========== RESULTADOS DE APRENDIZAJE ==========
   editarResultado(index: number): void {
     if (!this.data) return;
     this.editandoIndice = index;
     this.resultadoEdit = this.data.informe_actividades[index].resultado_aprendizaje || '';
+    this.cdr.markForCheck();
   }
 
   cancelarEdicionResultado(): void {
     this.editandoIndice = null;
     this.resultadoEdit = '';
+    this.cdr.markForCheck();
   }
 
   guardarResultado(index: number): void {
@@ -145,8 +150,12 @@ export class PlanAprendizajeComponent implements OnInit {
       return;
     }
     this.loading = true;
+    this.cdr.markForCheck();
     this.service.actualizarResultadoAprendizaje(actividad.id, this.resultadoEdit)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           actividad.resultado_aprendizaje = this.resultadoEdit;
@@ -155,27 +164,29 @@ export class PlanAprendizajeComponent implements OnInit {
         error: (err) => {
           console.error('❌ Error al actualizar resultado:', err);
           this.error = 'Error al actualizar resultado.';
+          this.cdr.markForCheck();
         }
       });
   }
 
-  // ========== REFLEXIÓN ==========
   toggleEditReflexion(): void {
     this.editandoReflexion = !this.editandoReflexion;
     if (!this.editandoReflexion) {
       alert('Reflexión actualizada localmente. (Endpoint pendiente para guardar en BD)');
     }
+    this.cdr.markForCheck();
   }
 
-  // ========== AVANCES ==========
   editarAvance(index: number): void {
     this.editandoAvanceIndex = index;
     this.avanceEdit = this.avances[index].avance;
+    this.cdr.markForCheck();
   }
 
   cancelarEdicionAvance(): void {
     this.editandoAvanceIndex = null;
     this.avanceEdit = 0;
+    this.cdr.markForCheck();
   }
 
   guardarAvance(index: number): void {

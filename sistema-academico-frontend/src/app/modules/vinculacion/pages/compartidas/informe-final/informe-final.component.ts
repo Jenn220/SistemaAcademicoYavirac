@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,6 +20,7 @@ export class InformeFinalComponent implements OnInit {
   private service = inject(InformeFinalService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
+  private cdr = inject(ChangeDetectorRef);  // ✅ INYECTADO
 
   data: InformeFinal | null = null;
   loading = true;
@@ -59,6 +60,7 @@ export class InformeFinalComponent implements OnInit {
     if (this.isCoordinador) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla.';
       this.loading = false;
+      this.cdr.markForCheck();  // ✅ AÑADIDO
       return;
     }
 
@@ -75,6 +77,7 @@ export class InformeFinalComponent implements OnInit {
         // Si es docente y no viene ID, mostrar error
         this.error = 'Debe seleccionar un estudiante primero.';
         this.loading = false;
+        this.cdr.markForCheck();  // ✅ AÑADIDO
       }
     });
   }
@@ -83,33 +86,40 @@ export class InformeFinalComponent implements OnInit {
    * ✅ Obtener vinculación activa del estudiante autenticado
    */
   obtenerVinculacionActiva(): void {
-  this.loading = true;
-  this.vinculacionService.obtenerVinculacionActiva()
-    .subscribe({   // ❌ sin finalize aquí
-      next: (response) => {
-        if (response && response.id_vinculacion) {
-          this.idVinculacion = Number(response.id_vinculacion);
-          this.cargarDatos();   // este método ya maneja su propio loading/finalize
-        } else {
-          this.error = 'No se encontró una vinculación activa para este estudiante.';
-          this.loading = false;   // ✅ solo aquí, en el camino de error/sin-datos
+    this.loading = true;
+    this.cdr.markForCheck();  // ✅ AÑADIDO
+    this.vinculacionService.obtenerVinculacionActiva()
+      .subscribe({
+        next: (response) => {
+          if (response && response.id_vinculacion) {
+            this.idVinculacion = Number(response.id_vinculacion);
+            this.cargarDatos();   // este método ya maneja su propio loading/finalize
+          } else {
+            this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.loading = false;
+            this.cdr.markForCheck();  // ✅ AÑADIDO
+          }
+        },
+        error: (err) => {
+          console.error('❌ Error al obtener vinculación activa:', err);
+          this.error = 'Error al obtener la vinculación activa.';
+          this.loading = false;
+          this.cdr.markForCheck();  // ✅ AÑADIDO
         }
-      },
-      error: (err) => {
-        console.error('❌ Error al obtener vinculación activa:', err);
-        this.error = 'Error al obtener la vinculación activa.';
-        this.loading = false;   // ✅ solo aquí
-      }
-    });
-}
+      });
+  }
 
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();  // ✅ AÑADIDO
     console.log('🔵 Cargando Informe Final para vinculación:', this.idVinculacion);
     
     this.service.obtenerInforme(this.idVinculacion)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();  // ✅ AÑADIDO (dentro de finalize)
+      }))
       .subscribe({
         next: (data) => {
           console.log('📦 Datos de Informe Final recibidos:', data);
@@ -123,10 +133,12 @@ export class InformeFinalComponent implements OnInit {
             nota_letras: data.evaluacion_final.nota_letras || '',
             observaciones: data.evaluacion_final.observaciones || ''
           };
+          this.cdr.markForCheck();  // ✅ AÑADIDO
         },
         error: (err) => {
           console.error('❌ Error al cargar Informe Final:', err);
           this.error = 'No se pudo cargar el informe final.';
+          this.cdr.markForCheck();  // ✅ AÑADIDO
         }
       });
   }
@@ -138,12 +150,14 @@ export class InformeFinalComponent implements OnInit {
     if (this.editandoActividades && this.data) {
       this.actividadesEdit = this.data.resumen_actividades.map(a => ({ ...a }));
     }
+    this.cdr.markForCheck();  // ✅ AÑADIDO
   }
 
   guardarActividades(): void {
     if (!this.isEstudiante) return;
     alert('Funcionalidad en desarrollo: guardar actividades. (Endpoint pendiente)');
     this.editandoActividades = false;
+    this.cdr.markForCheck();  // ✅ AÑADIDO
   }
 
   // ========== OBJETIVOS (SOLO ESTUDIANTE) ==========
@@ -153,12 +167,14 @@ export class InformeFinalComponent implements OnInit {
     if (this.editandoObjetivos && this.data) {
       this.objetivosEdit = this.data.objetivos_proyecto.map(o => ({ ...o }));
     }
+    this.cdr.markForCheck();  // ✅ AÑADIDO
   }
 
   guardarObjetivos(): void {
     if (!this.isEstudiante) return;
     alert('Funcionalidad en desarrollo: guardar objetivos. (Endpoint pendiente)');
     this.editandoObjetivos = false;
+    this.cdr.markForCheck();  // ✅ AÑADIDO
   }
 
   // ========== REFLEXIÓN (SOLO ESTUDIANTE) ==========
@@ -169,6 +185,7 @@ export class InformeFinalComponent implements OnInit {
       this.data.reflexion_estudiante = this.reflexionEdit;
       alert('Reflexión actualizada localmente. (Endpoint pendiente para guardar en BD)');
     }
+    this.cdr.markForCheck();  // ✅ AÑADIDO
   }
 
   // ========== EVALUACIÓN (SOLO DOCENTE) ==========
@@ -181,5 +198,6 @@ export class InformeFinalComponent implements OnInit {
       this.data.evaluacion_final.observaciones = this.evaluacionEdit.observaciones;
       alert('Evaluación guardada localmente. (Endpoint pendiente para guardar en BD)');
     }
+    this.cdr.markForCheck();  // ✅ AÑADIDO
   }
 }

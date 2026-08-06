@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -22,6 +22,7 @@ export class CertificadoComponent implements OnInit {
   private inicioService = inject(InicioActividadesService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
+  private cdr = inject(ChangeDetectorRef);
 
   certificado: Certificado | null = null;
   loading = true;
@@ -41,6 +42,7 @@ export class CertificadoComponent implements OnInit {
     if (!this.isEstudiante) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
       this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -51,19 +53,19 @@ export class CertificadoComponent implements OnInit {
         this.idVinculacion = idParam;
         this.cargarDatos();
       } else {
-        // ✅ Si no viene ID en la URL, obtener vinculación activa del estudiante
         this.obtenerVinculacionActiva();
       }
     });
   }
 
-  /**
-   * ✅ Obtener vinculación activa del estudiante autenticado
-   */
   obtenerVinculacionActiva(): void {
     this.loading = true;
+    this.cdr.markForCheck();
     this.vinculacionService.obtenerVinculacionActiva()
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (response) => {
           if (response && response.id_vinculacion) {
@@ -71,11 +73,13 @@ export class CertificadoComponent implements OnInit {
             this.cargarDatos();
           } else {
             this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.cdr.markForCheck();
           }
         },
         error: (err) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -83,10 +87,14 @@ export class CertificadoComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
     console.log('🔵 Cargando Certificado para vinculación:', this.idVinculacion);
     
     this.certificadoService.obtenerCertificado(this.idVinculacion)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (data) => {
           console.log('📦 Datos de Certificado recibidos:', data);
@@ -94,10 +102,12 @@ export class CertificadoComponent implements OnInit {
           this.proyectoEdit = data.proyecto || '';
           this.fechaInicioEdit = data.fecha_inicio || '';
           this.fechaFinEdit = data.fecha_fin || '';
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al cargar Certificado:', err);
           this.error = 'No se pudo cargar el certificado.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -105,12 +115,16 @@ export class CertificadoComponent implements OnInit {
   guardarCambios(): void {
     if (!this.certificado) return;
     this.loading = true;
+    this.cdr.markForCheck();
     const payload: any = {};
     if (this.proyectoEdit) payload.nombre_proyecto = this.proyectoEdit;
     if (this.fechaInicioEdit) payload.fecha_inicio = this.fechaInicioEdit;
 
     this.inicioService.actualizarInicioActividades(this.idVinculacion, payload)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           if (this.certificado) {
@@ -118,10 +132,12 @@ export class CertificadoComponent implements OnInit {
             this.certificado.fecha_inicio = this.fechaInicioEdit;
           }
           this.editando = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al guardar cambios:', err);
           this.error = 'Error al guardar los cambios.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -133,5 +149,6 @@ export class CertificadoComponent implements OnInit {
       this.fechaInicioEdit = this.certificado.fecha_inicio || '';
       this.fechaFinEdit = this.certificado.fecha_fin || '';
     }
+    this.cdr.markForCheck();
   }
 }

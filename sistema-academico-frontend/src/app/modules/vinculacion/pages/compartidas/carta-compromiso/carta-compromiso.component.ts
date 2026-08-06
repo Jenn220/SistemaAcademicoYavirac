@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { CartaCompromisoService } from '../../../services/carta-compromiso.service';
@@ -19,6 +19,7 @@ export class CartaCompromisoComponent implements OnInit {
   private cartaService = inject(CartaCompromisoService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
+  private cdr = inject(ChangeDetectorRef);
 
   cartaCompromiso: CartaCompromiso | null = null;
   loading = true;
@@ -33,6 +34,7 @@ export class CartaCompromisoComponent implements OnInit {
     if (!this.isEstudiante) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
       this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -43,19 +45,19 @@ export class CartaCompromisoComponent implements OnInit {
         this.idVinculacion = idParam;
         this.cargarDatos();
       } else {
-        // ✅ Si no viene ID en la URL, obtener vinculación activa del estudiante
         this.obtenerVinculacionActiva();
       }
     });
   }
 
-  /**
-   * ✅ Obtener vinculación activa del estudiante autenticado
-   */
   obtenerVinculacionActiva(): void {
     this.loading = true;
+    this.cdr.markForCheck();
     this.vinculacionService.obtenerVinculacionActiva()
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (response) => {
           if (response && response.id_vinculacion) {
@@ -63,11 +65,13 @@ export class CartaCompromisoComponent implements OnInit {
             this.cargarDatos();
           } else {
             this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.cdr.markForCheck();
           }
         },
         error: (err) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -75,18 +79,24 @@ export class CartaCompromisoComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
     console.log('🔵 Cargando Carta Compromiso para vinculación:', this.idVinculacion);
     
     this.cartaService.obtenerCartaCompromiso(this.idVinculacion)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (data) => {
           console.log('📦 Datos de Carta Compromiso recibidos:', data);
           this.cartaCompromiso = data;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al cargar Carta Compromiso:', err);
           this.error = 'No se pudo cargar la carta de compromiso.';
+          this.cdr.markForCheck();
         }
       });
   }
