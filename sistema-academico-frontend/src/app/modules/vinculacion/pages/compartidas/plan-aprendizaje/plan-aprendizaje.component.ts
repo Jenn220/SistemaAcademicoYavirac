@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { PlanAprendizajeService } from '../../../services/plan-aprendizaje.service';
 import { AuthService } from '../../../../auth/services/auth.service';
+import { VinculacionService } from '../../../services/vinculacion.service';
 import { PlanAprendizaje } from '../../../models/plan-aprendizaje.model';
 import { finalize } from 'rxjs/operators';
 
@@ -11,13 +12,14 @@ import { finalize } from 'rxjs/operators';
   selector: 'app-plan-aprendizaje',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './plan-aprendizaje.html',
-  styleUrls: ['./plan-aprendizaje.scss']
+  templateUrl: './plan-aprendizaje.component.html',
+  styleUrls: ['./plan-aprendizaje.component.scss']
 })
 export class PlanAprendizajeComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(PlanAprendizajeService);
   private authService = inject(AuthService);
+  private vinculacionService = inject(VinculacionService);
 
   data: PlanAprendizaje | null = null;
   loading = true;
@@ -42,7 +44,6 @@ export class PlanAprendizajeComponent implements OnInit {
   private primeraCarga = true;
 
   ngOnInit(): void {
-    // SOLO ESTUDIANTE puede ver esta pantalla
     const roles = this.authService.roles();
     this.isEstudiante = roles.includes('ESTUDIANTE');
 
@@ -53,18 +54,51 @@ export class PlanAprendizajeComponent implements OnInit {
     }
 
     this.route.params.subscribe(params => {
-      this.idVinculacion = params['id'] ? +params['id'] : 0;
-      this.cargarDatos();
+      const idParam = params['id'] ? +params['id'] : 0;
+      
+      if (idParam > 0) {
+        this.idVinculacion = idParam;
+        this.cargarDatos();
+      } else {
+        // ✅ Si no viene ID en la URL, obtener vinculación activa del estudiante
+        this.obtenerVinculacionActiva();
+      }
     });
+  }
+
+  /**
+   * ✅ Obtener vinculación activa del estudiante autenticado
+   */
+  obtenerVinculacionActiva(): void {
+    this.loading = true;
+    this.vinculacionService.obtenerVinculacionActiva()
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          if (response && response.id_vinculacion) {
+            this.idVinculacion = Number(response.id_vinculacion);
+            this.cargarDatos();
+          } else {
+            this.error = 'No se encontró una vinculación activa para este estudiante.';
+          }
+        },
+        error: (err) => {
+          console.error('❌ Error al obtener vinculación activa:', err);
+          this.error = 'Error al obtener la vinculación activa.';
+        }
+      });
   }
 
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    console.log('🔵 Cargando Plan de Aprendizaje para vinculación:', this.idVinculacion);
+    
     this.service.obtenerPlan(this.idVinculacion)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data) => {
+          console.log('📦 Datos de Plan de Aprendizaje recibidos:', data);
           this.data = data;
           // Inicializar reflexión solo en la primera carga
           if (this.primeraCarga) {
@@ -85,8 +119,8 @@ export class PlanAprendizajeComponent implements OnInit {
           ];
         },
         error: (err) => {
+          console.error('❌ Error al cargar Plan de Aprendizaje:', err);
           this.error = 'No se pudo cargar el plan de aprendizaje.';
-          console.error(err);
         }
       });
   }
@@ -119,8 +153,8 @@ export class PlanAprendizajeComponent implements OnInit {
           this.cancelarEdicionResultado();
         },
         error: (err) => {
+          console.error('❌ Error al actualizar resultado:', err);
           this.error = 'Error al actualizar resultado.';
-          console.error(err);
         }
       });
   }
@@ -129,8 +163,6 @@ export class PlanAprendizajeComponent implements OnInit {
   toggleEditReflexion(): void {
     this.editandoReflexion = !this.editandoReflexion;
     if (!this.editandoReflexion) {
-      // Guardar reflexión (localmente, sin endpoint)
-      // Aquí se puede agregar un endpoint si existe en el backend
       alert('Reflexión actualizada localmente. (Endpoint pendiente para guardar en BD)');
     }
   }
@@ -149,7 +181,6 @@ export class PlanAprendizajeComponent implements OnInit {
   guardarAvance(index: number): void {
     this.avances[index].avance = this.avanceEdit;
     this.cancelarEdicionAvance();
-    // Aquí se puede agregar un endpoint si existe en el backend
   }
 
   getTotalAvance(): number {

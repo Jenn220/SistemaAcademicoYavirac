@@ -4,20 +4,23 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ControlAsistenciaService } from '../../../services/control-asistencia.service';
 import { AuthService } from '../../../../auth/services/auth.service';
+import { VinculacionService } from '../../../services/vinculacion.service';
 import { AsistenciaEstudianteResponse, ActividadEstudiante, CreateActividadEstudianteDto, UpdateActividadEstudianteDto } from '../../../models/control-asistencia.model';
-import { finalize } from 'rxjs/operators';
+import { finalize, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-control-asistencia',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './control-asistencia.html',
-  styleUrls: ['./control-asistencia.scss']
+  templateUrl: './control-asistencia.component.html',
+  styleUrls: ['./control-asistencia.component.scss']
 })
 export class ControlAsistenciaComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private asistenciaService = inject(ControlAsistenciaService);
   private authService = inject(AuthService);
+  private vinculacionService = inject(VinculacionService);
 
   data: AsistenciaEstudianteResponse | null = null;
   loading = true;
@@ -39,7 +42,6 @@ export class ControlAsistenciaComponent implements OnInit {
   editandoActividad: UpdateActividadEstudianteDto = {};
 
   ngOnInit(): void {
-    // SOLO ESTUDIANTE puede ver esta pantalla
     const roles = this.authService.roles();
     this.isEstudiante = roles.includes('ESTUDIANTE');
 
@@ -50,23 +52,56 @@ export class ControlAsistenciaComponent implements OnInit {
     }
 
     this.route.params.subscribe(params => {
-      this.idVinculacion = params['id'] ? +params['id'] : 0;
-      this.cargarDatos();
+      const idParam = params['id'] ? +params['id'] : 0;
+      
+      if (idParam > 0) {
+        this.idVinculacion = idParam;
+        this.cargarDatos();
+      } else {
+        // ✅ Si no viene ID en la URL, obtener vinculación activa del estudiante
+        this.obtenerVinculacionActiva();
+      }
     });
+  }
+
+  /**
+   * ✅ Obtener vinculación activa del estudiante autenticado
+   */
+  obtenerVinculacionActiva(): void {
+    this.loading = true;
+    this.vinculacionService.obtenerVinculacionActiva()
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          if (response && response.id_vinculacion) {
+            this.idVinculacion = Number(response.id_vinculacion);
+            this.cargarDatos();
+          } else {
+            this.error = 'No se encontró una vinculación activa para este estudiante.';
+          }
+        },
+        error: (err) => {
+          console.error('❌ Error al obtener vinculación activa:', err);
+          this.error = 'Error al obtener la vinculación activa.';
+        }
+      });
   }
 
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    console.log('🔵 Cargando asistencia para vinculación:', this.idVinculacion);
+    
     this.asistenciaService.obtenerAsistencia(this.idVinculacion)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data) => {
+          console.log('📦 Datos de asistencia recibidos:', data);
           this.data = data;
         },
         error: (err) => {
+          console.error('❌ Error al cargar asistencia:', err);
           this.error = 'No se pudo cargar el control de asistencia.';
-          console.error(err);
         }
       });
   }
@@ -105,8 +140,8 @@ export class ControlAsistenciaComponent implements OnInit {
           this.mostrandoFormulario = false;
         },
         error: (err) => {
+          console.error('❌ Error al agregar actividad:', err);
           this.error = 'Error al agregar actividad.';
-          console.error(err);
         }
       });
   }
@@ -137,8 +172,8 @@ export class ControlAsistenciaComponent implements OnInit {
           this.cancelarEdicion();
         },
         error: (err) => {
+          console.error('❌ Error al actualizar actividad:', err);
           this.error = 'Error al actualizar actividad.';
-          console.error(err);
         }
       });
   }
@@ -153,8 +188,8 @@ export class ControlAsistenciaComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
+          console.error('❌ Error al eliminar actividad:', err);
           this.error = 'Error al eliminar actividad.';
-          console.error(err);
         }
       });
   }

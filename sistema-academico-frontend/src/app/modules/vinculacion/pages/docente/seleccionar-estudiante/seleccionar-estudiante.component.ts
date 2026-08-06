@@ -11,8 +11,8 @@ import { finalize } from 'rxjs/operators';
   selector: 'app-seleccionar-estudiante',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './seleccionar-estudiante.html',
-  styleUrls: ['./seleccionar-estudiante.scss']
+  templateUrl: './seleccionar-estudiante.component.html',
+  styleUrls: ['./seleccionar-estudiante.component.scss']
 })
 export class SeleccionarEstudianteComponent implements OnInit {
   private service = inject(VinculacionService);

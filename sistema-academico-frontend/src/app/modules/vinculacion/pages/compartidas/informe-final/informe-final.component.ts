@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { InformeFinalService } from '../../../services/informe-final.service';
 import { AuthService } from '../../../../auth/services/auth.service';
+import { VinculacionService } from '../../../services/vinculacion.service';
 import { InformeFinal } from '../../../models/informe-final.model';
 import { finalize } from 'rxjs/operators';
 
@@ -11,13 +12,14 @@ import { finalize } from 'rxjs/operators';
   selector: 'app-informe-final',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './informe-final.html',
-  styleUrls: ['./informe-final.scss']
+  templateUrl: './informe-final.component.html',
+  styleUrls: ['./informe-final.component.scss']
 })
 export class InformeFinalComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(InformeFinalService);
   private authService = inject(AuthService);
+  private vinculacionService = inject(VinculacionService);
 
   data: InformeFinal | null = null;
   loading = true;
@@ -61,18 +63,56 @@ export class InformeFinalComponent implements OnInit {
     }
 
     this.route.params.subscribe(params => {
-      this.idVinculacion = params['id'] ? +params['id'] : 0;
-      this.cargarDatos();
+      const idParam = params['id'] ? +params['id'] : 0;
+      
+      if (idParam > 0) {
+        this.idVinculacion = idParam;
+        this.cargarDatos();
+      } else if (this.isEstudiante) {
+        // ✅ Si es estudiante y no viene ID, obtener vinculación activa
+        this.obtenerVinculacionActiva();
+      } else if (this.isDocente && idParam === 0) {
+        // Si es docente y no viene ID, mostrar error
+        this.error = 'Debe seleccionar un estudiante primero.';
+        this.loading = false;
+      }
     });
   }
+
+  /**
+   * ✅ Obtener vinculación activa del estudiante autenticado
+   */
+  obtenerVinculacionActiva(): void {
+  this.loading = true;
+  this.vinculacionService.obtenerVinculacionActiva()
+    .subscribe({   // ❌ sin finalize aquí
+      next: (response) => {
+        if (response && response.id_vinculacion) {
+          this.idVinculacion = Number(response.id_vinculacion);
+          this.cargarDatos();   // este método ya maneja su propio loading/finalize
+        } else {
+          this.error = 'No se encontró una vinculación activa para este estudiante.';
+          this.loading = false;   // ✅ solo aquí, en el camino de error/sin-datos
+        }
+      },
+      error: (err) => {
+        console.error('❌ Error al obtener vinculación activa:', err);
+        this.error = 'Error al obtener la vinculación activa.';
+        this.loading = false;   // ✅ solo aquí
+      }
+    });
+}
 
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    console.log('🔵 Cargando Informe Final para vinculación:', this.idVinculacion);
+    
     this.service.obtenerInforme(this.idVinculacion)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data) => {
+          console.log('📦 Datos de Informe Final recibidos:', data);
           this.data = data;
           // Inicializar copias para edición
           this.actividadesEdit = data.resumen_actividades.map(a => ({ ...a }));
@@ -85,8 +125,8 @@ export class InformeFinalComponent implements OnInit {
           };
         },
         error: (err) => {
+          console.error('❌ Error al cargar Informe Final:', err);
           this.error = 'No se pudo cargar el informe final.';
-          console.error(err);
         }
       });
   }
@@ -102,7 +142,6 @@ export class InformeFinalComponent implements OnInit {
 
   guardarActividades(): void {
     if (!this.isEstudiante) return;
-    // Aquí se puede agregar un endpoint si existe
     alert('Funcionalidad en desarrollo: guardar actividades. (Endpoint pendiente)');
     this.editandoActividades = false;
   }

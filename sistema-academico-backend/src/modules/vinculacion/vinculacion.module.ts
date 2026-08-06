@@ -10,6 +10,8 @@ import { AsistenciaTutorController } from './controllers/Asistencia-Tutor.Contro
 import { InformeActividadesController } from './controllers/Informe-Actividades.Controller';
 import { CertificadoVinculacionController } from './controllers/Certificado-Vinculacion.Controller';
 import { InformeFinalController } from './controllers/Informe-Final.Controller';
+// ✅ NUEVO CONTROLADOR
+import { VinculacionController } from './controllers/vinculacion.controller';
 
 // Entidades
 import { VinculacionActividadEstudiante } from './domain/vinculacion_actividad_estudiante.entity';
@@ -32,6 +34,8 @@ import { AsistenciaTutorService } from './services/asistencia-tutor.service';
 import { InformeActividadesService } from './services/informe-actividades.service';
 import { InformeFinalService } from './services/informe-final.service';
 import { CertificadoVinculacionService } from './services/certificado-vinculacion.service';
+// ✅ NUEVO SERVICIO
+import { VinculacionService } from './services/vinculacion.service';
 
 // Puertos
 import { ENTIDAD_RECEPTORA_PORT } from './ports/entidad-receptora.port';
@@ -60,7 +64,7 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
       VinculacionAsistenciaTutor,
       VinculacionEstudianteEntity,
       VinculacionInforme,
-      VinculacionObjetivo, // ✅ Agregado
+      VinculacionObjetivo,
       EvaluacionVinculacion,
       DetalleEvaluacionVinculacion,
       VinculacionReporteObservacionEntity,
@@ -76,6 +80,8 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
     InformeActividadesController,
     CertificadoVinculacionController,
     InformeFinalController,
+    // ✅ NUEVO CONTROLADOR
+    VinculacionController,
   ],
   providers: [
     // Servicios
@@ -88,6 +94,8 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
     InformeActividadesService,
     InformeFinalService,
     CertificadoVinculacionService,
+    // ✅ NUEVO SERVICIO
+    VinculacionService,
 
     // Adaptadores
     {
@@ -126,6 +134,8 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
   exports: [
     EntidadReceptoraService,
     AuthVinculacionService,
+    // ✅ EXPORTAR EL NUEVO SERVICIO (opcional, por si otros módulos lo necesitan)
+    VinculacionService,
   ],
 })
 export class VinculacionModule {}
