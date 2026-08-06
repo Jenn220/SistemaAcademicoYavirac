@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SeguimientoPeaService } from '../../services/seguimiento-pea.service';
 import { PortafolioService } from '../../services/portafolio.service';
-import { WordExportService } from '../../../../shared/services/word-export.service'; // NUEVO
+import { WordExportService } from '../../../../shared/services/word-export.service';
 import {
   SeguimientoPeaManualData,
   SeguimientoPeaResponseDto,
@@ -27,7 +27,8 @@ export class SeguimientoPeaComponent implements OnInit {
   readonly guardandoManual = signal(false);
   readonly mensajeGuardado = signal<string | null>(null);
   readonly actualizandoRepresentante = signal(false);
-  readonly exportandoWord = signal(false); // NUEVO
+  readonly exportandoWord = signal(false);
+  readonly esSoloLectura = signal(false); // 🔒 nuevo
 
   readonly seguimiento = signal<SeguimientoPeaResponseDto | null>(null);
   readonly noExisteSeguimiento = signal(false);
@@ -45,11 +46,14 @@ export class SeguimientoPeaComponent implements OnInit {
 
   readonly fechaHoy = new Date();
 
+  // 🔑 Flag para evitar bloqueo inmediato tras crear el seguimiento
+  private seguimientoRecienCreado = false;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly seguimientoPeaService: SeguimientoPeaService,
     private readonly portafolioService: PortafolioService,
-    private readonly wordExportService: WordExportService, // NUEVO
+    private readonly wordExportService: WordExportService,
   ) {}
 
   ngOnInit(): void {
@@ -63,8 +67,7 @@ export class SeguimientoPeaComponent implements OnInit {
     this.portafolioService.getEstudiantesDeOferta(this.idOfertaAsignatura).subscribe({
       next: (est) => this.estudiantes.set(est),
       error: () => {
-        // No bloquea la vista del seguimiento si esto falla; solo
-        // impediría crear/editar el representante.
+        // No bloquea
       },
     });
   }
@@ -73,12 +76,15 @@ export class SeguimientoPeaComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
     this.noExisteSeguimiento.set(false);
+    this.esSoloLectura.set(false);
+    // ❌ NO resetear seguimientoRecienCreado aquí
 
     this.seguimientoPeaService.getSeguimientoPea(this.idOfertaAsignatura).subscribe({
       next: (respuesta) => {
         this.seguimiento.set(respuesta);
         this.cargarDatosManuales();
         this.cargando.set(false);
+        this.cargarOfertaRelacionada(); // para saber si es solo lectura
       },
       error: (err) => {
         this.cargando.set(false);
@@ -97,6 +103,21 @@ export class SeguimientoPeaComponent implements OnInit {
       next: (ofertas) => {
         const oferta = ofertas.find((o) => o.id_oferta_asignatura === this.idOfertaAsignatura);
         this.ofertaRelacionada.set(oferta ?? null);
+
+        if (oferta && this.seguimiento() !== null) {
+          // Si el seguimiento acaba de ser creado, no bloqueamos
+          if (this.seguimientoRecienCreado) {
+            this.esSoloLectura.set(false);
+            this.seguimientoRecienCreado = false; // consumimos el flag
+          } else {
+            this.esSoloLectura.set(!!oferta.tiene_seguimiento_pea);
+          }
+        } else {
+          this.esSoloLectura.set(false);
+        }
+      },
+      error: () => {
+        this.esSoloLectura.set(false);
       },
     });
   }
@@ -123,7 +144,9 @@ export class SeguimientoPeaComponent implements OnInit {
       .subscribe({
         next: () => {
           this.creando = false;
-          this.cargarSeguimiento();
+          // ✅ Marcamos que fue recién creado para no bloquear
+          this.seguimientoRecienCreado = true;
+          this.cargarSeguimiento(); // recarga y mostrará el seguimiento
         },
         error: (err) => {
           this.creando = false;
@@ -136,6 +159,7 @@ export class SeguimientoPeaComponent implements OnInit {
   }
 
   iniciarEdicionRepresentante(): void {
+    if (this.esSoloLectura()) return; // bloqueado
     const actual = this.seguimiento();
     if (!actual) return;
     this.editandoRepresentante = true;
@@ -148,6 +172,7 @@ export class SeguimientoPeaComponent implements OnInit {
   }
 
   guardarRepresentante(): void {
+    if (this.esSoloLectura()) return; // bloqueado
     const actual = this.seguimiento();
     if (!actual || !this.nuevoRepresentanteId) return;
 
@@ -170,6 +195,7 @@ export class SeguimientoPeaComponent implements OnInit {
   }
 
   agregarSemana(): void {
+    if (this.esSoloLectura()) return; // bloqueado
     this.manual.semanas.push({
       semana: this.manual.semanas.length + 1,
       fecha: '',
@@ -179,11 +205,13 @@ export class SeguimientoPeaComponent implements OnInit {
   }
 
   eliminarSemana(index: number): void {
+    if (this.esSoloLectura()) return; // bloqueado
     this.manual.semanas.splice(index, 1);
     this.manual.semanas.forEach((s, i) => (s.semana = i + 1));
   }
 
   guardarDatosManuales(): void {
+    if (this.esSoloLectura()) return; // bloqueado
     this.guardandoManual.set(true);
     this.seguimientoPeaService.guardarDatosManuales(this.idOfertaAsignatura, this.manual);
     this.guardandoManual.set(false);
