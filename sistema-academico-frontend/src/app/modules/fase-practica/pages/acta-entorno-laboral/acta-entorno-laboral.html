@@ -154,17 +154,21 @@
 
         </div>
 
-        <div class="caja-anexos" [@if]="acta.anexos?.length">
+        @if (acta.anexos?.length) {
 
-            <strong>ANEXOS:</strong>
+            <div class="caja-anexos">
 
-            <ol>
-                @for (anexo of acta.anexos; track $index) {
-                    <li>{{ anexo }}</li>
-                }
-            </ol>
+                <strong>ANEXOS:</strong>
 
-        </div>
+                <ol>
+                    @for (anexo of acta.anexos; track $index) {
+                        <li>{{ anexo }}</li>
+                    }
+                </ol>
+
+            </div>
+
+        }
 
         @if (acta.estudiantes?.length) {
 

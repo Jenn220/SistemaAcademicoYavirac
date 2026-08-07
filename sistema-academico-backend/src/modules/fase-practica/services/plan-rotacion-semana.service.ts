@@ -41,9 +41,9 @@ export class PlanRotacionSemanaService {
   }
 
   async create(usuario: any, dto: CreatePlanRotacionSemanaDto): Promise<PlanRotacionSemanaEntity> {
-    const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(dto.id_plan_rotacion);
+    const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(dto.id_plan_rotacion!);
     await this.esDuenoDePractica(usuario, idPractica);
-    const existentes = await this.repo.findByPlanRotacion(dto.id_plan_rotacion);
+    const existentes = await this.repo.findByPlanRotacion(dto.id_plan_rotacion!);
     if (existentes.length >= 8) {
       throw new BadRequestException('El plan de rotación no puede tener más de 8 semanas.');
     }
