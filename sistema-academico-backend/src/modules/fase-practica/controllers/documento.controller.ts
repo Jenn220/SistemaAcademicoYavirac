@@ -78,7 +78,7 @@ export class DocumentoController {
   }
 
   @Patch(':id/estado')
-  @Roles('DOCENTE', 'ESTUDIANTE')
+  @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
   actualizarEstado(@Req() req: any, @Param('id') id: string, @Body() dto: ActualizarEstadoDocumentoDto) {
     const idNum = Number(id);
     if (!Number.isInteger(idNum) || idNum <= 0) {
