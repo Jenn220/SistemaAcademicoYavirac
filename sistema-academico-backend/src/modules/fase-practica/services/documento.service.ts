@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DOCUMENTO_REPOSITORY, IDocumentoRepository } from '../ports/documento.repository.port';
 import { DocumentoEntity } from '../domain/documento.entity';
 import { DocumentoPlantillaService } from './documento-plantilla.service';
 import { NotificacionService } from './notificacion.service';
+import { EstadoDocumento } from '../dto/actualizar-estado-documento.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DocumentoService {
@@ -12,6 +14,7 @@ export class DocumentoService {
     private readonly documentoRepository: IDocumentoRepository,
     private readonly plantillaService: DocumentoPlantillaService,
     private readonly notificacionService: NotificacionService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async guardarDocumento(
@@ -31,6 +34,11 @@ export class DocumentoService {
       console.error('Error guardando documento', { codigo, idPractica, error: error?.message || error });
       throw error;
     }
+  }
+
+  async buscarIdDocumento(idPractica: number, codigoFormato: string): Promise<{ id_documento: number } | null> {
+    const documento = await this.documentoRepository.buscarPorPracticaYCodigo(idPractica, codigoFormato);
+    return documento ? { id_documento: documento.id_documento } : null;
   }
 
   getDatosMaestra(usuario: any, idPractica?: number) {
@@ -71,5 +79,188 @@ export class DocumentoService {
 
   getTodosLosDocumentos(usuario: any, idPractica?: number) {
     return this.plantillaService.getTodosLosDocumentos(usuario, idPractica);
+  }
+
+  async actualizarDocumentosPorPractica(usuario: any, idPractica: number): Promise<void> {
+    const documentos = await this.documentoRepository.listarPorPractica(idPractica);
+
+    const generadores: Record<string, (usuario: any, idPractica?: number) => Promise<any>> = {
+      F01: (u, id) => this.plantillaService.getCartaCompromiso(u, id, true),
+      F02: (u, id) => this.plantillaService.getCurriculum(u, id, true),
+      F05: (u, id) => this.plantillaService.getRegistroAsistencia(u, id, true),
+      F06: (u, id) => this.plantillaService.getInformeAprendizaje(u, id, true),
+      F07: (u, id) => this.plantillaService.getEvaluacionEmpresarial(u, id, true),
+      F08: (u, id) => this.plantillaService.getEvaluacionInstituto(u, id, true),
+      F10: (u, id) => this.plantillaService.getActaInduccionSeguridad(u, id, true),
+      F11: (u, id) => this.plantillaService.getActaEntornoLaboral(u, id, true),
+    };
+
+    for (const documento of documentos) {
+      const generador = generadores[documento.codigo_formato];
+      if (!generador) continue;
+
+      try {
+        const contenidoActualizado = await generador(usuario, idPractica);
+        documento.contenido = contenidoActualizado;
+        documento.updated_at = new Date();
+        await this.documentoRepository.guardarDocumento(
+          documento.codigo_formato,
+          documento.titulo ?? '',
+          contenidoActualizado,
+          idPractica,
+          documento.id_estudiante,
+          documento.id_usuario,
+          documento.estado,
+        );
+      } catch (error) {
+        console.error(`Error actualizando documento ${documento.codigo_formato} para práctica ${idPractica}`, error);
+      }
+    }
+  }
+
+  async cambiarEstado(idDocumento: number, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<DocumentoEntity | null> {
+    if (!usuarioOrigen?.roles) {
+      throw new Error('No autorizado');
+    }
+
+    const roles = usuarioOrigen.roles;
+    const esEstudiante = roles.includes('ESTUDIANTE');
+    const esDocente = roles.includes('DOCENTE');
+
+    if (!esEstudiante && !esDocente) {
+      throw new ForbiddenException('No autorizado para cambiar el estado del documento');
+    }
+
+    if (esEstudiante && estado !== EstadoDocumento.PENDIENTE_REVISION) {
+      throw new ForbiddenException('El estudiante solo puede enviar documentos a revisión');
+    }
+
+    const documento = await this.documentoRepository.actualizarEstado(idDocumento, estado, comentarios);
+
+    if (!documento) {
+      return null;
+    }
+
+    await this.notificarCambioEstado(documento, estado, comentarios, usuarioOrigen);
+
+    return documento;
+  }
+
+  async buscarPorId(idDocumento: number): Promise<DocumentoEntity | null> {
+    return this.documentoRepository.buscarPorId(idDocumento);
+  }
+
+  private async notificarCambioEstado(documento: DocumentoEntity, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<void> {
+    if (!documento.id_practica || !documento.id_estudiante) {
+      return;
+    }
+
+    const tipoMap: Record<string, string> = {
+      [EstadoDocumento.PENDIENTE_REVISION]: 'documento_enviado_revision',
+      [EstadoDocumento.APROBADO]: 'documento_aprobado',
+      [EstadoDocumento.RECHAZADO]: 'documento_rechazado',
+    };
+
+    const tipo = tipoMap[estado];
+    if (!tipo) {
+      return;
+    }
+
+    const mensaje = this.construirMensajeNotificacion(documento.codigo_formato, estado, comentarios);
+    const idUsuarioOrigen = usuarioOrigen?.sub ? Number(usuarioOrigen.sub) : undefined;
+
+    switch (estado) {
+      case EstadoDocumento.PENDIENTE_REVISION:
+        await this.notificarDocenteOTutor(documento, mensaje, idUsuarioOrigen);
+        break;
+      case EstadoDocumento.APROBADO:
+        await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        break;
+      case EstadoDocumento.RECHAZADO:
+        await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        break;
+    }
+  }
+
+  private construirMensajeNotificacion(codigoFormato: string, estado: string, comentarios?: string): string {
+    const nombreDocumento = this.obtenerNombreDocumento(codigoFormato);
+    const estadoTexto = this.obtenerTextoEstado(estado);
+
+    let mensaje = `El documento ${nombreDocumento} cambió a estado: ${estadoTexto}.`;
+
+    if (comentarios && estado === EstadoDocumento.RECHAZADO) {
+      mensaje += ` Comentarios: ${comentarios}`;
+    }
+
+    return mensaje;
+  }
+
+  private obtenerNombreDocumento(codigo: string): string {
+    const nombres: Record<string, string> = {
+      F01: 'Carta Compromiso',
+      F02: 'Currículo',
+      F05: 'Registro de Asistencia',
+      F06: 'Informe de Aprendizaje',
+      F07: 'Evaluación Empresarial',
+      F08: 'Evaluación Instituto',
+      F10: 'Acta de Inducción de Seguridad',
+      F11: 'Acta del Entorno Laboral',
+    };
+    return nombres[codigo] || codigo;
+  }
+
+  private obtenerTextoEstado(estado: string): string {
+    const textos: Record<string, string> = {
+      [EstadoDocumento.PENDIENTE_REVISION]: 'Pendiente de revisión',
+      [EstadoDocumento.APROBADO]: 'Aprobado',
+      [EstadoDocumento.RECHAZADO]: 'Rechazado',
+    };
+    return textos[estado] || estado;
+  }
+
+  private async notificarDocenteOTutor(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_practica) return;
+
+    try {
+      const practicaRows = await this.dataSource.query(
+        `SELECT id_docente FROM practica_estudiante WHERE id_practica = $1 LIMIT 1`,
+        [documento.id_practica],
+      );
+
+      if (practicaRows.length === 0) return;
+
+      const idDocente = practicaRows[0].id_docente;
+
+      if (idDocente) {
+        const docenteUsuario = await this.dataSource.query(
+          `SELECT id_usuario FROM usuario WHERE id_docente = $1 AND estado = 'ACTIVO' LIMIT 1`,
+          [idDocente],
+        );
+
+        if (docenteUsuario.length > 0) {
+          await this.notificacionService.crearNotificacion(
+            Number(docenteUsuario[0].id_usuario),
+            'documento_enviado_revision',
+            mensaje,
+            idUsuarioOrigen,
+            documento.id_practica,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error notificando docente', error);
+    }
+  }
+
+  private async notificarEstudiante(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_estudiante) return;
+
+    await this.notificacionService.crearNotificacion(
+      documento.id_estudiante,
+      'documento_estado_cambiado',
+      mensaje,
+      idUsuarioOrigen,
+      documento.id_practica,
+    );
   }
 }

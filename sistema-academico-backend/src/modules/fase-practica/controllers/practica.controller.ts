@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -53,7 +54,11 @@ export class PracticaController {
 
   @Get('practicas/:id')
   findPracticaById(@Param('id') id: string) {
-    return this.practicaService.findPracticaById(Number(id));
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new BadRequestException('Identificador de práctica inválido.');
+    }
+    return this.practicaService.findPracticaById(idNum);
   }
 
   /**

@@ -20,8 +20,6 @@ export class DocumentoPg implements IDocumentoRepository {
     idUsuario?: number,
     estado?: string,
   ): Promise<DocumentoEntity> {
-    const estadoFinal = estado ?? 'borrador';
-
     if (idPractica) {
       const existente = await this.buscarPorPracticaYCodigo(idPractica, codigo);
 
@@ -30,7 +28,7 @@ export class DocumentoPg implements IDocumentoRepository {
         existente.updated_at = new Date();
         if (idEstudiante) existente.id_estudiante = idEstudiante;
         if (idUsuario) existente.id_usuario = idUsuario;
-        existente.estado = estadoFinal;
+        if (estado !== undefined) existente.estado = estado;
         existente.version = (existente.version ?? 1) + 1;
         console.log('Actualizando documento existente', { idPractica, codigo, idDocumento: existente.id_documento });
         return this.documentoRepository.save(existente);
@@ -38,6 +36,7 @@ export class DocumentoPg implements IDocumentoRepository {
     }
 
     console.log('Creando nuevo documento', { codigo, idPractica, idEstudiante });
+    const estadoFinal = estado ?? 'borrador';
     const documento = this.documentoRepository.create({
       codigo_formato: codigo,
       titulo,
@@ -70,5 +69,30 @@ export class DocumentoPg implements IDocumentoRepository {
 
   async findOne(options: any): Promise<DocumentoEntity | null> {
     return this.documentoRepository.findOne(options);
+  }
+
+  async actualizarEstado(idDocumento: number, estado: string, comentarios?: string): Promise<DocumentoEntity | null> {
+    const documento = await this.documentoRepository.findOne({
+      where: { id_documento: idDocumento },
+    });
+
+    if (!documento) {
+      return null;
+    }
+
+    documento.estado = estado;
+    documento.updated_at = new Date();
+
+    if (comentarios !== undefined) {
+      documento.comentarios = comentarios;
+    }
+
+    return this.documentoRepository.save(documento);
+  }
+
+  async buscarPorId(idDocumento: number): Promise<DocumentoEntity | null> {
+    return this.documentoRepository.findOne({
+      where: { id_documento: idDocumento },
+    });
   }
 }

@@ -23,30 +23,125 @@
 
 <div id="documento-plan-rotacion" class="documento">
 
-    <app-document-header
-        [titulo]="'FORMATO 04 PLAN DE APRENDIZAJE PRÁCTICO Y DE ROTACIÓN'"
-        [codigo]="'DS-010204-4'"
-        [estudianteNombre]="encabezado.estudianteNombre"
-        [estudianteCedula]="''"
-        [carrera]="encabezado.carrera"
-        [nivel]="encabezado.nivel"
-        [periodo]="encabezado.periodo"
-        [nucleo]="encabezado.nucleoEstructurante"
-        [tutorAcademico]="encabezado.tutorAcademicoNombre"
-        [coordinador]="''"
-        [empresa]="encabezado.empresaFormadora"
-        [tutorEmpresarial]="encabezado.tutorEmpresarialNombre"
-        [proyecto]="''"
-        [cobertura]="''"
-        [plazo]="''"
-        [fechaInicio]="''"
-        [fechaFin]="''"
-        [telefonoEmergenciaNombre]="''"
-        [telefonoEmergenciaTelefono]="''"
-        [direccionEmpresa]="encabezado.direccionEmpresa">
-    </app-document-header>
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                010204
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 04 PLAN DE APRENDIZAJE PRÁCTICO Y DE ROTACIÓN</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>EMPRESA FORMADORA:</strong></td>
+            <td>{{ encabezado.empresaFormadora }}</td>
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ encabezado.carrera }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) ACADÉMICO:</strong></td>
+            <td>{{ encabezado.tutorAcademicoNombre }}</td>
+            <td><strong>PERÍODO ACADÉMICO:</strong></td>
+            <td>{{ encabezado.periodo }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) EMPRESARIAL:</strong></td>
+            <td>{{ encabezado.tutorEmpresarialNombre }}</td>
+            <td><strong>NIVEL:</strong></td>
+            <td>{{ encabezado.nivel }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>NOMBRE DEL ESTUDIANTE:</strong></td>
+            <td>{{ encabezado.estudianteNombre }}</td>
+            <td><strong>N. ESTRUCTURANTE:</strong></td>
+            <td>{{ encabezado.nucleoEstructurante }}</td>
+
+        </tr>
+
+    </table>
 
     <div class="contenido">
+
+        @if (!soloLectura) {
+        <div class="controles-semanas no-print">
+
+            <span>Semanas mostradas: {{ numeroSemanas }}</span>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="quitarSemana()">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="agregarSemana()">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+
+        </div>
+        }
 
         <table class="tabla-rotacion">
 
@@ -75,10 +170,10 @@
                     @for (semana of columnasSemanas; track semana) {
                     <td
                         class="celda-semana"
-                        [class.activa]="fila.semanasActivas[semana - 1]"
+                        [class.activa]="fila.semanasActivas.has(semana)"
                         [class.deshabilitada]="soloLectura"
                         (click)="toggleSemana(fila, semana)">
-                        @if (fila.semanasActivas[semana - 1]) { X }
+                        @if (fila.semanasActivas.has(semana)) { X }
                     </td>
                     }
 

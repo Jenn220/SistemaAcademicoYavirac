@@ -72,18 +72,50 @@ export class PlanFormacionLista implements OnInit {
   cargando = signal(true);
   error = signal<string | null>(null);
   busqueda = signal('');
+  filtroSemestre = signal<string>('');
+  filtroParalelo = signal<string>('');
+  filtroJornada = signal<string>('');
+
+  semestresDisponibles = computed(() => {
+    const valores = new Set<string>();
+    for (const p of this.practicas()) {
+      if (p.semestre) valores.add(p.semestre);
+    }
+    return [...valores].sort();
+  });
+
+  paralelosDisponibles = computed(() => {
+    const valores = new Set<string>();
+    for (const p of this.practicas()) {
+      if (p.paralelo) valores.add(p.paralelo);
+    }
+    return [...valores].sort();
+  });
+
+  jornadasDisponibles = computed(() => {
+    const valores = new Set<string>();
+    for (const p of this.practicas()) {
+      if (p.jornada) valores.add(p.jornada);
+    }
+    return [...valores].sort();
+  });
 
   practicasFiltradas = computed(() => {
 
     const texto = this.busqueda().trim().toLowerCase();
-
-    if (!texto) return this.practicas();
+    const semestre = this.filtroSemestre();
+    const paralelo = this.filtroParalelo();
+    const jornada = this.filtroJornada();
 
     return this.practicas().filter((p) => {
       const nombre = p.estudiante?.nombre?.toLowerCase() ?? '';
       const cedula = p.estudiante?.cedula?.toLowerCase() ?? '';
       const empresa = p.empresa?.razon_social?.toLowerCase() ?? '';
-      return nombre.includes(texto) || cedula.includes(texto) || empresa.includes(texto);
+      const matchTexto = !texto || nombre.includes(texto) || cedula.includes(texto) || empresa.includes(texto);
+      const matchSemestre = !semestre || p.semestre === semestre;
+      const matchParalelo = !paralelo || p.paralelo === paralelo;
+      const matchJornada = !jornada || p.jornada === jornada;
+      return matchTexto && matchSemestre && matchParalelo && matchJornada;
     });
 
   });
@@ -158,6 +190,18 @@ export class PlanFormacionLista implements OnInit {
 
   buscar(texto: string): void {
     this.busqueda.set(texto);
+  }
+
+  setFiltroSemestre(valor: string): void {
+    this.filtroSemestre.set(valor);
+  }
+
+  setFiltroParalelo(valor: string): void {
+    this.filtroParalelo.set(valor);
+  }
+
+  setFiltroJornada(valor: string): void {
+    this.filtroJornada.set(valor);
   }
 
   nombreTutor(practica: PracticaSelector): string {

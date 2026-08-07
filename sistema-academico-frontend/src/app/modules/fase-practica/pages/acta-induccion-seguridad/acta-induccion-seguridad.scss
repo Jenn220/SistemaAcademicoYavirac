@@ -1,3 +1,5 @@
+@import '../../_shared-documento-styles';
+
 .documento {
     max-width: 800px;
     margin: 0 auto;
@@ -71,10 +73,5 @@
 @media print {
     .toolbar {
         display: none;
-    }
-
-    .documento {
-        max-width: none;
-        padding: 0;
     }
 }

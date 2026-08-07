@@ -14,7 +14,6 @@ import Swal from 'sweetalert2';
 import { Documentos } from '../../services/documentos';
 import { InformeAprendizajeApi, BitacoraSemanalReal } from '../../services/informe-aprendizaje-real';
 import { AuthService } from '../../../auth/services/auth.service';
-import { DocumentHeader } from '../../components/document-header/document-header';
 import { InformeAprendizajeDocumento } from '../../interfaces';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 
@@ -36,7 +35,7 @@ function informeVacio(): InformeAprendizajeDocumento {
 @Component({
   selector: 'app-informe-aprendizaje',
   standalone: true,
-  imports: [CommonModule, FormsModule, DocumentHeader],
+  imports: [CommonModule, FormsModule],
   templateUrl: './informe-aprendizaje.html',
   styleUrl: './informe-aprendizaje.scss'
 })
@@ -57,13 +56,41 @@ export class InformeAprendizaje implements OnInit {
 
   guardando = false;
 
+  estadoDocumento: string = 'borrador';
+  comentariosDocumento: string = '';
+  idDocumento: number | undefined;
+
   /** ESTUDIANTE edita bitácora + reflexión; TUTOR_EMPRESARIAL edita observaciones de empresa; DOCENTE/COORDINADOR solo consultan. */
   get esEstudiante(): boolean {
     return this.authService.tieneAlgunRol(['ESTUDIANTE']);
   }
 
+  get esDocente(): boolean {
+    return this.authService.tieneAlgunRol(['DOCENTE']);
+  }
+
+  get esCoordinador(): boolean {
+    return this.authService.tieneAlgunRol(['COORDINADOR']);
+  }
+
   get esTutorEmpresarial(): boolean {
     return this.authService.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
+  }
+
+  get puedeEnviarRevision(): boolean {
+    return this.esEstudiante && this.estadoDocumento === 'borrador';
+  }
+
+  get puedeAprobar(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get puedeSolicitarCorrecciones(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get mostrarComentarios(): boolean {
+    return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
   }
 
   get soloLectura(): boolean {
@@ -160,6 +187,7 @@ export class InformeAprendizaje implements OnInit {
 
         this.informe = this.mapearBase(informe, datos);
         this.cargarInformeReal(datos);
+        this.cargarIdDocumento('F06');
 
       },
 
@@ -331,19 +359,24 @@ export class InformeAprendizaje implements OnInit {
         switchMap((idInforme) =>
           this.documentos.guardarInformeAprendizaje(this.informe, this.idPractica).pipe(
             catchError(() => of(null)),
-            map(() => idInforme)
+            map((snapshot) => ({ idInforme, idDocumento: snapshot?.id_documento }))
           )
         )
       )
       .subscribe({
 
-        next: (idInforme) => {
+        next: ({ idInforme, idDocumento }) => {
 
           this.informe.idInforme = idInforme;
+          if (idDocumento) {
+            this.idDocumento = idDocumento;
+          }
           this.guardando = false;
           this.cdr.detectChanges();
 
           Swal.fire('Informe guardado', 'El informe de aprendizaje se guardó correctamente.', 'success');
+
+          this.cargarEstadoDocumento();
 
         },
 
@@ -388,6 +421,128 @@ export class InformeAprendizaje implements OnInit {
 
     return forkJoin(operaciones);
 
+  }
+
+  private cargarEstadoDocumento(): void {
+    if (!this.idDocumento) {
+      return;
+    }
+
+    this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
+      next: (doc) => {
+        this.estadoDocumento = doc?.estado ?? 'borrador';
+        this.comentariosDocumento = doc?.comentarios ?? '';
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarIdDocumento(codigoFormato: string): void {
+    if (this.idDocumento || !this.idPractica) {
+      return;
+    }
+
+    this.documentos.obtenerIdDocumento(this.idPractica, codigoFormato).subscribe({
+      next: (resp) => {
+        this.idDocumento = resp?.id_documento ?? undefined;
+        this.cargarEstadoDocumento();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  enviarARevision(): void {
+    if (!this.idDocumento) {
+      Swal.fire('Error', 'Primero debe guardar el informe.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enviar a revisión',
+      text: '¿Está seguro de enviar este informe a revisión?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+          next: () => {
+            this.estadoDocumento = 'pendiente_revision';
+            this.cdr.detectChanges();
+            Swal.fire('Enviado', 'El informe se envió a revisión correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible enviar el informe a revisión.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  aprobar(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Aprobar informe',
+      text: '¿Está seguro de aprobar este informe?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'aprobado').subscribe({
+          next: () => {
+            this.estadoDocumento = 'aprobado';
+            this.cdr.detectChanges();
+            Swal.fire('Aprobado', 'El informe fue aprobado correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible aprobar el informe.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  solicitarCorrecciones(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Solicitar correcciones',
+      input: 'textarea',
+      inputLabel: 'Comentarios de corrección (obligatorio)',
+      inputPlaceholder: 'Describa los cambios que debe realizar el estudiante...',
+      inputValidator: (value: string) => {
+        if (!value) {
+          return 'Debe ingresar comentarios de corrección';
+        }
+        return null;
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Solicitar correcciones',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'rechazado', result.value).subscribe({
+          next: () => {
+            this.estadoDocumento = 'rechazado';
+            this.comentariosDocumento = result.value;
+            this.cdr.detectChanges();
+            Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+          },
+        });
+      }
+    });
   }
 
   descargarWord(): void {

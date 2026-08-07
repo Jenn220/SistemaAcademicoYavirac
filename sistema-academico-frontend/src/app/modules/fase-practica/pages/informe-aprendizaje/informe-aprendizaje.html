@@ -35,33 +35,171 @@
     <span class="badge-solo-lectura">Modo solo lectura</span>
     }
 
+    @if(puedeEnviarRevision){
+    <button
+        class="btn btn-success"
+        (click)="enviarARevision()">
+
+        <i class="bi bi-send"></i>
+
+        Enviar a revisión
+
+    </button>
+    }
+
+    @if(puedeAprobar){
+    <button
+        class="btn btn-success"
+        (click)="aprobar()">
+
+        <i class="bi bi-check-circle"></i>
+
+        Aprobar
+
+    </button>
+    }
+
+    @if(puedeSolicitarCorrecciones){
+    <button
+        class="btn btn-danger"
+        (click)="solicitarCorrecciones()">
+
+        <i class="bi bi-exclamation-circle"></i>
+
+        Solicitar correcciones
+
+    </button>
+    }
+
+    <span class="badge-estado" [class.borrador]="estadoDocumento === 'borrador'" [class.pendiente]="estadoDocumento === 'pendiente_revision'" [class.aprobado]="estadoDocumento === 'aprobado'" [class.rechazado]="estadoDocumento === 'rechazado'">
+        {{ estadoDocumento === 'borrador' ? 'Borrador' : estadoDocumento === 'pendiente_revision' ? 'Pendiente de revisión' : estadoDocumento === 'aprobado' ? 'Aprobado' : 'Rechazado' }}
+    </span>
+
 </div>
+
+@if(mostrarComentarios){
+<div class="comentarios-correccion">
+    <strong>Comentarios de corrección:</strong>
+    <p>{{ comentariosDocumento }}</p>
+</div>
+}
 
 <div
     id="documento-f06"
     class="documento">
 
-    <app-document-header
-        [titulo]="'FORMATO 06 BITÁCORA DE APRENDIZAJE DE FASE PRÁCTICA'"
-        [codigo]="'010206'"
-        [estudianteNombre]="informe.estudiante.nombre"
-        [estudianteCedula]="informe.estudiante.cedula"
-        [carrera]="informe.encabezado.carrera"
-        [nivel]="informe.encabezado.nivel"
-        [periodo]="informe.encabezado.cicloAcademico"
-        [nucleo]="informe.encabezado.nucleoEstructurante"
-        [tutorAcademico]="informe.encabezado.tutorAcademico"
-        [coordinador]="''"
-        [empresa]="informe.encabezado.empresaFormadora"
-        [tutorEmpresarial]="informe.encabezado.tutorEmpresarial"
-        [proyecto]="''"
-        [cobertura]="''"
-        [plazo]="''"
-        [fechaInicio]="informe.encabezado.fechaInicioFasePractica"
-        [fechaFin]="informe.encabezado.fechaFinFasePractica"
-        [telefonoEmergenciaNombre]="''"
-        [telefonoEmergenciaTelefono]="''">
-    </app-document-header>
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                DS-010206
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 06 BITÁCORA DE APRENDIZAJE DE FASE PRÁCTICA</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>EMPRESA FORMADORA:</strong></td>
+            <td>{{ informe.encabezado.empresaFormadora }}</td>
+            <td><strong>NIVEL:</strong></td>
+            <td>{{ informe.encabezado.nivel }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>ESTUDIANTE:</strong></td>
+            <td>{{ informe.estudiante.nombre }}</td>
+            <td><strong>CICLO ACADÉMICO:</strong></td>
+            <td>{{ informe.encabezado.cicloAcademico }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>CÉDULA:</strong></td>
+            <td>{{ informe.estudiante.cedula }}</td>
+            <td><strong>F. INICIO FASE PRÁCTICA:</strong></td>
+            <td>{{ informe.encabezado.fechaInicioFasePractica }}</td>
+            <td><strong>F. FIN FASE PRÁCTICA:</strong></td>
+            <td>{{ informe.encabezado.fechaFinFasePractica }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) ACADÉMICO:</strong></td>
+            <td>{{ informe.encabezado.tutorAcademico }}</td>
+            <td><strong>N. ESTRUCTURANTE:</strong></td>
+            <td>{{ informe.encabezado.nucleoEstructurante }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) EMPRESARIAL:</strong></td>
+            <td>{{ informe.encabezado.tutorEmpresarial }}</td>
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ informe.encabezado.carrera }}</td>
+
+        </tr>
+
+    </table>
 
     <div class="contenido">
 

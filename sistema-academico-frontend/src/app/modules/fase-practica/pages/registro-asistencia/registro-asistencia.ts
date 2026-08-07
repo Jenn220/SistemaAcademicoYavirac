@@ -16,8 +16,6 @@ import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 import { AuthService } from '../../../auth/services/auth.service';
 
-import { DocumentHeader } from '../../components/document-header/document-header';
-
 function registroVacio(): Registro {
   return {
     estudiante: { nombre: '', cedula: '', email: '', telefono: '', tipoSangre: '' },
@@ -41,8 +39,7 @@ function registroVacio(): Registro {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    DocumentHeader
+    FormsModule
   ],
   templateUrl: './registro-asistencia.html',
   styleUrl: './registro-asistencia.scss'
@@ -60,6 +57,42 @@ export class RegistroAsistencia implements OnInit {
   editando = false;
   idPractica: number | undefined;
   esEstudiante = false;
+
+  estadoDocumento: string = 'borrador';
+  comentariosDocumento: string = '';
+  idDocumento: number | undefined;
+
+  get soloLectura(): boolean {
+    return !this.esEstudiante;
+  }
+
+  get esDocente(): boolean {
+    return this.auth.tieneAlgunRol(['DOCENTE']);
+  }
+
+  get esCoordinador(): boolean {
+    return this.auth.tieneAlgunRol(['COORDINADOR']);
+  }
+
+  get esTutorEmpresarial(): boolean {
+    return this.auth.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
+  }
+
+  get puedeEnviarRevision(): boolean {
+    return this.esEstudiante && this.estadoDocumento === 'borrador';
+  }
+
+  get puedeAprobar(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get puedeSolicitarCorrecciones(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get mostrarComentarios(): boolean {
+    return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
+  }
 
   ngOnInit(): void {
 
@@ -142,6 +175,7 @@ export class RegistroAsistencia implements OnInit {
 
         this.registro = this.mapearRegistro(registro as unknown as Record<string, any>, datos);
         this.cdr.detectChanges();
+        this.cargarIdDocumento('F05');
 
       },
 
@@ -206,11 +240,16 @@ export class RegistroAsistencia implements OnInit {
 
     this.documentos.guardarRegistroAsistencia(this.registro, this.idPractica).subscribe({
 
-      next: () => {
+      next: (resp) => {
+
+        if (resp?.id_documento) {
+          this.idDocumento = resp.id_documento;
+        }
 
         this.editando = false;
         this.cargarRegistro();
         Swal.fire('Guardado', 'El registro de asistencia se guardó correctamente.', 'success');
+        this.cargarEstadoDocumento();
 
       },
 
@@ -224,6 +263,128 @@ export class RegistroAsistencia implements OnInit {
 
     });
 
+  }
+
+  private cargarEstadoDocumento(): void {
+    if (!this.idDocumento) {
+      return;
+    }
+
+    this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
+      next: (doc) => {
+        this.estadoDocumento = doc?.estado ?? 'borrador';
+        this.comentariosDocumento = doc?.comentarios ?? '';
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarIdDocumento(codigoFormato: string): void {
+    if (this.idDocumento || !this.idPractica) {
+      return;
+    }
+
+    this.documentos.obtenerIdDocumento(this.idPractica, codigoFormato).subscribe({
+      next: (resp) => {
+        this.idDocumento = resp?.id_documento ?? undefined;
+        this.cargarEstadoDocumento();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  enviarARevision(): void {
+    if (!this.idDocumento) {
+      Swal.fire('Error', 'Primero debe guardar el registro de asistencia.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enviar a revisión',
+      text: '¿Está seguro de enviar este registro a revisión?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+          next: () => {
+            this.estadoDocumento = 'pendiente_revision';
+            this.cdr.detectChanges();
+            Swal.fire('Enviado', 'El registro se envió a revisión correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible enviar el registro a revisión.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  aprobar(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Aprobar registro',
+      text: '¿Está seguro de aprobar este registro?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'aprobado').subscribe({
+          next: () => {
+            this.estadoDocumento = 'aprobado';
+            this.cdr.detectChanges();
+            Swal.fire('Aprobado', 'El registro fue aprobado correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible aprobar el registro.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  solicitarCorrecciones(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Solicitar correcciones',
+      input: 'textarea',
+      inputLabel: 'Comentarios de corrección (obligatorio)',
+      inputPlaceholder: 'Describa los cambios que debe realizar el estudiante...',
+      inputValidator: (value: string) => {
+        if (!value) {
+          return 'Debe ingresar comentarios de corrección';
+        }
+        return null;
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Solicitar correcciones',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'rechazado', result.value).subscribe({
+          next: () => {
+            this.estadoDocumento = 'rechazado';
+            this.comentariosDocumento = result.value;
+            this.cdr.detectChanges();
+            Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+          },
+        });
+      }
+    });
   }
 
   cancelarEdicion(): void {

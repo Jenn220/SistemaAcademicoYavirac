@@ -195,4 +195,24 @@ export class Documentos {
   actualizarDatosEstudiante(datos: Record<string, any>): Observable<any> {
     return this.http.patch<any>(`${environment.apiUrl}/api/fase-practica/perfil`, datos);
   }
+
+  obtenerDocumentoPorId(idDocumento: number): Observable<DocumentoGuardado & { estado?: string; comentarios?: string }> {
+    return this.http.get<DocumentoGuardado & { estado?: string; comentarios?: string }>(
+      `${environment.apiUrl}/api/fase-practica/documentos/${idDocumento}`
+    );
+  }
+
+  obtenerIdDocumento(idPractica: number, codigoFormato: string): Observable<{ id_documento: number }> {
+    return this.http.get<{ id_documento: number }>(
+      `${environment.apiUrl}/api/fase-practica/documentos/buscar`,
+      { params: { idPractica: idPractica.toString(), codigoFormato } }
+    );
+  }
+
+  actualizarEstadoDocumento(idDocumento: number, estado: string, comentarios?: string): Observable<any> {
+    return this.http.patch<any>(
+      `${environment.apiUrl}/api/fase-practica/documentos/${idDocumento}/estado`,
+      { estado, comentarios }
+    );
+  }
 }

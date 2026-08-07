@@ -18,4 +18,8 @@ export interface IDocumentoRepository {
   listarPorPractica(idPractica: number): Promise<DocumentoEntity[]>;
 
   findOne(options: any): Promise<DocumentoEntity | null>;
+
+  actualizarEstado(idDocumento: number, estado: string, comentarios?: string): Promise<DocumentoEntity | null>;
+
+  buscarPorId(idDocumento: number): Promise<DocumentoEntity | null>;
 }

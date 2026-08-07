@@ -88,11 +88,18 @@ export class PracticaService {
     const idsMatriculaDetalle = practicas.map((p) => p.id_matricula_detalle);
 
     const filas = await this.dataSource.query(
-      `SELECT md.id_matricula_detalle, e.id_estudiante, e.nombres, e.apellidos, e.cedula
-       FROM matricula_detalle md
-       JOIN matricula m ON m.id_matricula = md.id_matricula
-       JOIN estudiante e ON e.id_estudiante = m.id_estudiante
-       WHERE md.id_matricula_detalle = ANY($1)`,
+      `SELECT md.id_matricula_detalle, e.id_estudiante, e.nombres, e.apellidos, e.cedula,
+       j.nombre AS nombre_jornada,
+       pa.nombre AS nombre_paralelo,
+       per.nombre AS nombre_periodo
+        FROM matricula_detalle md
+        JOIN matricula m ON m.id_matricula = md.id_matricula
+        JOIN estudiante e ON e.id_estudiante = m.id_estudiante
+        LEFT JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+        LEFT JOIN jornada j ON j.id_jornada = oa.id_jornada
+        LEFT JOIN paralelo pa ON pa.id_paralelo = oa.id_paralelo
+        LEFT JOIN periodo_academico per ON per.id_periodo = m.id_periodo
+        WHERE md.id_matricula_detalle = ANY($1)`,
       [idsMatriculaDetalle],
     );
 
@@ -105,6 +112,9 @@ export class PracticaService {
         estudiante: fila
           ? { id_estudiante: Number(fila.id_estudiante), nombre: `${fila.nombres} ${fila.apellidos}`, cedula: fila.cedula }
           : null,
+        semestre: fila?.nombre_periodo ?? p.nombre_periodo ?? '',
+        paralelo: fila?.nombre_paralelo ?? p.paralelo ?? '',
+        jornada: fila?.nombre_jornada ?? '',
       };
     });
 

@@ -15,52 +15,130 @@
         <i class="bi bi-save"></i>
         {{ guardando ? 'Guardando...' : 'Guardar' }}
     </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
     }
 
-    @if (!soloLectura) {
-    <button class="btn btn-success text-white" (click)="mostrarFormularioCompanero = !mostrarFormularioCompanero">
-        <i class="bi bi-person-plus"></i>
-        {{ mostrarFormularioCompanero ? 'Ocultar formulario' : 'Agregar compañero' }}
+    @if(puedeEnviarRevision){
+    <button class="btn btn-success" (click)="enviarARevision()">
+        <i class="bi bi-send"></i>
+        Enviar a revisión
     </button>
     }
 
-    @if (mostrarFormularioCompanero) {
-    <div class="formulario-companero">
-        <h5>Agregar compañero</h5>
-        <input type="text" [(ngModel)]="nuevoCompanero.nombre" placeholder="Nombre completo" [disabled]="guardando">
-        <input type="text" [(ngModel)]="nuevoCompanero.cedula" placeholder="Cédula" [disabled]="guardando">
-        <input type="text" [(ngModel)]="nuevoCompanero.nivel" placeholder="Nivel" [disabled]="guardando">
-        <button class="btn btn-primary" [disabled]="guardando" (click)="agregarCompanero()">
-            <i class="bi bi-plus"></i> Agregar
-        </button>
-    </div>
+    @if(puedeAprobar){
+    <button class="btn btn-success" (click)="aprobar()">
+        <i class="bi bi-check-circle"></i>
+        Aprobar
+    </button>
     }
+
+    @if(puedeSolicitarCorrecciones){
+    <button class="btn btn-danger" (click)="solicitarCorrecciones()">
+        <i class="bi bi-exclamation-circle"></i>
+        Solicitar correcciones
+    </button>
+    }
+
+    <span class="badge-estado" [class.borrador]="estadoDocumento === 'borrador'" [class.pendiente]="estadoDocumento === 'pendiente_revision'" [class.aprobado]="estadoDocumento === 'aprobado'" [class.rechazado]="estadoDocumento === 'rechazado'">
+        {{ estadoDocumento === 'borrador' ? 'Borrador' : estadoDocumento === 'pendiente_revision' ? 'Pendiente de revisión' : estadoDocumento === 'aprobado' ? 'Aprobado' : 'Rechazado' }}
+    </span>
 
 </div>
 
+@if(mostrarComentarios){
+<div class="comentarios-correccion">
+    <strong>Comentarios de corrección:</strong>
+    <p>{{ comentariosDocumento }}</p>
+</div>
+}
+
 <div id="acta-entorno-laboral" class="documento">
 
-    <app-document-header
-        [titulo]="'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL'"
-        [codigo]="'DS-010401'"
-        [estudianteNombre]="acta.encabezado.estudianteNombre"
-        [estudianteCedula]="acta.encabezado.estudianteCedula"
-        [carrera]="acta.encabezado.carrera"
-        [nivel]="acta.encabezado.nivel"
-        [periodo]="acta.encabezado.periodoAcademico"
-        [nucleo]="''"
-        [tutorAcademico]="acta.encabezado.tutorAcademico"
-        [coordinador]="acta.encabezado.coordinador"
-        [empresa]="acta.encabezado.entidadReceptora"
-        [tutorEmpresarial]="acta.encabezado.tutorEmpresarial"
-        [proyecto]="''"
-        [cobertura]="''"
-        [plazo]="''"
-        [fechaInicio]="''"
-        [fechaFin]="''"
-        [telefonoEmergenciaNombre]="''"
-        [telefonoEmergenciaTelefono]="''">
-    </app-document-header>
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                <strong>CÓDIGO</strong><br>
+                010211
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 11 ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>FECHA:</strong></td>
+            <td>{{ acta.encabezado.fecha }}</td>
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ acta.encabezado.carrera }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>PERÍODO ACADÉMICO:</strong></td>
+            <td>{{ acta.encabezado.periodoAcademico }}</td>
+            <td><strong>ENTIDAD RECEPTORA FORMADORA:</strong></td>
+            <td>{{ acta.encabezado.entidadReceptora }}</td>
+
+        </tr>
+
+    </table>
 
     <div class="contenido">
 
@@ -76,7 +154,7 @@
 
         </div>
 
-        <div class="caja-anexos" *ngIf="acta.anexos?.length">
+        <div class="caja-anexos" [@if]="acta.anexos?.length">
 
             <strong>ANEXOS:</strong>
 

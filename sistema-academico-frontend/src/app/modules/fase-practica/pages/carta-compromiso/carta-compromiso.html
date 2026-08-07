@@ -20,36 +20,137 @@
 
     </button>
 
+    @if (!soloLectura) {
+    <button
+        class="btn btn-warning text-white"
+        [disabled]="guardando"
+        (click)="guardarEnBD()">
+
+        <i class="bi bi-save"></i>
+
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+
+    </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
+
+    @if(puedeEnviarRevision){
+    <button
+        class="btn btn-success"
+        (click)="enviarARevision()">
+
+        <i class="bi bi-send"></i>
+
+        Enviar a revisión
+
+    </button>
+    }
+
+    @if(puedeAprobar){
+    <button
+        class="btn btn-success"
+        (click)="aprobar()">
+
+        <i class="bi bi-check-circle"></i>
+
+        Aprobar
+
+    </button>
+    }
+
+    @if(puedeSolicitarCorrecciones){
+    <button
+        class="btn btn-danger"
+        (click)="solicitarCorrecciones()">
+
+        <i class="bi bi-exclamation-circle"></i>
+
+        Solicitar correcciones
+
+    </button>
+    }
+
+    <span class="badge-estado" [class.borrador]="estadoDocumento === 'borrador'" [class.pendiente]="estadoDocumento === 'pendiente_revision'" [class.aprobado]="estadoDocumento === 'aprobado'" [class.rechazado]="estadoDocumento === 'rechazado'">
+        {{ estadoDocumento === 'borrador' ? 'Borrador' : estadoDocumento === 'pendiente_revision' ? 'Pendiente de revisión' : estadoDocumento === 'aprobado' ? 'Aprobado' : 'Rechazado' }}
+    </span>
+
 </div>
+
+@if(mostrarComentarios){
+<div class="comentarios-correccion">
+    <strong>Comentarios de corrección:</strong>
+    <p>{{ comentariosDocumento }}</p>
+</div>
+}
 
 <div id="documento-f01" class="documento">
 
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                010201
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 01 CARTA DE PRESENTACIÓN Y ACTA COMPROMISO ESTUDIANTES</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
     <div class="contenido">
 
-        <app-document-header
-        [mostrarDatos]="false"
-        [titulo]="'FORMATO 01 CARTA DE COMPROMISO'"
-        [codigo]="'DS-010203-1'"
-        [estudianteNombre]="datosMaestros?.estudiante?.nombre ?? ''"
-        [estudianteCedula]="datosMaestros?.estudiante?.cedula ?? ''"
-        [carrera]="datosMaestros?.estudiante?.carrera ?? ''"
-        [nivel]="datosMaestros?.estudiante?.nivel ?? datosMaestros?.estudiante?.curso ?? ''"
-        [periodo]="datosMaestros?.periodoAcademico?.nombre ?? ''"
-        [nucleo]="datosMaestros?.carrera?.nucleoEstructurante ?? ''"
-        [tutorAcademico]="datosMaestros?.carrera?.tutorAcademico ?? ''"
-        [coordinador]="datosMaestros?.carrera?.coordinador ?? ''"
-        [empresa]="datosMaestros?.empresaBeneficiaria?.razonSocial ?? datosMaestros?.proyectoEmpresarial?.empresaAsignada ?? ''"
-        [tutorEmpresarial]="datosMaestros?.empresaBeneficiaria?.tutorEmpresarial ?? ''"
-        [proyecto]="datosMaestros?.proyectoEmpresarial?.nombre ?? ''"
-        [cobertura]="datosMaestros?.proyectoEmpresarial?.cobertura ?? ''"
-        [plazo]="datosMaestros?.proyectoEmpresarial?.plazo ?? ''"
-        [fechaInicio]="datosMaestros?.proyectoEmpresarial?.fechaInicio ?? ''"
-        [fechaFin]="datosMaestros?.proyectoEmpresarial?.fechaFin ?? ''"
-        [telefonoEmergenciaNombre]="datosMaestros?.estudiante?.contactoEmergenciaNombre ?? ''"
-        [telefonoEmergenciaTelefono]="datosMaestros?.estudiante?.contactoEmergenciaTelefono ?? ''">
-    </app-document-header>
-
-    <app-student-presentation
+        <app-student-presentation
             [carta]="carta">
         </app-student-presentation>
         

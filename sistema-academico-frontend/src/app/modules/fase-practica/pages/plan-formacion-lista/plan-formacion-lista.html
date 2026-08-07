@@ -16,6 +16,30 @@
             placeholder="Buscar por nombre, cédula o empresa..."
             [value]="busqueda()"
             (input)="buscar($any($event.target).value)">
+        @if (semestresDisponibles().length > 0) {
+        <select (change)="setFiltroSemestre($any($event.target).value)">
+            <option value="">Semestre</option>
+            @for (semestre of semestresDisponibles(); track semestre) {
+            <option [value]="semestre" [selected]="filtroSemestre() === semestre">{{ semestre }}</option>
+            }
+        </select>
+        }
+        @if (paralelosDisponibles().length > 0) {
+        <select (change)="setFiltroParalelo($any($event.target).value)">
+            <option value="">Paralelo</option>
+            @for (paralelo of paralelosDisponibles(); track paralelo) {
+            <option [value]="paralelo" [selected]="filtroParalelo() === paralelo">{{ paralelo }}</option>
+            }
+        </select>
+        }
+        @if (jornadasDisponibles().length > 0) {
+        <select (change)="setFiltroJornada($any($event.target).value)">
+            <option value="">Jornada</option>
+            @for (jornada of jornadasDisponibles(); track jornada) {
+            <option [value]="jornada" [selected]="filtroJornada() === jornada">{{ jornada }}</option>
+            }
+        </select>
+        }
     </div>
 
     }
@@ -34,7 +58,7 @@
 
     } @else if (practicasFiltradas().length === 0) {
 
-    <p class="text-center text-muted my-4">Ningún estudiante coincide con "{{ busqueda() }}".</p>
+    <p class="text-center text-muted my-4">Ningún estudiante coincide con los filtros aplicados.</p>
 
     } @else {
 
@@ -53,6 +77,15 @@
                 <span><strong>Cédula:</strong> {{ practica.estudiante?.cedula || '—' }}</span>
                 <span><strong>Empresa:</strong> {{ nombreEmpresa(practica) }}</span>
                 <span><strong>Tutor empresarial:</strong> {{ nombreTutor(practica) }}</span>
+                @if (practica.semestre) {
+                <span><strong>Semestre:</strong> {{ practica.semestre }}</span>
+                }
+                @if (practica.paralelo) {
+                <span><strong>Paralelo:</strong> {{ practica.paralelo }}</span>
+                }
+                @if (practica.jornada) {
+                <span><strong>Jornada:</strong> {{ practica.jornada }}</span>
+                }
                 <span class="tarjeta-id">Práctica #{{ practica.id_practica }}</span>
             </div>
 

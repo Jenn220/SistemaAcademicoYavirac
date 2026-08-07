@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, Inject } from '@nestjs/common';
+import { ForbiddenException, BadRequestException, Injectable, Inject } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -91,6 +91,10 @@ export class DocumentoPlantillaService {
    * IA-12 / EE-12 / EI-11 / PMF-07).
    */
   private async obtenerIdPractica(usuario: any, idPracticaSolicitado?: number): Promise<number> {
+
+    if (idPracticaSolicitado !== undefined && (!Number.isInteger(idPracticaSolicitado) || idPracticaSolicitado <= 0)) {
+      throw new BadRequestException('Identificador de práctica inválido.');
+    }
 
     if (usuario.idEstudiante) {
       const rows = await this.dataSource.query(
@@ -418,7 +422,7 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getCartaCompromiso(usuario: any, idPracticaSolicitado?: number): Promise<CartaCompromiso> {
+  async getCartaCompromiso(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<CartaCompromiso> {
     let idPractica: number | undefined;
     try {
       idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
@@ -426,7 +430,7 @@ export class DocumentoPlantillaService {
       idPractica = undefined;
     }
 
-    if (idPractica) {
+    if (idPractica && !forzar) {
       const guardado = await this.cargarContenidoGuardado(idPractica, 'F01');
       if (guardado) return guardado as CartaCompromiso;
     }
@@ -470,7 +474,7 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getCurriculum(usuario: any, idPracticaSolicitado?: number): Promise<Curriculum> {
+  async getCurriculum(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<Curriculum> {
     let idPractica: number | undefined;
     try {
       idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
@@ -478,7 +482,7 @@ export class DocumentoPlantillaService {
       idPractica = undefined;
     }
 
-    if (idPractica) {
+    if (idPractica && !forzar) {
       const guardado = await this.cargarContenidoGuardado(idPractica, 'F02');
       if (guardado) return guardado as Curriculum;
     }
@@ -529,7 +533,7 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getRegistroAsistencia(usuario: any, idPracticaSolicitado?: number): Promise<RegistroAsistencia> {
+  async getRegistroAsistencia(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<RegistroAsistencia> {
     let idPractica: number | undefined;
     try {
       idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
@@ -537,7 +541,7 @@ export class DocumentoPlantillaService {
       idPractica = undefined;
     }
 
-    if (idPractica) {
+    if (idPractica && !forzar) {
       const guardado = await this.cargarContenidoGuardado(idPractica, 'F05');
       if (guardado) return guardado as RegistroAsistencia;
     }
@@ -545,8 +549,10 @@ export class DocumentoPlantillaService {
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera, periodoAcademico } = datos;
 
+    const idPracticaResuelto = idPractica ?? datos.idPractica;
+
     const registros = await this.registroDiarioRepository.find({
-      where: { id_practica: await this.obtenerIdPractica(usuario, idPracticaSolicitado) },
+      where: idPracticaResuelto ? { id_practica: idPracticaResuelto } : {},
       order: { fecha: 'ASC' },
     });
 
@@ -586,7 +592,7 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getInformeAprendizaje(usuario: any, idPracticaSolicitado?: number): Promise<InformeAprendizaje> {
+  async getInformeAprendizaje(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<InformeAprendizaje> {
     let idPractica: number | undefined;
     try {
       idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
@@ -612,8 +618,10 @@ export class DocumentoPlantillaService {
       } as any;
     }
 
-    const guardado = await this.cargarContenidoGuardado(idPractica, 'F06');
-    if (guardado) return guardado as InformeAprendizaje;
+    if (!forzar) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F06');
+      if (guardado) return guardado as InformeAprendizaje;
+    }
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { empresaBeneficiaria, periodoAcademico, carrera } = datos;
@@ -661,7 +669,7 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getEvaluacionEmpresarial(usuario: any, idPracticaSolicitado?: number): Promise<EvaluacionEmpresarial> {
+  async getEvaluacionEmpresarial(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<EvaluacionEmpresarial> {
     let idPractica: number | undefined;
     try {
       idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
@@ -687,8 +695,10 @@ export class DocumentoPlantillaService {
       } as any;
     }
 
-    const guardado = await this.cargarContenidoGuardado(idPractica, 'F07');
-    if (guardado) return guardado as EvaluacionEmpresarial;
+    if (!forzar) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F07');
+      if (guardado) return guardado as EvaluacionEmpresarial;
+    }
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
@@ -782,7 +792,7 @@ export class DocumentoPlantillaService {
     return { criterios, defensaProyecto, idRubrica };
   }
 
-  async getEvaluacionInstituto(usuario: any, idPracticaSolicitado?: number): Promise<EvaluacionInstituto> {
+  async getEvaluacionInstituto(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<EvaluacionInstituto> {
     let idPractica: number | undefined;
     try {
       idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
@@ -809,8 +819,10 @@ export class DocumentoPlantillaService {
       } as any;
     }
 
-    const guardado = await this.cargarContenidoGuardado(idPractica, 'F08');
-    if (guardado) return guardado as EvaluacionInstituto;
+    if (!forzar) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F08');
+      if (guardado) return guardado as EvaluacionInstituto;
+    }
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
@@ -890,11 +902,11 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getActaInduccionSeguridad(usuario: any, idPracticaSolicitado?: number): Promise<ActaInduccionSeguridad> {
+  async getActaInduccionSeguridad(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<ActaInduccionSeguridad> {
     try {
       const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
 
-      if (idPractica) {
+      if (idPractica && !forzar) {
         const guardado = await this.cargarContenidoGuardado(idPractica, 'F10');
         if (guardado) return guardado as ActaInduccionSeguridad;
       }
@@ -1027,7 +1039,7 @@ export class DocumentoPlantillaService {
     };
   }
 
-  async getActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number): Promise<ActaEntornoLaboral> {
+  async getActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<ActaEntornoLaboral> {
     try {
       let idPractica: number | undefined;
 
@@ -1052,7 +1064,7 @@ export class DocumentoPlantillaService {
         idPractica = idPracticaSolicitado ?? (await this.obtenerIdPractica(usuario, idPracticaSolicitado));
       }
 
-      if (idPractica) {
+      if (idPractica && !forzar) {
         const guardado = await this.cargarContenidoGuardado(idPractica, 'F11');
         if (guardado) return guardado as ActaEntornoLaboral;
       }

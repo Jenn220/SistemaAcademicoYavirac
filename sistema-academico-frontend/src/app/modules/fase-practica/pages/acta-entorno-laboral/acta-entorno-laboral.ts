@@ -5,7 +5,6 @@ import {
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -16,23 +15,15 @@ import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 import { AuthService } from '../../../auth/services/auth.service';
 
-import { DocumentHeader } from '../../components/document-header/document-header';
-
 function actaEntornoVacia(): ActaEntornoLaboral {
   return {
     encabezado: {
       instituto: 'INSTITUTO TÉCNICO YAVIRAC',
       titulo: 'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL',
       fecha: '',
-      estudianteNombre: '',
-      estudianteCedula: '',
       carrera: '',
-      nivel: '',
       periodoAcademico: '',
-      entidadReceptora: '',
-      tutorAcademico: '',
-      coordinador: '',
-      tutorEmpresarial: ''
+      entidadReceptora: ''
     },
     textoLegal: [],
     anexos: [
@@ -55,7 +46,7 @@ function actaEntornoVacia(): ActaEntornoLaboral {
 @Component({
   selector: 'app-acta-entorno-laboral',
   standalone: true,
-  imports: [CommonModule, FormsModule, DocumentHeader],
+  imports: [CommonModule],
   templateUrl: './acta-entorno-laboral.html',
   styleUrl: './acta-entorno-laboral.scss'
 })
@@ -71,8 +62,42 @@ export class ActaEntornoLaboralPage implements OnInit {
   guardando = false;
   soloLectura = false;
   idPractica: number | undefined;
-  mostrarFormularioCompanero = false;
-  nuevoCompanero: { nombre: string; cedula: string; nivel: string } = { nombre: '', cedula: '', nivel: '' };
+
+  estadoDocumento: string = 'borrador';
+  comentariosDocumento: string = '';
+  idDocumento: number | undefined;
+
+  get esEstudiante(): boolean {
+    return this.auth.tieneAlgunRol(['ESTUDIANTE']);
+  }
+
+  get esDocente(): boolean {
+    return this.auth.tieneAlgunRol(['DOCENTE']);
+  }
+
+  get esCoordinador(): boolean {
+    return this.auth.tieneAlgunRol(['COORDINADOR']);
+  }
+
+  get esTutorEmpresarial(): boolean {
+    return this.auth.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
+  }
+
+  get puedeEnviarRevision(): boolean {
+    return this.esEstudiante && this.estadoDocumento === 'borrador';
+  }
+
+  get puedeAprobar(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get puedeSolicitarCorrecciones(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get mostrarComentarios(): boolean {
+    return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
+  }
 
   ngOnInit(): void {
     const usuario = this.auth.usuario();
@@ -111,8 +136,13 @@ export class ActaEntornoLaboralPage implements OnInit {
 
       next: ({ acta, datos }) => {
 
-        this.completarConDatosMaestra(acta, datos);
+        if (acta && acta.estudiantes?.length) {
+          this.acta = acta;
+        } else {
+          this.completarConDatosMaestra(acta, datos);
+        }
         this.cdr.detectChanges();
+        this.cargarIdDocumento('F11');
 
       },
 
@@ -147,6 +177,8 @@ export class ActaEntornoLaboralPage implements OnInit {
           text: 'El acta de entorno laboral se guardó correctamente.'
         });
 
+        this.cargarEstadoDocumento();
+
       },
 
       error: (err) => {
@@ -164,6 +196,128 @@ export class ActaEntornoLaboralPage implements OnInit {
 
   }
 
+  private cargarEstadoDocumento(): void {
+    if (!this.idDocumento) {
+      return;
+    }
+
+    this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
+      next: (doc) => {
+        this.estadoDocumento = doc?.estado ?? 'borrador';
+        this.comentariosDocumento = doc?.comentarios ?? '';
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarIdDocumento(codigoFormato: string): void {
+    if (this.idDocumento || !this.idPractica) {
+      return;
+    }
+
+    this.documentos.obtenerIdDocumento(this.idPractica, codigoFormato).subscribe({
+      next: (resp) => {
+        this.idDocumento = resp?.id_documento ?? undefined;
+        this.cargarEstadoDocumento();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  enviarARevision(): void {
+    if (!this.idDocumento) {
+      Swal.fire('Error', 'Primero debe guardar el acta.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enviar a revisión',
+      text: '¿Está seguro de enviar esta acta a revisión?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+          next: () => {
+            this.estadoDocumento = 'pendiente_revision';
+            this.cdr.detectChanges();
+            Swal.fire('Enviado', 'La acta se envió a revisión correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible enviar la acta a revisión.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  aprobar(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Aprobar acta',
+      text: '¿Está seguro de aprobar esta acta?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'aprobado').subscribe({
+          next: () => {
+            this.estadoDocumento = 'aprobado';
+            this.cdr.detectChanges();
+            Swal.fire('Aprobado', 'La acta fue aprobada correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible aprobar la acta.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  solicitarCorrecciones(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Solicitar correcciones',
+      input: 'textarea',
+      inputLabel: 'Comentarios de corrección (obligatorio)',
+      inputPlaceholder: 'Describa los cambios que debe realizar el estudiante...',
+      inputValidator: (value: string) => {
+        if (!value) {
+          return 'Debe ingresar comentarios de corrección';
+        }
+        return null;
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Solicitar correcciones',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'rechazado', result.value).subscribe({
+          next: () => {
+            this.estadoDocumento = 'rechazado';
+            this.comentariosDocumento = result.value;
+            this.cdr.detectChanges();
+            Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+          },
+        });
+      }
+    });
+  }
+
   private completarConDatosMaestra(acta: ActaEntornoLaboral, datos: Record<string, any>): void {
 
     const datosEstudiante = datos?.['estudiante'] ?? {};
@@ -171,25 +325,14 @@ export class ActaEntornoLaboralPage implements OnInit {
     const datosPeriodo = datos?.['periodoAcademico'] ?? {};
     const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
 
-    console.log('datosMaestra en acta-entorno-laboral:', datos);
-    console.log('datosEstudiante:', datosEstudiante);
-    console.log('datosCarrera:', datosCarrera);
-    console.log('datosPeriodo:', datosPeriodo);
-    console.log('datosEmpresa:', datosEmpresa);
-
     this.acta = {
       ...acta,
       encabezado: {
         ...acta.encabezado,
-        estudianteNombre: datosEstudiante.nombre ?? '',
-        estudianteCedula: datosEstudiante.cedula ?? '',
+        fecha: acta.encabezado.fecha || new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
         carrera: datosEstudiante.carrera ?? datosCarrera.nucleoEstructurante ?? '',
-        nivel: datosEstudiante.nivel ?? '',
         periodoAcademico: datosPeriodo.nombre ?? '',
-        entidadReceptora: datosEmpresa.razonSocial ?? '',
-        tutorAcademico: datosCarrera.tutorAcademico ?? '',
-        coordinador: datosCarrera.coordinador ?? '',
-        tutorEmpresarial: datosEmpresa.tutorEmpresarial ?? ''
+        entidadReceptora: datosEmpresa.razonSocial ?? ''
       },
       textoLegal: acta.textoLegal?.length ? acta.textoLegal : [
         'Por medio de la presente se deja constancia de que la estudiante ha cumplido con el programa de formación práctica en el entorno laboral real, de acuerdo con los objetivos y actividades programadas.',
@@ -202,7 +345,6 @@ export class ActaEntornoLaboralPage implements OnInit {
         tutorAcademico: { nombre: datosCarrera.tutorAcademico ?? '', cedula: '' }
       }
     };
-    console.log('acta final en acta-entorno-laboral:', this.acta);
     this.cdr.detectChanges();
   }
 
@@ -212,25 +354,5 @@ export class ActaEntornoLaboralPage implements OnInit {
 
   descargarWord(): void {
     exportarDocumentoWord('acta-entorno-laboral', 'Acta_Entorno_Laboral', 'portrait');
-  }
-
-  agregarCompanero(): void {
-    if (!this.nuevoCompanero.nombre || !this.nuevoCompanero.cedula || !this.nuevoCompanero.nivel) {
-      Swal.fire('Faltan datos', 'Completa al menos nombre, cédula y nivel del compañero.', 'warning');
-      return;
-    }
-
-    this.acta.estudiantes.push({
-      no: this.acta.estudiantes.length + 1,
-      nombre: this.nuevoCompanero.nombre,
-      cedula: this.nuevoCompanero.cedula,
-      nivel: this.nuevoCompanero.nivel,
-      nota: '',
-      firma: ''
-    });
-
-    this.nuevoCompanero = { nombre: '', cedula: '', nivel: '' };
-    this.mostrarFormularioCompanero = false;
-    this.cdr.detectChanges();
   }
 }

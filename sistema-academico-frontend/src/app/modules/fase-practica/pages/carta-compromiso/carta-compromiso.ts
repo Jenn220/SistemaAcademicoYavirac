@@ -11,7 +11,6 @@ import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { StudentPresentation } from '../../components/student-presentation/student-presentation';
-import { DocumentHeader } from '../../components/document-header/document-header';
 
 import { CartaCompromiso as Carta } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
@@ -38,8 +37,7 @@ function cartaVacia(): Carta {
   standalone: true,
   imports: [
     CommonModule,
-    StudentPresentation,
-    DocumentHeader
+    StudentPresentation
   ],
   templateUrl: './carta-compromiso.html',
   styleUrl: './carta-compromiso.scss'
@@ -57,6 +55,42 @@ export class CartaCompromiso implements OnInit {
   guardando = false;
   soloLectura = false;
   idPractica: number | undefined;
+
+  estadoDocumento: string = 'borrador';
+  comentariosDocumento: string = '';
+  idDocumento: number | undefined;
+
+  get esEstudiante(): boolean {
+    return this.auth.tieneAlgunRol(['ESTUDIANTE']);
+  }
+
+  get esDocente(): boolean {
+    return this.auth.tieneAlgunRol(['DOCENTE']);
+  }
+
+  get esCoordinador(): boolean {
+    return this.auth.tieneAlgunRol(['COORDINADOR']);
+  }
+
+  get esTutorEmpresarial(): boolean {
+    return this.auth.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
+  }
+
+  get puedeEnviarRevision(): boolean {
+    return this.esEstudiante && this.estadoDocumento === 'borrador';
+  }
+
+  get puedeAprobar(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get puedeSolicitarCorrecciones(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get mostrarComentarios(): boolean {
+    return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
+  }
 
   ngOnInit(): void {
 
@@ -100,8 +134,6 @@ export class CartaCompromiso implements OnInit {
 
       next: ({ carta, datos }) => {
 
-        this.datosMaestros = datos ?? {};
-
         const res = carta as unknown as Record<string, any>;
         const estudiante = res?.['estudiante'] ?? {};
         const espacioFirma = res?.['espacioFirma'] ?? {};
@@ -118,8 +150,8 @@ export class CartaCompromiso implements OnInit {
           compromisosConfidencialidad: res?.['compromisosConfidencialidad'] ?? [],
           cierre: res?.['cierre'] ?? [],
           estudiante: {
-            nombre: datosEstudiante.nombre ?? estudiante.nombre ?? '',
-            cedula: datosEstudiante.cedula ?? estudiante.cedula ?? '',
+            nombre: estudiante.nombre ?? '',
+            cedula: estudiante.cedula ?? '',
             carrera: estudiante.carrera ?? datosEstudiante.carrera ?? '',
             curso: estudiante.curso ?? datosEstudiante.curso ?? ''
           },
@@ -131,6 +163,7 @@ export class CartaCompromiso implements OnInit {
         };
 
         this.cdr.detectChanges();
+        this.cargarIdDocumento('F01');
 
       },
 
@@ -171,6 +204,8 @@ export class CartaCompromiso implements OnInit {
           text: 'La carta compromiso se guardó correctamente.'
         });
 
+        this.cargarEstadoDocumento();
+
       },
 
       error: (err) => {
@@ -186,6 +221,128 @@ export class CartaCompromiso implements OnInit {
 
     });
 
+  }
+
+  private cargarEstadoDocumento(): void {
+    if (!this.idDocumento) {
+      return;
+    }
+
+    this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
+      next: (doc) => {
+        this.estadoDocumento = doc?.estado ?? 'borrador';
+        this.comentariosDocumento = doc?.comentarios ?? '';
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarIdDocumento(codigoFormato: string): void {
+    if (this.idDocumento || !this.idPractica) {
+      return;
+    }
+
+    this.documentos.obtenerIdDocumento(this.idPractica, codigoFormato).subscribe({
+      next: (resp) => {
+        this.idDocumento = resp?.id_documento ?? undefined;
+        this.cargarEstadoDocumento();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  enviarARevision(): void {
+    if (!this.idDocumento) {
+      Swal.fire('Error', 'Primero debe guardar la carta.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enviar a revisión',
+      text: '¿Está seguro de enviar esta carta a revisión?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+          next: () => {
+            this.estadoDocumento = 'pendiente_revision';
+            this.cdr.detectChanges();
+            Swal.fire('Enviado', 'La carta se envió a revisión correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible enviar la carta a revisión.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  aprobar(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Aprobar carta',
+      text: '¿Está seguro de aprobar esta carta?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'aprobado').subscribe({
+          next: () => {
+            this.estadoDocumento = 'aprobado';
+            this.cdr.detectChanges();
+            Swal.fire('Aprobado', 'La carta fue aprobada correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible aprobar la carta.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  solicitarCorrecciones(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Solicitar correcciones',
+      input: 'textarea',
+      inputLabel: 'Comentarios de corrección (obligatorio)',
+      inputPlaceholder: 'Describa los cambios que debe realizar el estudiante...',
+      inputValidator: (value: string) => {
+        if (!value) {
+          return 'Debe ingresar comentarios de corrección';
+        }
+        return null;
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Solicitar correcciones',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'rechazado', result.value).subscribe({
+          next: () => {
+            this.estadoDocumento = 'rechazado';
+            this.comentariosDocumento = result.value;
+            this.cdr.detectChanges();
+            Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+          },
+        });
+      }
+    });
   }
 
   volver(): void {

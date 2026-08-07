@@ -14,7 +14,6 @@ import Swal from 'sweetalert2';
 import { Documentos } from '../../services/documentos';
 import { Cv, CvDatoAcademico, CvExperienciaLaboral, CvPracticaDual } from '../../services/cv';
 import { AuthService } from '../../../auth/services/auth.service';
-import { DocumentHeader } from '../../components/document-header/document-header';
 import { Curriculum as CurriculumModel } from '../../interfaces';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 
@@ -47,7 +46,7 @@ function curriculumVacio(): CurriculumModel {
 @Component({
   selector: 'app-curriculum',
   standalone: true,
-  imports: [CommonModule, FormsModule, DocumentHeader],
+  imports: [CommonModule, FormsModule],
   templateUrl: './curriculum.html',
   styleUrl: './curriculum.scss'
 })
@@ -81,8 +80,40 @@ export class Curriculum implements OnInit {
 
   guardando = false;
 
+  estadoDocumento: string = 'borrador';
+  comentariosDocumento: string = '';
+  idDocumento: number | undefined;
+
   get esEstudiante(): boolean {
     return this.authService.tieneAlgunRol(['ESTUDIANTE']);
+  }
+
+  get esDocente(): boolean {
+    return this.authService.tieneAlgunRol(['DOCENTE']);
+  }
+
+  get esCoordinador(): boolean {
+    return this.authService.tieneAlgunRol(['COORDINADOR']);
+  }
+
+  get esTutorEmpresarial(): boolean {
+    return this.authService.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
+  }
+
+  get puedeEnviarRevision(): boolean {
+    return this.esEstudiante && this.estadoDocumento === 'borrador';
+  }
+
+  get puedeAprobar(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get puedeSolicitarCorrecciones(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get mostrarComentarios(): boolean {
+    return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
   }
 
   encabezado = {
@@ -143,12 +174,12 @@ export class Curriculum implements OnInit {
         domicilio: dp.domicilio || datosEstudiante.domicilio || '',
         emailInstitucional: dp.emailInstitucional || datosEstudiante.email || ''
       },
-      datosAcademicos: (da || []).map((item: any) => ({
+      datosAcademicos: da?.institucion ? [{
         anio: '',
-        institucion: item.institucion ?? '',
-        tituloMencion: item.carrera ?? '',
-        notaFinal: item.promedio ?? ''
-      })),
+        institucion: da.institucion ?? '',
+        tituloMencion: da.carrera ?? '',
+        notaFinal: da.promedio ?? ''
+      }] : [],
       experienciaLaboral: experiencia.map((item) => ({
         anio: item.periodo ?? '',
         institucion: item.empresa ?? '',
@@ -249,6 +280,7 @@ export class Curriculum implements OnInit {
 
           this.curriculum = this.mapearBase(curriculum, datos);
           this.cargarCvReal();
+          this.cargarIdDocumento('F02');
 
         },
 
@@ -513,6 +545,9 @@ export class Curriculum implements OnInit {
 
     const finalizar = () => {
 
+      this.idDocumento = resultadoSnapshot.id_documento;
+      this.cargarEstadoDocumento();
+
       this.guardando = false;
       this.cdr.detectChanges();
 
@@ -547,6 +582,128 @@ export class Curriculum implements OnInit {
 
     });
 
+  }
+
+  private cargarEstadoDocumento(): void {
+    if (!this.idDocumento) {
+      return;
+    }
+
+    this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
+      next: (doc) => {
+        this.estadoDocumento = doc?.estado ?? 'borrador';
+        this.comentariosDocumento = doc?.comentarios ?? '';
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarIdDocumento(codigoFormato: string): void {
+    if (this.idDocumento || !this.idPractica) {
+      return;
+    }
+
+    this.documentos.obtenerIdDocumento(this.idPractica, codigoFormato).subscribe({
+      next: (resp) => {
+        this.idDocumento = resp?.id_documento ?? undefined;
+        this.cargarEstadoDocumento();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  enviarARevision(): void {
+    if (!this.idDocumento) {
+      Swal.fire('Error', 'Primero debe guardar el currículo.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enviar a revisión',
+      text: '¿Está seguro de enviar este currículo a revisión?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+          next: () => {
+            this.estadoDocumento = 'pendiente_revision';
+            this.cdr.detectChanges();
+            Swal.fire('Enviado', 'El currículo se envió a revisión correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible enviar el currículo a revisión.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  aprobar(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Aprobar currículo',
+      text: '¿Está seguro de aprobar este currículo?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'aprobado').subscribe({
+          next: () => {
+            this.estadoDocumento = 'aprobado';
+            this.cdr.detectChanges();
+            Swal.fire('Aprobado', 'El currículo fue aprobado correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible aprobar el currículo.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  solicitarCorrecciones(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Solicitar correcciones',
+      input: 'textarea',
+      inputLabel: 'Comentarios de corrección (obligatorio)',
+      inputPlaceholder: 'Describa los cambios que debe realizar el estudiante...',
+      inputValidator: (value: string) => {
+        if (!value) {
+          return 'Debe ingresar comentarios de corrección';
+        }
+        return null;
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Solicitar correcciones',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'rechazado', result.value).subscribe({
+          next: () => {
+            this.estadoDocumento = 'rechazado';
+            this.comentariosDocumento = result.value;
+            this.cdr.detectChanges();
+            Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+          },
+        });
+      }
+    });
   }
 
   descargarWord(): void {

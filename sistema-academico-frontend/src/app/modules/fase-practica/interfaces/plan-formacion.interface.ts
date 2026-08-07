@@ -15,6 +15,12 @@ export interface PracticaSelector {
   fecha_fin?: string;
   /** id_docente asignado en crudo — para preseleccionarlo en Asignaciones. */
   id_docente?: number;
+  /** Semestre/periodo académico (ej. "2025-1"). */
+  semestre?: string;
+  /** Paralelo al que pertenece el estudiante. */
+  paralelo?: string;
+  /** Jornada (ej. "Intensiva", "Nocturna"). */
+  jornada?: string;
   empresa?: {
     id_empresa: number;
     razon_social: string;

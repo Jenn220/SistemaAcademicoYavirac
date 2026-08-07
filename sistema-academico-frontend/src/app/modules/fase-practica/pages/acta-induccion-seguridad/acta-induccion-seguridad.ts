@@ -15,27 +15,20 @@ import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 import { AuthService } from '../../../auth/services/auth.service';
 
-import { DocumentHeader } from '../../components/document-header/document-header';
-
 function actaInduccionVacia(): ActaInduccionSeguridad {
   return {
     lugarFecha: '',
     estudiante: { nombre: '', cedula: '', nivel: '', carrera: '' },
     empresa: { razonSocial: '' },
     textoLegal: [],
-    firmaEstudiante: '',
-    periodo: '',
-    nucleo: '',
-    tutorAcademico: '',
-    coordinador: '',
-    tutorEmpresarial: ''
+    firmaEstudiante: ''
   };
 }
 
 @Component({
   selector: 'app-acta-induccion-seguridad',
   standalone: true,
-  imports: [CommonModule, DocumentHeader],
+  imports: [CommonModule],
   templateUrl: './acta-induccion-seguridad.html',
   styleUrl: './acta-induccion-seguridad.scss'
 })
@@ -51,6 +44,42 @@ export class ActaInduccionSeguridadPage implements OnInit {
   guardando = false;
   soloLectura = false;
   idPractica: number | undefined;
+
+  estadoDocumento: string = 'borrador';
+  comentariosDocumento: string = '';
+  idDocumento: number | undefined;
+
+  get esEstudiante(): boolean {
+    return this.auth.tieneAlgunRol(['ESTUDIANTE']);
+  }
+
+  get esDocente(): boolean {
+    return this.auth.tieneAlgunRol(['DOCENTE']);
+  }
+
+  get esCoordinador(): boolean {
+    return this.auth.tieneAlgunRol(['COORDINADOR']);
+  }
+
+  get esTutorEmpresarial(): boolean {
+    return this.auth.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
+  }
+
+  get puedeEnviarRevision(): boolean {
+    return this.esEstudiante && this.estadoDocumento === 'borrador';
+  }
+
+  get puedeAprobar(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get puedeSolicitarCorrecciones(): boolean {
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get mostrarComentarios(): boolean {
+    return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
+  }
 
   ngOnInit(): void {
     const usuario = this.auth.usuario();
@@ -95,6 +124,7 @@ export class ActaInduccionSeguridadPage implements OnInit {
           this.completarConDatosMaestra(acta, datos);
         }
         this.cdr.detectChanges();
+        this.cargarIdDocumento('F10');
 
       },
 
@@ -104,6 +134,39 @@ export class ActaInduccionSeguridadPage implements OnInit {
         Swal.fire('Error', 'No fue posible cargar el acta de inducción de seguridad.', 'error');
       }
 
+    });
+  }
+
+  private cargarEstadoDocumento(): void {
+    if (!this.idDocumento) {
+      return;
+    }
+
+    this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
+      next: (doc) => {
+        this.estadoDocumento = doc?.estado ?? 'borrador';
+        this.comentariosDocumento = doc?.comentarios ?? '';
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarIdDocumento(codigoFormato: string): void {
+    if (this.idDocumento || !this.idPractica) {
+      return;
+    }
+
+    this.documentos.obtenerIdDocumento(this.idPractica, codigoFormato).subscribe({
+      next: (resp) => {
+        this.idDocumento = resp?.id_documento ?? undefined;
+        this.cargarEstadoDocumento();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -129,6 +192,8 @@ export class ActaInduccionSeguridadPage implements OnInit {
           text: 'El acta de inducción de seguridad se guardó correctamente.'
         });
 
+        this.cargarEstadoDocumento();
+
       },
 
       error: (err) => {
@@ -146,11 +211,99 @@ export class ActaInduccionSeguridadPage implements OnInit {
 
   }
 
+  enviarARevision(): void {
+    if (!this.idDocumento) {
+      Swal.fire('Error', 'Primero debe guardar el acta.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enviar a revisión',
+      text: '¿Está seguro de enviar esta acta a revisión?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+          next: () => {
+            this.estadoDocumento = 'pendiente_revision';
+            this.cdr.detectChanges();
+            Swal.fire('Enviado', 'La acta se envió a revisión correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible enviar la acta a revisión.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  aprobar(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Aprobar acta',
+      text: '¿Está seguro de aprobar esta acta?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'aprobado').subscribe({
+          next: () => {
+            this.estadoDocumento = 'aprobado';
+            this.cdr.detectChanges();
+            Swal.fire('Aprobado', 'La acta fue aprobada correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible aprobar la acta.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  solicitarCorrecciones(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Solicitar correcciones',
+      input: 'textarea',
+      inputLabel: 'Comentarios de corrección (obligatorio)',
+      inputPlaceholder: 'Describa los cambios que debe realizar el estudiante...',
+      inputValidator: (value: string) => {
+        if (!value) {
+          return 'Debe ingresar comentarios de corrección';
+        }
+        return null;
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Solicitar correcciones',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'rechazado', result.value).subscribe({
+          next: () => {
+            this.estadoDocumento = 'rechazado';
+            this.comentariosDocumento = result.value;
+            this.cdr.detectChanges();
+            Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+          },
+        });
+      }
+    });
+  }
+
   private completarConDatosMaestra(acta: ActaInduccionSeguridad, datos: Record<string, any>): void {
 
     const datosEstudiante = datos?.['estudiante'] ?? {};
     const datosCarrera = datos?.['carrera'] ?? {};
-    const datosPeriodo = datos?.['periodoAcademico'] ?? {};
     const datosEmpresa = datos?.['empresaBeneficiaria'] ?? {};
 
     this.acta = {
@@ -163,11 +316,6 @@ export class ActaInduccionSeguridadPage implements OnInit {
         carrera: datosEstudiante.carrera ?? datosCarrera.nucleoEstructurante ?? ''
       },
       empresa: { razonSocial: datosEmpresa.razonSocial ?? '' },
-      periodo: datosPeriodo.nombre ?? '',
-      nucleo: datosCarrera.nucleoEstructurante ?? '',
-      tutorAcademico: datosCarrera.tutorAcademico ?? '',
-      coordinador: datosCarrera.coordinador ?? '',
-      tutorEmpresarial: datosEmpresa.tutorEmpresarial ?? '',
       textoLegal: acta.textoLegal?.length ? acta.textoLegal : [
         '1. Se informa al estudiante sobre los riesgos inherentes al entorno laboral.',
         '2. Se dan a conocer las medidas de prevención y protección personal.',
@@ -180,10 +328,21 @@ export class ActaInduccionSeguridadPage implements OnInit {
   }
 
   volver(): void {
+
     this.router.navigate(['/fase-practica/plan-formacion'], { queryParams: { modo: 'acta-induccion-seguridad' } });
+
+  }
+
+  imprimir(): void {
+
+    window.print();
+
   }
 
   descargarWord(): void {
+
     exportarDocumentoWord('acta-induccion-seguridad', 'Acta_Induccion_Seguridad', 'portrait');
+
   }
+
 }

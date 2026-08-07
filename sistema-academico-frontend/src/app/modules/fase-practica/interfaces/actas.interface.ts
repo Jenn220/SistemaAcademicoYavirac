@@ -11,11 +11,6 @@ export interface ActaInduccionSeguridad {
   };
   textoLegal: string[];
   firmaEstudiante: string;
-  periodo: string;
-  nucleo: string;
-  tutorAcademico: string;
-  coordinador: string;
-  tutorEmpresarial: string;
 }
 
 export interface EstudianteActaEntorno {
@@ -47,15 +42,9 @@ export interface ActaEntornoLaboral {
     instituto: string;
     titulo: string;
     fecha: string;
-    estudianteNombre: string;
-    estudianteCedula: string;
     carrera: string;
-    nivel: string;
     periodoAcademico: string;
     entidadReceptora: string;
-    tutorAcademico: string;
-    coordinador: string;
-    tutorEmpresarial: string;
   };
   textoLegal: string[];
   anexos: string[];

@@ -23,13 +23,33 @@
 
 .buscador {
   margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 
   input {
-    width: 100%;
+    flex: 1;
+    min-width: 200px;
     padding: 10px 14px;
     border: 1px solid #ced4da;
     border-radius: 8px;
     font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: #6c8ee8;
+      box-shadow: 0 0 0 3px rgba(108, 142, 232, .15);
+    }
+  }
+
+  select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    min-width: 120px;
 
     &:focus {
       outline: none;

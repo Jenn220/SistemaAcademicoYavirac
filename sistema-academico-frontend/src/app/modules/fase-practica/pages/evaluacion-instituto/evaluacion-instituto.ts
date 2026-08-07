@@ -14,7 +14,6 @@ import Swal from 'sweetalert2';
 import { Documentos } from '../../services/documentos';
 import { Evaluacion, DetalleEvaluacion } from '../../services/evaluacion';
 import { AuthService } from '../../../auth/services/auth.service';
-import { DocumentHeader } from '../../components/document-header/document-header';
 import {
   EvaluacionInstituto as EvaluacionInstitutoModel,
   CriterioDefensaProyecto
@@ -49,7 +48,7 @@ function evaluacionVacia(): EvaluacionInstitutoModel {
 @Component({
   selector: 'app-evaluacion-instituto',
   standalone: true,
-  imports: [CommonModule, FormsModule, DocumentHeader],
+  imports: [CommonModule, FormsModule],
   templateUrl: './evaluacion-instituto.html',
   styleUrl: './evaluacion-instituto.scss'
 })
@@ -70,9 +69,45 @@ export class EvaluacionInstituto implements OnInit {
 
   guardando = false;
 
+  estadoDocumento: string = 'borrador';
+  comentariosDocumento: string = '';
+  idDocumento: number | undefined;
+
   /** Solo DOCENTE/COORDINADOR califican F08; ESTUDIANTE y TUTOR_EMPRESARIAL solo consultan. */
   get soloLectura(): boolean {
     return !this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR']);
+  }
+
+  get esEstudiante(): boolean {
+    return this.authService.tieneAlgunRol(['ESTUDIANTE']);
+  }
+
+  get esDocente(): boolean {
+    return this.authService.tieneAlgunRol(['DOCENTE']);
+  }
+
+  get esCoordinador(): boolean {
+    return this.authService.tieneAlgunRol(['COORDINADOR']);
+  }
+
+  get esTutorEmpresarial(): boolean {
+    return this.authService.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
+  }
+
+  get puedeEnviarRevision(): boolean {
+    return (this.esDocente || this.esCoordinador) && this.estadoDocumento === 'borrador';
+  }
+
+  get puedeAprobar(): boolean {
+    return this.esCoordinador && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get puedeSolicitarCorrecciones(): boolean {
+    return this.esCoordinador && this.estadoDocumento === 'pendiente_revision';
+  }
+
+  get mostrarComentarios(): boolean {
+    return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
   }
 
   private idPractica: number | null = null;
@@ -190,6 +225,7 @@ export class EvaluacionInstituto implements OnInit {
         this.evaluacion = this.mapearBase(evaluacion, datos);
         this.cargando = false;
         this.cdr.detectChanges();
+        this.cargarIdDocumento('F08');
 
       },
 
@@ -314,15 +350,18 @@ export class EvaluacionInstituto implements OnInit {
         switchMap((resultado) =>
           this.documentos.guardarEvaluacionInstituto(this.evaluacion, this.idPractica ?? undefined).pipe(
             catchError(() => of(null)),
-            map(() => resultado)
+            map((snapshot) => ({ resultado, snapshot }))
           )
         )
       )
       .subscribe({
 
-        next: (resultado) => {
+        next: ({ resultado, snapshot }) => {
 
           this.evaluacion.idEvaluacion = resultado.evaluacion.id_evaluacion;
+          if (snapshot?.id_documento) {
+            this.idDocumento = snapshot.id_documento;
+          }
           this.guardando = false;
           this.cdr.detectChanges();
 
@@ -331,6 +370,8 @@ export class EvaluacionInstituto implements OnInit {
             title: 'Evaluación guardada',
             html: `<b>Nota final instituto:</b> ${resultado.notaFinalInstituto}`
           });
+
+          this.cargarEstadoDocumento();
 
         },
 
@@ -378,6 +419,128 @@ export class EvaluacionInstituto implements OnInit {
       })
     );
 
+  }
+
+  private cargarEstadoDocumento(): void {
+    if (!this.idDocumento) {
+      return;
+    }
+
+    this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
+      next: (doc) => {
+        this.estadoDocumento = doc?.estado ?? 'borrador';
+        this.comentariosDocumento = doc?.comentarios ?? '';
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarIdDocumento(codigoFormato: string): void {
+    if (this.idDocumento || !this.idPractica) {
+      return;
+    }
+
+    this.documentos.obtenerIdDocumento(this.idPractica, codigoFormato).subscribe({
+      next: (resp) => {
+        this.idDocumento = resp?.id_documento ?? undefined;
+        this.cargarEstadoDocumento();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  enviarARevision(): void {
+    if (!this.idDocumento) {
+      Swal.fire('Error', 'Primero debe guardar la evaluación.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enviar a revisión',
+      text: '¿Está seguro de enviar esta evaluación a revisión?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+          next: () => {
+            this.estadoDocumento = 'pendiente_revision';
+            this.cdr.detectChanges();
+            Swal.fire('Enviado', 'La evaluación se envió a revisión correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible enviar la evaluación a revisión.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  aprobar(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Aprobar evaluación',
+      text: '¿Está seguro de aprobar esta evaluación?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'aprobado').subscribe({
+          next: () => {
+            this.estadoDocumento = 'aprobado';
+            this.cdr.detectChanges();
+            Swal.fire('Aprobado', 'La evaluación fue aprobada correctamente.', 'success');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible aprobar la evaluación.', 'error');
+          },
+        });
+      }
+    });
+  }
+
+  solicitarCorrecciones(): void {
+    if (!this.idDocumento) return;
+
+    Swal.fire({
+      title: 'Solicitar correcciones',
+      input: 'textarea',
+      inputLabel: 'Comentarios de corrección (obligatorio)',
+      inputPlaceholder: 'Describa los cambios que debe realizar el estudiante...',
+      inputValidator: (value: string) => {
+        if (!value) {
+          return 'Debe ingresar comentarios de corrección';
+        }
+        return null;
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Solicitar correcciones',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'rechazado', result.value).subscribe({
+          next: () => {
+            this.estadoDocumento = 'rechazado';
+            this.comentariosDocumento = result.value;
+            this.cdr.detectChanges();
+            Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
+          },
+          error: () => {
+            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+          },
+        });
+      }
+    });
   }
 
   descargarWord(): void {

@@ -3,6 +3,11 @@ import { IsOptional, IsString, MaxLength } from 'class-validator';
 export class ActualizarDatosEstudianteDto {
   @IsOptional()
   @IsString()
+  @MaxLength(20)
+  cedula?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(150)
   nombres?: string;
 
