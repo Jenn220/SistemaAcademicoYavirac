@@ -226,12 +226,50 @@
       </div>
       <div class="topbar-right">
         <div class="notificaciones-wrapper">
-          <button class="icon-btn notificaciones-btn" title="Notificaciones">
+
+          <button
+            class="icon-btn notificaciones-btn"
+            title="Notificaciones"
+            (click)="toggleNotificaciones()">
+
             🔔
             @if (cantidadNotificaciones() > 0) {
-              <span class="badge-notificacion">{{ cantidadNotificaciones() }}</span>
+            <span class="badge-notificacion">{{ cantidadNotificaciones() }}</span>
             }
+
           </button>
+
+          @if (notificacionesAbiertas()) {
+
+          <div class="notificaciones-dropdown">
+
+            @if (notificacionesService.notificaciones().length === 0) {
+
+            <span class="notificacion-vacia">No hay notificaciones</span>
+
+            } @else {
+
+            @for (noti of notificacionesService.notificaciones(); track noti.id_notificacion) {
+
+            <div
+              class="notificacion-item"
+              [class.notificacion-no-leida]="!noti.leida"
+              (click)="marcarComoLeida(noti.id_notificacion)">
+
+              <div class="notificacion-tipo">{{ noti.tipo }}</div>
+              <div class="notificacion-mensaje">{{ noti.mensaje }}</div>
+              <div class="notificacion-fecha">{{ noti.created_at | date:'short':'GMT-5' }}</div>
+
+            </div>
+
+            }
+
+            }
+
+          </div>
+
+          }
+
         </div>
 
         <!-- Menú de Usuario con Dropdown -->

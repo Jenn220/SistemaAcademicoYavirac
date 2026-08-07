@@ -19,9 +19,12 @@ import { NotificacionesService } from '../../../modules/fase-practica/services/n
 export class LayoutShellComponent implements OnInit {
   private router = inject(Router);
   protected authService = inject(AuthService);
-  private notificacionesService = inject(NotificacionesService);
+  protected notificacionesService = inject(NotificacionesService);
 
   menuUsuarioAbierto = signal(false);
+  notificacionesAbiertas = signal(false);
+
+  protected notificaciones = computed(() => this.notificacionesService.notificaciones());
 
   nombreUsuario = computed(() => {
     const u = this.authService.usuario();
@@ -44,6 +47,20 @@ export class LayoutShellComponent implements OnInit {
 
   toggleMenuUsuario(): void {
     this.menuUsuarioAbierto.update(v => !v);
+  }
+
+  toggleNotificaciones(): void {
+    const abriendo = !this.notificacionesAbiertas();
+    this.notificacionesAbiertas.set(abriendo);
+    if (abriendo) {
+      this.notificacionesService.cargarTodas();
+    }
+  }
+
+  marcarComoLeida(idNotificacion: number): void {
+    this.notificacionesService.marcarLeida(idNotificacion).subscribe(() => {
+      this.notificacionesService.cargarTodas();
+    });
   }
 
   cerrarMenuUsuario(): void {

@@ -328,3 +328,77 @@ body {
     transform: translateY(0);
   }
 }
+
+/* ==========================================================================
+   Estilos del Dropdown de Notificaciones
+   ========================================================================== */
+.notificaciones-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  max-height: 400px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e4ecf8;
+  box-shadow: 0 10px 30px rgba(18, 56, 124, 0.12);
+  padding: 8px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: dropdownFade 0.2s ease-out;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f5fb;
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+  }
+}
+
+.notificacion-vacia {
+  padding: 16px;
+  text-align: center;
+  color: #8a95a8;
+  font-size: 13px;
+}
+
+.notificacion-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f2f6fc;
+  }
+
+  &.notificacion-no-leida {
+    background: linear-gradient(135deg, #e8f1ff, #ffffff);
+  }
+}
+
+.notificacion-tipo {
+  font-size: 11px;
+  font-weight: 700;
+  color: #163d8c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.notificacion-mensaje {
+  font-size: 13px;
+  color: #233861;
+  margin: 2px 0;
+}
+
+.notificacion-fecha {
+  font-size: 11px;
+  color: #9fa8b5;
+}

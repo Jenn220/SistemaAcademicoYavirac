@@ -176,14 +176,9 @@ export class DocumentoService {
     switch (estado) {
       case EstadoDocumento.PENDIENTE_REVISION:
         await this.notificarDocenteOTutor(documento, mensaje, idUsuarioOrigen);
-        // F07/F08: el COORDINADOR también debe revisar (no el DOCENTE ni el TUTOR)
-        if (['F07', 'F08'].includes(documento.codigo_formato)) {
-          await this.notificarCoordinador(documento, mensaje, idUsuarioOrigen);
-        }
         break;
       case EstadoDocumento.APROBADO:
         await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
-        // F07/F08: también notificar al TUTOR_EMPRESARIAL (quien creó el documento)
         if (['F07', 'F08'].includes(documento.codigo_formato)) {
           await this.notificarTutorEmpresarial(documento, mensaje, idUsuarioOrigen);
         }
@@ -277,34 +272,6 @@ export class DocumentoService {
       idUsuarioOrigen,
       documento.id_practica,
     );
-  }
-
-  /** Notifica al COORDINADOR de la carrera/periodo de la práctica (para F07/F08). */
-  private async notificarCoordinador(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
-    if (!documento.id_practica) return;
-
-    try {
-      const rows = await this.dataSource.query(
-        `SELECT u.id_usuario
-         FROM usuario u
-         JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
-         JOIN rol r ON r.id_rol = ur.id_rol
-         WHERE r.nombre = 'COORDINADOR' AND u.estado = 'ACTIVO'
-         LIMIT 1`,
-      );
-
-      if (rows.length > 0) {
-        await this.notificacionService.crearNotificacion(
-          Number(rows[0].id_usuario),
-          'documento_enviado_revision',
-          mensaje,
-          idUsuarioOrigen,
-          documento.id_practica,
-        );
-      }
-    } catch (error) {
-      console.error('Error notificando coordinador', error);
-    }
   }
 
   /** Notifica al TUTOR_EMPRESARIAL de la práctica (para F07/F08 aprobados/rechazados). */

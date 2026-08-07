@@ -99,7 +99,11 @@ export class DocumentoController {
 
   // Los POST tienen su propio @Roles por formato (más restrictivo que el de
   // la clase): TUTOR_EMPRESARIAL nunca guarda F01/F02/F05/F06/F10/F11;
-  // ESTUDIANTE nunca guarda F07/F08; F08 es exclusivo de DOCENTE/COORDINADOR.
+  // ESTUDIANTE nunca guarda F07/F08. F07/F08 ahora los crea TUTOR_EMPRESARIAL
+  // y los aprueba el DOCENTE (tutor académico asignado).
+
+  @Post('carta-compromiso')
+  @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
 
   @Post('carta-compromiso')
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
@@ -140,7 +144,7 @@ export class DocumentoController {
   }
 
   @Post('evaluacion-instituto')
-  @Roles('DOCENTE', 'COORDINADOR')
+  @Roles('DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
   async createEvaluacionInstituto(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getEvaluacionInstituto(req.user, this.parseIdPractica(idPractica));
     return this.documentoService.guardarDocumento('F08', 'Evaluación Instituto', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub);

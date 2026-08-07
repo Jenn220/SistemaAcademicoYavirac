@@ -30,7 +30,9 @@ export class NotificacionesService {
 
   listar(soloNoLeidas = false): Observable<Notificacion[]> {
     const params = new HttpParams().set('soloNoLeidas', soloNoLeidas ? 'true' : 'false');
-    return this.http.get<Notificacion[]>(this.API, { params });
+    return this.http.get<Notificacion[]>(this.API, { params }).pipe(
+      tap((data) => this.notificacionesSignal.set(data)),
+    );
   }
 
   contarNoLeidas(): Observable<number> {

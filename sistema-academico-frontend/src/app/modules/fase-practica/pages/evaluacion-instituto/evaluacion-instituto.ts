@@ -73,9 +73,9 @@ export class EvaluacionInstituto implements OnInit {
   comentariosDocumento: string = '';
   idDocumento: number | undefined;
 
-  /** Solo DOCENTE/COORDINADOR califican F08; ESTUDIANTE y TUTOR_EMPRESARIAL solo consultan. */
+  /** TUTOR_EMPRESARIAL crea la evaluación; DOCENTE la aprueba. */
   get soloLectura(): boolean {
-    return !this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR']);
+    return !this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL']);
   }
 
   get esEstudiante(): boolean {
@@ -95,15 +95,15 @@ export class EvaluacionInstituto implements OnInit {
   }
 
   get puedeEnviarRevision(): boolean {
-    return (this.esDocente || this.esCoordinador) && this.estadoDocumento === 'borrador';
+    return this.esTutorEmpresarial && this.estadoDocumento === 'borrador';
   }
 
   get puedeAprobar(): boolean {
-    return this.esCoordinador && this.estadoDocumento === 'pendiente_revision';
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
   }
 
   get puedeSolicitarCorrecciones(): boolean {
-    return this.esCoordinador && this.estadoDocumento === 'pendiente_revision';
+    return this.esDocente && this.estadoDocumento === 'pendiente_revision';
   }
 
   get mostrarComentarios(): boolean {
