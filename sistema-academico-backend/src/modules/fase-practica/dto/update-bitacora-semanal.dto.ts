@@ -1,4 +1,4 @@
-import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateBitacoraSemanalDto {
   @IsOptional()
@@ -10,11 +10,11 @@ export class UpdateBitacoraSemanalDto {
   semana?: number;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   fecha_inicio_semana?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   fecha_fin_semana?: string;
 
   @IsOptional()

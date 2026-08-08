@@ -71,9 +71,9 @@ export class EvaluacionEmpresarial implements OnInit {
   comentariosDocumento: string = '';
   idDocumento: number | undefined;
 
-  /** DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL califican; ESTUDIANTE solo consulta. */
+  /** TUTOR_EMPRESARIAL califica; DOCENTE aprueba; ESTUDIANTE solo consulta. */
   get soloLectura(): boolean {
-    return !this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL']);
+    return !this.authService.tieneAlgunRol(['DOCENTE', 'TUTOR_EMPRESARIAL']);
   }
 
   get esEstudiante(): boolean {
@@ -92,8 +92,9 @@ export class EvaluacionEmpresarial implements OnInit {
     return this.authService.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
   }
 
+  // TUTOR_EMPRESARIAL crea y envía a revisión; DOCENTE aprueba
   get puedeEnviarRevision(): boolean {
-    return this.esTutorEmpresarial && this.estadoDocumento === 'borrador';
+    return this.esTutorEmpresarial && (this.estadoDocumento === 'borrador' || this.estadoDocumento === 'rechazado');
   }
 
   get puedeAprobar(): boolean {
@@ -454,9 +455,10 @@ export class EvaluacionEmpresarial implements OnInit {
       cancelButtonText: 'Cancelar',
     }).then((result) => {
       if (result.isConfirmed) {
-        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision', '').subscribe({
           next: () => {
             this.estadoDocumento = 'pendiente_revision';
+            this.comentariosDocumento = '';
             this.cdr.detectChanges();
             Swal.fire('Enviado', 'La evaluación se envió a revisión correctamente.', 'success');
           },

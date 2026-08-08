@@ -77,7 +77,7 @@ export class CartaCompromiso implements OnInit {
   }
 
   get puedeEnviarRevision(): boolean {
-    return this.esEstudiante && this.estadoDocumento === 'borrador';
+    return this.esEstudiante && (this.estadoDocumento === 'borrador' || this.estadoDocumento === 'rechazado');
   }
 
   get puedeAprobar(): boolean {
@@ -271,9 +271,10 @@ export class CartaCompromiso implements OnInit {
       cancelButtonText: 'Cancelar',
     }).then((result) => {
       if (result.isConfirmed) {
-        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision').subscribe({
+        this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'pendiente_revision', '').subscribe({
           next: () => {
             this.estadoDocumento = 'pendiente_revision';
+            this.comentariosDocumento = '';
             this.cdr.detectChanges();
             Swal.fire('Enviado', 'La carta se envió a revisión correctamente.', 'success');
           },
