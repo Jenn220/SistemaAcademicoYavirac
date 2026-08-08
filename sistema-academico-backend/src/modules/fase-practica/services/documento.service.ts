@@ -155,9 +155,12 @@ export class DocumentoService {
   }
 
   private async notificarCambioEstado(documento: DocumentoEntity, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<void> {
-    if (!documento.id_practica || !documento.id_estudiante) {
+    if (!documento.id_practica) {
       return;
     }
+
+    const notificaEstudiante = !!documento.id_estudiante;
+    const esEvaluacionEmpresa = ['F07', 'F08'].includes(documento.codigo_formato);
 
     const tipoMap: Record<string, string> = {
       [EstadoDocumento.PENDIENTE_REVISION]: 'documento_enviado_revision',
@@ -178,14 +181,18 @@ export class DocumentoService {
         await this.notificarDocenteOTutor(documento, mensaje, idUsuarioOrigen);
         break;
       case EstadoDocumento.APROBADO:
-        await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
-        if (['F07', 'F08'].includes(documento.codigo_formato)) {
+        if (notificaEstudiante) {
+          await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        }
+        if (esEvaluacionEmpresa) {
           await this.notificarTutorEmpresarial(documento, mensaje, idUsuarioOrigen);
         }
         break;
       case EstadoDocumento.RECHAZADO:
-        await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
-        if (['F07', 'F08'].includes(documento.codigo_formato)) {
+        if (notificaEstudiante) {
+          await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        }
+        if (esEvaluacionEmpresa) {
           await this.notificarTutorEmpresarial(documento, mensaje, idUsuarioOrigen);
         }
         break;
