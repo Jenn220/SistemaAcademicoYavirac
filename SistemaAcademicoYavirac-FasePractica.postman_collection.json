@@ -17,7 +17,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": JSON.stringify({ correo: "estudiante@yavirac.edu.ec", password: "123456" }, null, 2)
+              "raw": "{\n  \"correo\": \"estudiante@yavirac.edu.ec\",\n  \"password\": \"123456\"\n}"
             },
             "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
           },
@@ -39,39 +39,39 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ correo: "carlos@yavirac.edu.ec", password: "123456" }, null, 2) },
+            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"carlos@yavirac.edu.ec\",\n  \"password\": \"123456\"\n}" },
             "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
             "pm.test('Login docente OK', () => pm.expect(pm.response.code).to.eql(200));",
             "pm.collectionVariables.set('docToken', pm.response.json().accessToken);"
-          ]}}}]
+          ]}}]
         },
         {
           "name": "Login - Tutor Empresarial",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ correo: "ana@empresaxyz.com", password: "123456" }, null, 2) },
+            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"ana@empresaxyz.com\",\n  \"password\": \"123456\"\n}" },
             "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
             "pm.test('Login tutor OK', () => pm.expect(pm.response.code).to.eql(200));",
             "pm.collectionVariables.set('tutorToken', pm.response.json().accessToken);"
-          ]}}}]
+          ]}}]
         },
         {
           "name": "Login - Coordinador",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ correo: "coordinador.general@yavirac.edu.ec", password: "123456" }, null, 2) },
+            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"coordinador.general@yavirac.edu.ec\",\n  \"password\": \"123456\"\n}" },
             "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
             "pm.test('Login coordinador OK', () => pm.expect(pm.response.code).to.eql(200));",
             "pm.collectionVariables.set('coordToken', pm.response.json().accessToken);"
-          ]}}}]
+          ]}}]
         }
       ]
     },
@@ -91,7 +91,7 @@
             "pm.test('Datos maestra - carrera', () => pm.expect(d.carrera.coordinador).to.exist);",
             "pm.test('Datos maestra - empresa', () => pm.expect(d.proyectoEmpresarial.empresaAsignada).to.exist);",
             "pm.test('Datos maestra - periodo', () => pm.expect(d.periodoAcademico.nombre).to.exist);"
-          ]}}}]
+          ]}}]
         }
       ]
     },
@@ -112,7 +112,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ contenido: { encabezado: "Test F01" } }, null, 2) },
+            "body": { "mode": "raw", "raw": "{\n  \"contenido\": { \"encabezado\": \"Test F01\" }\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/carta-compromiso?idPractica={{idPractica}}", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "carta-compromiso"], "query": [{ "key": "idPractica", "value": "{{idPractica}}" }] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
@@ -124,14 +124,14 @@
     },
     {
       "name": "04. Workflow Estado Documentos",
-      "description": "Ciclo: borrador → pendiente_revision → rechazado → pendiente_revision → aprobado",
+      "description": "Ciclo: borrador a pendiente_revision a rechazado a pendiente_revision a aprobado",
       "item": [
         {
-          "name": "Student envía F01 a revisión",
+          "name": "Student envia F01 a revision",
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "pendiente_revision", comentarios: "" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"pendiente_revision\",\n  \"comentarios\": \"\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF01}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF01}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
@@ -143,7 +143,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{docToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "rechazado", comentarios: "Revise el nombre del estudiante" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"rechazado\",\n  \"comentarios\": \"Revise el nombre del estudiante\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF01}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF01}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
@@ -155,12 +155,12 @@
           ]}}]
         },
         {
-          "name": "Student REENVÍO a revisión (comentarios limpios)",
-          "description": "FIX: el botón Enviar a revisión ahora aparece en estado 'rechazado', y al reenviar se limpian los comentarios",
+          "name": "Student REENVIO a revision (comentarios limpios) - FIX",
+          "description": "FIX: el boton Enviar a revision ahora aparece en estado 'rechazado', y al reenviar se limpian los comentarios",
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "pendiente_revision", comentarios: "" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"pendiente_revision\",\n  \"comentarios\": \"\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF01}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF01}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
@@ -176,7 +176,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{docToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "aprobado" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"aprobado\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF01}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF01}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Aprobado', () => pm.expect(pm.response.json().estado).to.eql('aprobado'));"]}}]
@@ -186,7 +186,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "aprobado" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"aprobado\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF01}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF01}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Student blocked (403)', () => pm.expect(pm.response.code).to.eql(403));"]}}]
@@ -197,11 +197,11 @@
       "name": "05. F07/F08 - Tutor + Docente Workflow",
       "item": [
         {
-          "name": "F07 - Tutor guarda evaluación empresarial",
+          "name": "F07 - Tutor guarda evaluacion empresarial",
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{tutorToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ contenido: { observaciones: "Test F07" } }, null, 2) },
+            "body": { "mode": "raw", "raw": "{\n  \"contenido\": { \"observaciones\": \"Test F07\" }\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/evaluacion-empresarial?idPractica={{idPractica}}", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "evaluacion-empresarial"], "query": [{ "key": "idPractica", "value": "{{idPractica}}" }] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
@@ -210,11 +210,11 @@
           ]}}]
         },
         {
-          "name": "F07 - Tutor envía a revisión",
+          "name": "F07 - Tutor envia a revision",
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{tutorToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "pendiente_revision", comentarios: "" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"pendiente_revision\",\n  \"comentarios\": \"\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF07}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF07}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Tutor envia F07 a revision', () => pm.expect(pm.response.json().estado).to.eql('pendiente_revision'));"]}}]
@@ -224,7 +224,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{docToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "aprobado" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"aprobado\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF07}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF07}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('DOCENTE aprueba F07', () => pm.expect(pm.response.json().estado).to.eql('aprobado'));"]}}]
@@ -234,7 +234,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{tutorToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ estado: "aprobado" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"aprobado\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/documentos/{{idF07}}/estado", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "documentos", "{{idF07}}", "estado"] }
           },
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Tutor blocked (403)', () => pm.expect(pm.response.code).to.eql(403));"]}}]
@@ -242,10 +242,10 @@
       ]
     },
     {
-      "name": "06. Bitácora Semanal",
+      "name": "06. Bitacora Semanal",
       "item": [
         {
-          "name": "Obtener bitácoras",
+          "name": "Obtener bitacoras",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }],
@@ -254,11 +254,11 @@
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Bitacoras OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         },
         {
-          "name": "Crear bitácora (fecha DD/MM/YYYY)",
+          "name": "Crear bitacora (fecha DD/MM/YYYY)",
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ id_informe: 8, semana: 99, fecha_inicio_semana: "01/09/2025", fecha_fin_semana: "07/09/2025", puesto_aprendizaje: "Puesto", actividades_realizadas: "Test", actividades_autonomas: "Test" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"id_informe\": 8,\n  \"semana\": 99,\n  \"fecha_inicio_semana\": \"01/09/2025\",\n  \"fecha_fin_semana\": \"07/09/2025\",\n  \"puesto_aprendizaje\": \"Puesto\",\n  \"actividades_realizadas\": \"Test\",\n  \"actividades_autonomas\": \"Test\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/bitacora-semanal", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "bitacola-semanal"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
@@ -267,42 +267,42 @@
           ]}}]
         },
         {
-          "name": "PATCH bitácora (fecha DD/MM/YYYY - antes fallaba con 400)",
+          "name": "PATCH bitacola (fecha DD/MM/YYYY - antes fallaba con 400)",
           "description": "BUG FIX: antes lanzaba 400/500 porque PostgreSQL 'date' no aceptaba DD/MM/YYYY",
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ fecha_inicio_semana: "15/08/2025", fecha_fin_semana: "21/08/2025", actividades_realizadas: "Actualizado" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"fecha_inicio_semana\": \"15/08/2025\",\n  \"fecha_fin_semana\": \"21/08/2025\",\n  \"actividades_realizadas\": \"Actualizado\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/bitacora-semanal/{{idBitacora}}", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "bitacola-semanal", "{{idBitacora}}"] }
           },
           "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('Bitacora PATCH DD/MM/YYYY OK (200)', () => pm.expect(pm.response.code).to.eql(200));",
+            "pm.test('Bitacola PATCH DD/MM/YYYY OK (200)', () => pm.expect(pm.response.code).to.eql(200));",
             "pm.test('Fecha guardada', () => pm.expect(pm.response.json().fecha_inicio_semana).to.eql('15/08/2025'));"
           ]}}]
         },
         {
-          "name": "PATCH bitácora (fechas vacías)",
+          "name": "PATCH bitacola (fechas vacias)",
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ fecha_inicio_semana: "", fecha_fin_semana: "" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"fecha_inicio_semana\": \"\",\n  \"fecha_fin_semana\": \"\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/bitacora-semanal/{{idBitacora}}", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "bitacola-semanal", "{{idBitacora}}"] }
           },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Bitacora PATCH fechas vacias OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Bitacola PATCH fechas vacias OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         },
         {
-          "name": "Eliminar bitácora",
+          "name": "Eliminar bitacola",
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }],
             "url": { "raw": "{{base_url}}/api/fase-practica/bitacora-semanal/{{idBitacora}}", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "bitacola-semanal", "{{idBitacora}}"] }
           },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Bitacora eliminada', () => pm.expect(pm.response.code).to.eql(200));"]}}]
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Bitacola eliminada', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         }
       ]
     },
     {
-      "name": "07. Informe Aprendizaje + Reflexión",
+      "name": "07. Informe Aprendizaje + Reflexion",
       "item": [
         {
           "name": "Obtener informe",
@@ -314,19 +314,19 @@
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Informe OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         },
         {
-          "name": "Actualizar reflexión",
+          "name": "Actualizar reflexion",
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ reflexion_aprendizaje: "Aprendí mucho sobre prácticas profesionales", observaciones_empresa: "Empresa muy colaborativa" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"reflexion_aprendizaje\": \"Aprendi mucho sobre practicas profesionales\",\n  \"observaciones_empresa\": \"Empresa muy colaborativa\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/informe-aprendizaje/8", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "informe-aprendizaje", "8"] }
           },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Reflexión guardada', () => pm.expect(pm.response.code).to.eql(200));"]}}]
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Reflexion guardada', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         }
       ]
     },
     {
-      "name": "08. Plan Marco de Formación",
+      "name": "08. Plan Marco de Formacion",
       "item": [
         {
           "name": "Listar planes marco",
@@ -340,24 +340,24 @@
       ]
     },
     {
-      "name": "09. Plan de Rotación",
+      "name": "09. Plan de Rotacion",
       "item": [
         {
-          "name": "Listar plan de rotación",
+          "name": "Listar plan de rotacion",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }],
             "url": { "raw": "{{base_url}}/api/fase-practica/plan-rotacion/practica/{{idPractica}}", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "plan-rotacion", "practica", "{{idPractica}}"] }
           },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Plan rotación OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Plan rotacion OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         }
       ]
     },
     {
-      "name": "10. Rúbricas y Evaluaciones",
+      "name": "10. Rubricas y Evaluaciones",
       "item": [
         {
-          "name": "Listar rúbricas",
+          "name": "Listar rubricas",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{docToken}}" }],
@@ -393,12 +393,12 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }],
-            "url": { "raw": "{{base_url}}/api/fase-practica/notificaciones?soloSoloNoLeidas=false", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "notificaciones"], "query": [{ "key": "soloSoloNoLeidas", "value": "false" }] }
+            "url": { "raw": "{{base_url}}/api/fase-practica/notificaciones?limite=20", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "notificaciones"], "query": [{ "key": "limite", "value": "20" }] }
           },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Notificaciones estudiante OK', () => pm.expect(pm.response.code).to.eql(200));"]}}}]
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Notificaciones estudiante OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         },
         {
-          "name": "Contar notificaciones no leídas",
+          "name": "Contar notificaciones no leidas",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{docToken}}" }],
@@ -425,7 +425,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": JSON.stringify({ telefono: "0999999999" }) },
+            "body": { "mode": "raw", "raw": "{\n  \"telefono\": \"0999999999\"\n}" },
             "url": { "raw": "{{base_url}}/api/fase-practica/perfil", "host": ["{{base_url}}"], "path": ["api", "fase-practica", "perfil"] }
           },
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Perfil actualizado', () => pm.expect(pm.response.code).to.eql(200));"]}}]
@@ -433,10 +433,10 @@
       ]
     },
     {
-      "name": "13. Supervisión por Rol",
+      "name": "13. Supervision por Rol",
       "item": [
         {
-          "name": "Docente ve prácticas asignadas",
+          "name": "Docente ve practicas asignadas",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{docToken}}" }],
@@ -445,7 +445,7 @@
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Docente supervision OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         },
         {
-          "name": "Coordinador ve todas las prácticas",
+          "name": "Coordinador ve todas las practicas",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{coordToken}}" }],
@@ -454,7 +454,7 @@
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Coordinador supervision OK', () => pm.expect(pm.response.code).to.eql(200));"]}}]
         },
         {
-          "name": "Estudiante ve solo su práctica",
+          "name": "Estudiante ve solo su practica",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{estToken}}" }],
@@ -468,7 +468,7 @@
       "name": "14. Todos los documentos (bulk)",
       "item": [
         {
-          "name": "Obtener todos los documentos de la práctica",
+          "name": "Obtener todos los documentos de la practica",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{docToken}}" }],
