@@ -18,9 +18,15 @@ export class CertificadoVinculacionAdapter implements ICertificadoVinculacionPor
         est.cedula,
         car.nombre AS carrera,
         vinc.nombre_proyecto,
-        vinc.fecha_inicio,
-        vinc.fecha_fin,
-        vinc.total_horas_estudiante,
+        -- 🟢 Extraídas directamente de la tabla vinculacion_estudiante
+        vinc.fecha_inicio AS fecha_inicio,
+        vinc.fecha_fin AS fecha_fin,
+        -- Sumamos las horas de las actividades del estudiante
+        (
+          SELECT COALESCE(SUM(act.horas_total), 0) 
+          FROM vinculacion_actividad_estudiante act 
+          WHERE act.id_vinculacion = vinc.id_vinculacion
+        ) AS total_horas_estudiante,
         COALESCE(er.nombre_entidad, emp.razon_social, 'Sin Institución Asignada') AS institucion,
         er.tutor_entidad_receptora AS representante
       FROM vinculacion_estudiante vinc

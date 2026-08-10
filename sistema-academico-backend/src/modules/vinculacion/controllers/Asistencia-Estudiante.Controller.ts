@@ -35,6 +35,17 @@ export class AsistenciaEstudianteController {
     const idFinal = await this.authService.resolverIdVinculacionLectura(req, id);
     return await this.asistenciaService.obtenerAsistenciaEstudiante(idFinal);
   }
+  
+@Patch(':idVinculacion/observaciones')
+  @Roles('ESTUDIANTE', 'COORDINADOR', 'DOCENTE')
+  async actualizarObservacionControlador(
+    @Param('idVinculacion', ParseIntPipe) idVinculacion: number,
+    @Body() dto: { observaciones: string },
+    @Req() req: any,
+  ) {
+    const idFinal = await this.authService.resolverIdVinculacionLectura(req, idVinculacion);
+    return await this.asistenciaService.actualizarObservacion(idFinal, dto.observaciones || '');
+  }
 
 @Post()
 @Roles('ESTUDIANTE')

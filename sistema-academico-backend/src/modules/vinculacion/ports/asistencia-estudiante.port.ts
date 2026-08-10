@@ -12,4 +12,5 @@ export interface IVinculacionAsistenciaEstudiantePort {
   buscarPorId(idActividad: number): Promise<VinculacionActividadEstudiante | null>;
   obtenerIdVinculacionPorEstudiante(idEstudiante: number | string): Promise<string | null>;
   guardarObservacion(dto: CreateObservacionDto): Promise<any>;
+  obtenerRangoFechasVinculacion(idVinculacion: number | string): Promise<{ fecha_inicio: Date; fecha_fin: Date } | null>;
 }

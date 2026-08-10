@@ -39,6 +39,14 @@ export class InformeActividadesAdapter implements IInformeActividadesPort {
           INNER JOIN asignatura asig ON oa.id_asignatura = asig.id_asignatura
           WHERE md.id_matricula = m.id_matricula
         ) AS asignaturas,
+        -- ✅ AGREGA ESTA SUBCONSULTA AQUÍ:
+        (
+          SELECT observacion 
+          FROM vinculacion_reporte_observacion 
+          WHERE id_vinculacion = vinc.id_vinculacion 
+            AND tipo_reporte = 'ASISTENCIA_ESTUDIANTE' 
+          LIMIT 1
+        ) AS reflexion_estudiante,
         act.fecha,
         act.actividades_realizadas,
         act.resultado_aprendizaje
@@ -66,5 +74,44 @@ export class InformeActividadesAdapter implements IInformeActividadesPort {
       WHERE id_actividad_estudiante = $2
     `;
     return await this.repo.query(query, [resultadoAprendizaje, idActividad]);
+  }
+
+  async obtenerActividadPorId(idActividad: number): Promise<any> {
+    const query = `
+      SELECT id_actividad_estudiante, id_vinculacion, resultado_aprendizaje
+      FROM vinculacion_actividad_estudiante
+      WHERE id_actividad_estudiante = $1
+      LIMIT 1;
+    `;
+    const resultado = await this.repo.query(query, [idActividad]);
+    return resultado.length > 0 ? resultado[0] : null;
+  }
+
+  async guardarOActualizarObservacion(
+    idVinculacion: number,
+    tipoReporte: string,
+    observacion: string,
+  ): Promise<any> {
+    const querySelect = `
+      SELECT id_observacion FROM vinculacion_reporte_observacion 
+      WHERE id_vinculacion = $1 AND tipo_reporte = $2 
+      LIMIT 1;
+    `;
+    const existente = await this.repo.query(querySelect, [idVinculacion, tipoReporte]);
+
+    if (existente && existente.length > 0) {
+      const queryUpdate = `
+        UPDATE vinculacion_reporte_observacion 
+        SET observacion = $3 
+        WHERE id_vinculacion = $1 AND tipo_reporte = $2;
+      `;
+      return await this.repo.query(queryUpdate, [idVinculacion, tipoReporte, observacion]);
+    } else {
+      const queryInsert = `
+        INSERT INTO vinculacion_reporte_observacion (id_vinculacion, tipo_reporte, observacion)
+        VALUES ($1, $2, $3);
+      `;
+      return await this.repo.query(queryInsert, [idVinculacion, tipoReporte, observacion]);
+    }
   }
 }

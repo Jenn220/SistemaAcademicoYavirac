@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, ParseIntPipe, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, ParseIntPipe, Req, UseGuards, Post } from '@nestjs/common';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -7,6 +7,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { AuthVinculacionService } from '../services/auth-vinculacion.service';
 import { InicioActividadesTutorService } from '../services/inicio-actividades-tutor.service';
 import { UpdateInicioActividadesDto } from '../dto/update-inicio-actividades.dto';
+import { CreateInicioActividadesDto } from '../dto/create-inicio-actividades.dto';
 
 @UseGuards(JwtGuard, RolesGuard)
 @Controller('vinculacion/inicio-actividades') // 👈 Corregida la ruta base
@@ -46,6 +47,16 @@ export class InicioActividadesTutorController {
   async actualizarInicioActividades(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateInicioActividadesDto,
+    @Req() req: any,
+  ) {
+    const idFinal = await this.authService.resolverIdVinculacionLectura(req, id);
+    return await this.inicioActividadesService.actualizarInicioActividadesTutor(idFinal, dto);
+  }
+  @Post(':id')
+  @Roles('DOCENTE', 'COORDINADOR')
+  async crearInicioActividades(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateInicioActividadesDto,
     @Req() req: any,
   ) {
     const idFinal = await this.authService.resolverIdVinculacionLectura(req, id);

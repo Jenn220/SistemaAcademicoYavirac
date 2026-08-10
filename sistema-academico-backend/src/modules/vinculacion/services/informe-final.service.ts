@@ -3,14 +3,26 @@ import {
   INFORME_FINAL_PORT, 
   IInformeFinalPort 
 } from '../ports/informe-final.port';
+import { UpdateEvaluacionDto } from '../dto/update-evaluacion.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EvaluacionVinculacion } from '../domain/vinculacion-evaluacion';
+import { VinculacionReporteObservacionEntity } from '../domain/vinculacion_reporte_observacion';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class InformeFinalService {
   constructor(
     @Inject(INFORME_FINAL_PORT) 
     private readonly repository: IInformeFinalPort,
-  ) {}
 
+// 2. Puedes inyectar directamente los repositorios que necesites aquí:
+    @InjectRepository(EvaluacionVinculacion)
+    private readonly evaluacionRepo: Repository<EvaluacionVinculacion>,
+
+    @InjectRepository(VinculacionReporteObservacionEntity)
+    private readonly observacionRepo: Repository<VinculacionReporteObservacionEntity>,
+
+  ) {}
   async obtenerInformeFinal(idVinculacion: number) {
     const resultados = await this.repository.obtainInformeFinalRaw(idVinculacion);
     if (!resultados || resultados.length === 0) return null;
@@ -95,7 +107,50 @@ export class InformeFinalService {
       }
     };
   }
+async guardarEvaluacionFinal(idVinculacion: number, dto: UpdateEvaluacionDto) {
+    const idStr = String(idVinculacion);
 
+    if (dto.notaFinal !== undefined) {
+   let evaluacion = await this.evaluacionRepo.findOne({
+  where: { idVinculacion: idStr }
+});
+
+if (evaluacion) {
+  evaluacion.notaFinal = dto.notaFinal;
+  evaluacion.fechaEvaluacion = new Date();
+  await this.evaluacionRepo.save(evaluacion);
+} else {
+  evaluacion = this.evaluacionRepo.create({
+    idVinculacion: idStr,
+    notaFinal: dto.notaFinal!,
+    fechaEvaluacion: new Date(),
+    // 👈 Solución al error de idRubrica: si es null o undefined, pásale undefined en lugar de null
+    idRubrica: dto.idRubrica ?? undefined, 
+  });
+  await this.evaluacionRepo.save(evaluacion);
+}
+    }
+
+    if (dto.observaciones !== undefined) {
+      let reporteObs = await this.observacionRepo.findOne({
+        where: { id_vinculacion: idStr, tipo_reporte: 'INFORME_FINAL' }
+      });
+
+      if (reporteObs) {
+        reporteObs.observacion = dto.observaciones;
+        await this.observacionRepo.save(reporteObs);
+      } else {
+        reporteObs = this.observacionRepo.create({
+          id_vinculacion: idStr,
+          tipo_reporte: 'INFORME_FINAL',
+          observacion: dto.observaciones,
+        });
+        await this.observacionRepo.save(reporteObs);
+      }
+    }
+
+    return { message: "Evaluación y observaciones guardadas correctamente" };
+  }
   async listarInformesPorDocente(idDocente: number) {
     const listado = await this.repository.listarInformesEstudiantesPorDocente(idDocente);
     return listado.map((item) => ({

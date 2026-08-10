@@ -8,6 +8,7 @@ export class UpdateEvaluacionDto {
   @IsInt()
   @IsOptional()
   id_entidad_receptora?: number;
+
   @IsOptional()
   @IsString()
   idRubrica?: string;
@@ -15,6 +16,11 @@ export class UpdateEvaluacionDto {
   @IsOptional()
   @IsNumber()
   notaFinal?: number;
+
+  // 🟢 Añade esta propiedad aquí para que TypeScript la reconozca
+  @IsOptional()
+  @IsString()
+  observaciones?: string;
 
   @IsOptional()
   @IsDateString()

@@ -17,31 +17,27 @@ export class InicioActividadesTutorService {
   }
 
   async obtenerInicioActividadesTutor(idVinculacion: number) {
-    const data = await this.repository.obtainInicioActividadesTutorRaw(idVinculacion);
-    if (!data) return null;
+  const data = await this.repository.obtainInicioActividadesTutorRaw(idVinculacion);
+  if (!data) return null;
 
-    const formatearFecha = (fechaStr: string) => {
-      if (!fechaStr) return '';
-      const fecha = new Date(fechaStr);
-      return !isNaN(fecha.getTime())
-        ? fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
-        : fechaStr;
-    };
+  const coordinador = data.coordinador?.trim();
+  
+  return {
+    coordinador: (coordinador && coordinador !== '') ? coordinador : 'Sin Coordinador Asignado',
+    tutor_nombre: data.tutor_nombre,
+    tutor_cedula: data.tutor_cedula,
+    proyecto_nombre: data.proyecto_nombre,
+    // 👇 Agregamos estas dos líneas:
+    fecha_inicio: data.fecha_proyecto ? new Date(data.fecha_proyecto).toISOString() : null,
+    fecha_fin: data.fecha_fin ? new Date(data.fecha_fin).toISOString() : null, 
+    carrera: data.carrera,
+    entidad_beneficiaria: data.entidad_beneficiaria,
+    tutor_entidad: data.tutor_entidad || 'Sin Tutor Receptora Asignado',
+    descripcion_actividades: data.descripcion_actividades || '',
+  };
+}
 
-    const coordinador = data.coordinador?.trim();
-    return {
-      coordinador: (coordinador && coordinador !== '') ? coordinador : 'Sin Coordinador Asignado',
-      tutor_nombre: data.tutor_nombre,
-      tutor_cedula: data.tutor_cedula,
-      proyecto_nombre: data.proyecto_nombre,
-      fecha_inicio: formatearFecha(data.fecha_proyecto),
-      carrera: data.carrera,
-      entidad_beneficiaria: data.entidad_beneficiaria,
-      tutor_entidad: data.tutor_entidad || 'Sin Tutor Receptora Asignado',
-      descripcion_actividades: data.descripcion_actividades || '',
-    };
-  }
-
+  // 🟢 Método exclusivo para actualizar (ya sin fechas)
   async actualizarInicioActividadesTutor(idVinculacion: number, dto: UpdateInicioActividadesDto) {
     const registroExistente = await this.repository.obtainInicioActividadesTutorRaw(idVinculacion);
     if (!registroExistente) {
@@ -50,4 +46,9 @@ export class InicioActividadesTutorService {
     await this.repository.actualizarInicioActividadesRaw(idVinculacion, dto);
     return await this.obtenerInicioActividadesTutor(idVinculacion);
   }
+  async actualizarFechaFinProyecto(idVinculacion: number, nuevaFechaFin: string) {
+  // Aquí delegamos al repositorio para actualizar el campo fecha_fin
+  await this.repository.actualizarFechaFin(idVinculacion, nuevaFechaFin);
+  return { message: "Fecha de finalización actualizada correctamente" };
+}
 }

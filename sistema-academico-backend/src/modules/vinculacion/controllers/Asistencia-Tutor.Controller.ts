@@ -53,6 +53,15 @@ export class AsistenciaTutorController {
     return await this.reportesService.obtenerAsistenciasTutorPorDocente(idDocente);
   }
 
+  
+@Patch(':idVinculacion/observaciones')
+  @Roles('DOCENTE', 'TUTOR_EMPRESARIAL', 'COORDINADOR')
+  async actualizarObservacionControlador(
+    @Param('idVinculacion', ParseIntPipe) idVinculacion: number,
+    @Body() dto: { observaciones: string },
+  ) {
+    return await this.reportesService.actualizarObservacion(idVinculacion, dto.observaciones || '');
+  }
   /**
    * ESTUDIANTE / DOCENTE / COORDINADOR / TUTOR EMPRESARIAL:
    * Obtiene el reporte de asistencia específico por ID.

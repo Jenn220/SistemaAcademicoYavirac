@@ -136,17 +136,40 @@ export class VinculacionAsistenciaEstudianteAdapter implements IVinculacionAsist
     return await this.repoEstudiante.query(query, [idVinculacion.toString()]);
   }
 
-  async guardarObservacion(dto: CreateObservacionDto): Promise<any> {
-    const query = `
-      INSERT INTO vinculacion_reporte_observacion (id_vinculacion, tipo_reporte, observacion)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (id_vinculacion, tipo_reporte) 
-      DO UPDATE SET observacion = EXCLUDED.observacion;
+ async guardarObservacion(dto: CreateObservacionDto): Promise<any> {
+    // 1. Buscar si ya existe la observación usando la columna correcta: id_observacion
+    const querySelect = `
+      SELECT id_observacion FROM vinculacion_reporte_observacion 
+      WHERE id_vinculacion = $1 AND tipo_reporte = $2 
+      LIMIT 1;
     `;
-    return await this.repoEstudiante.query(query, [
-      dto.id_vinculacion,
-      dto.tipo_reporte,
-      dto.observacion,
-    ]);
+    const existente = await this.repoEstudiante.query(querySelect, [dto.id_vinculacion, dto.tipo_reporte]);
+
+    if (existente && existente.length > 0) {
+      // 2. Si existe, actualizamos
+      const queryUpdate = `
+        UPDATE vinculacion_reporte_observacion 
+        SET observacion = $3 
+        WHERE id_vinculacion = $1 AND tipo_reporte = $2;
+      `;
+      return await this.repoEstudiante.query(queryUpdate, [dto.id_vinculacion, dto.tipo_reporte, dto.observacion]);
+    } else {
+      // 3. Si no existe, insertamos
+      const queryInsert = `
+        INSERT INTO vinculacion_reporte_observacion (id_vinculacion, tipo_reporte, observacion)
+        VALUES ($1, $2, $3);
+      `;
+      return await this.repoEstudiante.query(queryInsert, [dto.id_vinculacion, dto.tipo_reporte, dto.observacion]);
+    }
   }
+  async obtenerRangoFechasVinculacion(idVinculacion: number | string): Promise<{ fecha_inicio: Date; fecha_fin: Date } | null> {
+  const query = `
+    SELECT fecha_inicio, fecha_fin 
+    FROM vinculacion_estudiante 
+    WHERE id_vinculacion::text = $1::text 
+    LIMIT 1;
+  `;
+  const res = await this.repoEstudiante.query(query, [idVinculacion.toString()]);
+  return res.length > 0 ? res[0] : null;
+}
 }

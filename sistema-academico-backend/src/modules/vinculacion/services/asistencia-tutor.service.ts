@@ -270,4 +270,45 @@ export class AsistenciaTutorService {
       throw new InternalServerErrorException(`Error interno al intentar eliminar la asistencia: ${mensaje}`);
     }
   }
+
+  async actualizarObservacion(idVinculacion: number, observaciones: string) {
+    try {
+      // 1. Verificar si ya existe una observación para esta vinculación y tipo de reporte
+      const querySelect = `
+        SELECT id_observacion FROM vinculacion_reporte_observacion 
+        WHERE id_vinculacion = $1 AND tipo_reporte = $2 
+        LIMIT 1;
+      `;
+      const existente = await this.vinculacionRepo.query(querySelect, [idVinculacion, 'ASISTENCIA_TUTOR']);
+
+      if (existente && existente.length > 0) {
+        // 2. Si existe, actualizamos
+        const queryUpdate = `
+          UPDATE vinculacion_reporte_observacion 
+          SET observacion = $3 
+          WHERE id_vinculacion = $1 AND tipo_reporte = $2;
+        `;
+        await this.vinculacionRepo.query(queryUpdate, [idVinculacion, 'ASISTENCIA_TUTOR', observaciones]);
+      } else {
+        // 3. Si no existe, insertamos
+        const queryInsert = `
+          INSERT INTO vinculacion_reporte_observacion (id_vinculacion, tipo_reporte, observacion)
+          VALUES ($1, $2, $3);
+        `;
+        await this.vinculacionRepo.query(queryInsert, [idVinculacion, 'ASISTENCIA_TUTOR', observaciones]);
+      }
+
+      return { 
+        statusCode: 200, 
+        message: 'Observación actualizada correctamente', 
+        observaciones 
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      const mensaje = error instanceof Error ? error.message : String(error);
+      throw new InternalServerErrorException(`Error al actualizar la observación: ${mensaje}`);
+    }
+  }
 }

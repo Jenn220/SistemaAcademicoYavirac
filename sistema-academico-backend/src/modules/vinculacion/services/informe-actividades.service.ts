@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { 
   INFORME_ACTIVIDADES_PORT, 
   IInformeActividadesPort 
@@ -28,6 +28,7 @@ export class InformeActividadesService {
           : row.fecha;
 
         return {
+          id: row.id_actividad_estudiante,
           fecha: fechaFormateada,
           actividad: row.actividades_realizadas,
           resultado_aprendizaje: row.resultado_aprendizaje || 'Sin resultado de aprendizaje especificado',
@@ -40,7 +41,7 @@ export class InformeActividadesService {
       return !isNaN(fecha.getTime()) ? fecha.toLocaleDateString('es-ES', { timeZone: 'UTC' }) : 'N/A';
     };
 
-    return {
+  return {
       cabecera: {
         fundacion: primerRegistro.entidad_beneficiaria,
         nivel: primerRegistro.nivel || 'N/A',
@@ -55,18 +56,13 @@ export class InformeActividadesService {
         titulo_proyecto: primerRegistro.nombre_proyecto,
       },
       informe_actividades: actividades,
+      // ✅ AGREGA ESTA LÍNEA AQUÍ:
+      reflexion_estudiante: primerRegistro.reflexion_estudiante || "Sin reflexión registrada.",
     };
   }
 
   async obtenerActividadPorId(idActividad: number): Promise<any> {
-    // Método auxiliar para obtener una actividad y su id_vinculacion
-    const query = `
-      SELECT id_actividad_estudiante, id_vinculacion, resultado_aprendizaje
-      FROM vinculacion_actividad_estudiante
-      WHERE id_actividad_estudiante = $1
-    `;
-    const actividades = await this.repository.obtainInformeActividadesRaw(0); // Esto no es ideal, mejor crear un método específico
-    const actividad = actividades.find((a: any) => Number(a.id_actividad_estudiante) === idActividad);
+    const actividad = await this.repository.obtenerActividadPorId(idActividad);
     if (!actividad) {
       throw new NotFoundException(`Actividad con ID ${idActividad} no encontrada`);
     }
@@ -101,5 +97,25 @@ export class InformeActividadesService {
       statusCode: 200,
       message: 'Resultado de aprendizaje actualizado exitosamente.',
     };
+  }
+
+  async actualizarReflexionEstudiante(idVinculacion: number, observaciones: string) {
+    try {
+      // ✅ Usamos el método definido en el puerto e implementado en el adaptador
+      await this.repository.guardarOActualizarObservacion(
+        idVinculacion, 
+        'ASISTENCIA_ESTUDIANTE', 
+        observaciones
+      );
+
+      return {
+        statusCode: 200,
+        message: 'Reflexión del estudiante actualizada exitosamente.',
+        reflexion_estudiante: observaciones,
+      };
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : String(error);
+      throw new InternalServerErrorException(`Error al actualizar la reflexión: ${mensaje}`);
+    }
   }
 }

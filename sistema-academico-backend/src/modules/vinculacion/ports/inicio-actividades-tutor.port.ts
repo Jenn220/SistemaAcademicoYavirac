@@ -6,4 +6,5 @@ export interface IVinculacionInicioActividadesPort {
   obtenerIniciosActividadesPorDocenteRaw(idDocente: number): Promise<any>;
   obtainInicioActividadesTutorRaw(idVinculacion: number): Promise<any>;
   actualizarInicioActividadesRaw(idVinculacion: number, dto: UpdateInicioActividadesDto): Promise<any>;
+  actualizarFechaFin(idVinculacion: number, fechaFin: string): Promise<void>;
 }

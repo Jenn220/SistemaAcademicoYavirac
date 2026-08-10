@@ -24,7 +24,22 @@ export class InformeActividadesController {
     private readonly authService: AuthVinculacionService,
     private readonly informeActividadesService: InformeActividadesService,
   ) {}
-
+  
+@Patch(':id/reflexion')
+  @Roles('ESTUDIANTE', 'COORDINADOR')
+  async actualizarReflexion(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: { reflexion: string },
+    @Req() req: any,
+  ) {
+    // Resuelve la vinculación correcta validando permisos del usuario
+    const idFinal = await this.authService.resolverIdVinculacionLectura(req, id);
+    
+    return await this.informeActividadesService.actualizarReflexionEstudiante(
+      idFinal, 
+      dto.reflexion || ''
+    );
+  }
   @Get(':id')
   @Roles('ESTUDIANTE', 'COORDINADOR')
   async obtenerInformeActividades(
