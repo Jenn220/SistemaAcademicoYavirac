@@ -84,7 +84,7 @@ export const routes: Routes = [
         ],
       },
 
-      // VINCULACIÓN (ESTUDIANTE y DOCENTE) - CON PROTECCIÓN DE ROLES
+      // VINCULACIÓN (ESTUDIANTE y DOCENTE)
       {
         path: 'vinculacion',
         children: [
@@ -162,6 +162,22 @@ export const routes: Routes = [
                   import(
                     './modules/vinculacion/pages/docente/seleccionar-estudiante/seleccionar-estudiante.component'
                   ).then((m) => m.SeleccionarEstudianteComponent),
+              },
+              // ✅ INICIO DE ACTIVIDADES
+              {
+                path: 'estudiante/:id/inicio-actividades',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/inicio-actividades/inicio-actividades.component'
+                  ).then((m) => m.InicioActividadesComponent),
+              },
+              // ✅ CONTROL DE ASISTENCIA
+              {
+                path: 'estudiante/:id/control-asistencia',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/control-asistencia/control-asistencia.component'
+                  ).then((m) => m.ControlAsistenciaComponent),
               },
               {
                 path: 'estudiante/:id/registro-asistencia-tutor',

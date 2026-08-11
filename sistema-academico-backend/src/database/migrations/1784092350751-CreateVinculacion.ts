@@ -25,13 +25,13 @@ CREATE TABLE public.evaluacion_vinculacion (
 
     await queryRunner.query(`
 CREATE TABLE public.vinculacion_actividad_estudiante (
-    id_actividad_estudiante bigint CONSTRAINT vinculacion_actividad_estudian_id_actividad_estudiante_not_null NOT NULL,
+    id_actividad_estudiante bigint NOT NULL,
     id_vinculacion bigint NOT NULL,
     fecha date NOT NULL,
     hora_inicio time without time zone NOT NULL,
     hora_fin time without time zone NOT NULL,
     horas_total numeric(5,2) NOT NULL,
-    actividades_realizadas text CONSTRAINT vinculacion_actividad_estudiant_actividades_realizadas_not_null NOT NULL
+    actividades_realizadas text NOT NULL
 );
     `);
 
@@ -70,6 +70,25 @@ CREATE TABLE public.vinculacion_informe (
     fecha_informe date NOT NULL,
     actividad_macro text NOT NULL,
     resultado_aprendizaje text NOT NULL
+);
+    `);
+
+    // ✅ TABLA NUEVA: evaluacion_parametros_tutor
+    await queryRunner.query(`
+CREATE TABLE public.evaluacion_parametros_tutor (
+    id_parametro bigint NOT NULL,
+    id_vinculacion bigint NOT NULL,
+    puntualidad numeric(5,2) DEFAULT 0,
+    trabajo_autonomo numeric(5,2) DEFAULT 0,
+    asistencia numeric(5,2) DEFAULT 0,
+    etica_profesional numeric(5,2) DEFAULT 0,
+    cumple_tareas numeric(5,2) DEFAULT 0,
+    actitud_proactiva numeric(5,2) DEFAULT 0,
+    coopera_permanentemente numeric(5,2) DEFAULT 0,
+    respeto_autoridad numeric(5,2) DEFAULT 0,
+    constancia_predisposicion numeric(5,2) DEFAULT 0,
+    responsabilidad_esmero numeric(5,2) DEFAULT 0,
+    habilidad_practica numeric(5,2) DEFAULT 0
 );
     `);
 
@@ -127,6 +146,16 @@ CREATE SEQUENCE public.vinculacion_informe_id_informe_seq
     CACHE 1;
     `);
 
+    // ✅ SECUENCIA NUEVA: para id_parametro
+    await queryRunner.query(`
+CREATE SEQUENCE public.evaluacion_parametros_tutor_id_parametro_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+    `);
+
     await queryRunner.query(`
 ALTER SEQUENCE public.detalle_evaluacion_vinculacion_id_detalle_vinc_seq OWNED BY public.detalle_evaluacion_vinculacion.id_detalle_vinc;
     `);
@@ -151,6 +180,11 @@ ALTER SEQUENCE public.vinculacion_estudiante_id_vinculacion_seq OWNED BY public.
 ALTER SEQUENCE public.vinculacion_informe_id_informe_seq OWNED BY public.vinculacion_informe.id_informe;
     `);
 
+    // ✅ OWNED BY para la nueva secuencia
+    await queryRunner.query(`
+ALTER SEQUENCE public.evaluacion_parametros_tutor_id_parametro_seq OWNED BY public.evaluacion_parametros_tutor.id_parametro;
+    `);
+
     await queryRunner.query(`
 ALTER TABLE ONLY public.detalle_evaluacion_vinculacion ALTER COLUMN id_detalle_vinc SET DEFAULT nextval('public.detalle_evaluacion_vinculacion_id_detalle_vinc_seq'::regclass);
     `);
@@ -173,6 +207,11 @@ ALTER TABLE ONLY public.vinculacion_estudiante ALTER COLUMN id_vinculacion SET D
 
     await queryRunner.query(`
 ALTER TABLE ONLY public.vinculacion_informe ALTER COLUMN id_informe SET DEFAULT nextval('public.vinculacion_informe_id_informe_seq'::regclass);
+    `);
+
+    // ✅ SET DEFAULT para la nueva tabla
+    await queryRunner.query(`
+ALTER TABLE ONLY public.evaluacion_parametros_tutor ALTER COLUMN id_parametro SET DEFAULT nextval('public.evaluacion_parametros_tutor_id_parametro_seq'::regclass);
     `);
 
     await queryRunner.query(`
@@ -205,9 +244,21 @@ ALTER TABLE ONLY public.vinculacion_informe
     ADD CONSTRAINT vinculacion_informe_pkey PRIMARY KEY (id_informe);
     `);
 
+    // ✅ PRIMARY KEY para la nueva tabla
+    await queryRunner.query(`
+ALTER TABLE ONLY public.evaluacion_parametros_tutor
+    ADD CONSTRAINT evaluacion_parametros_tutor_pkey PRIMARY KEY (id_parametro);
+    `);
+
     await queryRunner.query(`
 ALTER TABLE ONLY public.vinculacion_estudiante
     ADD CONSTRAINT vinculacion_estudiante_id_matricula_detalle_key UNIQUE (id_matricula_detalle);
+    `);
+
+    // ✅ UNIQUE CONSTRAINT para la nueva tabla
+    await queryRunner.query(`
+ALTER TABLE ONLY public.evaluacion_parametros_tutor
+    ADD CONSTRAINT evaluacion_parametros_tutor_id_vinculacion_key UNIQUE (id_vinculacion);
     `);
 
     await queryRunner.query(`
@@ -229,14 +280,26 @@ ALTER TABLE ONLY public.evaluacion_vinculacion
 ALTER TABLE ONLY public.evaluacion_vinculacion
     ADD CONSTRAINT fk_ev_vinculacion FOREIGN KEY (id_vinculacion) REFERENCES public.vinculacion_estudiante(id_vinculacion);
     `);
+
+    // ✅ FOREIGN KEY para la nueva tabla
+    await queryRunner.query(`
+ALTER TABLE ONLY public.evaluacion_parametros_tutor
+    ADD CONSTRAINT fk_ept_vinculacion FOREIGN KEY (id_vinculacion) REFERENCES public.vinculacion_estudiante(id_vinculacion) ON DELETE CASCADE;
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    // ✅ Eliminar en orden inverso para respetar las FK
+    await queryRunner.query(`ALTER TABLE public.evaluacion_parametros_tutor DROP CONSTRAINT IF EXISTS fk_ept_vinculacion;`);
+    await queryRunner.query(`ALTER TABLE public.evaluacion_parametros_tutor DROP CONSTRAINT IF EXISTS evaluacion_parametros_tutor_id_vinculacion_key;`);
+    await queryRunner.query(`ALTER TABLE public.evaluacion_parametros_tutor DROP CONSTRAINT IF EXISTS evaluacion_parametros_tutor_pkey;`);
+    
     await queryRunner.query(`DROP TABLE public.detalle_evaluacion_vinculacion`);
     await queryRunner.query(`DROP TABLE public.evaluacion_vinculacion`);
     await queryRunner.query(`DROP TABLE public.vinculacion_informe`);
     await queryRunner.query(`DROP TABLE public.vinculacion_asistencia_tutor`);
     await queryRunner.query(`DROP TABLE public.vinculacion_actividad_estudiante`);
     await queryRunner.query(`DROP TABLE public.vinculacion_estudiante`);
+    await queryRunner.query(`DROP TABLE public.evaluacion_parametros_tutor`);
   }
 }

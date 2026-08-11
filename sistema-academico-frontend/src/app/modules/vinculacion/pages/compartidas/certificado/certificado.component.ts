@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CertificadoService } from '../../../services/certificado.service';
 import { InicioActividadesService } from '../../../services/inicio-actividades.service';
+import { ControlAsistenciaService } from '../../../services/control-asistencia.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { Certificado } from '../../../models/certificado.model';
-import { finalize } from 'rxjs/operators';
+import { finalize, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-certificado',
@@ -20,6 +21,7 @@ export class CertificadoComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private certificadoService = inject(CertificadoService);
   private inicioService = inject(InicioActividadesService);
+  private controlAsistenciaService = inject(ControlAsistenciaService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
@@ -29,11 +31,12 @@ export class CertificadoComponent implements OnInit {
   error: string | null = null;
   isEstudiante = false;
   idVinculacion: number = 0;
-  editando = false;
 
-  proyectoEdit: string = '';
-  fechaInicioEdit: string = '';
-  fechaFinEdit: string = '';
+  // Datos combinados
+  proyectoNombre: string = '';
+  fechaInicio: string = '';
+  fechaFin: string = '';
+  totalHoras: number = 0;
 
   ngOnInit(): void {
     const roles = this.authService.roles();
@@ -90,65 +93,75 @@ export class CertificadoComponent implements OnInit {
     this.cdr.markForCheck();
     console.log('🔵 Cargando Certificado para vinculación:', this.idVinculacion);
     
-    this.certificadoService.obtenerCertificado(this.idVinculacion)
-      .pipe(finalize(() => {
-        this.loading = false;
-        this.cdr.markForCheck();
-      }))
-      .subscribe({
-        next: (data) => {
-          console.log('📦 Datos de Certificado recibidos:', data);
-          this.certificado = data;
-          this.proyectoEdit = data.proyecto || '';
-          this.fechaInicioEdit = data.fecha_inicio || '';
-          this.fechaFinEdit = data.fecha_fin || '';
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error('❌ Error al cargar Certificado:', err);
-          this.error = 'No se pudo cargar el certificado.';
-          this.cdr.markForCheck();
+    // Cargar datos en paralelo
+    forkJoin({
+      certificado: this.certificadoService.obtenerCertificado(this.idVinculacion),
+      inicioActividades: this.inicioService.obtenerInicioActividades(this.idVinculacion),
+      asistencia: this.controlAsistenciaService.obtenerAsistencia(this.idVinculacion)
+    })
+    .pipe(finalize(() => {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }))
+    .subscribe({
+      next: (result) => {
+        console.log('📦 Datos combinados:', result);
+        
+        // Datos base del certificado
+        this.certificado = result.certificado;
+        
+        // Datos desde inicio-actividades
+        if (result.inicioActividades) {
+          this.proyectoNombre = result.inicioActividades.proyecto_nombre || '';
+          this.fechaInicio = result.inicioActividades.fecha_inicio || '';
+          this.fechaFin = result.inicioActividades.fecha_fin || '';
         }
-      });
+        
+        // Total horas desde control-asistencia
+        if (result.asistencia && result.asistencia.totales) {
+          this.totalHoras = result.asistencia.totales.total_horas || 0;
+        }
+        
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar datos:', err);
+        this.error = 'No se pudo cargar el certificado.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  guardarCambios(): void {
-    if (!this.certificado) return;
-    this.loading = true;
-    this.cdr.markForCheck();
-    const payload: any = {};
-    if (this.proyectoEdit) payload.nombre_proyecto = this.proyectoEdit;
-    if (this.fechaInicioEdit) payload.fecha_inicio = this.fechaInicioEdit;
-
-    this.inicioService.actualizarInicioActividades(this.idVinculacion, payload)
-      .pipe(finalize(() => {
-        this.loading = false;
-        this.cdr.markForCheck();
-      }))
-      .subscribe({
-        next: () => {
-          if (this.certificado) {
-            this.certificado.proyecto = this.proyectoEdit;
-            this.certificado.fecha_inicio = this.fechaInicioEdit;
-          }
-          this.editando = false;
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error('❌ Error al guardar cambios:', err);
-          this.error = 'Error al guardar los cambios.';
-          this.cdr.markForCheck();
-        }
+  // ============================================
+  // UTILIDADES
+  // ============================================
+  formatearFecha(fecha: string): string {
+    if (!fecha) return 'N/A';
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC'
       });
-  }
-
-  toggleEdit(): void {
-    this.editando = !this.editando;
-    if (!this.editando && this.certificado) {
-      this.proyectoEdit = this.certificado.proyecto || '';
-      this.fechaInicioEdit = this.certificado.fecha_inicio || '';
-      this.fechaFinEdit = this.certificado.fecha_fin || '';
+    } catch {
+      return fecha;
     }
-    this.cdr.markForCheck();
+  }
+
+  formatearFechaCorta(fecha: string): string {
+    if (!fecha) return 'N/A';
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        timeZone: 'UTC'
+      });
+    } catch {
+      return fecha;
+    }
   }
 }

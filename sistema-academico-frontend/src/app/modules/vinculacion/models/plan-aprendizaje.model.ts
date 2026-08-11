@@ -20,4 +20,5 @@ export interface PlanAprendizaje {
     titulo_proyecto: string;
   };
   informe_actividades: ActividadPlan[];
+  reflexion_estudiante?: string;  
 }

@@ -15,21 +15,16 @@
       desempeñó las actividades y tareas establecidas en la planificación del proyecto:
     </p>
 
-    <div class="campo-editable">
-      <label>Nombre del Proyecto:</label>
-      <input *ngIf="editando" [(ngModel)]="proyectoEdit" class="input-edit" />
-      <p *ngIf="!editando"><strong>{{ certificado.proyecto }}</strong></p>
+    <div class="campo">
+      <p><strong>{{ proyectoNombre || certificado.proyecto }}</strong></p>
     </div>
 
     <p>
       propuesto para esta comunidad, desde el
-      <span *ngIf="editando">
-        <input type="date" [(ngModel)]="fechaInicioEdit" class="input-edit" />
-      </span>
-      <span *ngIf="!editando"><strong>{{ certificado.fecha_inicio }}</strong></span>
+      <strong>{{ formatearFecha(fechaInicio || certificado.fecha_inicio) }}</strong>
       hasta el
-      <span *ngIf="!editando"><strong>{{ certificado.fecha_fin }}</strong></span>
-      , acumulando un total de <strong>{{ certificado.total_horas }}</strong> horas de vinculación social,
+      <strong>{{ formatearFecha(fechaFin || certificado.fecha_fin) }}</strong>,
+      acumulando un total de <strong>{{ totalHoras || certificado.total_horas }}</strong> horas de vinculación social,
       demostrando en todo momento responsabilidad, capacidad y entusiasmo en el desarrollo de las labores encomendadas.
     </p>
 
@@ -41,15 +36,17 @@
         <span>{{ certificado.institucion }}</span>
       </div>
     </div>
-
-    <div class="acciones">
-      <button (click)="toggleEdit()" class="btn-secondary">
-        {{ editando ? 'Cancelar' : 'Editar datos' }}
-      </button>
-      <button *ngIf="editando" (click)="guardarCambios()" class="btn-primary">Guardar cambios</button>
-    </div>
   </div>
 </div>
 
-<div class="loading" *ngIf="loading">Cargando...</div>
-<div class="error" *ngIf="error">{{ error }}</div>
+<!-- LOADING -->
+<div class="loading" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
+
+<!-- ERROR -->
+<div class="error" *ngIf="error">
+  <span class="error-icon">⚠️</span>
+  {{ error }}
+</div>

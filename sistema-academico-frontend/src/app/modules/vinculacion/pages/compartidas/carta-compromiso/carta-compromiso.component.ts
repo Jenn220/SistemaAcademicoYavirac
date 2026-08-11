@@ -6,11 +6,12 @@ import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { CartaCompromiso } from '../../../models/carta-compromiso.model';
 import { finalize } from 'rxjs/operators';
+import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
 
 @Component({
   selector: 'app-carta-compromiso',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, VolverArchivosComponent],
   templateUrl: './carta-compromiso.component.html',
   styleUrls: ['./carta-compromiso.component.scss']
 })
@@ -25,11 +26,13 @@ export class CartaCompromisoComponent implements OnInit {
   loading = true;
   error: string | null = null;
   isEstudiante = false;
+  isDocente = false;
   idVinculacion: number = 0;
 
   ngOnInit(): void {
     const roles = this.authService.roles();
     this.isEstudiante = roles.includes('ESTUDIANTE');
+    this.isDocente = roles.includes('DOCENTE');
 
     if (!this.isEstudiante) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';

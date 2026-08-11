@@ -181,6 +181,8 @@ SELECT (SELECT id_vinculacion FROM vinculacion_estudiante LIMIT 1),
        (SELECT id_rubrica FROM catalogo_rubrica WHERE nombre = 'Rúbrica de Evaluación de Vinculación'),
        9.5, '2026-06-30';
 
+
+
 INSERT INTO detalle_evaluacion_vinculacion (id_evaluacion_vinc, id_item, puntaje_asignado)
 SELECT (SELECT id_evaluacion_vinc FROM evaluacion_vinculacion LIMIT 1),
        (SELECT id_item FROM item_rubrica WHERE descripcion_criterio = 'Impacto social del proyecto'),

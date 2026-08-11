@@ -16,14 +16,12 @@ export class VinculacionController {
    * GET /api/vinculacion/estudiante/vinculacion-activa
    */
   @Get('estudiante/vinculacion-activa')
-  @Roles('ESTUDIANTE')
-  async obtenerVinculacionActiva(@Req() req: any) {
-    const idEstudiante = req.user?.idEstudiante || req.user?.sub || req.user?.id_estudiante;
-    
-    if (!idEstudiante) {
-      throw new UnauthorizedException('No se pudo identificar al estudiante.');
-    }
-
-    return await this.vinculacionService.obtenerVinculacionActivaPorEstudiante(Number(idEstudiante));
+@Roles('ESTUDIANTE')
+async obtenerVinculacionActiva(@Req() req: any) {
+  const idEstudiante = req.user?.idEstudiante || req.user?.sub;
+  if (!idEstudiante) {
+    throw new UnauthorizedException('No se pudo identificar al estudiante.');
   }
+  return await this.vinculacionService.obtenerVinculacionActivaPorEstudiante(Number(idEstudiante));
+}
 }

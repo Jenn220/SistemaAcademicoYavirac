@@ -1,4 +1,5 @@
 <div class="carta-container" *ngIf="!loading && !error && cartaCompromiso">
+  <app-volver-archivos *ngIf="isDocente" />
   <div class="document-header">
     <h1>{{ cartaCompromiso.titulo }}</h1>
     <p class="instituto">{{ cartaCompromiso.instituto }}</p>

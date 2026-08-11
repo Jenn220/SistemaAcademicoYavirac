@@ -43,15 +43,15 @@ export class InicioActividadesTutorController {
    * Actualizar datos de inicio de actividades (PATCH)
    */
   @Patch(':id')
-  @Roles('DOCENTE', 'COORDINADOR')
-  async actualizarInicioActividades(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateInicioActividadesDto,
-    @Req() req: any,
-  ) {
-    const idFinal = await this.authService.resolverIdVinculacionLectura(req, id);
-    return await this.inicioActividadesService.actualizarInicioActividadesTutor(idFinal, dto);
-  }
+@Roles('DOCENTE', 'COORDINADOR')
+async actualizarInicioActividades(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() dto: UpdateInicioActividadesDto, // ✅ Ya incluye fecha_inicio
+  @Req() req: any,
+) {
+  const idFinal = await this.authService.resolverIdVinculacionLectura(req, id);
+  return await this.inicioActividadesService.actualizarInicioActividadesTutor(idFinal, dto);
+}
   @Post(':id')
   @Roles('DOCENTE', 'COORDINADOR')
   async crearInicioActividades(

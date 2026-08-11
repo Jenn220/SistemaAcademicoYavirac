@@ -12,7 +12,7 @@ import {
   providedIn: 'root'
 })
 export class RegistroAsistenciaTutorService {
-  private apiUrl = environment.apiUrl + '/api/vinculacion/asistencia-tutor';  // 👈 AGREGAR /api
+  private apiUrl = environment.apiUrl + '/api/vinculacion/asistencia-tutor';
 
   constructor(private http: HttpClient) {}
 
@@ -30,5 +30,9 @@ export class RegistroAsistenciaTutorService {
 
   eliminarAsistencia(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  actualizarObservacion(idVinculacion: number, observaciones: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${idVinculacion}/observaciones`, { observaciones });
   }
 }

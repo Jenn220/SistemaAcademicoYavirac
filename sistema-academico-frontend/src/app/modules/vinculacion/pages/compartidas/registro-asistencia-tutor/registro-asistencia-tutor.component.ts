@@ -3,21 +3,24 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { RegistroAsistenciaTutorService } from '../../../services/registro-asistencia-tutor.service';
+import { InicioActividadesService } from '../../../services/inicio-actividades.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { AsistenciaTutorResponse, AsistenciaTutor, CreateAsistenciaTutorDto, UpdateAsistenciaTutorDto } from '../../../models/registro-asistencia-tutor.model';
 import { finalize } from 'rxjs/operators';
+import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
 
 @Component({
   selector: 'app-registro-asistencia-tutor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VolverArchivosComponent],
   templateUrl: './registro-asistencia-tutor.component.html',
   styleUrls: ['./registro-asistencia-tutor.component.scss']
 })
 export class RegistroAsistenciaTutorComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(RegistroAsistenciaTutorService);
+  private inicioActividadesService = inject(InicioActividadesService);
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
@@ -27,17 +30,30 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   error: string | null = null;
   idVinculacion: number = 0;
 
+  // Roles
   isEstudiante = false;
   isDocente = false;
   isCoordinador = false;
   isTutorEmpresarial = false;
 
+  // Fechas del proyecto (desde inicio-actividades)
+  fechaInicioProyecto: string = '';
+  fechaFinProyecto: string = '';
+
+  // Edición de actividades
   editandoId: number | null = null;
   editandoActividad: UpdateAsistenciaTutorDto = {};
 
+  // Observaciones - auto-guardado
   observacionEdit: string = '';
+  observacionOriginal: string = '';
+  guardandoObservacion: boolean = false;
+  observacionGuardada: boolean = true;
+  timeoutGuardado: any = null;
+  mensajeFeedback: string = '';
   editandoObservacion = false;
 
+  // Nueva actividad
   nuevaActividad: CreateAsistenciaTutorDto = {
     id_vinculacion: 0,
     fecha: '',
@@ -47,6 +63,16 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     observaciones: ''
   };
   mostrandoFormulario = false;
+
+  // Getter: puede editar actividades (ESTUDIANTE o DOCENTE)
+  get puedeEditarActividades(): boolean {
+    return this.isEstudiante || this.isDocente;
+  }
+
+  // Getter: puede editar observaciones (DOCENTE o TUTOR_EMPRESARIAL)
+  get puedeEditarObservaciones(): boolean {
+    return this.isDocente || this.isTutorEmpresarial;
+  }
 
   ngOnInit(): void {
     const roles = this.authService.roles();
@@ -70,7 +96,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         this.cargarDatos();
       } else if (this.isEstudiante) {
         this.obtenerVinculacionActiva();
-      } else if (this.isDocente && idParam === 0) {
+      } else if ((this.isDocente || this.isTutorEmpresarial) && idParam === 0) {
         this.error = 'Debe seleccionar un estudiante primero.';
         this.loading = false;
         this.cdr.markForCheck();
@@ -110,6 +136,20 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     this.cdr.markForCheck();
     console.log('🔵 Cargando Registro Asistencia Tutor para vinculación:', this.idVinculacion);
     
+    this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion)
+      .subscribe({
+        next: (data) => {
+          console.log('📦 Fechas del proyecto recibidas:', data);
+          this.fechaInicioProyecto = data.fecha_inicio || '';
+          this.fechaFinProyecto = data.fecha_fin || '';
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.fechaInicioProyecto = '';
+          this.fechaFinProyecto = '';
+        }
+      });
+
     this.service.obtenerReporte(this.idVinculacion)
       .pipe(finalize(() => {
         this.loading = false;
@@ -120,6 +160,8 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           console.log('📦 Datos de Asistencia Tutor recibidos:', data);
           this.data = data;
           this.observacionEdit = data.totales.observaciones || '';
+          this.observacionOriginal = this.observacionEdit;
+          this.observacionGuardada = true;
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -130,12 +172,135 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       });
   }
 
+  validarFecha(fecha: string): boolean {
+    if (!this.fechaInicioProyecto || !this.fechaFinProyecto) {
+      console.warn('⚠️ No hay fechas de proyecto para validar');
+      return true;
+    }
+
+    const fechaActividad = new Date(fecha);
+    const fechaInicio = new Date(this.fechaInicioProyecto);
+    const fechaFin = new Date(this.fechaFinProyecto);
+
+    fechaActividad.setHours(0, 0, 0, 0);
+    fechaInicio.setHours(0, 0, 0, 0);
+    fechaFin.setHours(0, 0, 0, 0);
+
+    if (fechaActividad < fechaInicio) {
+      alert(`❌ La fecha no puede ser anterior a ${this.formatearFecha(this.fechaInicioProyecto)}`);
+      return false;
+    }
+
+    if (fechaActividad > fechaFin) {
+      alert(`❌ La fecha no puede ser posterior a ${this.formatearFecha(this.fechaFinProyecto)}`);
+      return false;
+    }
+
+    return true;
+  }
+
+  formatearFecha(fecha: string): string {
+    if (!fecha) return 'N/A';
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return fecha;
+    }
+  }
+
+  // ============================================
+  // OBSERVACIONES - AUTO-GUARDADO
+  // ============================================
+  onObservacionChange(): void {
+    if (!this.puedeEditarObservaciones) return;
+
+    if (this.timeoutGuardado) {
+      clearTimeout(this.timeoutGuardado);
+    }
+
+    this.observacionGuardada = false;
+
+    this.timeoutGuardado = setTimeout(() => {
+      this.guardarObservacion();
+    }, 1500);
+  }
+
+  guardarObservacion(): void {
+    if (!this.puedeEditarObservaciones) return;
+    if (this.guardandoObservacion) return;
+    if (this.observacionEdit === this.observacionOriginal) {
+      this.observacionGuardada = true;
+      // ✅ CERRAR el recuadro si no hay cambios
+      this.editandoObservacion = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.guardandoObservacion = true;
+    this.observacionGuardada = false;
+    this.cdr.markForCheck();
+
+    this.service.actualizarObservacion(this.idVinculacion, this.observacionEdit)
+      .pipe(finalize(() => {
+        this.guardandoObservacion = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: () => {
+          console.log('✅ Observación guardada automáticamente');
+          this.observacionOriginal = this.observacionEdit;
+          this.observacionGuardada = true;
+          this.mostrarFeedback('Observación guardada ✅');
+          // ✅ CERRAR el recuadro después de guardar
+          this.editandoObservacion = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('❌ Error al guardar observación:', err);
+          this.error = 'Error al guardar la observación.';
+          this.observacionGuardada = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  mostrarFeedback(mensaje: string): void {
+    this.mensajeFeedback = mensaje;
+    setTimeout(() => {
+      this.mensajeFeedback = '';
+      this.cdr.markForCheck();
+    }, 3000);
+  }
+
+  toggleEditObservacion(): void {
+    if (!this.puedeEditarObservaciones) return;
+    // Si está en modo edición y se hace clic, guardar y cerrar
+    if (this.editandoObservacion) {
+      this.guardarObservacion();
+    } else {
+      this.editandoObservacion = true;
+      this.observacionEdit = this.data?.totales.observaciones || '';
+      this.observacionOriginal = this.observacionEdit;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ============================================
+  // CRUD ACTIVIDADES (ESTUDIANTE Y DOCENTE)
+  // ============================================
   mostrarFormulario(): void {
-    if (!this.isEstudiante) return;
+    if (!this.puedeEditarActividades) return;
     this.mostrandoFormulario = true;
+    const hoy = new Date();
+    const fechaStr = hoy.toISOString().split('T')[0];
     this.nuevaActividad = {
       id_vinculacion: this.idVinculacion,
-      fecha: '',
+      fecha: fechaStr,
       hora_inicio: '',
       hora_fin: '',
       actividad_realizada: '',
@@ -150,13 +315,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   agregarActividad(): void {
-    if (!this.isEstudiante) return;
+    if (!this.puedeEditarActividades) return;
     if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_inicio || !this.nuevaActividad.hora_fin) {
-      alert('Complete fecha, hora entrada y salida.');
+      alert('⚠️ Complete fecha, hora entrada y hora salida.');
       return;
     }
+
+    if (this.nuevaActividad.hora_fin <= this.nuevaActividad.hora_inicio) {
+      alert('❌ La hora de salida debe ser posterior a la hora de entrada.');
+      return;
+    }
+
+    if (!this.validarFecha(this.nuevaActividad.fecha)) {
+      return;
+    }
+
     this.loading = true;
     this.cdr.markForCheck();
+    
     this.service.crearAsistencia(this.nuevaActividad)
       .pipe(finalize(() => {
         this.loading = false;
@@ -169,14 +345,14 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         },
         error: (err) => {
           console.error('❌ Error al agregar actividad:', err);
-          this.error = 'Error al agregar actividad.';
+          this.error = err.error?.message || 'Error al agregar actividad.';
           this.cdr.markForCheck();
         }
       });
   }
 
   editarActividad(act: AsistenciaTutor): void {
-    if (!this.isEstudiante) return;
+    if (!this.puedeEditarActividades) return;
     this.editandoId = act.id;
     this.editandoActividad = {
       fecha: act.fecha,
@@ -194,9 +370,22 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   guardarEdicion(): void {
-    if (!this.isEstudiante || !this.editandoId) return;
+    if (!this.puedeEditarActividades || !this.editandoId) return;
+
+    if (this.editandoActividad.fecha && !this.validarFecha(this.editandoActividad.fecha)) {
+      return;
+    }
+
+    if (this.editandoActividad.hora_inicio && this.editandoActividad.hora_fin) {
+      if (this.editandoActividad.hora_fin <= this.editandoActividad.hora_inicio) {
+        alert('❌ La hora de salida debe ser posterior a la hora de entrada.');
+        return;
+      }
+    }
+
     this.loading = true;
     this.cdr.markForCheck();
+    
     this.service.actualizarAsistencia(this.editandoId, this.editandoActividad)
       .pipe(finalize(() => {
         this.loading = false;
@@ -209,17 +398,19 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         },
         error: (err) => {
           console.error('❌ Error al actualizar actividad:', err);
-          this.error = 'Error al actualizar actividad.';
+          this.error = err.error?.message || 'Error al actualizar actividad.';
           this.cdr.markForCheck();
         }
       });
   }
 
   eliminarActividad(id: number): void {
-    if (!this.isEstudiante) return;
-    if (!confirm('¿Eliminar esta actividad?')) return;
+    if (!this.puedeEditarActividades) return;
+    if (!confirm('¿Está seguro de eliminar esta actividad?')) return;
+    
     this.loading = true;
     this.cdr.markForCheck();
+    
     this.service.eliminarAsistencia(id)
       .pipe(finalize(() => {
         this.loading = false;
@@ -231,18 +422,9 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         },
         error: (err) => {
           console.error('❌ Error al eliminar actividad:', err);
-          this.error = 'Error al eliminar actividad.';
+          this.error = err.error?.message || 'Error al eliminar actividad.';
           this.cdr.markForCheck();
         }
       });
-  }
-
-  toggleEditObservacion(): void {
-    if (!this.isDocente) return;
-    this.editandoObservacion = !this.editandoObservacion;
-    if (!this.editandoObservacion && this.data) {
-      alert('Observación guardada localmente. (Endpoint pendiente para guardar en BD)');
-    }
-    this.cdr.markForCheck();
   }
 }

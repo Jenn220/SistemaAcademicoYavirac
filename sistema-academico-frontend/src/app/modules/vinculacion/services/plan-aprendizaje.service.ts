@@ -8,7 +8,7 @@ import { PlanAprendizaje } from '../models/plan-aprendizaje.model';
   providedIn: 'root'
 })
 export class PlanAprendizajeService {
-  private apiUrl = environment.apiUrl + '/api/vinculacion';  // 👈 AGREGAR /api
+  private apiUrl = environment.apiUrl + '/api/vinculacion';
 
   constructor(private http: HttpClient) {}
 
@@ -19,6 +19,13 @@ export class PlanAprendizajeService {
   actualizarResultadoAprendizaje(idActividad: number, resultado: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/informe-actividades/actividad/${idActividad}`, { 
       resultado_aprendizaje: resultado 
+    });
+  }
+
+  // Actualizar reflexión del estudiante
+  actualizarReflexion(idVinculacion: number, reflexion: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/informe-actividades/${idVinculacion}/reflexion`, { 
+      reflexion: reflexion 
     });
   }
 }

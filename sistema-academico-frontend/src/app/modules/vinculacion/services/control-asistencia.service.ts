@@ -12,7 +12,7 @@ import {
   providedIn: 'root'
 })
 export class ControlAsistenciaService {
-  private apiUrl = environment.apiUrl + '/api/vinculacion/asistencia-estudiante';  // 👈 AGREGAR /api
+  private apiUrl = environment.apiUrl + '/api/vinculacion/asistencia-estudiante';
 
   constructor(private http: HttpClient) {}
 
@@ -30,5 +30,10 @@ export class ControlAsistenciaService {
 
   eliminarActividad(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  // ✅ NUEVO: Actualizar observación
+  actualizarObservacion(idVinculacion: number, observaciones: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${idVinculacion}/observaciones`, { observaciones });
   }
 }

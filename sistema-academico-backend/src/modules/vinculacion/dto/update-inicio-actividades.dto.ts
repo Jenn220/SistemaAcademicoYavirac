@@ -4,8 +4,12 @@ export class UpdateInicioActividadesDto {
   @IsOptional()
   @IsString()
   nombre_proyecto?: string;
-@IsOptional()
-  @IsDateString()
-  fecha_fin?: string; // 👈 Asegúrate de que esté declarado aquí
 
+  @IsOptional()
+  @IsDateString()
+  fecha_inicio?: string; // ✅ AGREGAR
+
+  @IsOptional()
+  @IsDateString()
+  fecha_fin?: string;
 }

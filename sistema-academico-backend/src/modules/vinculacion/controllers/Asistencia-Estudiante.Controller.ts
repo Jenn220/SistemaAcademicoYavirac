@@ -30,7 +30,7 @@ export class AsistenciaEstudianteController {
   ) {}
 
   @Get(':id')
-  @Roles('ESTUDIANTE', 'COORDINADOR')
+  @Roles('ESTUDIANTE', 'COORDINADOR', 'DOCENTE')
   async obtenerAsistencia(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     const idFinal = await this.authService.resolverIdVinculacionLectura(req, id);
     return await this.asistenciaService.obtenerAsistenciaEstudiante(idFinal);

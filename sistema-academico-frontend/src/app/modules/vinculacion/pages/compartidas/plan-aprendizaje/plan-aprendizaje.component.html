@@ -16,6 +16,7 @@
     </div>
   </div>
 
+  <!-- TABLA DE ACTIVIDADES -->
   <table class="tabla">
     <thead>
       <tr>
@@ -30,79 +31,75 @@
       <tr *ngFor="let act of data.informe_actividades; let i = index">
         <td>{{ i + 1 }}</td>
         <td>{{ act.fecha }}</td>
-        <td>{{ act.actividad }}</td>
+        <td>{{ act.actividad || 'Sin actividad registrada' }}</td>
         <td>
-          <span *ngIf="editandoIndice !== i">{{ act.resultado_aprendizaje }}</span>
+          <span *ngIf="editandoIndice !== i">{{ act.resultado_aprendizaje || 'Sin resultado' }}</span>
           <textarea *ngIf="editandoIndice === i" [(ngModel)]="resultadoEdit" rows="2" class="textarea-edit"></textarea>
         </td>
         <td>
           <ng-container *ngIf="editandoIndice !== i">
-            <button (click)="editarResultado(i)" class="btn-edit">✏️</button>
+            <button (click)="editarResultado(i)" class="btn-edit" title="Editar">✏️</button>
           </ng-container>
           <ng-container *ngIf="editandoIndice === i">
-            <button (click)="guardarResultado(i)" class="btn-save">💾</button>
-            <button (click)="cancelarEdicionResultado()" class="btn-cancel">❌</button>
+            <button (click)="guardarResultado(i)" class="btn-save" title="Guardar">💾</button>
+            <button (click)="cancelarEdicionResultado()" class="btn-cancel" title="Cancelar">❌</button>
           </ng-container>
         </td>
       </tr>
     </tbody>
   </table>
 
-  <!-- REFLEXIÓN -->
+  <!-- REFLEXIÓN DEL ESTUDIANTE -->
   <div class="reflexion">
-    <p><strong>Reflexión sobre el aprendizaje alcanzado:</strong></p>
-    <div *ngIf="!editandoReflexion">
-      <p>{{ reflexionEdit }}</p>
-      <button (click)="toggleEditReflexion()" class="btn-edit">✏️ Editar reflexión</button>
+    <div class="reflexion-header">
+      <p><strong>Reflexión sobre el aprendizaje alcanzado:</strong></p>
+      <div class="estado-guardado" *ngIf="!editandoReflexion">
+        <span *ngIf="guardandoReflexion" class="estado guardando">⏳ Guardando...</span>
+        <span *ngIf="reflexionGuardada && !guardandoReflexion" class="estado guardado">✅ Guardado</span>
+        <span *ngIf="!reflexionGuardada && !guardandoReflexion" class="estado sin-guardar">⚠️ Sin guardar</span>
+      </div>
     </div>
+
+    <!-- Modo visualización -->
+    <div *ngIf="!editandoReflexion">
+      <p class="texto-reflexion">{{ reflexionEdit || 'Sin reflexión registrada.' }}</p>
+      <button (click)="toggleEditReflexion()" class="btn-edit-obs">✏️ Editar reflexión</button>
+    </div>
+
+    <!-- Modo edición -->
     <div *ngIf="editandoReflexion">
-      <textarea [(ngModel)]="reflexionEdit" rows="4" class="textarea-edit"></textarea>
+      <div class="reflexion-input-wrapper">
+        <textarea 
+          [(ngModel)]="reflexionEdit" 
+          (ngModelChange)="onReflexionChange()"
+          rows="4" 
+          class="textarea-edit"
+          placeholder="Escriba su reflexión... (se guarda automáticamente)"
+        ></textarea>
+        <button 
+          (click)="guardarReflexion()" 
+          class="btn-guardar-obs"
+          [disabled]="guardandoReflexion || reflexionEdit === reflexionOriginal"
+          title="Guardar reflexión manualmente">
+          💾
+        </button>
+      </div>
+      <div *ngIf="mensajeFeedback" class="feedback">{{ mensajeFeedback }}</div>
       <div class="form-actions">
-        <button (click)="toggleEditReflexion()" class="btn-save">💾 Guardar</button>
-        <button (click)="editandoReflexion = false" class="btn-cancel">❌ Cancelar</button>
+        <button (click)="toggleEditReflexion()" class="btn-cancel">❌ Cancelar</button>
       </div>
     </div>
   </div>
-
-  <!-- AVANCE DEL PROYECTO -->
-  <div class="avance">
-    <h4>Avance del proyecto</h4>
-    <table class="tabla-avance">
-      <thead>
-        <tr>
-          <th>Sección</th>
-          <th>Avance %</th>
-          <th>Acción</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let av of avances; let i = index">
-          <td>{{ av.seccion }}</td>
-          <td>
-            <span *ngIf="editandoAvanceIndex !== i">{{ (av.avance * 100) | number:'1.0-0' }}%</span>
-            <input *ngIf="editandoAvanceIndex === i" type="number" [(ngModel)]="avanceEdit" min="0" max="1" step="0.01" class="input-avance" />
-          </td>
-          <td>
-            <ng-container *ngIf="editandoAvanceIndex !== i">
-              <button (click)="editarAvance(i)" class="btn-edit">✏️</button>
-            </ng-container>
-            <ng-container *ngIf="editandoAvanceIndex === i">
-              <button (click)="guardarAvance(i)" class="btn-save">💾</button>
-              <button (click)="cancelarEdicionAvance()" class="btn-cancel">❌</button>
-            </ng-container>
-          </td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td><strong>Total</strong></td>
-          <td><strong>{{ (getTotalAvance() * 100) | number:'1.0-0' }}%</strong></td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
 </div>
 
-<div class="loading" *ngIf="loading">Cargando...</div>
-<div class="error" *ngIf="error">{{ error }}</div>
+<!-- LOADING -->
+<div class="loading" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
+
+<!-- ERROR -->
+<div class="error" *ngIf="error">
+  <span class="error-icon">⚠️</span>
+  {{ error }}
+</div>

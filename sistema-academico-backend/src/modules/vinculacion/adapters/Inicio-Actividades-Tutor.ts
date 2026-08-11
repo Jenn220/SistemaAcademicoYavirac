@@ -60,29 +60,32 @@ async obtainInicioActividadesTutorRaw(idVinculacion: number): Promise<any> {
     return rows.length > 0 ? rows[0] : null;
   }
 
-  async actualizarInicioActividadesRaw(
-    idVinculacion: number,
-    datos: { nombre_proyecto?: string; fecha_fin?: string }
-  ): Promise<boolean> {
-    const { nombre_proyecto, fecha_fin } = datos;
+// Inicio-Actividades-Tutor.ts (Adapter)
+async actualizarInicioActividadesRaw(
+  idVinculacion: number,
+  datos: { nombre_proyecto?: string; fecha_inicio?: string; fecha_fin?: string }
+): Promise<boolean> {
+  const { nombre_proyecto, fecha_inicio, fecha_fin } = datos;
 
-    // Actualizamos los campos que vengan definidos
-    const query = `
-      UPDATE vinculacion_estudiante
-      SET 
-        nombre_proyecto = COALESCE($1, nombre_proyecto),
-        fecha_fin = COALESCE($2, fecha_fin)
-      WHERE id_vinculacion = $3;
-    `;
-    
-    await this.repo.query(query, [
-      nombre_proyecto ?? null,
-      fecha_fin ?? null,
-      idVinculacion,
-    ]);
+  // ✅ AGREGAR fecha_inicio al UPDATE
+  const query = `
+    UPDATE vinculacion_estudiante
+    SET 
+      nombre_proyecto = COALESCE($1, nombre_proyecto),
+      fecha_inicio = COALESCE($2, fecha_inicio),
+      fecha_fin = COALESCE($3, fecha_fin)
+    WHERE id_vinculacion = $4;
+  `;
+  
+  await this.repo.query(query, [
+    nombre_proyecto ?? null,
+    fecha_inicio ?? null,  // ✅ AGREGADO
+    fecha_fin ?? null,
+    idVinculacion,
+  ]);
 
-    return true;
-  }
+  return true;
+}
   async actualizarFechaFin(idVinculacion: number, fechaFin: string): Promise<void> {
   const query = `
     UPDATE vinculacion_estudiante 

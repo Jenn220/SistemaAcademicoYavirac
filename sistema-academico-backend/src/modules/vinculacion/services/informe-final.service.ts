@@ -7,6 +7,7 @@ import { UpdateEvaluacionDto } from '../dto/update-evaluacion.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EvaluacionVinculacion } from '../domain/vinculacion-evaluacion';
 import { VinculacionReporteObservacionEntity } from '../domain/vinculacion_reporte_observacion';
+import { EvaluacionParametrosTutorEntity } from '../domain/evaluacion-parametros-tutor.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -15,14 +16,17 @@ export class InformeFinalService {
     @Inject(INFORME_FINAL_PORT) 
     private readonly repository: IInformeFinalPort,
 
-// 2. Puedes inyectar directamente los repositorios que necesites aquí:
     @InjectRepository(EvaluacionVinculacion)
     private readonly evaluacionRepo: Repository<EvaluacionVinculacion>,
 
     @InjectRepository(VinculacionReporteObservacionEntity)
     private readonly observacionRepo: Repository<VinculacionReporteObservacionEntity>,
 
+    // ✅ NUEVO REPOSITORIO PARA PARÁMETROS
+    @InjectRepository(EvaluacionParametrosTutorEntity)
+    private readonly parametrosRepo: Repository<EvaluacionParametrosTutorEntity>,
   ) {}
+
   async obtenerInformeFinal(idVinculacion: number) {
     const resultados = await this.repository.obtainInformeFinalRaw(idVinculacion);
     if (!resultados || resultados.length === 0) return null;
@@ -70,6 +74,33 @@ export class InformeFinalService {
 
     const notaNumerica = parseFloat(primerRegistro.nota_final || 0);
 
+    // ✅ RECUPERAR PARÁMETROS DE EVALUACIÓN
+    let parametros = null;
+    try {
+      const parametrosData = await this.parametrosRepo.findOne({
+        where: { idVinculacion: String(idVinculacion) }
+      });
+      
+      if (parametrosData) {
+        parametros = {
+          puntualidad: parametrosData.puntualidad,
+          trabajo_autonomo: parametrosData.trabajoAutonomo,
+          asistencia: parametrosData.asistencia,
+          etica_profesional: parametrosData.eticaProfesional,
+          cumple_tareas: parametrosData.cumpleTareas,
+          actitud_proactiva: parametrosData.actitudProactiva,
+          coopera_permanentemente: parametrosData.cooperaPermanentemente,
+          respeto_autoridad: parametrosData.respetoAutoridad,
+          constancia_predisposicion: parametrosData.constanciaPredisposicion,
+          responsabilidad_esmero: parametrosData.responsabilidadEsmero,
+          habilidad_practica: parametrosData.habilidadPractica,
+        };
+      }
+    } catch (error) {
+      // Si no hay parámetros, simplemente no se muestran
+      console.log('No se encontraron parámetros de evaluación para esta vinculación');
+    }
+
     return {
       datos_generales: {
         carrera: primerRegistro.carrera,
@@ -103,34 +134,38 @@ export class InformeFinalService {
         observaciones: primerRegistro.observaciones_evaluacion || "Sin observaciones",
         coordinador: (primerRegistro.coordinador && primerRegistro.coordinador.trim() !== "") 
           ? primerRegistro.coordinador.trim() 
-          : "Sin Coordinador Asignado"
+          : "Sin Coordinador Asignado",
+        // ✅ AGREGAR PARÁMETROS A LA RESPUESTA
+        parametros: parametros
       }
     };
   }
-async guardarEvaluacionFinal(idVinculacion: number, dto: UpdateEvaluacionDto) {
+
+  async guardarEvaluacionFinal(idVinculacion: number, dto: UpdateEvaluacionDto) {
     const idStr = String(idVinculacion);
 
+    // 1. Guardar nota final
     if (dto.notaFinal !== undefined) {
-   let evaluacion = await this.evaluacionRepo.findOne({
-  where: { idVinculacion: idStr }
-});
+      let evaluacion = await this.evaluacionRepo.findOne({
+        where: { idVinculacion: idStr }
+      });
 
-if (evaluacion) {
-  evaluacion.notaFinal = dto.notaFinal;
-  evaluacion.fechaEvaluacion = new Date();
-  await this.evaluacionRepo.save(evaluacion);
-} else {
-  evaluacion = this.evaluacionRepo.create({
-    idVinculacion: idStr,
-    notaFinal: dto.notaFinal!,
-    fechaEvaluacion: new Date(),
-    // 👈 Solución al error de idRubrica: si es null o undefined, pásale undefined en lugar de null
-    idRubrica: dto.idRubrica ?? undefined, 
-  });
-  await this.evaluacionRepo.save(evaluacion);
-}
+      if (evaluacion) {
+        evaluacion.notaFinal = dto.notaFinal;
+        evaluacion.fechaEvaluacion = new Date();
+        await this.evaluacionRepo.save(evaluacion);
+      } else {
+        evaluacion = this.evaluacionRepo.create({
+          idVinculacion: idStr,
+          notaFinal: dto.notaFinal!,
+          fechaEvaluacion: new Date(),
+          idRubrica: dto.idRubrica ?? undefined,
+        });
+        await this.evaluacionRepo.save(evaluacion);
+      }
     }
 
+    // 2. Guardar observaciones
     if (dto.observaciones !== undefined) {
       let reporteObs = await this.observacionRepo.findOne({
         where: { id_vinculacion: idStr, tipo_reporte: 'INFORME_FINAL' }
@@ -149,8 +184,65 @@ if (evaluacion) {
       }
     }
 
+    // ✅ 3. GUARDAR PARÁMETROS DE EVALUACIÓN
+    // Verificar si vienen parámetros en el DTO
+    const tieneParametros = 
+      dto.puntualidad !== undefined ||
+      dto.trabajo_autonomo !== undefined ||
+      dto.asistencia !== undefined ||
+      dto.etica_profesional !== undefined ||
+      dto.cumple_tareas !== undefined ||
+      dto.actitud_proactiva !== undefined ||
+      dto.coopera_permanentemente !== undefined ||
+      dto.respeto_autoridad !== undefined ||
+      dto.constancia_predisposicion !== undefined ||
+      dto.responsabilidad_esmero !== undefined ||
+      dto.habilidad_practica !== undefined;
+
+    if (tieneParametros) {
+      // Buscar si ya existe un registro de parámetros para esta vinculación
+      let parametros = await this.parametrosRepo.findOne({
+        where: { idVinculacion: idStr }
+      });
+
+      if (parametros) {
+        // Actualizar existente
+        if (dto.puntualidad !== undefined) parametros.puntualidad = dto.puntualidad;
+        if (dto.trabajo_autonomo !== undefined) parametros.trabajoAutonomo = dto.trabajo_autonomo;
+        if (dto.asistencia !== undefined) parametros.asistencia = dto.asistencia;
+        if (dto.etica_profesional !== undefined) parametros.eticaProfesional = dto.etica_profesional;
+        if (dto.cumple_tareas !== undefined) parametros.cumpleTareas = dto.cumple_tareas;
+        if (dto.actitud_proactiva !== undefined) parametros.actitudProactiva = dto.actitud_proactiva;
+        if (dto.coopera_permanentemente !== undefined) parametros.cooperaPermanentemente = dto.coopera_permanentemente;
+        if (dto.respeto_autoridad !== undefined) parametros.respetoAutoridad = dto.respeto_autoridad;
+        if (dto.constancia_predisposicion !== undefined) parametros.constanciaPredisposicion = dto.constancia_predisposicion;
+        if (dto.responsabilidad_esmero !== undefined) parametros.responsabilidadEsmero = dto.responsabilidad_esmero;
+        if (dto.habilidad_practica !== undefined) parametros.habilidadPractica = dto.habilidad_practica;
+        
+        await this.parametrosRepo.save(parametros);
+      } else {
+        // Crear nuevo
+        parametros = this.parametrosRepo.create({
+          idVinculacion: idStr,
+          puntualidad: dto.puntualidad || 0,
+          trabajoAutonomo: dto.trabajo_autonomo || 0,
+          asistencia: dto.asistencia || 0,
+          eticaProfesional: dto.etica_profesional || 0,
+          cumpleTareas: dto.cumple_tareas || 0,
+          actitudProactiva: dto.actitud_proactiva || 0,
+          cooperaPermanentemente: dto.coopera_permanentemente || 0,
+          respetoAutoridad: dto.respeto_autoridad || 0,
+          constanciaPredisposicion: dto.constancia_predisposicion || 0,
+          responsabilidadEsmero: dto.responsabilidad_esmero || 0,
+          habilidadPractica: dto.habilidad_practica || 0,
+        });
+        await this.parametrosRepo.save(parametros);
+      }
+    }
+
     return { message: "Evaluación y observaciones guardadas correctamente" };
   }
+
   async listarInformesPorDocente(idDocente: number) {
     const listado = await this.repository.listarInformesEstudiantesPorDocente(idDocente);
     return listado.map((item) => ({

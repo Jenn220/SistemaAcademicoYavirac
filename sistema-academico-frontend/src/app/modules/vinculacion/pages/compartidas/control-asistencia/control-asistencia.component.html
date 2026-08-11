@@ -1,6 +1,10 @@
 <div class="asistencia-container" *ngIf="!loading && !error && data">
+  <app-volver-archivos *ngIf="isDocente" />
+  
+  <!-- CABECERA -->
   <div class="cabecera">
     <h2>CONTROL DE ASISTENCIA Y SEGUIMIENTO DE VINCULACIÓN CON LA COMUNIDAD</h2>
+    
     <div class="datos">
       <p><strong>CARRERA:</strong> {{ data.cabecera.carrera }}</p>
       <p><strong>ESTUDIANTE:</strong> {{ data.cabecera.estudiante }}</p>
@@ -10,9 +14,24 @@
       <p><strong>TUTOR ENTIDAD:</strong> {{ data.cabecera.tutor_entidad_receptora }}</p>
       <p><strong>PERIODO:</strong> {{ data.cabecera.periodo_academico }}</p>
     </div>
+
+    <div class="rango-fechas" *ngIf="fechaInicioProyecto || fechaFinProyecto">
+      <p>
+        <strong>📅 RANGO DEL PROYECTO:</strong>
+        <span class="fecha-rango">
+          {{ formatearFecha(fechaInicioProyecto) }} 
+          <span class="separador">—</span> 
+          {{ formatearFecha(fechaFinProyecto) }}
+        </span>
+        <span class="indicador">
+          <span class="dot verde"></span> Las fechas deben estar dentro de este rango
+        </span>
+      </p>
+    </div>
   </div>
 
-  <table class="tabla-actividades">
+  <!-- TABLA DE ACTIVIDADES -->
+  <table class="tabla-actividades" *ngIf="isEstudiante">
     <thead>
       <tr>
         <th>FECHA</th>
@@ -31,25 +50,28 @@
         </td>
         <td>
           <span *ngIf="editandoId !== act.id">{{ act.hora_entrada }}</span>
-          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" />
+          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" (ngModelChange)="errorHora = null" />
         </td>
         <td>
           <span *ngIf="editandoId !== act.id">{{ act.hora_salida }}</span>
-          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" />
+          <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" (ngModelChange)="errorHora = null" />
         </td>
         <td>{{ act.total_horas | number:'1.2-2' }}</td>
         <td>
           <span *ngIf="editandoId !== act.id">{{ act.descripcion }}</span>
-          <input *ngIf="editandoId === act.id" type="text" [(ngModel)]="editandoActividad.actividades_realizadas" />
+          <input *ngIf="editandoId === act.id" type="text" [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" />
         </td>
         <td>
+          <div *ngIf="errorHora && editandoId === act.id" class="error-hora-small">
+            {{ errorHora }}
+          </div>
           <ng-container *ngIf="editandoId !== act.id">
-            <button (click)="editarActividad(act)" class="btn-edit">✏️</button>
-            <button (click)="eliminarActividad(act.id)" class="btn-delete">🗑️</button>
+            <button (click)="editarActividad(act)" class="btn-edit" title="Editar">✏️</button>
+            <button (click)="eliminarActividad(act.id)" class="btn-delete" title="Eliminar">🗑️</button>
           </ng-container>
           <ng-container *ngIf="editandoId === act.id">
-            <button (click)="guardarEdicion()" class="btn-save">💾</button>
-            <button (click)="cancelarEdicion()" class="btn-cancel">❌</button>
+            <button (click)="guardarEdicion()" class="btn-save" title="Guardar">💾</button>
+            <button (click)="cancelarEdicion()" class="btn-cancel" title="Cancelar">❌</button>
           </ng-container>
         </td>
       </tr>
@@ -63,33 +85,122 @@
     </tfoot>
   </table>
 
+  <!-- OBSERVACIONES -->
   <div class="observaciones">
-    <p><strong>OBSERVACIONES:</strong> {{ data.totales.observaciones || 'Ninguna' }}</p>
+    <div class="observaciones-header">
+      <label for="observaciones"><strong>OBSERVACIONES:</strong></label>
+      
+      <div *ngIf="puedeEditarObservaciones && !editandoObservacion" class="estado-guardado">
+        <span *ngIf="guardandoObservacion" class="estado guardando">⏳ Guardando...</span>
+        <span *ngIf="observacionGuardada && !guardandoObservacion" class="estado guardado">✅ Guardado</span>
+        <span *ngIf="!observacionGuardada && !guardandoObservacion" class="estado sin-guardar">⚠️ Sin guardar</span>
+      </div>
+    </div>
+    
+    <!-- ESTUDIANTE: solo lectura -->
+    <div *ngIf="!puedeEditarObservaciones" class="observaciones-input-wrapper">
+      <input 
+        type="text" 
+        [value]="observaciones"
+        disabled
+        class="input-observaciones input-readonly"
+        placeholder="Sin observaciones"
+      />
+    </div>
+    
+    <!-- DOCENTE / COORDINADOR: editable con auto-guardado -->
+    <div *ngIf="puedeEditarObservaciones" class="observaciones-input-wrapper">
+      
+      <!-- MODO VISTA -->
+      <div *ngIf="!editandoObservacion" class="observaciones-vista">
+        <p class="texto-observacion">{{ observaciones || 'Sin observaciones' }}</p>
+        <button (click)="toggleEditObservacion()" class="btn-edit-obs">✏️ Editar observación</button>
+      </div>
+      
+      <!-- MODO EDICIÓN -->
+      <div *ngIf="editandoObservacion" class="observaciones-edicion">
+        <input 
+          id="observaciones"
+          type="text" 
+          [(ngModel)]="observaciones"
+          (ngModelChange)="onObservacionChange()"
+          placeholder="Escriba una observación... (se guarda automáticamente)"
+          class="input-observaciones"
+        />
+        <button 
+          (click)="guardarObservacion()" 
+          class="btn-guardar-obs"
+          [disabled]="guardandoObservacion || observaciones === observacionesOriginales"
+          title="Guardar observación manualmente">
+          💾
+        </button>
+      </div>
+    </div>
+    
+    <div *ngIf="puedeEditarObservaciones && mensajeFeedback" class="feedback">
+      {{ mensajeFeedback }}
+    </div>
   </div>
 
-  <div class="acciones">
-    <button *ngIf="!mostrandoFormulario" (click)="mostrarFormulario()" class="btn-add">+ Agregar actividad</button>
+  <!-- BOTÓN AGREGAR (SOLO ESTUDIANTE) -->
+  <div class="acciones" *ngIf="isEstudiante">
+    <button *ngIf="!mostrandoFormulario" (click)="mostrarFormulario()" class="btn-add">
+      + Agregar actividad
+    </button>
   </div>
 
-  <div class="nueva-actividad" *ngIf="mostrandoFormulario">
-    <h3>Nueva actividad</h3>
-    <div class="form-row">
-      <label>Fecha: <input type="date" [(ngModel)]="nuevaActividad.fecha" /></label>
-      <label>Hora entrada: <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" /></label>
-      <label>Hora salida: <input type="time" [(ngModel)]="nuevaActividad.hora_fin" /></label>
+  <!-- FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) -->
+  <div class="nueva-actividad" *ngIf="mostrandoFormulario && isEstudiante">
+    <h3>📝 Nueva actividad</h3>
+    
+    <div *ngIf="errorHora" class="error-hora">
+      {{ errorHora }}
     </div>
+    
     <div class="form-row">
-      <label>Actividad realizada: <input type="text" [(ngModel)]="nuevaActividad.actividades_realizadas" /></label>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" [(ngModel)]="nuevaActividad.fecha" />
+      </div>
+      <div class="form-group">
+        <label>Hora entrada</label>
+        <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora salida</label>
+        <input type="time" [(ngModel)]="nuevaActividad.hora_fin" (ngModelChange)="errorHora = null" />
+      </div>
     </div>
+
     <div class="form-row">
-      <label>Observación: <input type="text" [(ngModel)]="nuevaActividad.observacion" /></label>
+      <div class="form-group full-width">
+        <label>Actividad realizada</label>
+        <input type="text" [(ngModel)]="nuevaActividad.actividades_realizadas" placeholder="Describa la actividad realizada" />
+      </div>
     </div>
+
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label>Observación</label>
+        <input type="text" [(ngModel)]="nuevaActividad.observacion" placeholder="Observaciones adicionales (opcional)" />
+      </div>
+    </div>
+
     <div class="form-actions">
-      <button (click)="agregarActividad()" class="btn-save">Guardar</button>
-      <button (click)="cancelarNuevo()" class="btn-cancel">Cancelar</button>
+      <button (click)="agregarActividad()" class="btn-save" [disabled]="loading">💾 Guardar</button>
+      <button (click)="cancelarNuevo()" class="btn-cancel">❌ Cancelar</button>
     </div>
   </div>
 </div>
 
-<div class="loading" *ngIf="loading">Cargando...</div>
-<div class="error" *ngIf="error">{{ error }}</div>
+<!-- LOADING -->
+<div class="loading" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
+
+<!-- ERROR -->
+<div class="error" *ngIf="error">
+  <span class="error-icon">⚠️</span>
+  {{ error }}
+</div>

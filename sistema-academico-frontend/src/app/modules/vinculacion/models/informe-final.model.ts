@@ -1,18 +1,4 @@
-export interface ActividadInforme {
-  fecha: string;
-  actividades: string;
-  horas_cumplidas: number;
-  observaciones: string;
-}
-
-export interface ObjetivoInforme {
-  objetivo: string;
-  actividades: string;
-  avance: string;
-  resultados: string;
-}
-
-export interface InformeFinal {
+export interface InformeFinalResponse {
   datos_generales: {
     carrera: string;
     fecha_informe: string;
@@ -30,14 +16,38 @@ export interface InformeFinal {
     tutor_entidad: string;
     docente_tutor: string;
   };
-  resumen_actividades: ActividadInforme[];
+  resumen_actividades: Array<{
+    fecha: string;
+    actividades: string;
+    horas_cumplidas: number;
+    observaciones: string;
+  }>;
   total_horas_cumplidas: number;
-  objetivos_proyecto: ObjetivoInforme[];
+  objetivos_proyecto: Array<{
+    objetivo: string;
+    actividades: string;
+    avance: string;
+    resultados: string;
+  }>;
   reflexion_estudiante: string;
   evaluacion_final: {
-    nota_final: string;
+    nota_final: number | string;
     nota_letras: string;
     observaciones: string;
     coordinador: string;
+    // ✅ PARÁMETROS DE EVALUACIÓN
+    parametros?: {
+      puntualidad: number;
+      trabajo_autonomo: number;
+      asistencia: number;
+      etica_profesional: number;
+      cumple_tareas: number;
+      actitud_proactiva: number;
+      coopera_permanentemente: number;
+      respeto_autoridad: number;
+      constancia_predisposicion: number;
+      responsabilidad_esmero: number;
+      habilidad_practica: number;
+    };
   };
 }

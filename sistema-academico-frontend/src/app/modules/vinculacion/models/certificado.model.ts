@@ -10,3 +10,12 @@ export interface Certificado {
   institucion: string;
   representante: string;
 }
+
+// ✅ OPCIONAL: Interfaz para datos combinados
+export interface CertificadoCompleto {
+  certificado: Certificado;
+  proyectoNombre: string;
+  fechaInicio: string;
+  fechaFin: string;
+  totalHoras: number;
+}

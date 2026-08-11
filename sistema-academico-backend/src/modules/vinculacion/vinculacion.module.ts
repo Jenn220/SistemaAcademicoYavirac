@@ -1,3 +1,4 @@
+// vinculacion.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -10,7 +11,6 @@ import { AsistenciaTutorController } from './controllers/Asistencia-Tutor.Contro
 import { InformeActividadesController } from './controllers/Informe-Actividades.Controller';
 import { CertificadoVinculacionController } from './controllers/Certificado-Vinculacion.Controller';
 import { InformeFinalController } from './controllers/Informe-Final.Controller';
-// ✅ NUEVO CONTROLADOR
 import { VinculacionController } from './controllers/vinculacion.controller';
 
 // Entidades
@@ -23,6 +23,7 @@ import { EvaluacionVinculacion } from './domain/vinculacion-evaluacion';
 import { DetalleEvaluacionVinculacion } from './domain/detalle-evaluacion-vinculacion.entity';
 import { VinculacionReporteObservacionEntity } from './domain/vinculacion_reporte_observacion';
 import { EntidadReceptoraEntity } from './domain/entidad-receptora.entity';
+import { EvaluacionParametrosTutorEntity } from './domain/evaluacion-parametros-tutor.entity';
 
 // Servicios
 import { EntidadReceptoraService } from './services/entidad-receptora.service';
@@ -34,13 +35,13 @@ import { AsistenciaTutorService } from './services/asistencia-tutor.service';
 import { InformeActividadesService } from './services/informe-actividades.service';
 import { InformeFinalService } from './services/informe-final.service';
 import { CertificadoVinculacionService } from './services/certificado-vinculacion.service';
-// ✅ NUEVO SERVICIO
 import { VinculacionService } from './services/vinculacion.service';
 
 // Puertos
 import { ENTIDAD_RECEPTORA_PORT } from './ports/entidad-receptora.port';
 import { VINCULACION_ACTA_PORT } from './ports/acta-compromiso.port';
 import { VINCULACION_ASISTENCIA_ESTUDIANTE_PORT } from './ports/asistencia-estudiante.port';
+// ✅ IMPORTAR CORRECTAMENTE (usando la constante exportada)
 import { VINCULACION_INICIO_ACTIVIDADES_PORT } from './ports/inicio-actividades-tutor.port';
 import { VINCULACION_ASISTENCIA_TUTOR_PORT } from './ports/asistencia-tutor.port';
 import { INFORME_ACTIVIDADES_PORT } from './ports/informe-actividades.port';
@@ -69,6 +70,7 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
       DetalleEvaluacionVinculacion,
       VinculacionReporteObservacionEntity,
       EntidadReceptoraEntity,
+      EvaluacionParametrosTutorEntity,
     ]),
   ],
   controllers: [
@@ -80,7 +82,6 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
     InformeActividadesController,
     CertificadoVinculacionController,
     InformeFinalController,
-    // ✅ NUEVO CONTROLADOR
     VinculacionController,
   ],
   providers: [
@@ -94,7 +95,6 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
     InformeActividadesService,
     InformeFinalService,
     CertificadoVinculacionService,
-    // ✅ NUEVO SERVICIO
     VinculacionService,
 
     // Adaptadores
@@ -134,7 +134,6 @@ import { InformeFinalAdapter } from './adapters/Informe-Final';
   exports: [
     EntidadReceptoraService,
     AuthVinculacionService,
-    // ✅ EXPORTAR EL NUEVO SERVICIO (opcional, por si otros módulos lo necesitan)
     VinculacionService,
   ],
 })

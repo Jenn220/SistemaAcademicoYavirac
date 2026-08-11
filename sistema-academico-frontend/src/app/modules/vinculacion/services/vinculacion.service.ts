@@ -8,12 +8,12 @@ import { EstudianteDocente } from '../models/vinculacion.model';
   providedIn: 'root'
 })
 export class VinculacionService {
-  private apiUrl = environment.apiUrl + '/api/vinculacion';
+  private apiUrl = environment.apiUrl + '/api';  // ✅ AGREGAR /api AQUÍ
 
   constructor(private http: HttpClient) {}
 
   obtenerEstudiantesAsignados(): Observable<EstudianteDocente[]> {
-    return this.http.get<EstudianteDocente[]>(`${this.apiUrl}/informe-final`);
+    return this.http.get<EstudianteDocente[]>(`${this.apiUrl}/vinculacion/informe-final`);
   }
 
   /**
@@ -21,7 +21,7 @@ export class VinculacionService {
    * Endpoint: GET /api/vinculacion/estudiante/vinculacion-activa
    */
   obtenerVinculacionActiva(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/estudiante/vinculacion-activa`);
+    return this.http.get(`${this.apiUrl}/vinculacion/estudiante/vinculacion-activa`);
   }
 
   /**
@@ -29,6 +29,6 @@ export class VinculacionService {
    * Endpoint: GET /api/vinculacion/:id
    */
   obtenerVinculacionPorId(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/${id}`);
+    return this.http.get(`${this.apiUrl}/vinculacion/${id}`);
   }
 }

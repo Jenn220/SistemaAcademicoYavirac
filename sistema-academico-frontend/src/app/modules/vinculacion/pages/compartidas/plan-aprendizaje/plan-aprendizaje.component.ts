@@ -28,17 +28,18 @@ export class PlanAprendizajeComponent implements OnInit {
   isEstudiante = false;
   idVinculacion: number = 0;
 
+  // Edición de resultado de aprendizaje
   editandoIndice: number | null = null;
   resultadoEdit: string = '';
 
+  // Reflexión - auto-guardado
   reflexionEdit: string = '';
+  reflexionOriginal: string = '';
+  guardandoReflexion: boolean = false;
+  reflexionGuardada: boolean = true;
+  timeoutReflexion: any = null;
+  mensajeFeedback: string = '';
   editandoReflexion = false;
-
-  avances: { tema: string; seccion: string; avance: number }[] = [];
-  editandoAvanceIndex: number | null = null;
-  avanceEdit: number = 0;
-
-  private primeraCarga = true;
 
   ngOnInit(): void {
     const roles = this.authService.roles();
@@ -104,21 +105,12 @@ export class PlanAprendizajeComponent implements OnInit {
         next: (data) => {
           console.log('📦 Datos de Plan de Aprendizaje recibidos:', data);
           this.data = data;
-          if (this.primeraCarga) {
-            this.reflexionEdit = 'Los estudiantes desarrollaron algunas habilidades blandas como: comunicación en equipo, coordinación de actividades, planificación de actividades.';
-            this.primeraCarga = false;
-          }
-          this.avances = [
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '1. Título del Proyecto (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '2. Antecedentes (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '3. Marco Teórico (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '4. Metodología (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '5. Resultados (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '6. Conclusiones y recomendaciones (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '7. Referencias bibliográficas (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '8. Anexos (10%)', avance: 0.1 },
-            { tema: data.cabecera?.titulo_proyecto || '', seccion: '9. Entrega de proyecto final (20%)', avance: 0.2 }
-          ];
+          
+          // Cargar reflexión desde los datos (viene del backend)
+          this.reflexionEdit = data.reflexion_estudiante || '';
+          this.reflexionOriginal = this.reflexionEdit;
+          this.reflexionGuardada = true;
+          
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -129,6 +121,83 @@ export class PlanAprendizajeComponent implements OnInit {
       });
   }
 
+  // ============================================
+  // REFLEXIÓN - AUTO-GUARDADO
+  // ============================================
+  onReflexionChange(): void {
+    if (this.timeoutReflexion) {
+      clearTimeout(this.timeoutReflexion);
+    }
+
+    this.reflexionGuardada = false;
+
+    this.timeoutReflexion = setTimeout(() => {
+      this.guardarReflexion();
+    }, 1500);
+  }
+
+  guardarReflexion(): void {
+    if (this.guardandoReflexion) return;
+    if (this.reflexionEdit === this.reflexionOriginal) {
+      this.reflexionGuardada = true;
+      // ✅ CERRAR el recuadro si no hay cambios
+      this.editandoReflexion = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.guardandoReflexion = true;
+    this.reflexionGuardada = false;
+    this.cdr.markForCheck();
+
+    this.service.actualizarReflexion(this.idVinculacion, this.reflexionEdit)
+      .pipe(finalize(() => {
+        this.guardandoReflexion = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: () => {
+          console.log('✅ Reflexión guardada automáticamente');
+          this.reflexionOriginal = this.reflexionEdit;
+          this.reflexionGuardada = true;
+          this.mostrarFeedback('Reflexión guardada ✅');
+          // ✅ CERRAR el recuadro después de guardar
+          this.editandoReflexion = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('❌ Error al guardar reflexión:', err);
+          this.error = 'Error al guardar la reflexión.';
+          this.reflexionGuardada = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  toggleEditReflexion(): void {
+    // Si está en modo edición y se hace clic, guardar y cerrar
+    if (this.editandoReflexion) {
+      this.guardarReflexion();
+    } else {
+      // Activar modo edición
+      this.editandoReflexion = true;
+      this.reflexionEdit = this.data?.reflexion_estudiante || '';
+      this.reflexionOriginal = this.reflexionEdit;
+      this.cdr.markForCheck();
+    }
+  }
+
+  mostrarFeedback(mensaje: string): void {
+    this.mensajeFeedback = mensaje;
+    setTimeout(() => {
+      this.mensajeFeedback = '';
+      this.cdr.markForCheck();
+    }, 3000);
+  }
+
+  // ============================================
+  // RESULTADO DE APRENDIZAJE
+  // ============================================
   editarResultado(index: number): void {
     if (!this.data) return;
     this.editandoIndice = index;
@@ -167,34 +236,5 @@ export class PlanAprendizajeComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
-  }
-
-  toggleEditReflexion(): void {
-    this.editandoReflexion = !this.editandoReflexion;
-    if (!this.editandoReflexion) {
-      alert('Reflexión actualizada localmente. (Endpoint pendiente para guardar en BD)');
-    }
-    this.cdr.markForCheck();
-  }
-
-  editarAvance(index: number): void {
-    this.editandoAvanceIndex = index;
-    this.avanceEdit = this.avances[index].avance;
-    this.cdr.markForCheck();
-  }
-
-  cancelarEdicionAvance(): void {
-    this.editandoAvanceIndex = null;
-    this.avanceEdit = 0;
-    this.cdr.markForCheck();
-  }
-
-  guardarAvance(index: number): void {
-    this.avances[index].avance = this.avanceEdit;
-    this.cancelarEdicionAvance();
-  }
-
-  getTotalAvance(): number {
-    return this.avances.reduce((acc, a) => acc + a.avance, 0);
   }
 }
