@@ -1,0 +1,9 @@
+{
+  "id": "env-local",
+  "name": "Local Docker",
+  "values": [
+    { "key": "base_url", "value": "http://localhost:3000", "enabled": true },
+    { "key": "idPractica", "value": "6", "enabled": true }
+  ],
+  "timestamp": 0
+}
