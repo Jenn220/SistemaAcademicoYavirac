@@ -21,14 +21,14 @@ export class PlanMarcoController {
 
   @Get('plan-marco/practica/:idPractica')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  findByPractica(@Param('idPractica') idPractica: string, @Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.planMarcoService.findByPractica(Number(idPractica), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findByPractica(@Req() req: any, @Param('idPractica') idPractica: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.planMarcoService.findByPractica(req.user, Number(idPractica), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Get('plan-marco/:id')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  findById(@Param('id') id: string) {
-    return this.planMarcoService.findById(Number(id));
+  findById(@Req() req: any, @Param('id') id: string) {
+    return this.planMarcoService.findById(req.user, Number(id));
   }
 
   @Patch('plan-marco/:id')

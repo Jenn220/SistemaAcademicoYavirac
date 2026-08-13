@@ -16,7 +16,7 @@ export class EvaluacionInstitutoService {
   ) {}
 
   private async esDuenoDePractica(usuario: any, idPractica: number): Promise<void> {
-    if (usuario.rol !== 'ESTUDIANTE') {
+    if (!Array.isArray(usuario?.roles) || !usuario.roles.includes('ESTUDIANTE')) {
       return;
     }
     const esDueno = await this.dataSource.query(
@@ -24,7 +24,7 @@ export class EvaluacionInstitutoService {
        JOIN matricula m ON m.id_matricula = md.id_matricula
        JOIN practica_estudiante pe ON pe.id_matricula_detalle = md.id_matricula_detalle
        WHERE pe.id_practica = $1 AND m.id_estudiante = $2`,
-      [idPractica, usuario.id_usuario],
+      [idPractica, usuario.idEstudiante],
     );
     if (!esDueno || esDueno.length === 0) {
       throw new NotFoundException('No tienes permiso para acceder a esta evaluación');

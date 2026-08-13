@@ -176,14 +176,14 @@ export class PracticaService {
     if (!practica) {
       throw new NotFoundException(`Práctica con id ${idPractica} no encontrada`);
     }
-    if (usuario.rol !== 'ESTUDIANTE') {
+    if (!Array.isArray(usuario?.roles) || !usuario.roles.includes('ESTUDIANTE')) {
       return;
     }
     const esDueno = await this.dataSource.query(
       `SELECT 1 FROM matricula_detalle md
        JOIN matricula m ON m.id_matricula = md.id_matricula
        WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
-      [practica.id_matricula_detalle, usuario.id_usuario],
+      [practica.id_matricula_detalle, usuario.idEstudiante],
     );
     if (!esDueno || esDueno.length === 0) {
       throw new BadRequestException('No tienes permiso para modificar esta práctica');

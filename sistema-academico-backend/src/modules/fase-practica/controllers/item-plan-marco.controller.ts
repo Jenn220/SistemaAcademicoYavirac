@@ -24,14 +24,14 @@ export class ItemPlanMarcoController {
 
   @Get('plan-marco/:idPlanMarco/items')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  findByPlanMarco(@Param('idPlanMarco') idPlanMarco: string, @Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.itemPlanMarcoService.findByPlanMarco(Number(idPlanMarco), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findByPlanMarco(@Req() req: any, @Param('idPlanMarco') idPlanMarco: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.itemPlanMarcoService.findByPlanMarco(req.user, Number(idPlanMarco), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Get('items-plan-marco/:id')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  findOne(@Param('id') id: string) {
-    return this.itemPlanMarcoService.findById(Number(id));
+  findOne(@Req() req: any, @Param('id') id: string) {
+    return this.itemPlanMarcoService.findById(req.user, Number(id));
   }
 
   @Patch('items-plan-marco/:id')
