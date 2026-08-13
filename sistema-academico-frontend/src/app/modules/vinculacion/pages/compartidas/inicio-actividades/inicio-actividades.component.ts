@@ -40,7 +40,7 @@ export class InicioActividadesComponent implements OnInit {
   isEditingEnabled = true;
   editedFields = {
     nombre_proyecto: '',
-    fecha_inicio: '', // ✅ AGREGADO
+    fecha_inicio: '',
     fecha_fin: ''
   };
   
@@ -90,7 +90,7 @@ export class InicioActividadesComponent implements OnInit {
             this.cdr.markForCheck();
           }
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
           this.cdr.markForCheck();
@@ -123,7 +123,7 @@ export class InicioActividadesComponent implements OnInit {
           
           this.cdr.markForCheck();
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('❌ Error al cargar Inicio Actividades:', err);
           this.error = 'No se pudieron cargar los datos.';
           this.cdr.markForCheck();
@@ -161,7 +161,7 @@ export class InicioActividadesComponent implements OnInit {
     this.editMode = true;
     this.editedFields = {
       nombre_proyecto: this.data.proyecto_nombre || '',
-      fecha_inicio: this.data.fecha_inicio ? this.data.fecha_inicio.split('T')[0] : '', // ✅ AGREGADO
+      fecha_inicio: this.data.fecha_inicio ? this.data.fecha_inicio.split('T')[0] : '',
       fecha_fin: this.data.fecha_fin ? this.data.fecha_fin.split('T')[0] : ''
     };
     this.cdr.markForCheck();
@@ -185,7 +185,7 @@ export class InicioActividadesComponent implements OnInit {
       return false;
     }
     
-    // ✅ Validar fecha de inicio
+    // Validar fecha de inicio
     if (!this.editedFields.fecha_inicio) {
       alert('La fecha de inicio es obligatoria.');
       return false;
@@ -197,24 +197,26 @@ export class InicioActividadesComponent implements OnInit {
       return false;
     }
     
-    const fechaInicio = new Date(this.editedFields.fecha_inicio);
-    const fechaFin = new Date(this.editedFields.fecha_fin);
+    // Normalizar ambas fechas para comparación
+    const fechaInicio = new Date(this.editedFields.fecha_inicio + 'T00:00:00');
+    const fechaFin = new Date(this.editedFields.fecha_fin + 'T00:00:00');
     
     if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
       alert('Las fechas no son válidas.');
       return false;
     }
     
-    // ✅ Validar que fecha_inicio no sea anterior a hoy
+    // Validación 1: Fecha de inicio no puede ser anterior a hoy
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    if (fechaInicio < hoy) {
+    
+    if (fechaInicio.getTime() < hoy.getTime()) {
       alert('La fecha de inicio no puede ser anterior a la fecha actual.');
       return false;
     }
     
-    // ✅ Validar que fecha_fin sea posterior a fecha_inicio
-    if (fechaFin <= fechaInicio) {
+    // Validación 2: Fecha de fin debe ser POSTERIOR a fecha de inicio
+    if (fechaFin.getTime() <= fechaInicio.getTime()) {
       alert('La fecha de finalización debe ser posterior a la fecha de inicio.');
       return false;
     }
@@ -233,7 +235,6 @@ export class InicioActividadesComponent implements OnInit {
     this.isLoading = true;
     this.cdr.markForCheck();
     
-    // ✅ AGREGAR fecha_inicio al payload
     const payload = {
       nombre_proyecto: this.editedFields.nombre_proyecto.trim(),
       fecha_inicio: this.editedFields.fecha_inicio,
@@ -248,7 +249,7 @@ export class InicioActividadesComponent implements OnInit {
         this.cdr.markForCheck();
       }))
       .subscribe({
-        next: (response) => {
+        next: (response: any) => {
           console.log('✅ Cambios guardados exitosamente:', response);
           
           // Marcar como editado en localStorage
@@ -262,7 +263,7 @@ export class InicioActividadesComponent implements OnInit {
           
           alert('✅ Cambios guardados exitosamente.');
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('❌ Error al guardar cambios:', err);
           this.error = 'Error al guardar los cambios. Por favor, intenta nuevamente.';
           this.cdr.markForCheck();
@@ -272,11 +273,17 @@ export class InicioActividadesComponent implements OnInit {
 
   /**
    * Formatear fecha para mostrar
+   * ✅ CORREGIDO: Maneja fechas ISO con T00:00:00.000Z
    */
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      const date = new Date(fecha);
+      // Si la fecha ya tiene formato ISO, extraer solo la parte de la fecha
+      let fechaStr = fecha;
+      if (fecha.includes('T')) {
+        fechaStr = fecha.split('T')[0];
+      }
+      const date = new Date(fechaStr + 'T00:00:00');
       return date.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',

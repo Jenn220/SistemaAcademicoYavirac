@@ -79,7 +79,7 @@ export class CertificadoComponent implements OnInit {
             this.cdr.markForCheck();
           }
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('❌ Error al obtener vinculación activa:', err);
           this.error = 'Error al obtener la vinculación activa.';
           this.cdr.markForCheck();
@@ -113,8 +113,23 @@ export class CertificadoComponent implements OnInit {
         // Datos desde inicio-actividades
         if (result.inicioActividades) {
           this.proyectoNombre = result.inicioActividades.proyecto_nombre || '';
-          this.fechaInicio = result.inicioActividades.fecha_inicio || '';
-          this.fechaFin = result.inicioActividades.fecha_fin || '';
+          
+          // Normalizar fechas
+          let fechaInicioRaw = result.inicioActividades.fecha_inicio || '';
+          let fechaFinRaw = result.inicioActividades.fecha_fin || '';
+          
+          // Si el backend devuelve ISO string (con T), extraer solo la fecha
+          if (fechaInicioRaw && fechaInicioRaw.includes('T')) {
+            this.fechaInicio = fechaInicioRaw.split('T')[0];
+          } else {
+            this.fechaInicio = fechaInicioRaw;
+          }
+          
+          if (fechaFinRaw && fechaFinRaw.includes('T')) {
+            this.fechaFin = fechaFinRaw.split('T')[0];
+          } else {
+            this.fechaFin = fechaFinRaw;
+          }
         }
         
         // Total horas desde control-asistencia
@@ -124,7 +139,7 @@ export class CertificadoComponent implements OnInit {
         
         this.cdr.markForCheck();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('❌ Error al cargar datos:', err);
         this.error = 'No se pudo cargar el certificado.';
         this.cdr.markForCheck();
@@ -138,12 +153,11 @@ export class CertificadoComponent implements OnInit {
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      const date = new Date(fecha);
+      const date = new Date(fecha + 'T00:00:00');
       return date.toLocaleDateString('es-ES', {
         day: 'numeric',
         month: 'long',
-        year: 'numeric',
-        timeZone: 'UTC'
+        year: 'numeric'
       });
     } catch {
       return fecha;
@@ -153,12 +167,11 @@ export class CertificadoComponent implements OnInit {
   formatearFechaCorta(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      const date = new Date(fecha);
+      const date = new Date(fecha + 'T00:00:00');
       return date.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
-        timeZone: 'UTC'
+        year: 'numeric'
       });
     } catch {
       return fecha;
