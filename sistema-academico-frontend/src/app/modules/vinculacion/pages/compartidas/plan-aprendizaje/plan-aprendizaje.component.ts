@@ -7,6 +7,7 @@ import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { PlanAprendizaje } from '../../../models/plan-aprendizaje.model';
 import { finalize } from 'rxjs/operators';
+import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
 
 @Component({
   selector: 'app-plan-aprendizaje',
@@ -21,6 +22,7 @@ export class PlanAprendizajeComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
+  private excelService = inject(ExcelExportService); // ✅ NUEVO
 
   data: PlanAprendizaje | null = null;
   loading = true;
@@ -140,7 +142,6 @@ export class PlanAprendizajeComponent implements OnInit {
     if (this.guardandoReflexion) return;
     if (this.reflexionEdit === this.reflexionOriginal) {
       this.reflexionGuardada = true;
-      // ✅ CERRAR el recuadro si no hay cambios
       this.editandoReflexion = false;
       this.cdr.markForCheck();
       return;
@@ -161,7 +162,6 @@ export class PlanAprendizajeComponent implements OnInit {
           this.reflexionOriginal = this.reflexionEdit;
           this.reflexionGuardada = true;
           this.mostrarFeedback('Reflexión guardada ✅');
-          // ✅ CERRAR el recuadro después de guardar
           this.editandoReflexion = false;
           this.cdr.markForCheck();
         },
@@ -175,11 +175,9 @@ export class PlanAprendizajeComponent implements OnInit {
   }
 
   toggleEditReflexion(): void {
-    // Si está en modo edición y se hace clic, guardar y cerrar
     if (this.editandoReflexion) {
       this.guardarReflexion();
     } else {
-      // Activar modo edición
       this.editandoReflexion = true;
       this.reflexionEdit = this.data?.reflexion_estudiante || '';
       this.reflexionOriginal = this.reflexionEdit;
@@ -236,5 +234,23 @@ export class PlanAprendizajeComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ✅ NUEVO: Exportar a Excel
+  async exportarExcel(): Promise<void> {
+    if (!this.idVinculacion || !this.data) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    try {
+      await this.excelService.exportarHojaIndividual(
+        this.idVinculacion,
+        'P.A.',
+        this.data
+      );
+    } catch (error) {
+      console.error('❌ Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel.');
+    }
   }
 }

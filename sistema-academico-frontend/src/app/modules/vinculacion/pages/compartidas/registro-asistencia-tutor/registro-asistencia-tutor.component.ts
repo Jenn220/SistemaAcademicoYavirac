@@ -9,6 +9,7 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { AsistenciaTutorResponse, AsistenciaTutor, CreateAsistenciaTutorDto, UpdateAsistenciaTutorDto } from '../../../models/registro-asistencia-tutor.model';
 import { finalize } from 'rxjs/operators';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
+import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
 
 @Component({
   selector: 'app-registro-asistencia-tutor',
@@ -24,6 +25,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
+  private excelService = inject(ExcelExportService); // ✅ NUEVO
 
   data: AsistenciaTutorResponse | null = null;
   loading = true;
@@ -235,7 +237,6 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     if (this.guardandoObservacion) return;
     if (this.observacionEdit === this.observacionOriginal) {
       this.observacionGuardada = true;
-      // ✅ CERRAR el recuadro si no hay cambios
       this.editandoObservacion = false;
       this.cdr.markForCheck();
       return;
@@ -256,7 +257,6 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           this.observacionOriginal = this.observacionEdit;
           this.observacionGuardada = true;
           this.mostrarFeedback('Observación guardada ✅');
-          // ✅ CERRAR el recuadro después de guardar
           this.editandoObservacion = false;
           this.cdr.markForCheck();
         },
@@ -279,7 +279,6 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
   toggleEditObservacion(): void {
     if (!this.puedeEditarObservaciones) return;
-    // Si está en modo edición y se hace clic, guardar y cerrar
     if (this.editandoObservacion) {
       this.guardarObservacion();
     } else {
@@ -426,5 +425,23 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ✅ NUEVO: Exportar a Excel
+  async exportarExcel(): Promise<void> {
+    if (!this.idVinculacion || !this.data) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    try {
+      await this.excelService.exportarHojaIndividual(
+        this.idVinculacion,
+        'R.A.T',
+        this.data
+      );
+    } catch (error) {
+      console.error('❌ Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel.');
+    }
   }
 }

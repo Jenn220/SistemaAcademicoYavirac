@@ -9,11 +9,12 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { AsistenciaEstudianteResponse, ActividadEstudiante, CreateActividadEstudianteDto, UpdateActividadEstudianteDto } from '../../../models/control-asistencia.model';
 import { finalize } from 'rxjs/operators';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
+import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
 
 @Component({
   selector: 'app-control-asistencia',
   standalone: true,
-  imports: [CommonModule, FormsModule, VolverArchivosComponent], // ✅ AGREGAR
+  imports: [CommonModule, FormsModule, VolverArchivosComponent],
   templateUrl: './control-asistencia.component.html',
   styleUrls: ['./control-asistencia.component.scss']
 })
@@ -24,6 +25,7 @@ export class ControlAsistenciaComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
+  private excelService = inject(ExcelExportService); // ✅ NUEVO
 
   data: AsistenciaEstudianteResponse | null = null;
   loading = true;
@@ -518,5 +520,23 @@ export class ControlAsistenciaComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ✅ NUEVO: Exportar a Excel
+  async exportarExcel(): Promise<void> {
+    if (!this.idVinculacion || !this.data) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    try {
+      await this.excelService.exportarHojaIndividual(
+        this.idVinculacion,
+        'C.A.',
+        this.data
+      );
+    } catch (error) {
+      console.error('❌ Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel.');
+    }
   }
 }

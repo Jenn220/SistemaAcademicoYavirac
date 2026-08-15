@@ -9,6 +9,7 @@ import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { Certificado } from '../../../models/certificado.model';
 import { finalize, forkJoin } from 'rxjs';
+import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
 
 @Component({
   selector: 'app-certificado',
@@ -25,6 +26,7 @@ export class CertificadoComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
+  private excelService = inject(ExcelExportService); // ✅ NUEVO
 
   certificado: Certificado | null = null;
   loading = true;
@@ -118,7 +120,6 @@ export class CertificadoComponent implements OnInit {
           let fechaInicioRaw = result.inicioActividades.fecha_inicio || '';
           let fechaFinRaw = result.inicioActividades.fecha_fin || '';
           
-          // Si el backend devuelve ISO string (con T), extraer solo la fecha
           if (fechaInicioRaw && fechaInicioRaw.includes('T')) {
             this.fechaInicio = fechaInicioRaw.split('T')[0];
           } else {
@@ -175,6 +176,33 @@ export class CertificadoComponent implements OnInit {
       });
     } catch {
       return fecha;
+    }
+  }
+
+  // ✅ NUEVO: Exportar a Excel
+  async exportarExcel(): Promise<void> {
+    if (!this.idVinculacion || !this.certificado) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    try {
+      // Construir objeto con datos combinados para el Excel
+      const dataParaExcel = {
+        ...this.certificado,
+        proyecto: this.proyectoNombre || this.certificado.proyecto,
+        fecha_inicio: this.fechaInicio || this.certificado.fecha_inicio,
+        fecha_fin: this.fechaFin || this.certificado.fecha_fin,
+        total_horas: this.totalHoras || this.certificado.total_horas
+      };
+      
+      await this.excelService.exportarHojaIndividual(
+        this.idVinculacion,
+        'Cert.',
+        dataParaExcel
+      );
+    } catch (error) {
+      console.error('❌ Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel.');
     }
   }
 }

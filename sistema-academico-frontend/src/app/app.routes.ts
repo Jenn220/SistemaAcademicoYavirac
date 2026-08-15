@@ -8,7 +8,7 @@ import { authGuard } from './modules/auth/guards/auth.guard';
 import { roleGuard } from './modules/auth/guards/role.guard';
 
 // Dashboard
-import { Dashboard } from './modules/dashboard';
+import { Dashboard } from './modules/dashboard/pages/dashboard/dashboard';
 
 // Fase Práctica
 import { CartaCompromiso } from './modules/fase-practica/pages/carta-compromiso/carta-compromiso';

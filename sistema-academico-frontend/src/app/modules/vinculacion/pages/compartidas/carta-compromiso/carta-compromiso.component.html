@@ -1,5 +1,13 @@
 <div class="carta-container" *ngIf="!loading && !error && cartaCompromiso">
   <app-volver-archivos *ngIf="isDocente" />
+  
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
   <div class="document-header">
     <h1>{{ cartaCompromiso.titulo }}</h1>
     <p class="instituto">{{ cartaCompromiso.instituto }}</p>

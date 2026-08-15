@@ -7,6 +7,7 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../../../auth/services/auth.service';
+import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
 
 @Component({
   selector: 'app-informe-final',
@@ -22,6 +23,7 @@ export class InformeFinalComponent implements OnInit {
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
+  private excelService = inject(ExcelExportService); // ✅ NUEVO
 
   @Input() idVinculacion: number = 0;
   esEstudiante: boolean = false;
@@ -71,7 +73,6 @@ export class InformeFinalComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    // ✅ Obtener roles usando AuthService
     this.obtenerRoles();
 
     console.log('🔍 esEstudiante FINAL:', this.esEstudiante);
@@ -116,10 +117,8 @@ export class InformeFinalComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTODO PARA OBTENER ROLES USANDO AUTH SERVICE
   obtenerRoles(): void {
     try {
-      // ✅ MÉTODO 1: Usar AuthService
       const roles = this.authService.roles();
       console.log('🔍 Roles desde AuthService:', roles);
       
@@ -140,7 +139,6 @@ export class InformeFinalComponent implements OnInit {
         return;
       }
       
-      // ✅ MÉTODO 2: Fallback - buscar en localStorage con diferentes claves
       console.warn('⚠️ AuthService no devolvió roles, buscando en localStorage...');
       
       const posiblesClaves = ['user', 'authData', 'currentUser', 'usuario', 'auth_user', 'userData', 'data'];
@@ -175,7 +173,6 @@ export class InformeFinalComponent implements OnInit {
         }
       }
       
-      // ✅ MÉTODO 3: Último recurso - verificar si hay un token JWT
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         console.log('🔍 Token encontrado, intentando decodificar...');
@@ -316,7 +313,6 @@ export class InformeFinalComponent implements OnInit {
       });
   }
 
-  // ✅ Cargar objetivos desde localStorage
   cargarObjetivosDesdeLocalStorage(): void {
     if (!this.informe) return;
     
@@ -336,7 +332,6 @@ export class InformeFinalComponent implements OnInit {
     }
   }
 
-  // ✅ Guardar objetivos en localStorage
   guardarObjetivosEnLocalStorage(): void {
     if (!this.informe || !this.informe.objetivos_proyecto) return;
     
@@ -345,7 +340,6 @@ export class InformeFinalComponent implements OnInit {
     console.log('✅ Objetivos guardados en localStorage');
   }
 
-  // ✅ Activar edición de objetivos (SOLO ESTUDIANTE)
   activarEdicionObjetivos(): void {
     if (!this.esEstudiante) {
       console.warn('⚠️ Solo estudiantes pueden editar objetivos');
@@ -361,7 +355,6 @@ export class InformeFinalComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // ✅ Guardar edición de objetivos
   guardarEdicionObjetivos(): void {
     if (!this.objetivosEditados) return;
     
@@ -378,14 +371,12 @@ export class InformeFinalComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // ✅ Cancelar edición de objetivos
   cancelarEdicionObjetivos(): void {
     this.editandoObjetivos = false;
     this.objetivosEditados = [];
     this.cdr.markForCheck();
   }
 
-  // ✅ Actualizar un campo específico de un objetivo
   actualizarObjetivo(index: number, campo: string, event: any): void {
     if (this.objetivosEditados && this.objetivosEditados[index]) {
       this.objetivosEditados[index][campo] = event.target.value;
@@ -576,28 +567,58 @@ export class InformeFinalComponent implements OnInit {
     return textos[estado] || estado;
   }
 
-  // ✅ NUEVO: Agregar una fila de objetivo
-agregarObjetivo(): void {
-  if (!this.objetivosEditados) return;
-  
-  const nuevoObjetivo = {
-    objetivo: '',
-    actividades: '',
-    avance: '0%',
-    resultados: 'Pendiente'
-  };
-  
-  this.objetivosEditados.push(nuevoObjetivo);
-  this.cdr.markForCheck();
-}
-
-// ✅ NUEVO: Eliminar una fila de objetivo
-eliminarObjetivo(index: number): void {
-  if (!this.objetivosEditados) return;
-  
-  if (confirm('¿Estás seguro de eliminar este objetivo?')) {
-    this.objetivosEditados.splice(index, 1);
+  agregarObjetivo(): void {
+    if (!this.objetivosEditados) return;
+    
+    const nuevoObjetivo = {
+      objetivo: '',
+      actividades: '',
+      avance: '0%',
+      resultados: 'Pendiente'
+    };
+    
+    this.objetivosEditados.push(nuevoObjetivo);
     this.cdr.markForCheck();
   }
-}
+
+  eliminarObjetivo(index: number): void {
+    if (!this.objetivosEditados) return;
+    
+    if (confirm('¿Estás seguro de eliminar este objetivo?')) {
+      this.objetivosEditados.splice(index, 1);
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ✅ NUEVO: Exportar a Excel (solo esta hoja)
+  async exportarExcelIndividual(): Promise<void> {
+    if (!this.idVinculacion || !this.informe) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    try {
+      await this.excelService.exportarHojaIndividual(
+        this.idVinculacion,
+        'Informe final',
+        this.informe
+      );
+    } catch (error) {
+      console.error('❌ Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel.');
+    }
+  }
+
+  // ✅ NUEVO: Exportar Excel completo (7 hojas)
+  async exportarExcelCompleto(): Promise<void> {
+    if (!this.idVinculacion) {
+      alert('No hay ID de vinculación para exportar.');
+      return;
+    }
+    try {
+      await this.excelService.exportarExcelCompleto(this.idVinculacion);
+    } catch (error) {
+      console.error('❌ Error al exportar Excel completo:', error);
+      alert('Error al exportar el archivo Excel completo.');
+    }
+  }
 }

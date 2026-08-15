@@ -8,6 +8,7 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { InicioActividadesResponse } from '../../../models';
 import { finalize } from 'rxjs/operators';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
+import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
 
 @Component({
   selector: 'app-inicio-actividades',
@@ -22,6 +23,7 @@ export class InicioActividadesComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
+  private excelService = inject(ExcelExportService); // ✅ NUEVO
 
   // Datos principales
   data: InicioActividadesResponse | null = null;
@@ -291,6 +293,24 @@ export class InicioActividadesComponent implements OnInit {
       });
     } catch {
       return fecha;
+    }
+  }
+
+  // ✅ NUEVO: Exportar a Excel
+  async exportarExcel(): Promise<void> {
+    if (!this.idVinculacion || !this.data) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    try {
+      await this.excelService.exportarHojaIndividual(
+        this.idVinculacion,
+        'Inicio Act.',
+        this.data
+      );
+    } catch (error) {
+      console.error('❌ Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel.');
     }
   }
 }

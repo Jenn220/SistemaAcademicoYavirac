@@ -5,6 +5,14 @@
   
   <div *ngIf="!isLoading && !error && data" class="documento">
     <app-volver-archivos *ngIf="isDocente" />
+    
+    <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+    <div class="acciones-export">
+      <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+        📊 Exportar a Excel
+      </button>
+    </div>
+
     <div class="encabezado">
       <div class="logo">
         <img src="assets/images/logo-yavirac.png" alt="Yavirac">

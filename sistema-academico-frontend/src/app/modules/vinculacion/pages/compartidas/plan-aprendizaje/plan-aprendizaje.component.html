@@ -1,4 +1,12 @@
 <div class="container" *ngIf="!loading && !error && data">
+  
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
   <div class="cabecera">
     <h2>PLAN DE APRENDIZAJE Y SEGUIMIENTO</h2>
     <div class="datos">

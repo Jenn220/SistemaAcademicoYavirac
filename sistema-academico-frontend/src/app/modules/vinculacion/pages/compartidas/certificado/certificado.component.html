@@ -1,4 +1,12 @@
 <div class="certificado-container" *ngIf="!loading && !error && certificado">
+  
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
   <div class="document-header">
     <h2>CERTIFICADO DE VINCULACIÓN CON LA COMUNIDAD</h2>
     <p class="instituto">{{ certificado.institucion }}</p>

@@ -7,6 +7,7 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { CartaCompromiso } from '../../../models/carta-compromiso.model';
 import { finalize } from 'rxjs/operators';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
+import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
 
 @Component({
   selector: 'app-carta-compromiso',
@@ -21,6 +22,7 @@ export class CartaCompromisoComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
+  private excelService = inject(ExcelExportService); // ✅ NUEVO
 
   cartaCompromiso: CartaCompromiso | null = null;
   loading = true;
@@ -102,5 +104,23 @@ export class CartaCompromisoComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ✅ NUEVO: Exportar a Excel
+  async exportarExcel(): Promise<void> {
+    if (!this.idVinculacion || !this.cartaCompromiso) {
+      alert('No hay datos para exportar.');
+      return;
+    }
+    try {
+      await this.excelService.exportarHojaIndividual(
+        this.idVinculacion,
+        'C.C.',
+        this.cartaCompromiso
+      );
+    } catch (error) {
+      console.error('❌ Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel.');
+    }
   }
 }

@@ -1,6 +1,13 @@
 <div class="container" *ngIf="!loading && !error && data">
   <app-volver-archivos *ngIf="isDocente" />
   
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+  
   <!-- CABECERA -->
   <div class="cabecera">
     <h2>REGISTRO DE ASISTENCIA DEL TUTOR</h2>
