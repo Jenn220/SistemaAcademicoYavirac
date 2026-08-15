@@ -25,6 +25,7 @@
   </div>
 
   <!-- TABLA DE ACTIVIDADES -->
+<!-- TABLA DE ACTIVIDADES -->
   <table class="tabla">
     <thead>
       <tr>
@@ -36,14 +37,19 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let act of data.informe_actividades; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ act.fecha }}</td>
-        <td>{{ act.actividad || 'Sin actividad registrada' }}</td>
+      <!-- Iteramos sobre los bloques de semanas agrupados -->
+      <tr *ngFor="let sem of semanasAgrupadas; let i = index">
+        <td class="text-center"><strong>{{ sem.semana }}</strong></td>
+        <td>{{ sem.fecha }}</td>
+        <td>{{ sem.actividad }}</td>
+        
+        <!-- RESULTADOS DEL APRENDIZAJE -->
         <td>
-          <span *ngIf="editandoIndice !== i">{{ act.resultado_aprendizaje || 'Sin resultado' }}</span>
+          <span *ngIf="editandoIndice !== i">{{ sem.resultado_aprendizaje || 'Sin resultado de aprendizaje especificado' }}</span>
           <textarea *ngIf="editandoIndice === i" [(ngModel)]="resultadoEdit" rows="2" class="textarea-edit"></textarea>
         </td>
+
+        <!-- ACCIÓN -->
         <td>
           <ng-container *ngIf="editandoIndice !== i">
             <button (click)="editarResultado(i)" class="btn-edit" title="Editar">✏️</button>
@@ -56,7 +62,7 @@
       </tr>
     </tbody>
   </table>
-
+  
   <!-- REFLEXIÓN DEL ESTUDIANTE -->
   <div class="reflexion">
     <div class="reflexion-header">

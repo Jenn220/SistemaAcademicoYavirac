@@ -6,6 +6,17 @@ export interface ActividadEstudiante {
   total_horas: number;
   descripcion: string;
 }
+export interface ActividadAgrupada {
+  ids: number[];
+  fechas: string[];
+  textoFechas: string;
+  hora_entrada: string;
+  hora_salida: string;
+  total_horas: number;
+  descripcion: string;
+ actividadRepresentativa: ActividadEstudiante;
+   actividadesDetalle: ActividadEstudiante[]; // 👈 Asegúrate de que esta línea esté aquí
+}
 
 export interface CabeceraAsistencia {
   carrera: string;
@@ -42,4 +53,6 @@ export interface UpdateActividadEstudianteDto {
   hora_fin?: string;
   actividades_realizadas?: string;
   resultado_aprendizaje?: string;
+
+  
 }

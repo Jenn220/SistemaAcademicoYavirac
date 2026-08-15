@@ -7,7 +7,7 @@ import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { PlanAprendizaje } from '../../../models/plan-aprendizaje.model';
 import { finalize } from 'rxjs/operators';
-import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
+import { ExcelExportService } from '../../../services/excel-export.service';
 
 @Component({
   selector: 'app-plan-aprendizaje',
@@ -22,9 +22,10 @@ export class PlanAprendizajeComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
-  private excelService = inject(ExcelExportService); // ✅ NUEVO
+  private excelService = inject(ExcelExportService);
 
   data: PlanAprendizaje | null = null;
+  semanasAgrupadas: any[] = []; // ✅ Lista agrupada por semanas/bloques
   loading = true;
   error: string | null = null;
   isEstudiante = false;
@@ -108,7 +109,10 @@ export class PlanAprendizajeComponent implements OnInit {
           console.log('📦 Datos de Plan de Aprendizaje recibidos:', data);
           this.data = data;
           
-          // Cargar reflexión desde los datos (viene del backend)
+          // ✅ Agrupar actividades por semana/bloque único
+          this.semanasAgrupadas = this.agruparPorSemanaActividad(data.informe_actividades || []);
+          
+          // Cargar reflexión desde los datos
           this.reflexionEdit = data.reflexion_estudiante || '';
           this.reflexionOriginal = this.reflexionEdit;
           this.reflexionGuardada = true;
@@ -121,6 +125,32 @@ export class PlanAprendizajeComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ✅ Función para transformar los días individuales en bloques por semana/actividad
+  agruparPorSemanaActividad(actividades: any[]): any[] {
+    const agrupadas: any[] = [];
+    const map = new Map();
+
+    actividades.forEach((item) => {
+      if (!item.actividad || item.actividad.trim() === '') return;
+
+      const clave = item.actividad.trim();
+
+      if (!map.has(clave)) {
+        const nuevoGrupo = {
+          semana: `Semana ${agrupadas.length + 1}`,
+          fecha: item.fecha, // Muestra la fecha de inicio del bloque
+          actividad: item.actividad,
+          resultado_aprendizaje: item.resultado_aprendizaje,
+          id: item.id
+        };
+        map.set(clave, nuevoGrupo);
+        agrupadas.push(nuevoGrupo);
+      }
+    });
+
+    return agrupadas;
   }
 
   // ============================================
@@ -197,9 +227,9 @@ export class PlanAprendizajeComponent implements OnInit {
   // RESULTADO DE APRENDIZAJE
   // ============================================
   editarResultado(index: number): void {
-    if (!this.data) return;
+    if (!this.semanasAgrupadas) return;
     this.editandoIndice = index;
-    this.resultadoEdit = this.data.informe_actividades[index].resultado_aprendizaje || '';
+    this.resultadoEdit = this.semanasAgrupadas[index].resultado_aprendizaje || '';
     this.cdr.markForCheck();
   }
 
@@ -210,22 +240,22 @@ export class PlanAprendizajeComponent implements OnInit {
   }
 
   guardarResultado(index: number): void {
-    if (!this.data) return;
-    const actividad = this.data.informe_actividades[index];
-    if (!actividad.id) {
+    if (!this.semanasAgrupadas) return;
+    const item = this.semanasAgrupadas[index];
+    if (!item.id) {
       alert('La actividad no tiene ID, no se puede actualizar.');
       return;
     }
     this.loading = true;
     this.cdr.markForCheck();
-    this.service.actualizarResultadoAprendizaje(actividad.id, this.resultadoEdit)
+    this.service.actualizarResultadoAprendizaje(item.id, this.resultadoEdit)
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.markForCheck();
       }))
       .subscribe({
         next: () => {
-          actividad.resultado_aprendizaje = this.resultadoEdit;
+          item.resultado_aprendizaje = this.resultadoEdit;
           this.cancelarEdicionResultado();
         },
         error: (err) => {
@@ -236,7 +266,9 @@ export class PlanAprendizajeComponent implements OnInit {
       });
   }
 
-  // ✅ NUEVO: Exportar a Excel
+  // ============================================
+  // EXPORTAR A EXCEL
+  // ============================================
   async exportarExcel(): Promise<void> {
     if (!this.idVinculacion || !this.data) {
       alert('No hay datos para exportar.');
