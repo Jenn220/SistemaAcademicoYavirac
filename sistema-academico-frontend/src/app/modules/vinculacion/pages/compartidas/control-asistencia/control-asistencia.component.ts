@@ -6,10 +6,11 @@ import { ControlAsistenciaService } from '../../../services/control-asistencia.s
 import { InicioActividadesService } from '../../../services/inicio-actividades.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
-import { AsistenciaEstudianteResponse, ActividadEstudiante, CreateActividadEstudianteDto, UpdateActividadEstudianteDto } from '../../../models/control-asistencia.model';
-import { finalize } from 'rxjs/operators';
+import { AsistenciaEstudianteResponse, ActividadEstudiante, CreateActividadEstudianteDto, UpdateActividadEstudianteDto, ActividadAgrupada } from '../../../models/control-asistencia.model';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
-import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
+import { ExcelExportService } from '../../../services/excel-export.service'; 
+import { finalize } from 'rxjs/operators';
+
 
 @Component({
   selector: 'app-control-asistencia',
@@ -25,7 +26,7 @@ export class ControlAsistenciaComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
-  private excelService = inject(ExcelExportService); // ✅ NUEVO
+  private excelService = inject(ExcelExportService);
 
   data: AsistenciaEstudianteResponse | null = null;
   loading = true;
@@ -48,6 +49,8 @@ export class ControlAsistenciaComponent implements OnInit {
 
   errorHora: string | null = null;
 
+  actividadesAgrupadas: ActividadAgrupada[] = [];
+
   nuevaActividad: CreateActividadEstudianteDto = {
     fecha: '',
     hora_inicio: '',
@@ -60,6 +63,8 @@ export class ControlAsistenciaComponent implements OnInit {
 
   editandoId: number | null = null;
   editandoActividad: UpdateActividadEstudianteDto = {};
+  editandoGrupoId: number | null = null;
+  descripcionGrupoOriginal: string = '';
 
   get puedeEditarObservaciones(): boolean {
     return this.isDocente || this.isCoordinador;
@@ -93,6 +98,106 @@ export class ControlAsistenciaComponent implements OnInit {
         this.obtenerVinculacionActiva();
       }
     });
+  }
+
+  // ============================================
+  // ✅ MÉTODOS DE EDICIÓN SEPARADOS Y CORREGIDOS
+  // ============================================
+
+  // 1️⃣ Edita únicamente una fila específica (fecha, hora entrada, hora salida)
+  editarFilaIndividual(act: any): void {
+    if (!this.isEstudiante) return;
+    this.editandoId = act.id;
+    this.editandoGrupoId = null; 
+    this.errorHora = null;
+
+    this.editandoActividad = {
+      fecha: act.fecha,
+      hora_inicio: act.hora_entrada,
+      hora_fin: act.hora_salida,
+      actividades_realizadas: act.descripcion // 👈 Añadido para que cargue el texto al editar
+    };
+    this.cdr.markForCheck();
+  }
+
+  // 2️⃣ Edita la descripción compartida de todo el grupo
+  editarDescripcionGrupo(grupo: ActividadAgrupada): void {
+    if (!this.isEstudiante) return;
+    this.editandoId = null; // Nos aseguramos de no activar filas individuales
+    this.editandoGrupoId = grupo.ids[0];
+    this.errorHora = null;
+
+    this.editandoActividad = {
+      actividades_realizadas: grupo.descripcion
+    };
+    this.cdr.markForCheck();
+  }
+
+  // 3️⃣ Guarda los cambios de una fila individual (fecha u horas)
+  guardarEdicionFila(actId: number): void {
+    if (!this.isEstudiante) return;
+
+    this.errorHora = null;
+
+    if (this.editandoActividad.fecha && !this.validarFecha(this.editandoActividad.fecha)) {
+      return;
+    }
+
+    if (this.editandoActividad.hora_inicio && this.editandoActividad.hora_fin) {
+      if (this.editandoActividad.hora_fin <= this.editandoActividad.hora_inicio) {
+        this.errorHora = '❌ La hora de salida debe ser posterior a la hora de entrada.';
+        this.cdr.markForCheck();
+        return;
+      }
+    }
+
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    this.asistenciaService.actualizarActividad(actId, this.editandoActividad).subscribe({
+      next: () => {
+        this.cargarDatos();
+        this.cancelarEdicion();
+      },
+      error: (err) => {
+        console.error('❌ Error al actualizar la actividad:', err);
+        const mensaje = err.error?.message || 'Error al actualizar la actividad.';
+        this.error = mensaje;
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  // 4️⃣ Guarda el cambio de la descripción en todos los elementos del grupo mediante el backend
+  guardarEdicionGrupo(grupo: ActividadAgrupada): void {
+    if (!this.isEstudiante || !this.editandoGrupoId) return;
+
+    const nuevaDescripcion = this.editandoActividad.actividades_realizadas;
+    if (!nuevaDescripcion || nuevaDescripcion.trim() === '') {
+      alert('⚠️ La descripción no puede estar vacía.');
+      return;
+    }
+
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    const promesas = grupo.ids.map(id => 
+      this.asistenciaService.actualizarActividad(id, { actividades_realizadas: nuevaDescripcion }).toPromise()
+    );
+
+    Promise.all(promesas)
+      .then(() => {
+        this.cargarDatos();
+        this.cancelarEdicion();
+      })
+      .catch((err) => {
+        console.error('❌ Error al actualizar el grupo de actividades:', err);
+        const mensaje = err.error?.message || 'Error al actualizar las actividades.';
+        this.error = mensaje;
+        this.loading = false;
+        this.cdr.markForCheck();
+      });
   }
 
   cargarDatosDocente(): void {
@@ -153,6 +258,7 @@ export class ControlAsistenciaComponent implements OnInit {
               observaciones: data.totales?.observaciones || ''
             }
           };
+          this.procesarActividadesAgrupadas();
           this.observaciones = data.totales?.observaciones || '';
           this.observacionesOriginales = this.observaciones;
           this.observacionGuardada = true;
@@ -175,6 +281,7 @@ export class ControlAsistenciaComponent implements OnInit {
               observaciones: ''
             }
           };
+          this.procesarActividadesAgrupadas();
           this.observaciones = '';
           this.observacionesOriginales = '';
           this.observacionGuardada = true;
@@ -238,6 +345,7 @@ export class ControlAsistenciaComponent implements OnInit {
         next: (data) => {
           console.log('📦 Datos de asistencia recibidos:', data);
           this.data = data;
+          this.procesarActividadesAgrupadas();
           this.observaciones = data.totales?.observaciones || '';
           this.observacionesOriginales = this.observaciones;
           this.observacionGuardada = true;
@@ -249,6 +357,56 @@ export class ControlAsistenciaComponent implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ============================================
+  // LÓGICA DE AGRUPACIÓN DE ACTIVIDADES
+  // ============================================
+  procesarActividadesAgrupadas(): void {
+    if (!this.data || !this.data.actividades) {
+      this.actividadesAgrupadas = [];
+      return;
+    }
+
+    const mapa = new Map<string, ActividadAgrupada>();
+
+    this.data.actividades.forEach(act => {
+      const clave = act.descripcion.trim().toLowerCase();
+
+      if (!mapa.has(clave)) {
+        mapa.set(clave, {
+          ids: [act.id],
+          fechas: [act.fecha],
+          textoFechas: this.formatearFecha(act.fecha),
+          hora_entrada: act.hora_entrada,
+          hora_salida: act.hora_salida,
+          total_horas: Number(act.total_horas) || 0,
+          descripcion: act.descripcion,
+          actividadRepresentativa: act,
+          actividadesDetalle: [act]
+        });
+      } else {
+        const grupo = mapa.get(clave)!;
+        grupo.ids.push(act.id);
+        grupo.fechas.push(act.fecha);
+        grupo.total_horas += Number(act.total_horas) || 0;
+        
+        grupo.actividadesDetalle.push(act);
+        grupo.actividadesDetalle.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+
+        grupo.fechas.sort();
+        const fechaInicio = this.formatearFecha(grupo.fechas[0]);
+        const fechaFin = this.formatearFecha(grupo.fechas[grupo.fechas.length - 1]);
+
+        if (grupo.fechas.length === 1) {
+          grupo.textoFechas = fechaInicio;
+        } else {
+          grupo.textoFechas = `${fechaInicio} al ${fechaFin} (${grupo.fechas.length} días)`;
+        }
+      }
+    });
+
+    this.actividadesAgrupadas = Array.from(mapa.values());
   }
 
   validarFecha(fecha: string): boolean {
@@ -438,63 +596,12 @@ export class ControlAsistenciaComponent implements OnInit {
       });
   }
 
-  editarActividad(actividad: ActividadEstudiante): void {
-    if (!this.isEstudiante) return;
-    this.editandoId = actividad.id;
-    this.errorHora = null;
-    this.editandoActividad = {
-      fecha: actividad.fecha,
-      hora_inicio: actividad.hora_entrada,
-      hora_fin: actividad.hora_salida,
-      actividades_realizadas: actividad.descripcion
-    };
-    this.cdr.markForCheck();
-  }
-
   cancelarEdicion(): void {
     this.editandoId = null;
+    this.editandoGrupoId = null;
     this.editandoActividad = {};
     this.errorHora = null;
     this.cdr.markForCheck();
-  }
-
-  guardarEdicion(): void {
-    if (!this.isEstudiante || !this.editandoId) return;
-
-    this.errorHora = null;
-
-    if (this.editandoActividad.fecha && !this.validarFecha(this.editandoActividad.fecha)) {
-      return;
-    }
-
-    if (this.editandoActividad.hora_inicio && this.editandoActividad.hora_fin) {
-      if (this.editandoActividad.hora_fin <= this.editandoActividad.hora_inicio) {
-        this.errorHora = '❌ La hora de salida debe ser posterior a la hora de entrada.';
-        this.cdr.markForCheck();
-        return;
-      }
-    }
-
-    this.loading = true;
-    this.cdr.markForCheck();
-    
-    this.asistenciaService.actualizarActividad(this.editandoId, this.editandoActividad)
-      .pipe(finalize(() => {
-        this.loading = false;
-        this.cdr.markForCheck();
-      }))
-      .subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cancelarEdicion();
-        },
-        error: (err) => {
-          console.error('❌ Error al actualizar actividad:', err);
-          const mensaje = err.error?.message || 'Error al actualizar actividad.';
-          this.error = mensaje;
-          this.cdr.markForCheck();
-        }
-      });
   }
 
   eliminarActividad(id: number): void {
@@ -522,7 +629,88 @@ export class ControlAsistenciaComponent implements OnInit {
       });
   }
 
-  // ✅ NUEVO: Exportar a Excel
+  // ============================================
+  // ESTADOS PARA DUPLICAR ACTIVIDAD
+  // ============================================
+  mostrandoModalDuplicar = false;
+  actividadParaDuplicar: ActividadEstudiante | null = null;
+  nuevoDiaDuplicado = {
+    fecha: '',
+    hora_inicio: '08:00',
+    hora_fin: '12:00'
+  };
+
+  prepararDuplicado(actividad: ActividadEstudiante): void {
+    if (!this.isEstudiante) return;
+    this.actividadParaDuplicar = actividad;
+    this.errorHora = null;
+    this.nuevoDiaDuplicado = {
+      fecha: '',
+      hora_inicio: actividad.hora_entrada || '08:00',
+      hora_fin: actividad.hora_salida || '12:00'
+    };
+    this.mostrandoModalDuplicar = true;
+    this.cdr.markForCheck();
+  }
+
+  cancelarDuplicado(): void {
+    this.mostrandoModalDuplicar = false;
+    this.actividadParaDuplicar = null;
+    this.errorHora = null;
+    this.cdr.markForCheck();
+  }
+
+  guardarDiaDuplicado(): void {
+    if (!this.isEstudiante || !this.actividadParaDuplicar) return;
+    this.errorHora = null;
+
+    if (!this.nuevoDiaDuplicado.fecha || !this.nuevoDiaDuplicado.hora_inicio || !this.nuevoDiaDuplicado.hora_fin) {
+      alert('⚠️ Complete la fecha, hora de entrada y hora de salida.');
+      return;
+    }
+
+    if (this.nuevoDiaDuplicado.hora_fin <= this.nuevoDiaDuplicado.hora_inicio) {
+      this.errorHora = '❌ La hora de salida debe ser posterior a la hora de entrada.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (!this.validarFecha(this.nuevoDiaDuplicado.fecha)) {
+      return;
+    }
+
+    const payload: CreateActividadEstudianteDto = {
+      fecha: this.nuevoDiaDuplicado.fecha,
+      hora_inicio: this.nuevoDiaDuplicado.hora_inicio,
+      hora_fin: this.nuevoDiaDuplicado.hora_fin,
+      actividades_realizadas: this.actividadParaDuplicar.descripcion, 
+      observacion: '', 
+      id_vinculacion: this.idVinculacion
+    };
+
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    this.asistenciaService.crearActividad(payload)
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.cancelarDuplicado();
+        },
+        error: (err) => {
+          console.error('❌ Error al duplicar actividad:', err);
+          const mensaje = err.error?.message || 'Error al duplicar la actividad.';
+          this.error = mensaje;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  // ✅ Exportar a Excel
   async exportarExcel(): Promise<void> {
     if (!this.idVinculacion || !this.data) {
       alert('No hay datos para exportar.');
