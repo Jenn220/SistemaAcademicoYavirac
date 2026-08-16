@@ -16,7 +16,6 @@
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: none;
   font-family: 'Times New Roman', Times, serif;
   position: relative;
 
@@ -630,7 +629,7 @@
   text-align: center;
   padding: 4rem 2rem;
   font-size: 16px;
-  color: #5a6a7e;
+  color: #6a7a8e;
   font-family: 'Times New Roman', Times, serif;
   background: #ffffff;
   border-radius: 12px;
@@ -640,9 +639,9 @@
 }
 
 .error {
-  color: #b22222;
+  color: #dc3545;
   font-weight: 600;
-  border-left: 4px solid #b22222;
+  border-left: 4px solid #dc3545;
 }
 
 .spinner {

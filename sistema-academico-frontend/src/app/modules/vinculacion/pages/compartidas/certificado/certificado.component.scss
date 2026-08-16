@@ -16,7 +16,6 @@
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: none;
   font-family: 'Times New Roman', Times, serif;
   position: relative;
 
@@ -151,7 +150,6 @@
     font-weight: 600;
     display: block;
     margin-bottom: 0.4rem;
-    font-size: 14px;
     color: #163d8c;
     font-family: 'Roboto', 'Segoe UI', sans-serif;
     font-size: 12px;
@@ -256,8 +254,7 @@
   border-top: 1px solid #e8ecf2;
 }
 
-.btn-primary,
-.btn-secondary {
+.btn-primary {
   padding: 0.7rem 2rem;
   border: none;
   border-radius: 8px;
@@ -266,29 +263,32 @@
   font-size: 14px;
   font-family: 'Roboto', 'Segoe UI', sans-serif;
   transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-}
-
-.btn-primary {
   background: #163d8c;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(22, 61, 140, 0.25);
 
   &:hover {
     background: #0f2d66;
+    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
   }
 }
 
 .btn-secondary {
-  background: #f0f2f5;
-  color: #2c3e50;
+  padding: 0.7rem 2rem;
+  border: 2px solid #e8ecf2;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  color: #1e2a3a;
 
   &:hover {
-    background: #e4e7ed;
+    background: #f7faff;
+    transform: translateY(-2px);
   }
 }
 
@@ -300,7 +300,7 @@
   text-align: center;
   padding: 4rem 2rem;
   font-size: 16px;
-  color: #5a6a7e;
+  color: #6a7a8e;
   font-family: 'Times New Roman', Times, serif;
   background: #ffffff;
   border-radius: 12px;
@@ -310,9 +310,9 @@
 }
 
 .error {
-  color: #b22222;
+  color: #dc3545;
   font-weight: 600;
-  border-left: 4px solid #b22222;
+  border-left: 4px solid #dc3545;
 }
 
 .spinner {

@@ -18,10 +18,7 @@
   background: #ffffff;
   border-radius: 12px;
   padding: 3rem 3.5rem;
-  box-shadow:
-    0 8px 40px rgba(22, 61, 140, 0.10),
-    0 2px 8px rgba(0, 0, 0, 0.04);
-  border: none;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
   font-family: 'Times New Roman', Times, serif;
   position: relative;
 
@@ -32,12 +29,7 @@
     left: 2rem;
     right: 2rem;
     height: 4px;
-    background: linear-gradient(
-      90deg,
-      #163d8c 0%,
-      #ff7b22 60%,
-      #163d8c 100%
-    );
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
     border-radius: 0 0 4px 4px;
   }
 }
@@ -61,52 +53,33 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(
-      90deg,
-      #163d8c 0%,
-      #ff7b22 50%,
-      #163d8c 100%
-    );
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 50%, #163d8c 100%);
   }
 
-  // ==========================================
-  // LOGO
-  // ==========================================
   .logo {
     width: 95px;
     height: 95px;
     flex: 0 0 95px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     background: #ffffff;
     padding: 0;
     margin: 0;
-
     border-radius: 0;
     overflow: hidden;
 
-    // IMPORTANTE:
-    // El object-fit debe aplicarse al IMG,
-    // no al contenedor .logo.
     img {
       width: 100%;
       height: 100%;
       max-width: 100%;
       max-height: 100%;
-
       object-fit: contain;
       object-position: center;
-
       display: block;
     }
   }
 
-  // ==========================================
-  // TÍTULO
-  // ==========================================
   .titulo {
     flex: 1;
     text-align: center;
@@ -166,9 +139,6 @@
     }
   }
 
-  // ============================================
-  // ACCIONES TOP (EDITAR)
-  // ============================================
   .acciones-top {
     background: #f0f7ff;
     border-left-color: #163d8c;
@@ -220,13 +190,9 @@
     }
   }
 
-  // ============================================
-  // DATOS ADICIONALES
-  // ============================================
   .datos-adicionales {
     background: #f0f7ff;
     border-left-color: #163d8c;
-
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.2rem 2rem;
@@ -237,9 +203,6 @@
     }
   }
 
-  // ============================================
-  // VISTA EDICIÓN
-  // ============================================
   .vista-edicion {
     display: block;
 
@@ -258,7 +221,7 @@
         letter-spacing: 0.3px;
 
         .required {
-          color: #b22222;
+          color: #dc3545;
           margin-left: 0.2rem;
         }
       }
@@ -348,9 +311,6 @@
     }
   }
 
-  // ============================================
-  // ANEXOS
-  // ============================================
   .anexos {
     background: #ffffff;
     border: 1px solid #e8ecf2;
@@ -382,11 +342,9 @@
           border: 2px dashed #c8d4e4;
           border-radius: 6px;
           height: 140px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           color: #8a9aaa;
           font-size: 13px;
           margin-bottom: 0.6rem;
@@ -402,9 +360,6 @@
     }
   }
 
-  // ============================================
-  // FIRMA
-  // ============================================
   .firma {
     background: #ffffff;
     border: none;
@@ -443,7 +398,7 @@
   text-align: center;
   padding: 4rem 2rem;
   font-size: 16px;
-  color: #5a6a7e;
+  color: #6a7a8e;
   font-family: 'Times New Roman', Times, serif;
   background: #ffffff;
   border-radius: 12px;
@@ -453,9 +408,9 @@
 }
 
 .error {
-  color: #b22222;
+  color: #dc3545;
   font-weight: 600;
-  border-left: 4px solid #b22222;
+  border-left: 4px solid #dc3545;
 }
 
 .sin-datos {
@@ -482,13 +437,8 @@
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 // ============================================

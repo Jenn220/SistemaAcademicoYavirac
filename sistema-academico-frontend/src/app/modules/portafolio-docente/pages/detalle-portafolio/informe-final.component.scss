@@ -1,32 +1,72 @@
-.informe-final {
-  padding: 24px;
+/* ============================================
+   1. :host
+   ============================================ */
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
 }
 
+/* ============================================
+   2. Contenedor principal
+   ============================================ */
+.informe-final {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+/* Línea decorativa superior */
+.informe-final::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 2rem;
+  right: 2rem;
+  height: 4px;
+  background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+  border-radius: 0 0 4px 4px;
+}
+
+/* ============================================
+   3. Estados
+   ============================================ */
 .estado {
   padding: 16px 18px;
-  border-radius: 10px;
-  background: #f1f5f9;
-  color: #334155;
+  border-radius: 8px;
+  background: #f7faff;
+  color: #1e2a3a;
   margin-bottom: 16px;
-
-  &--error {
-    background: #fee2e2;
-    color: #991b1b;
-  }
 }
 
+.estado--error {
+  background: #fff8f8;
+  color: #dc3545;
+  border-left: 5px solid #dc3545;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ============================================
+   4. Formulario - Crear informe
+   ============================================ */
 .crear-informe {
   max-width: 480px;
   padding: 28px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  border: 1px solid #eef1f6;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 14px 40px rgba(20, 50, 90, 0.08), 0 2px 8px rgba(20, 50, 90, 0.05);
+  border: 1px solid #e8ecf2;
 
   h2 {
     margin-top: 0;
     font-size: 1.15rem;
-    color: #0f172a;
+    color: #163d8c;
+    font-weight: 700;
   }
 
   label {
@@ -34,60 +74,69 @@
     margin: 12px 0 4px;
     font-weight: 600;
     font-size: 0.9rem;
-    color: #334155;
+    color: #1e2a3a;
   }
 
   input {
     width: 100%;
-    padding: 9px 12px;
+    padding: 0.6rem 1rem;
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
+    border: 2px solid #e8ecf2;
+    background: #fafcff;
     box-sizing: border-box;
     font-size: 0.9rem;
+    transition: all 0.3s ease;
 
     &:focus {
       outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      border-color: #163d8c;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
     }
   }
 
   .error-texto {
-    color: #991b1b;
+    color: #dc3545;
     font-size: 0.85rem;
   }
 
   button {
     margin-top: 16px;
-    padding: 10px 16px;
+    padding: 0.7rem 2rem;
     border-radius: 8px;
     border: none;
-    background: #2563eb;
-    color: #fff;
+    background: #163d8c;
+    color: #ffffff;
     cursor: pointer;
     font-weight: 600;
+    transition: all 0.3s ease;
 
     &:hover {
-      background: #1d4ed8;
+      background: #0f2d66;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
     }
 
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
   }
-  .btn-cancelar {
-  background: #64748b !important;
 
-  &:hover {
-    background: #475569 !important;
+  .btn-cancelar {
+    background: #ff7b22 !important;
+    margin-left: 8px;
+
+    &:hover {
+      background: #e06a1a !important;
+    }
   }
 }
-}
 
-// ---------------------------------------------------------------------
-// Toolbar (acciones fuera del documento, no se imprimen)
-// ---------------------------------------------------------------------
+/* ============================================
+   5. Toolbar (acciones fuera del documento)
+   ============================================ */
 .informe-final__toolbar {
   display: flex;
   align-items: center;
@@ -96,7 +145,7 @@
   flex-wrap: wrap;
 
   .mensaje-guardado {
-    color: #166534;
+    color: #28a745;
     font-size: 0.85rem;
     font-weight: 600;
   }
@@ -106,15 +155,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 16px;
+  padding: 0.7rem 2rem;
   border-radius: 8px;
-  border: 1px solid #2563eb;
-  background: #2563eb;
-  color: #fff;
+  border: none;
+  background: #163d8c;
+  color: #ffffff;
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 600;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.3s ease;
 
   svg {
     width: 16px;
@@ -122,36 +171,40 @@
   }
 
   &:hover {
-    background: #1d4ed8;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    background: #0f2d66;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
   }
 
   &--outline {
-    background: #fff;
-    color: #2563eb;
+    background: transparent;
+    color: #163d8c;
+    border: 2px solid #163d8c;
 
     &:hover {
-      background: #eff6ff;
-      box-shadow: none;
+      background: #f7faff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(22, 61, 140, 0.15);
     }
   }
 }
 
-// ---------------------------------------------------------------------
-// Documento (formato-04) — pensado para verse fiel al PDF institucional
-// ---------------------------------------------------------------------
+/* ============================================
+   6. Documento (formato-04) - Versión institucional
+   ============================================ */
 .formato-04 {
-  background: #fff;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  border: 1px solid #dbe1ea;
+  box-shadow: 0 14px 40px rgba(20, 50, 90, 0.08), 0 2px 8px rgba(20, 50, 90, 0.05);
+  border: 1px solid #e8ecf2;
   padding: 0 0 28px;
-  width: 100%; /* Cambiado max-width: 960px por width: 100% para ocupar todo el ancho */
+  width: 100%;
   overflow: hidden;
 
   h1 {
@@ -159,7 +212,7 @@
     font-size: 1.15rem;
     font-weight: 700;
     letter-spacing: 0.01em;
-    color: #0f172a;
+    color: #163d8c;
     margin: 22px 24px 20px;
   }
 
@@ -169,16 +222,16 @@
     h2 {
       font-size: 0.95rem;
       font-weight: 700;
-      color: #1e3a8a;
-      border-left: 4px solid #2563eb;
-      padding: 4px 0 4px 10px;
+      color: #163d8c;
+      border-left: 5px solid #ff7b22;
+      padding: 4px 0 4px 12px;
       margin: 0 0 10px;
     }
 
     h3 {
       font-size: 0.9rem;
       font-weight: 700;
-      color: #334155;
+      color: #1e2a3a;
       margin: 14px 0 6px;
     }
 
@@ -186,32 +239,33 @@
       font-size: 0.82rem;
       font-style: italic;
       font-weight: 600;
-      color: #64748b;
+      color: #6a7a8e;
       margin: 10px 0 6px;
     }
 
     textarea {
       width: 100%;
       box-sizing: border-box;
-      padding: 10px 12px;
+      padding: 0.6rem 1rem;
       border-radius: 8px;
-      border: 1px solid #dbe1ea;
-      background: #fafbfc;
+      border: 2px solid #e8ecf2;
+      background: #fafcff;
       font-family: inherit;
       font-size: 0.88rem;
       line-height: 1.5;
       resize: vertical;
-      color: #1e293b;
+      color: #1e2a3a;
+      transition: all 0.3s ease;
 
       &:focus {
         outline: none;
-        border-color: #2563eb;
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: #163d8c;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
       }
 
       &::placeholder {
-        color: #94a3b8;
+        color: #6a7a8e;
       }
     }
   }
@@ -223,26 +277,29 @@
 
   th,
   td {
-    border: 1px solid #cbd5e1;
+    border: 1px solid #e8ecf2;
     padding: 7px 10px;
     font-size: 0.85rem;
   }
 
   .tabla-datos {
-    border: 1px solid #cbd5e1;
+    border: 1px solid #e8ecf2;
     border-radius: 8px;
     overflow: hidden;
 
     th {
-      background: #eff6ff;
-      color: #1e3a8a;
+      background: #f0f4fc;
+      color: #163d8c;
       width: 32%;
       text-align: left;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     td {
-      color: #1e293b;
+      color: #1e2a3a;
     }
   }
 
@@ -251,9 +308,12 @@
     width: calc(100% - 48px);
 
     th {
-      background: #f8fafc;
-      color: #1e293b;
-      font-weight: 600;
+      background: #f0f4fc;
+      color: #163d8c;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       text-align: left;
     }
 
@@ -263,93 +323,176 @@
   }
 }
 
-// ---------------------------------------------------------------------
-// Membrete institucional — replica los colores/estructura del PDF
-// ---------------------------------------------------------------------
+/* ============================================
+   7. Membrete institucional
+   ============================================ */
 .membrete {
   display: grid;
   grid-template-columns: 90px 1fr 110px;
-  border-bottom: 2px solid #0f172a;
+  border-bottom: 2px solid #e8ecf2;
+  position: relative;
+}
 
-  &__logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    border-right: 1px solid #cbd5e1;
+.membrete::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #163d8c 0%, #ff7b22 50%, #163d8c 100%);
+}
 
-    img {
-      max-width: 100%;
-      max-height: 64px;
-      object-fit: contain;
-    }
+.membrete__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-right: 1px solid #e8ecf2;
+
+  img {
+    max-width: 100%;
+    max-height: 64px;
+    object-fit: contain;
   }
+}
 
-  &__info {
-    display: flex;
-    flex-direction: column;
-  }
+.membrete__info {
+  display: flex;
+  flex-direction: column;
+}
 
-  &__institucion {
-    padding: 6px 12px;
-    font-size: 0.78rem;
+.membrete__institucion {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e2a3a;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__macroproceso {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  background: #f7faff;
+  color: #163d8c;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__proceso {
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  background: #f7faff;
+  color: #163d8c;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__formato {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e2a3a;
+}
+
+.membrete__codigo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-left: 1px solid #e8ecf2;
+  padding: 8px;
+
+  span {
+    font-size: 0.68rem;
     font-weight: 700;
-    text-align: center;
-    color: #0f172a;
-    border-bottom: 1px solid #cbd5e1;
+    color: #6a7a8e;
+    text-transform: uppercase;
   }
 
-  &__macroproceso {
-    padding: 5px 12px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-align: center;
-    background: #bfdbfe;
-    color: #1e3a8a;
-    border-bottom: 1px solid #cbd5e1;
+  strong {
+    font-size: 0.85rem;
+    color: #1e2a3a;
+  }
+}
+
+/* ============================================
+   8. Responsive
+   ============================================ */
+@media (max-width: 768px) {
+  :host {
+    padding: 1rem 0.5rem;
   }
 
-  &__proceso {
-    padding: 5px 12px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-align: center;
-    background: #fecaca;
-    color: #7f1d1d;
-    border-bottom: 1px solid #cbd5e1;
+  .informe-final {
+    padding: 1.5rem 1.2rem;
   }
 
-  &__formato {
-    padding: 5px 12px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-align: center;
-    color: #0f172a;
+  .crear-informe {
+    max-width: 100%;
+    padding: 20px;
   }
 
-  &__codigo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border-left: 1px solid #cbd5e1;
-    padding: 8px;
+  .membrete {
+    grid-template-columns: 70px 1fr 80px;
+  }
 
+  .membrete__institucion {
+    font-size: 0.68rem;
+  }
+
+  .membrete__macroproceso,
+  .membrete__proceso,
+  .membrete__formato {
+    font-size: 0.62rem;
+  }
+
+  .membrete__codigo {
     span {
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
+      font-size: 0.58rem;
+    }
+    strong {
+      font-size: 0.72rem;
+    }
+  }
+
+  .formato-04 {
+    h1 {
+      font-size: 1rem;
+      margin: 16px 16px 14px;
     }
 
-    strong {
-      font-size: 0.85rem;
-      color: #0f172a;
+    section {
+      margin: 0 16px 16px;
+    }
+  }
+
+  .tabla-datos {
+    th,
+    td {
+      font-size: 0.75rem;
+      padding: 5px 7px;
+    }
+  }
+
+  .informe-final__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn-toolbar {
+      justify-content: center;
     }
   }
 }
 
+/* ============================================
+   9. Estilos de impresión
+   ============================================ */
 @media print {
   .no-print {
     display: none !important;
@@ -364,6 +507,28 @@
 
   .formato-04 {
     box-shadow: none;
-    border: 1px solid #000;
+    border: 1px solid #1e2a3a;
+  }
+
+  :host {
+    background: #ffffff;
+    padding: 0;
+  }
+
+  .informe-final {
+    padding: 2rem;
+    box-shadow: none;
+  }
+
+  .informe-final::before {
+    display: none;
+  }
+
+  .membrete {
+    border-bottom: 2px solid #1e2a3a;
+  }
+
+  .membrete::after {
+    display: none;
   }
 }

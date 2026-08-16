@@ -16,7 +16,6 @@
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: none;
   font-family: 'Times New Roman', Times, serif;
   position: relative;
 
@@ -290,7 +289,6 @@ h2 {
   }
 
   .documento-icono {
-    font-size: 2rem;
     flex-shrink: 0;
     width: 48px;
     height: 48px;
@@ -403,8 +401,8 @@ h2 {
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1.2rem 1.8rem;
-  background: #fde8e8;
-  color: #b22222;
+  background: #fff8f8;
+  color: #dc3545;
   border: 1px solid #f5c6cb;
   border-radius: 8px;
   margin-top: 1rem;
@@ -412,7 +410,7 @@ h2 {
   font-size: 0.95rem;
 
   .btn-reintentar {
-    background: #b22222;
+    background: #dc3545;
     color: #ffffff;
     border: none;
     border-radius: 6px;
@@ -424,7 +422,7 @@ h2 {
     transition: all 0.3s ease;
 
     &:hover {
-      background: #8a1a1a;
+      background: #c82333;
       transform: translateY(-2px);
     }
   }

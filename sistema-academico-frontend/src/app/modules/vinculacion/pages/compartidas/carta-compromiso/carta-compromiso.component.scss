@@ -2,7 +2,6 @@
 // CARTA DE COMPROMISO - ESTILO PROFESIONAL
 // ============================================
 
-// Fondo general de la página
 :host {
   display: block;
   background: #f0f2f5;
@@ -17,12 +16,10 @@
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: none;
   font-family: 'Times New Roman', Times, serif;
   position: relative;
   transition: all 0.3s ease;
 
-  // Sutil línea decorativa superior
   &::before {
     content: '';
     position: absolute;
@@ -47,7 +44,6 @@
   border-bottom: 2px solid #e8ecf2;
   position: relative;
 
-  // Línea decorativa inferior (doble efecto)
   &::after {
     content: '';
     position: absolute;
@@ -136,9 +132,6 @@
     }
   }
 
-  // ============================================
-  // ARTÍCULOS (OBLIGACIONES Y PROHIBICIONES)
-  // ============================================
   .articulos {
     margin: 2.5rem 0;
     padding: 1.8rem 2.2rem;
@@ -150,12 +143,11 @@
     p {
       font-family: 'Roboto', 'Segoe UI', sans-serif;
       font-weight: 700;
-      font-size: 13.5px;
+      font-size: 13px;
       margin: 1.2rem 0 0.6rem 0;
       color: #163d8c;
       letter-spacing: 0.3px;
       text-transform: uppercase;
-      font-size: 13px;
     }
 
     ul {
@@ -182,16 +174,12 @@
       }
     }
 
-    // Separador entre Art. 22 y Art. 23
     .separador-articulo {
       margin: 1.5rem 0 0.5rem 0;
       border-top: 1px dashed #dde4ef;
     }
   }
 
-  // ============================================
-  // TEXTO LEGAL (INCUMPLIMIENTO Y ACEPTACIÓN)
-  // ============================================
   .texto-legal {
     margin: 2rem 0 1.5rem 0;
     padding: 1.2rem 1.8rem;
@@ -212,7 +200,7 @@
 
       &:first-child {
         font-weight: 600;
-        color: #b22222;
+        color: #dc3545;
         font-size: 13px;
       }
     }
@@ -343,7 +331,7 @@
   text-align: center;
   padding: 4rem 2rem;
   font-size: 16px;
-  color: #5a6a7e;
+  color: #6a7a8e;
   font-family: 'Times New Roman', Times, serif;
   background: #ffffff;
   border-radius: 12px;
@@ -353,9 +341,9 @@
 }
 
 .error {
-  color: #b22222;
+  color: #dc3545;
   font-weight: 600;
-  border-left: 4px solid #b22222;
+  border-left: 4px solid #dc3545;
 }
 
 .spinner {
