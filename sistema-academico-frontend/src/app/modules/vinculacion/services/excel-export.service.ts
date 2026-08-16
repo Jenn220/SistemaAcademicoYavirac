@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import * as XLSX from 'xlsx-js-style';
+import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { InicioActividadesService } from './inicio-actividades.service';
 import { CartaCompromisoService } from './carta-compromiso.service';
@@ -207,6 +208,30 @@ export class ExcelExportService {
     'Informe final': 'Informe final'
   };
 
+  // El Certificado es el único documento que NO lleva el logo institucional
+  // (es un formato distinto, sin la franja de cabecera con espacio reservado).
+  private readonly LOGO_PATH = 'assets/images/logo-yavirac.png';
+  private logoBytesCache: ArrayBuffer | null | undefined = undefined;
+
+  /**
+   * Descarga el logo institucional una sola vez y lo cachea en memoria para
+   * toda la vida del servicio. Si falla (archivo no existe, red, etc.) no
+   * rompe la exportación: se sigue generando el Excel, solo que sin el logo
+   * incrustado (queda la celda reservada en blanco, como hasta ahora).
+   */
+  private async obtenerLogoBytes(): Promise<ArrayBuffer | null> {
+    if (this.logoBytesCache !== undefined) return this.logoBytesCache;
+    try {
+      const respuesta = await fetch(this.LOGO_PATH);
+      if (!respuesta.ok) throw new Error(`No se pudo cargar ${this.LOGO_PATH} (${respuesta.status})`);
+      this.logoBytesCache = await respuesta.arrayBuffer();
+    } catch (err) {
+      console.warn('⚠️ No se pudo cargar el logo institucional, se exportará sin él:', err);
+      this.logoBytesCache = null;
+    }
+    return this.logoBytesCache;
+  }
+
   // ============================================
   // EXPORTAR HOJA INDIVIDUAL
   // ============================================
@@ -252,7 +277,14 @@ export class ExcelExportService {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, hojaNormalizada);
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+    // El logo va en todas las hojas menos el Certificado (formato distinto,
+    // sin franja de cabecera con espacio reservado para él).
+    const hojasConLogo = hojaNormalizada !== '7 Cert.' ? [hojaNormalizada] : [];
+    const logoBytes = hojasConLogo.length ? await this.obtenerLogoBytes() : null;
+    const bufferFinal = logoBytes ? await this.incrustarLogos(wbout, logoBytes, hojasConLogo) : wbout;
+
+    const blob = new Blob([bufferFinal], { type: 'application/octet-stream' });
     saveAs(blob, `${nombreArchivo}.xlsx`);
   }
 
@@ -288,13 +320,133 @@ export class ExcelExportService {
     }
 
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+    // El logo va en todas las hojas menos el Certificado.
+    const hojasConLogo = hojas.map(h => h.nombre).filter(n => n !== '7 Cert.');
+    const logoBytes = await this.obtenerLogoBytes();
+    const bufferFinal = logoBytes ? await this.incrustarLogos(wbout, logoBytes, hojasConLogo) : wbout;
+
+    const blob = new Blob([bufferFinal], { type: 'application/octet-stream' });
     saveAs(blob, 'PORTAFOLIO VINCULACIÓN.xlsx');
   }
 
   // ============================================
   // HELPERS DE ESCRITURA Y FORMATEO
   // ============================================
+  /**
+   * xlsx-js-style (la edición community de SheetJS) no soporta incrustar
+   * imágenes por API — es una limitación conocida de la librería. Este
+   * método lo evita manipulando directamente el .xlsx ya generado: es un
+   * ZIP con archivos XML adentro (formato OOXML), así que abrimos ese ZIP
+   * con JSZip y le inyectamos a mano las piezas que Excel necesita para
+   * mostrar una imagen:
+   *   1. El archivo de la imagen en xl/media/
+   *   2. Un "drawing" (xl/drawings/drawingN.xml) que dice dónde va anclada
+   *   3. La relación del drawing hacia la imagen (drawingN.xml.rels)
+   *   4. La relación de la hoja hacia su drawing (sheetN.xml.rels)
+   *   5. La referencia <drawing/> dentro del XML de la hoja
+   *   6. El tipo MIME del drawing registrado en [Content_Types].xml
+   *
+   * @param buffer        El .xlsx ya generado por XLSX.write(...).
+   * @param logoBytes     Los bytes del logo (PNG).
+   * @param hojasConLogo  Nombres de hoja (tal como se pasaron a
+   *                      XLSX.utils.book_append_sheet) donde insertar el
+   *                      logo, ancladas en las celdas A1:A4 (o A1:B4 según
+   *                      la hoja) que cada hoja ya deja reservadas y en
+   *                      blanco para esto.
+   */
+  private async incrustarLogos(buffer: ArrayBuffer, logoBytes: ArrayBuffer, hojasConLogo: string[]): Promise<ArrayBuffer> {
+    if (!hojasConLogo.length) return buffer;
+
+    const zip = await JSZip.loadAsync(buffer);
+
+    const imagePath = 'xl/media/image_logo.png';
+    zip.file(imagePath, logoBytes);
+
+    let contentTypes = await zip.file('[Content_Types].xml')!.async('string');
+    if (!contentTypes.includes('Extension="png"')) {
+      contentTypes = contentTypes.replace('</Types>', '<Default Extension="png" ContentType="image/png"/></Types>');
+    }
+
+    // Mapea nombre de hoja -> r:id (workbook.xml) -> archivo sheetN.xml (workbook.xml.rels)
+    const workbookXml = await zip.file('xl/workbook.xml')!.async('string');
+    const sheetMatches = [...workbookXml.matchAll(/<sheet[^>]*name="([^"]+)"[^>]*r:id="(rId\d+)"/g)];
+    const relsXml = await zip.file('xl/_rels/workbook.xml.rels')!.async('string');
+    const relMatches = [...relsXml.matchAll(/<Relationship[^>]*Id="(rId\d+)"[^>]*Target="(worksheets\/sheet\d+\.xml)"/g)];
+    const ridAFile = new Map(relMatches.map(m => [m[1], m[2]]));
+
+    let indiceDrawing = 1;
+    for (const [, nombreHoja, rid] of sheetMatches) {
+      if (!hojasConLogo.includes(nombreHoja)) continue;
+      const archivoHoja = ridAFile.get(rid);
+      if (!archivoHoja) continue;
+
+      const sheetPath = `xl/${archivoHoja}`;
+      const sheetFileName = archivoHoja.split('/')[1];
+      const drawingName = `drawing${indiceDrawing}.xml`;
+      const drawingPath = `xl/drawings/${drawingName}`;
+      const drawingRelsPath = `xl/drawings/_rels/${drawingName}.rels`;
+      const sheetRelsPath = `xl/worksheets/_rels/${sheetFileName}.rels`;
+
+      // Ancla el logo dentro de A1:B4 (con un pequeño margen interno para
+      // que no toque los bordes de la celda reservada) y deja que Excel lo
+      // estire para llenar ese espacio manteniendo la relación de aspecto
+      // no forzada (noChangeAspect solo evita el redimensionado manual, el
+      // "stretch" inicial sí llena el rectángulo completo).
+      const drawingXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+<xdr:twoCellAnchor editAs="oneCell">
+<xdr:from><xdr:col>0</xdr:col><xdr:colOff>38100</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>38100</xdr:rowOff></xdr:from>
+<xdr:to><xdr:col>1</xdr:col><xdr:colOff>-38100</xdr:colOff><xdr:row>3</xdr:row><xdr:rowOff>190500</xdr:rowOff></xdr:to>
+<xdr:pic>
+<xdr:nvPicPr><xdr:cNvPr id="${indiceDrawing + 1}" name="LogoYavirac"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>
+<xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>
+<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>
+</xdr:pic>
+<xdr:clientData/>
+</xdr:twoCellAnchor>
+</xdr:wsDr>`;
+
+      zip.file(drawingPath, drawingXml);
+      zip.file(drawingRelsPath, `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image_logo.png"/>
+</Relationships>`);
+
+      let sheetXml = await zip.file(sheetPath)!.async('string');
+      const drawingRelId = 'rIdLogoDrawing';
+      if (sheetXml.includes('</worksheet>')) {
+        sheetXml = sheetXml.replace(
+          '</worksheet>',
+          `<drawing xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="${drawingRelId}"/></worksheet>`
+        );
+      }
+      zip.file(sheetPath, sheetXml);
+
+      const sheetRelsFile = zip.file(sheetRelsPath);
+      let sheetRelsXml = sheetRelsFile
+        ? await sheetRelsFile.async('string')
+        : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
+      sheetRelsXml = sheetRelsXml.replace(
+        '</Relationships>',
+        `<Relationship Id="${drawingRelId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/${drawingName}"/></Relationships>`
+      );
+      zip.file(sheetRelsPath, sheetRelsXml);
+
+      if (!contentTypes.includes(`/xl/drawings/${drawingName}`)) {
+        contentTypes = contentTypes.replace(
+          '</Types>',
+          `<Override PartName="/xl/drawings/${drawingName}" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/></Types>`
+        );
+      }
+
+      indiceDrawing++;
+    }
+
+    zip.file('[Content_Types].xml', contentTypes);
+    return await zip.generateAsync({ type: 'arraybuffer' });
+  }
+
   private nuevaHoja(): XLSX.WorkSheet {
     const ws: XLSX.WorkSheet = {};
     ws['!merges'] = [];
@@ -449,9 +601,13 @@ export class ExcelExportService {
   // ============================================
   private construirHojaInicioActividades(data: any, idVinculacion?: number): XLSX.WorkSheet {
     const ws = this.nuevaHoja();
-    this.anchoColumnas(ws, [4, 15, 13, 13, 13, 13, 13, 13, 13, 13]);
+    this.anchoColumnas(ws, [17.86, 15.86, 13.86, 13, 13, 13, 13, 13, 13, 13]);
 
     const d = data || {};
+
+    // Columna A reservada para el logo institucional.
+    this.celda(ws, 'A1', '', ESTILO_HEADER_BLANCO);
+    this.merge(ws, 'A1:A4', ESTILO_HEADER_BLANCO);
 
     this.bloqueCabeceraInstitucional(ws, {
       colTituloInicio: 'B', colTituloFin: 'H',
@@ -465,42 +621,47 @@ export class ExcelExportService {
     this.merge(ws, 'A7:I7', ESTILO_TITULO_DOCUMENTO);
 
     // "A:" -> Coordinador de Carrera
-    this.celda(ws, 'B10', 'A:', ESTILO_FIELD_LABEL);
+    this.celda(ws, 'A10', 'A:', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'A10:B10', ESTILO_FIELD_LABEL);
     this.celda(ws, 'C10', d.coordinador || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'C10:E10', ESTILO_FIELD_VALUE);
     this.celda(ws, 'C11', 'Coordinador de Carrera', { font: { sz: 10, italic: true, name: 'Calibri' } });
 
     // "De:" -> Tutor del Proyecto (docente)
-    this.celda(ws, 'B13', 'De:', ESTILO_FIELD_LABEL);
+    this.celda(ws, 'A13', 'De:', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'A13:B13', ESTILO_FIELD_LABEL);
     this.celda(ws, 'C13', d.tutor_nombre || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'C13:E13', ESTILO_FIELD_VALUE);
     this.celda(ws, 'C14', 'Tutor del Proyecto', { font: { sz: 10, italic: true, name: 'Calibri' } });
 
-    this.celda(ws, 'B16', 'Asunto:', ESTILO_FIELD_LABEL);
+    this.celda(ws, 'A16', 'Asunto:', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'A16:B16', ESTILO_FIELD_LABEL);
     this.celda(ws, 'C16', 'Informe de inicio de actividades del Proyecto:', ESTILO_FIELD_VALUE);
     this.merge(ws, 'C16:E16', ESTILO_FIELD_VALUE);
     this.celda(ws, 'B17', d.proyecto_nombre || '', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
     this.merge(ws, 'B17:I18', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
 
     // "Fecha:" = fecha de inicio del proyecto (única fecha disponible en la respuesta)
-    this.celda(ws, 'B20', 'Fecha:', ESTILO_FIELD_LABEL);
+    this.celda(ws, 'A20', 'Fecha:', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'A20:B20', ESTILO_FIELD_LABEL);
     this.celda(ws, 'C20', this.fmtFecha(d.fecha_inicio), ESTILO_FIELD_VALUE);
 
-    this.celda(ws, 'B24', 'Yo,', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'A24', 'Yo,', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'A24:B24', ESTILO_CELDA_TABLA);
     this.celda(ws, 'C24', d.tutor_nombre || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
     this.merge(ws, 'C24:E24', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
     this.celda(ws, 'F24', 'con C.I. Nro.', ESTILO_CELDA_TABLA);
     this.celda(ws, 'G24', d.tutor_cedula || '', ESTILO_CELDA_TABLA);
     this.celda(ws, 'H24', 'tengo a bien', ESTILO_CELDA_TABLA);
 
-    this.celda(ws, 'B25', 'informar que siguiendo con el cronograma de actividades establecido en el proyecto de vinculación:', ESTILO_TEXTO_NORMAL);
-    this.merge(ws, 'B25:I25', ESTILO_TEXTO_NORMAL);
+    this.celda(ws, 'A25', 'informar que siguiendo con el cronograma de actividades establecido en el proyecto de vinculación:', ESTILO_TEXTO_NORMAL);
+    this.merge(ws, 'A25:H25', ESTILO_TEXTO_NORMAL);
     this.filaAltura(ws, 25, 24);
-    this.celda(ws, 'B26', d.proyecto_nombre || '', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
-    this.merge(ws, 'B26:I27', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
+    this.celda(ws, 'A26', d.proyecto_nombre || '', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
+    this.merge(ws, 'A26:I27', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
 
-    this.celda(ws, 'B28', 'Informo que el día de hoy', ESTILO_TEXTO_NORMAL);
-    this.merge(ws, 'B28:C28', ESTILO_TEXTO_NORMAL);
+    this.celda(ws, 'A28', 'Informo que el día de hoy', ESTILO_TEXTO_NORMAL);
+    this.merge(ws, 'A28:C28', ESTILO_TEXTO_NORMAL);
     this.celda(ws, 'D28', this.fmtFecha(d.fecha_inicio), { font: { bold: true, sz: 10, name: 'Calibri' } });
     this.celda(ws, 'E28', 'del año en curso, se procedió a dar inicio con el desarrollo del mismo.', ESTILO_TEXTO_NORMAL);
     this.merge(ws, 'E28:I28', ESTILO_TEXTO_NORMAL);
@@ -508,23 +669,23 @@ export class ExcelExportService {
 
     this.celda(ws, 'B30', 'Explicar cómo se dio el inicio de las actividades y anexar fotografías.', { font: { italic: true, sz: 9, name: 'Calibri' } });
 
-    this.celda(ws, 'B31', d.descripcion_actividades || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'B31:I38', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'A31', d.descripcion_actividades || '', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'A31:I38', ESTILO_CELDA_TABLA);
     this.filasAltura(ws, 31, 38, 30);
 
-    this.celda(ws, 'B39', 'Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación con los grupos estudiantiles.', ESTILO_SECCION);
-    this.merge(ws, 'B39:H39', ESTILO_SECCION);
+    this.celda(ws, 'A39', 'Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación con los grupos estudiantiles.', ESTILO_SECCION);
+    this.merge(ws, 'A39:H39', ESTILO_SECCION);
 
-    this.celda(ws, 'B41', 'Figura 1: Primera reunión de inducción vinculación.', { font: { italic: true, sz: 9, name: 'Calibri' } });
-    this.merge(ws, 'B41:D41', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.celda(ws, 'A41', 'Figura 1: Primera reunión de inducción vinculación.', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.merge(ws, 'A41:D41', { font: { italic: true, sz: 9, name: 'Calibri' } });
     this.celda(ws, 'F41', 'Figura 2: Socialización de actividades.', { font: { italic: true, sz: 9, name: 'Calibri' } });
     this.merge(ws, 'F41:H41', { font: { italic: true, sz: 9, name: 'Calibri' } });
 
     // Espacios reservados para las imágenes (celdas combinadas grandes, sin imagen embebida)
-    this.merge(ws, 'B42:I50', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'A42:I50', ESTILO_CELDA_TABLA);
     this.filasAltura(ws, 42, 50, 24);
 
-    this.celda(ws, 'B51', 'Figura 3: Explicación del alcance del proyecto.', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.celda(ws, 'A51', 'Figura 3: Explicación del alcance del proyecto.', { font: { italic: true, sz: 9, name: 'Calibri' } });
     this.celda(ws, 'F51', 'Figura 4: Primer día de actividades en la Fundación', { font: { italic: true, sz: 9, name: 'Calibri' } });
 
     this.celda(ws, 'B62', 'Atentamente,', ESTILO_TEXTO_NORMAL);
@@ -550,8 +711,8 @@ export class ExcelExportService {
 
     const d = data || {};
 
-    // Columna A:B reservada para el logo institucional (ver nota sobre
-    // xlsx-js-style en construirHojaInformeFinal: no soporta incrustar imágenes).
+    // Columna A:B reservada para el logo institucional — se incrusta
+    // aparte, en incrustarLogos(), después de generar el .xlsx.
     this.celda(ws, 'A1', '', ESTILO_HEADER_BLANCO);
     this.merge(ws, 'A1:B4', ESTILO_HEADER_BLANCO);
 
@@ -572,13 +733,13 @@ export class ExcelExportService {
     // Bloque "Yo, ... me comprometo": cada línea de texto corrido se combina
     // sobre un rango ancho (en vez de desbordar sobre celdas vacías) para que
     // se lea de corrido y no se monte sobre las filas siguientes.
-    const ESTILO_TEXTO_CENTRADO = { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' } };
+    const ESTILO_TEXTO_CENTRADO = { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' }, border: allBorders() };
 
     this.celda(ws, 'A10', 'Yo,', ESTILO_TEXTO_CENTRADO);
     this.merge(ws, 'A10:B10', ESTILO_TEXTO_CENTRADO);
     this.celda(ws, 'C10', d.estudiante || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
     this.merge(ws, 'C10:D10', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.celda(ws, 'E10', 'con C.I.', ESTILO_TEXTO_NORMAL);
+    this.celda(ws, 'E10', 'con C.I.', { ...ESTILO_TEXTO_NORMAL, border: allBorders() });
     this.celda(ws, 'F10', d.cedula || '', ESTILO_CELDA_TABLA);
     this.celda(ws, 'G10', 'estudiante del Instituto Superior', ESTILO_TEXTO_CENTRADO);
     this.merge(ws, 'G10:I10', ESTILO_TEXTO_CENTRADO);
@@ -595,8 +756,8 @@ export class ExcelExportService {
     this.celda(ws, 'E12', d.entidad_beneficiaria || '', ESTILO_CELDA_TABLA);
     this.merge(ws, 'E12:I12', ESTILO_CELDA_TABLA);
 
-    this.celda(ws, 'A13', 'me comprometo a seguir las siguientes recomendaciones:', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A13:I13', ESTILO_TEXTO_CENTRADO);
+    this.celda(ws, 'A13', 'me comprometo a seguir las siguientes recomendaciones:', { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' } });
+    this.merge(ws, 'A13:I13', { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' } });
     this.merge(ws, 'A14:I14', { border: allBorders() });
 
     this.celda(ws, 'A15', TEXTO_ART_22, ESTILO_TEXTO_LEGAL);
@@ -774,6 +935,10 @@ export class ExcelExportService {
     const cab = data?.cabecera || {};
     const visitas: any[] = data?.actividades || [];
     const totales = data?.totales || {};
+
+    // Columna A reservada para el logo institucional.
+    this.celda(ws, 'A1', '', ESTILO_HEADER_BLANCO);
+    this.merge(ws, 'A1:A4', ESTILO_HEADER_BLANCO);
 
     this.celda(ws, 'B1', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC', ESTILO_HEADER_AZUL);
     this.merge(ws, 'B1:F1', ESTILO_HEADER_AZUL);
@@ -1128,11 +1293,8 @@ export class ExcelExportService {
     const ws = this.nuevaHoja();
     this.anchoColumnas(ws, [16.86, 14.86, 30.86, 28.29, 15.43, 11.57, 14.86]);
 
-    // Columna A reservada para el logo institucional. xlsx-js-style (edición
-    // community de SheetJS) no soporta incrustar imágenes por código — ver nota
-    // en exportarHojaIndividual/exportarExcelCompleto — así que se deja un
-    // espacio en blanco con el mismo alto que la franja de cabecera para
-    // pegar el logo manualmente en Excel, igual que en la plantilla ya ajustada.
+    // Columna A reservada para el logo institucional — se incrusta aparte,
+    // en incrustarLogos(), después de generar el .xlsx.
     this.celda(ws, 'A1', '', ESTILO_HEADER_BLANCO);
     this.merge(ws, 'A1:A4', ESTILO_HEADER_BLANCO);
 

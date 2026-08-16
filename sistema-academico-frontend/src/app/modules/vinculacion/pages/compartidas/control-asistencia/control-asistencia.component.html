@@ -1,13 +1,6 @@
 <div class="asistencia-container" *ngIf="!loading && !error && data">
   <app-volver-archivos *ngIf="isDocente" />
   
-  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
-  <div class="acciones-export">
-    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
-      📊 Exportar a Excel
-    </button>
-  </div>
-  
   <!-- CABECERA -->
   <div class="cabecera">
     <h2>CONTROL DE ASISTENCIA Y SEGUIMIENTO DE VINCULACIÓN CON LA COMUNIDAD</h2>
@@ -35,6 +28,86 @@
         </span>
       </p>
     </div>
+  </div>
+
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
+  <!-- ✅ FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) - MOVIDO ARRIBA -->
+  <div class="nueva-actividad" *ngIf="mostrandoFormulario && isEstudiante">
+    <h3>📝 Nueva actividad</h3>
+    
+    <div *ngIf="errorHora" class="error-hora">
+      {{ errorHora }}
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" [(ngModel)]="nuevaActividad.fecha" />
+      </div>
+      <div class="form-group">
+        <label>Hora entrada</label>
+        <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora salida</label>
+        <input type="time" [(ngModel)]="nuevaActividad.hora_fin" (ngModelChange)="errorHora = null" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label>Actividad realizada</label>
+        <input type="text" [(ngModel)]="nuevaActividad.actividades_realizadas" placeholder="Describa la actividad realizada" />
+      </div>
+    </div>
+    
+    <div class="form-actions">
+      <button (click)="agregarActividad()" class="btn-save" [disabled]="loading">💾 Guardar</button>
+      <button (click)="cancelarNuevo()" class="btn-cancel">❌ Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ✅ FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) - MOVIDO ARRIBA -->
+  <div class="nueva-actividad" *ngIf="mostrandoModalDuplicar && isEstudiante">
+    <h3>➕ Añadir fecha para la misma actividad</h3>
+    <p class="info-duplicar"><strong>Actividad:</strong> {{ actividadParaDuplicar?.descripcion }}</p>
+    
+    <div *ngIf="errorHora" class="error-hora">
+      {{ errorHora }}
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nueva Fecha</label>
+        <input type="date" [(ngModel)]="nuevoDiaDuplicado.fecha" />
+      </div>
+      <div class="form-group">
+        <label>Hora entrada</label>
+        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_inicio" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora salida</label>
+        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_fin" (ngModelChange)="errorHora = null" />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button (click)="guardarDiaDuplicado()" class="btn-save" [disabled]="loading">💾 Guardar Nuevo Día</button>
+      <button (click)="cancelarDuplicado()" class="btn-cancel">❌ Cancelar</button>
+    </div>
+  </div>
+
+  <!-- BOTÓN AGREGAR (SOLO ESTUDIANTE) -->
+  <div class="acciones" *ngIf="isEstudiante">
+    <button *ngIf="!mostrandoFormulario && !mostrandoModalDuplicar" (click)="mostrarFormulario()" class="btn-add">
+      + Agregar actividad
+    </button>
   </div>
 
   <!-- TABLA DE ACTIVIDADES -->
@@ -71,47 +144,46 @@
           </td>
           <td>{{ act.total_horas | number:'1.2-2' }}</td>
 
-          <!-- ✅ ESTILO EXCEL (ROWSPAN) -->
-          <td *ngIf="isFirst" [attr.rowspan]="grupo.actividadesDetalle.length" style="vertical-align: middle; background-color: #fff;">
+          <!-- ✅ ACTIVIDAD REALIZADA MEJORADA -->
+          <td *ngIf="isFirst" [attr.rowspan]="grupo.actividadesDetalle.length" class="actividad-cell">
             <div class="grupo-actividad-wrapper">
               <!-- Modo Vista de la Descripción -->
               <div class="texto-actividad-container" *ngIf="editandoGrupoId !== grupo.ids[0]">
                 <span>{{ grupo.descripcion }}</span>
-                <!-- Botón para editar la descripción general del grupo -->
-                <button (click)="editarDescripcionGrupo(grupo)" class="btn-action btn-edit" title="Editar descripción general" style="margin-left: 8px;">✏️</button>
+                <button (click)="editarDescripcionGrupo(grupo)" class="btn-edit-desc" title="Editar descripción general">✏️</button>
               </div>
 
               <!-- Modo Edición de la Descripción -->
               <div class="texto-actividad-container" *ngIf="editandoGrupoId === grupo.ids[0]">
-                <textarea [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" style="width: 100%; resize: vertical;" rows="3" placeholder="Descripción de la actividad..."></textarea>
+                <textarea [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" rows="3" placeholder="Descripción de la actividad..."></textarea>
               </div>
               
-              <!-- Botón para añadir otra fecha (solo si no se está editando nada) -->
+              <!-- Botón para añadir otra fecha -->
               <div class="btn-agregar-fecha-container" *ngIf="!editandoId && !editandoGrupoId">
-                <button (click)="prepararDuplicado(grupo.actividadesDetalle[0])" class="btn-action btn-add-copy" title="Añadir otra fecha a esta actividad">
+                <button (click)="prepararDuplicado(grupo.actividadesDetalle[0])" class="btn-add-copy">
                   ➕ Añadir fecha
                 </button>
               </div>
             </div>
           </td>
 
-          <!-- Botones de Acción por fila -->
+          <!-- ✅ BOTONES DE ACCIÓN MEJORADOS -->
           <td class="acciones-cell">
             <div *ngIf="errorHora && editandoId === act.id" class="error-hora-small">{{ errorHora }}</div>
             
-            <!-- 👁️ Modo Normal (Cuando no se está editando) -->
+            <!-- Modo Normal -->
             <div class="btn-group-acciones" *ngIf="editandoId !== act.id && editandoGrupoId !== grupo.ids[0]">
               <button (click)="editarFilaIndividual(act)" class="btn-action btn-edit" title="Editar fecha u horas de este día">✏️</button>
               <button (click)="eliminarActividad(act.id)" class="btn-action btn-delete" title="Eliminar este día">🗑️</button>
             </div>
             
-            <!-- 💾 Modo Guardar/Cancelar Fila Individual -->
+            <!-- Modo Guardar/Cancelar Fila Individual -->
             <div class="btn-group-acciones" *ngIf="editandoId === act.id">
               <button (click)="guardarEdicionFila(act.id)" class="btn-action btn-save" title="Guardar cambios de la fila">💾</button>
               <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
             </div>
 
-            <!-- 💾 Modo Guardar/Cancelar Grupo (Descripción) -->
+            <!-- Modo Guardar/Cancelar Grupo (Descripción) -->
             <div class="btn-group-acciones" *ngIf="editandoGrupoId === grupo.ids[0] && isFirst">
               <button (click)="guardarEdicionGrupo(grupo)" class="btn-action btn-save" title="Guardar cambios del grupo">💾</button>
               <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
@@ -184,86 +256,6 @@
     
     <div *ngIf="puedeEditarObservaciones && mensajeFeedback" class="feedback">
       {{ mensajeFeedback }}
-    </div>
-  </div>
-
-  <!-- BOTÓN AGREGAR (SOLO ESTUDIANTE) -->
-  <div class="acciones" *ngIf="isEstudiante">
-    <button *ngIf="!mostrandoFormulario && !mostrandoModalDuplicar" (click)="mostrarFormulario()" class="btn-add">
-      + Agregar actividad
-    </button>
-  </div>
-
-  <!-- FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) -->
-  <div class="nueva-actividad" *ngIf="mostrandoFormulario && isEstudiante">
-    <h3>📝 Nueva actividad</h3>
-    
-    <div *ngIf="errorHora" class="error-hora">
-      {{ errorHora }}
-    </div>
-    
-    <div class="form-row">
-      <div class="form-group">
-        <label>Fecha</label>
-        <input type="date" [(ngModel)]="nuevaActividad.fecha" />
-      </div>
-      <div class="form-group">
-        <label>Hora entrada</label>
-        <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" (ngModelChange)="errorHora = null" />
-      </div>
-      <div class="form-group">
-        <label>Hora salida</label>
-        <input type="time" [(ngModel)]="nuevaActividad.hora_fin" (ngModelChange)="errorHora = null" />
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group full-width">
-        <label>Actividad realizada</label>
-        <input type="text" [(ngModel)]="nuevaActividad.actividades_realizadas" placeholder="Describa la actividad realizada" />
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group full-width">
-        <label>Observación</label>
-        <input type="text" [(ngModel)]="nuevaActividad.observacion" placeholder="Observaciones adicionales (opcional)" />
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button (click)="agregarActividad()" class="btn-save" [disabled]="loading">💾 Guardar</button>
-      <button (click)="cancelarNuevo()" class="btn-cancel">❌ Cancelar</button>
-    </div>
-  </div>
-
-  <!-- FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) -->
-  <div class="nueva-actividad" *ngIf="mostrandoModalDuplicar && isEstudiante">
-    <h3>➕ Añadir fecha para la misma actividad</h3>
-    <p class="info-duplicar"><strong>Actividad:</strong> {{ actividadParaDuplicar?.descripcion }}</p>
-    
-    <div *ngIf="errorHora" class="error-hora">
-      {{ errorHora }}
-    </div>
-    
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nueva Fecha</label>
-        <input type="date" [(ngModel)]="nuevoDiaDuplicado.fecha" />
-      </div>
-      <div class="form-group">
-        <label>Hora entrada</label>
-        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_inicio" (ngModelChange)="errorHora = null" />
-      </div>
-      <div class="form-group">
-        <label>Hora salida</label>
-        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_fin" (ngModelChange)="errorHora = null" />
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button (click)="guardarDiaDuplicado()" class="btn-save" [disabled]="loading">💾 Guardar Nuevo Día</button>
-      <button (click)="cancelarDuplicado()" class="btn-cancel">❌ Cancelar</button>
     </div>
   </div>
 
