@@ -213,6 +213,18 @@ export class ExcelExportService {
   private readonly LOGO_PATH = 'assets/images/logo-yavirac.png';
   private logoBytesCache: ArrayBuffer | null | undefined = undefined;
 
+  // Cuántas columnas (A o A:B) reserva cada hoja para el logo — debe
+  // coincidir con el merge 'A1:A4' / 'A1:B4' que hace cada construirHoja*.
+  // El Certificado no aparece aquí a propósito: no lleva logo.
+  private readonly COLUMNAS_LOGO_POR_HOJA: Record<string, 1 | 2> = {
+    'Inicio Act.': 1,
+    '1 C.C.': 2,
+    '2 C.A.': 1,
+    '3 R.A.T': 1,
+    '4 P.A.': 2,
+    'Informe final': 1
+  };
+
   /**
    * Descarga el logo institucional una sola vez y lo cachea en memoria para
    * toda la vida del servicio. Si falla (archivo no existe, red, etc.) no
@@ -280,7 +292,8 @@ export class ExcelExportService {
 
     // El logo va en todas las hojas menos el Certificado (formato distinto,
     // sin franja de cabecera con espacio reservado para él).
-    const hojasConLogo = hojaNormalizada !== '7 Cert.' ? [hojaNormalizada] : [];
+    const columnasLogo = this.COLUMNAS_LOGO_POR_HOJA[hojaNormalizada];
+    const hojasConLogo = columnasLogo ? [{ nombre: hojaNormalizada, columnas: columnasLogo }] : [];
     const logoBytes = hojasConLogo.length ? await this.obtenerLogoBytes() : null;
     const bufferFinal = logoBytes ? await this.incrustarLogos(wbout, logoBytes, hojasConLogo) : wbout;
 
@@ -322,7 +335,9 @@ export class ExcelExportService {
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 
     // El logo va en todas las hojas menos el Certificado.
-    const hojasConLogo = hojas.map(h => h.nombre).filter(n => n !== '7 Cert.');
+    const hojasConLogo = hojas
+      .map(h => ({ nombre: h.nombre, columnas: this.COLUMNAS_LOGO_POR_HOJA[h.nombre] }))
+      .filter((h): h is { nombre: string; columnas: 1 | 2 } => !!h.columnas);
     const logoBytes = await this.obtenerLogoBytes();
     const bufferFinal = logoBytes ? await this.incrustarLogos(wbout, logoBytes, hojasConLogo) : wbout;
 
@@ -349,13 +364,12 @@ export class ExcelExportService {
    *
    * @param buffer        El .xlsx ya generado por XLSX.write(...).
    * @param logoBytes     Los bytes del logo (PNG).
-   * @param hojasConLogo  Nombres de hoja (tal como se pasaron a
-   *                      XLSX.utils.book_append_sheet) donde insertar el
-   *                      logo, ancladas en las celdas A1:A4 (o A1:B4 según
-   *                      la hoja) que cada hoja ya deja reservadas y en
-   *                      blanco para esto.
+   * @param hojasConLogo  Nombre de hoja (tal como se pasó a
+   *                      XLSX.utils.book_append_sheet) + cuántas columnas
+   *                      reserva esa hoja para el logo: 1 si solo es la
+   *                      columna A (A1:A4) o 2 si es A:B (A1:B4).
    */
-  private async incrustarLogos(buffer: ArrayBuffer, logoBytes: ArrayBuffer, hojasConLogo: string[]): Promise<ArrayBuffer> {
+  private async incrustarLogos(buffer: ArrayBuffer, logoBytes: ArrayBuffer, hojasConLogo: { nombre: string; columnas: 1 | 2 }[]): Promise<ArrayBuffer> {
     if (!hojasConLogo.length) return buffer;
 
     const zip = await JSZip.loadAsync(buffer);
@@ -374,10 +388,12 @@ export class ExcelExportService {
     const relsXml = await zip.file('xl/_rels/workbook.xml.rels')!.async('string');
     const relMatches = [...relsXml.matchAll(/<Relationship[^>]*Id="(rId\d+)"[^>]*Target="(worksheets\/sheet\d+\.xml)"/g)];
     const ridAFile = new Map(relMatches.map(m => [m[1], m[2]]));
+    const configPorHoja = new Map(hojasConLogo.map(h => [h.nombre, h.columnas]));
 
     let indiceDrawing = 1;
     for (const [, nombreHoja, rid] of sheetMatches) {
-      if (!hojasConLogo.includes(nombreHoja)) continue;
+      const columnas = configPorHoja.get(nombreHoja);
+      if (!columnas) continue;
       const archivoHoja = ridAFile.get(rid);
       if (!archivoHoja) continue;
 
@@ -388,18 +404,22 @@ export class ExcelExportService {
       const drawingRelsPath = `xl/drawings/_rels/${drawingName}.rels`;
       const sheetRelsPath = `xl/worksheets/_rels/${sheetFileName}.rels`;
 
-      // Ancla el logo dentro de A1:B4 (con un pequeño margen interno para
-      // que no toque los bordes de la celda reservada) y deja que Excel lo
-      // estire para llenar ese espacio manteniendo la relación de aspecto
-      // no forzada (noChangeAspect solo evita el redimensionado manual, el
-      // "stretch" inicial sí llena el rectángulo completo).
+      // Ancla el logo desde la esquina superior de A1 hasta la esquina
+      // inferior de la última columna reservada (B si columnas=2, A si
+      // columnas=1) en la fila 4 — con un margen interno mínimo para que
+      // no toque los bordes. SIN editAs="oneCell": eso le decía a Excel
+      // que NO redimensionara la imagen según el ancla (solo la movía),
+      // por eso antes se veía chica en vez de llenar el espacio. Con
+      // twoCellAnchor "normal" (por defecto), Excel estira la imagen para
+      // llenar exactamente el rectángulo entre "from" y "to".
+      const colFin = columnas; // 1 columna reservada -> termina al inicio de la col B (índice 1); 2 -> al inicio de la C (índice 2)
       const drawingXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-<xdr:twoCellAnchor editAs="oneCell">
-<xdr:from><xdr:col>0</xdr:col><xdr:colOff>38100</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>38100</xdr:rowOff></xdr:from>
-<xdr:to><xdr:col>1</xdr:col><xdr:colOff>-38100</xdr:colOff><xdr:row>3</xdr:row><xdr:rowOff>190500</xdr:rowOff></xdr:to>
+<xdr:twoCellAnchor>
+<xdr:from><xdr:col>0</xdr:col><xdr:colOff>28575</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>28575</xdr:rowOff></xdr:from>
+<xdr:to><xdr:col>${colFin}</xdr:col><xdr:colOff>-28575</xdr:colOff><xdr:row>4</xdr:row><xdr:rowOff>-28575</xdr:rowOff></xdr:to>
 <xdr:pic>
-<xdr:nvPicPr><xdr:cNvPr id="${indiceDrawing + 1}" name="LogoYavirac"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>
+<xdr:nvPicPr><xdr:cNvPr id="${indiceDrawing + 1}" name="LogoYavirac"/><xdr:cNvPicPr><a:picLocks noChangeAspect="0"/></xdr:cNvPicPr></xdr:nvPicPr>
 <xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>
 <xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>
 </xdr:pic>
@@ -445,6 +465,61 @@ export class ExcelExportService {
 
     zip.file('[Content_Types].xml', contentTypes);
     return await zip.generateAsync({ type: 'arraybuffer' });
+  }
+
+  /**
+   * Agrupa los registros de Control de Asistencia por descripción de
+   * actividad, igual que hace la pantalla (actividadesAgrupadas): todas las
+   * fechas que comparten la misma "actividad realizada" quedan juntas en un
+   * solo grupo, en el orden en que aparecen por primera vez.
+   */
+  private agruparPorDescripcion(registros: any[]): { descripcion: string; detalle: any[] }[] {
+    const grupos: { descripcion: string; detalle: any[] }[] = [];
+    // Misma clave que procesarActividadesAgrupadas() en control-asistencia.component.ts:
+    // trim().toLowerCase(), para que "Reunión" y "reunión" caigan en el mismo grupo.
+    const mapa = new Map<string, { descripcion: string; detalle: any[] }>();
+    (registros || []).forEach((item) => {
+      const clave = (item.descripcion || '').trim().toLowerCase();
+      let grupo = mapa.get(clave);
+      if (!grupo) {
+        grupo = { descripcion: item.descripcion || '', detalle: [] };
+        mapa.set(clave, grupo);
+        grupos.push(grupo);
+      }
+      grupo.detalle.push(item);
+    });
+    // Mismo orden que el frontend: cada grupo ordena sus fechas ascendente.
+    grupos.forEach(g => g.detalle.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()));
+    return grupos;
+  }
+
+  /**
+   * Agrupa las actividades del Plan de Aprendizaje por texto de actividad,
+   * exactamente igual que agruparPorSemanaActividad() en
+   * plan-aprendizaje.component.ts: una fila por actividad única (no por
+   * fecha), usando la fecha del primer registro y su resultado de
+   * aprendizaje. Si el mismo texto de actividad tiene varias fechas, el
+   * Word/Excel solo muestra la primera — tal como en el sistema.
+   */
+  private agruparPorSemanaActividad(actividades: any[]): any[] {
+    const agrupadas: any[] = [];
+    const mapa = new Map<string, any>();
+    (actividades || []).forEach((item) => {
+      if (!item.actividad || item.actividad.trim() === '') return;
+      const clave = item.actividad.trim();
+      if (!mapa.has(clave)) {
+        const nuevoGrupo = {
+          semana: `Semana ${agrupadas.length + 1}`,
+          fecha: item.fecha,
+          actividad: item.actividad,
+          resultado_aprendizaje: item.resultado_aprendizaje,
+          id: item.id
+        };
+        mapa.set(clave, nuevoGrupo);
+        agrupadas.push(nuevoGrupo);
+      }
+    });
+    return agrupadas;
   }
 
   private nuevaHoja(): XLSX.WorkSheet {
@@ -883,17 +958,25 @@ export class ExcelExportService {
     this.merge(ws, `E${filaHeader}:J${filaHeader}`, ESTILO_HEADER_TABLA);
 
     let fila = filaHeader + 1;
-    registros.forEach((reg, i) => {
-      const estCentrado = this.filaCebra(ESTILO_CENTRADO, i);
-      const estCelda = this.filaCebra(ESTILO_CELDA_TABLA, i);
-      this.celda(ws, `A${fila}`, this.fmtFecha(reg.fecha), estCentrado);
-      this.celda(ws, `B${fila}`, this.fmtHora(reg.hora_entrada), estCentrado);
-      this.celda(ws, `C${fila}`, this.fmtHora(reg.hora_salida), estCentrado);
-      this.celda(ws, `D${fila}`, reg.total_horas ?? '', estCentrado);
-      this.celda(ws, `E${fila}`, reg.descripcion || '', estCelda);
-      this.merge(ws, `E${fila}:J${fila}`, estCelda);
-      this.filaAltura(ws, fila, 26);
-      fila++;
+    const gruposActividad = this.agruparPorDescripcion(registros);
+    gruposActividad.forEach((grupo, gi) => {
+      const estCentrado = this.filaCebra(ESTILO_CENTRADO, gi);
+      const estCelda = this.filaCebra(ESTILO_CELDA_TABLA, gi);
+      const filaInicioGrupo = fila;
+      grupo.detalle.forEach((reg: any) => {
+        this.celda(ws, `A${fila}`, this.fmtFecha(reg.fecha), estCentrado);
+        this.celda(ws, `B${fila}`, this.fmtHora(reg.hora_entrada), estCentrado);
+        this.celda(ws, `C${fila}`, this.fmtHora(reg.hora_salida), estCentrado);
+        this.celda(ws, `D${fila}`, reg.total_horas ?? '', estCentrado);
+        this.filaAltura(ws, fila, 26);
+        fila++;
+      });
+      // Igual que en el sistema: cuando varias fechas comparten la misma
+      // actividad realizada, esa celda se combina en un solo bloque que
+      // abarca todas esas filas (rowspan), en vez de repetir el texto.
+      const filaFinGrupo = fila - 1;
+      this.celda(ws, `E${filaInicioGrupo}`, grupo.descripcion || '', estCelda);
+      this.merge(ws, `E${filaInicioGrupo}:J${filaFinGrupo}`, estCelda);
     });
 
     // Total de horas acumulado (dato ya calculado por el backend), justo debajo de la tabla
@@ -1040,7 +1123,10 @@ export class ExcelExportService {
     this.anchoColumnas(ws, [8.14, 14.86, 9.86, 9, 9, 9, 9, 9, 9, 15.86, 11.86, 10.86, 14.86]);
 
     const cab = data?.cabecera || {};
-    const semanas: any[] = data?.informe_actividades || [];
+    // Igual que en el sistema (agruparPorSemanaActividad): una fila por
+    // actividad única, no por fecha — si varias fechas comparten el mismo
+    // texto de actividad, solo se muestra la primera fecha y su resultado.
+    const semanas: any[] = this.agruparPorSemanaActividad(data?.informe_actividades || []);
     const reflexion = data?.reflexion_estudiante || '';
 
     this.bloqueCabeceraInstitucional(ws, {
@@ -1109,7 +1195,7 @@ export class ExcelExportService {
     semanas.forEach((s, i) => {
       const estCentrado = this.filaCebra(ESTILO_CENTRADO, i);
       const estCelda = this.filaCebra(ESTILO_CELDA_TABLA, i);
-      this.celda(ws, `A${fila}`, i + 1, estCentrado);
+      this.celda(ws, `A${fila}`, s.semana, estCentrado);
       this.celda(ws, `B${fila}`, this.fmtFecha(s.fecha), estCentrado);
       this.celda(ws, `C${fila}`, s.actividad || '', estCelda);
       this.merge(ws, `C${fila}:I${fila}`, estCelda);
