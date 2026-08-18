@@ -1,140 +1,325 @@
-.panel-coordinador {
-  padding: 24px;
+// ============================================
+// panel-coordinador.component.scss
+// Estandarizado segun Sistema de Estilos Institucional YAVIRAC
+// ============================================
 
-  .titulo {
-    margin: 0 0 6px;
-    font-size: 22px;
-    color: #102a43;
+// 1. :host
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
+}
+
+// 2. Contenedor principal
+.panel-coordinador {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow:
+    0 8px 40px rgba(22, 61, 140, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 4px;
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+    border-radius: 0 0 4px 4px;
+  }
+}
+
+// 3. Titulos y encabezados
+.titulo {
+  color: #163d8c;
+  font-weight: 700;
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.subtitulo {
+  margin: 0 0 20px;
+  color: #6a7a8e;
+  font-size: 14px;
+}
+
+// 4. Tabla de periodos
+.tabla-periodos {
+  background: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   }
 
-  .subtitulo {
-    margin: 0 0 20px;
-    color: #627d98;
+  th, td {
+    border: 1px solid #e8ecf2;
+    padding: 0.5rem 0.8rem;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  th {
+    background: #f0f4fc;
+    color: #163d8c;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  td {
+    background: #ffffff;
+    color: #1e2a3a;
+  }
+
+  tr.seleccionado td {
+    background: #f7faff;
+  }
+
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.activo { background: #e8f6ea; color: #28a745; }
+    &.finalizado { background: #eceff1; color: #6a7a8e; }
+  }
+
+  .btn-detalle {
+    background: #ff7b22;
+    color: #ffffff;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #e06a1a;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// 5. Detalle de cierre (seccion destacada + tarjetas)
+.detalle-cierre {
+  padding: 1.2rem 1.8rem;
+  background: #f7faff;
+  border-left: 5px solid #ff7b22;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 20px;
+
+  h2 {
+    color: #163d8c;
+    font-weight: 700;
+    margin-top: 0;
+    font-size: 18px;
+  }
+
+  .resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+
+    .tarjeta {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid #e9eef7;
+      border-radius: 22px;
+      box-shadow:
+        0 14px 40px rgba(20, 50, 90, 0.08),
+        0 2px 8px rgba(20, 50, 90, 0.05);
+      transition: 0.35s ease;
+      padding: 16px;
+      text-align: center;
+
+      &:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 24px 50px rgba(20, 50, 90, 0.14);
+      }
+
+      .numero {
+        display: block;
+        font-size: 24px;
+        font-weight: 700;
+        color: #163d8c;
+      }
+
+      .etiqueta {
+        font-size: 12px;
+        color: #6a7a8e;
+      }
+    }
+  }
+
+  .btn-cerrar {
+    background: #dc3545;
+    color: #ffffff;
+    border: none;
+    padding: 0.7rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #c82333;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(220, 53, 69, 0.35);
+    }
+  }
+
+  .aviso {
+    color: #6a7a8e;
     font-size: 14px;
+  }
+}
+
+// 6. Modal de confirmacion
+.modal-confirmacion {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 42, 58, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  .modal-contenido {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 420px;
+    box-shadow:
+      0 8px 40px rgba(22, 61, 140, 0.10),
+      0 2px 8px rgba(0, 0, 0, 0.04);
+
+    h3 {
+      color: #163d8c;
+      font-weight: 700;
+      margin-top: 0;
+    }
+
+    p {
+      color: #1e2a3a;
+    }
+
+    .acciones {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-primario {
+      background: #163d8c;
+      color: #ffffff;
+      border: none;
+      padding: 0.7rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #0f2d66;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+
+    .btn-secundario {
+      background: #ff7b22;
+      color: #ffffff;
+      border: none;
+      padding: 0.7rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #e06a1a;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// 7. Mensaje de exito
+.mensaje-exito {
+  color: #28a745;
+  font-weight: 600;
+}
+
+// 8. Responsive
+@media (max-width: 768px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .panel-coordinador {
+    padding: 1.5rem 1.2rem;
   }
 
   .tabla-periodos {
-    background: #fff;
-    border-radius: 10px;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    margin-bottom: 20px;
-    overflow-x: auto;
-
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 12px; font-size: 14px; }
-    th { color: #627d98; border-bottom: 1px solid #e5e9f0; }
-    tr.seleccionado { background: #f0f6ff; }
-
-    .badge {
-      padding: 3px 10px;
-      border-radius: 12px;
+    table, th, td {
       font-size: 12px;
-      font-weight: 600;
-
-      &.activo { background: #e3f5e6; color: #2e7d32; }
-      &.finalizado { background: #eceff1; color: #546e7a; }
-    }
-
-    .btn-detalle {
-      background: none;
-      border: 1px solid #1F3864;
-      color: #1F3864;
-      border-radius: 6px;
-      padding: 5px 12px;
-      cursor: pointer;
-      font-size: 13px;
-
-      &:hover { background: #1F3864; color: #fff; }
     }
   }
 
   .detalle-cierre {
-    background: #fff;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    margin-bottom: 20px;
-
-    h2 { margin-top: 0; color: #102a43; font-size: 18px; }
+    padding: 1rem 1.2rem;
 
     .resumen {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 16px;
-      margin: 16px 0;
-
-      .tarjeta {
-        background: #f4f6f9;
-        border-radius: 8px;
-        padding: 16px;
-        text-align: center;
-
-        .numero { display: block; font-size: 24px; font-weight: 700; color: #102a43; }
-        .etiqueta { font-size: 12px; color: #627d98; }
-      }
-    }
-
-    .btn-cerrar {
-      background: #c62828;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 24px;
-      font-size: 15px;
-      cursor: pointer;
-
-      &:hover { background: #a02020; }
-    }
-
-    .aviso { color: #b26a00; font-size: 14px; }
-  }
-
-  .modal-confirmacion {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-
-    .modal-contenido {
-      background: #fff;
-      border-radius: 10px;
-      padding: 24px;
-      max-width: 420px;
-
-      h3 { margin-top: 0; }
-
-      .acciones {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
-      }
-
-      .btn-primario {
-        background: #1F3864;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: 8px 16px;
-        cursor: pointer;
-      }
-
-      .btn-secundario {
-        background: #eceff1;
-        border: none;
-        border-radius: 6px;
-        padding: 8px 16px;
-        cursor: pointer;
-      }
+      grid-template-columns: 1fr 1fr;
     }
   }
 
-  .mensaje-exito {
-    color: #2e7d32;
-    font-weight: 600;
+  .modal-confirmacion .modal-contenido {
+    max-width: 90%;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalle-cierre .resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-confirmacion .modal-contenido .acciones {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
   }
 }
