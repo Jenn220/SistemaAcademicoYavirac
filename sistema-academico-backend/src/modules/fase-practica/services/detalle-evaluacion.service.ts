@@ -21,10 +21,10 @@ export class DetalleEvaluacionService {
 
   /**
    * TUTOR_EMPRESARIAL solo califica F07 (evaluaciones tipo EMPRESA); las
-   * notas de F08 (INSTITUTO) son exclusivas de DOCENTE/COORDINADOR. Este
-   * endpoint es compartido por ambos formatos y el @Roles de clase no
-   * distingue el tipo de evaluación al que pertenece el detalle, así que
-   * hay que validarlo aquí (hallazgo QA EI-09).
+   * notas de F08 (INSTITUTO) son exclusivas de DOCENTE. Este endpoint es
+   * compartido por ambos formatos y el @Roles de clase no distingue el
+   * tipo de evaluación al que pertenece el detalle, así que hay que
+   * validarlo aquí (hallazgo QA EI-09).
    */
   private async verificarPermisoTutor(usuario: any, idEvaluacion: number): Promise<void> {
     const esSoloTutor = Array.isArray(usuario?.roles) && usuario.roles.includes('TUTOR_EMPRESARIAL')
@@ -36,6 +36,24 @@ export class DetalleEvaluacionService {
 
     if (evaluacion?.tipo_evaluador !== 'EMPRESA') {
       throw new ForbiddenException('El tutor empresarial solo puede calificar la Evaluación Empresarial (F07).');
+    }
+  }
+
+  /**
+   * COORDINADOR solo puede consultar F08 (INSTITUTO), nunca calificarla —
+   * es exclusiva del DOCENTE. Igual que verificarPermisoTutor: solo se
+   * bloquea si el usuario NO es también DOCENTE.
+   */
+  private async verificarPermisoCoordinador(usuario: any, idEvaluacion: number): Promise<void> {
+    const esSoloCoordinador = Array.isArray(usuario?.roles) && usuario.roles.includes('COORDINADOR')
+      && !usuario.roles.includes('DOCENTE');
+
+    if (!esSoloCoordinador) return;
+
+    const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: idEvaluacion } });
+
+    if (evaluacion?.tipo_evaluador === 'INSTITUTO') {
+      throw new ForbiddenException('El coordinador solo puede consultar la Evaluación Instituto (F08), no calificarla.');
     }
   }
 
@@ -62,6 +80,7 @@ export class DetalleEvaluacionService {
 
   private async verificarAcceso(usuario: any, idEvaluacion: number): Promise<void> {
     await this.verificarPermisoTutor(usuario, idEvaluacion);
+    await this.verificarPermisoCoordinador(usuario, idEvaluacion);
 
     const evaluacion = await this.evaluacionRepo.findById(idEvaluacion);
     if (!evaluacion) {

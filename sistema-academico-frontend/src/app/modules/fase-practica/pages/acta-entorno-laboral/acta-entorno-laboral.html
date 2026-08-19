@@ -184,6 +184,9 @@
                     <th>Nivel</th>
                     <th>Nota</th>
                     <th>Firma</th>
+                    @if (!soloLectura) {
+                    <th class="no-print"></th>
+                    }
                 </tr>
             </thead>
 
@@ -197,12 +200,47 @@
                         <td>{{ est.nivel }}</td>
                         <td>{{ est.nota }}</td>
                         <td>{{ est.firma }}</td>
+                        @if (!soloLectura) {
+                        <td class="text-center no-print">
+                            <button type="button" class="btn-eliminar-fila" (click)="quitarEstudiante($index)" title="Quitar estudiante">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                        }
                     </tr>
                 }
 
             </tbody>
 
         </table>
+
+        }
+
+        @if (!soloLectura) {
+
+        <div class="caja-candidatos no-print">
+
+            <strong>Agregar estudiantes (misma empresa, tutor empresarial y docente)</strong>
+
+            @if (cargandoCandidatos) {
+            <p class="texto-candidatos">Buscando estudiantes...</p>
+            } @else if (candidatosDisponibles.length === 0) {
+            <p class="texto-candidatos">No hay más estudiantes disponibles para agregar.</p>
+            } @else {
+            <ul class="lista-candidatos">
+                @for (candidato of candidatosDisponibles; track candidato.cedula) {
+                <li>
+                    <span>{{ candidato.nombre }} — {{ candidato.cedula }} (Nivel {{ candidato.nivel }}, Nota {{ candidato.nota || '—' }})</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarEstudiante(candidato)">
+                        <i class="bi bi-plus-lg"></i>
+                        Agregar
+                    </button>
+                </li>
+                }
+            </ul>
+            }
+
+        </div>
 
         }
 

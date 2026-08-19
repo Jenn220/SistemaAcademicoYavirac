@@ -123,4 +123,23 @@ export class PlanFormacion {
   eliminarSemana(id: number): Observable<{ deleted: boolean; id_rotacion_semana: number }> {
     return this.http.delete<{ deleted: boolean; id_rotacion_semana: number }>(`${this.API}/plan-rotacion-semanas/${id}`);
   }
+
+  // ==========================================================
+  // Competencias Necesarias (un solo bloque de texto por práctica,
+  // no por fila — vive en su propia tabla en el back)
+  // ==========================================================
+
+  obtenerCompetenciasRotacion(idPractica: number): Observable<CompetenciasRotacion> {
+    return this.http.get<CompetenciasRotacion>(`${this.API}/plan-rotacion/competencias/${idPractica}`);
+  }
+
+  guardarCompetenciasRotacion(idPractica: number, dto: CompetenciasRotacion): Observable<CompetenciasRotacion> {
+    return this.http.patch<CompetenciasRotacion>(`${this.API}/plan-rotacion/competencias/${idPractica}`, dto);
+  }
+}
+
+export interface CompetenciasRotacion {
+  conocimientos_teoricos: string;
+  procedimentales: string;
+  actitudinales: string;
 }

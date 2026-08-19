@@ -12,7 +12,8 @@ import {
   EvaluacionEmpresarial,
   EvaluacionInstituto,
   ActaInduccionSeguridad,
-  ActaEntornoLaboral
+  ActaEntornoLaboral,
+  CandidatoActaEntorno
 } from '../interfaces';
 
 @Injectable({
@@ -188,6 +189,14 @@ export class Documentos {
     return this.http.post<DocumentoGuardado>(
       `${this.API}/acta-entorno-laboral`,
       { contenido },
+      { params: this.paramsIdPractica(idPractica) }
+    );
+  }
+
+  /** Estudiantes de la misma empresa/tutor empresarial/docente que idPractica, para agregar al listado del acta. */
+  buscarCandidatosActaEntornoLaboral(idPractica: number): Observable<CandidatoActaEntorno[]> {
+    return this.http.get<CandidatoActaEntorno[]>(
+      `${this.API}/acta-entorno-laboral/candidatos`,
       { params: this.paramsIdPractica(idPractica) }
     );
   }

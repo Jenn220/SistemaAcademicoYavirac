@@ -103,9 +103,8 @@ export class EvaluacionEmpresaService {
 
     await this.esDuenoDePractica(usuario, evaluacion.id_practica);
 
-    Object.assign(evaluacion, {
-      nota_final_calculada: dto.calificacion,
-    });
+    if (dto.calificacion !== undefined) evaluacion.nota_final_calculada = dto.calificacion;
+    if (dto.observaciones !== undefined) evaluacion.observaciones = dto.observaciones;
 
     const saved = await this.evaluacionRepository.save(evaluacion);
 
@@ -114,6 +113,7 @@ export class EvaluacionEmpresaService {
       id_practica: saved.id_practica,
       id_evaluacion_plan_marco: saved.id_rubrica,
       calificacion: saved.nota_final_calculada,
+      observaciones: saved.observaciones,
       fortalezas: dto.fortalezas,
       oportunidades_mejora: dto.oportunidades_mejora,
       recomendaciones: dto.recomendaciones,

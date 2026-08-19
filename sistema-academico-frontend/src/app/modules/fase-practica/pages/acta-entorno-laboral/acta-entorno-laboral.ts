@@ -10,7 +10,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
-import { ActaEntornoLaboral } from '../../interfaces';
+import { ActaEntornoLaboral, CandidatoActaEntorno } from '../../interfaces';
 import { Documentos } from '../../services/documentos';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
 import { AuthService } from '../../../auth/services/auth.service';
@@ -63,6 +63,9 @@ export class ActaEntornoLaboralPage implements OnInit {
   soloLectura = false;
   idPractica: number | undefined;
 
+  candidatos: CandidatoActaEntorno[] = [];
+  cargandoCandidatos = false;
+
   estadoDocumento: string = 'borrador';
   comentariosDocumento: string = '';
   idDocumento: number | undefined;
@@ -99,9 +102,21 @@ export class ActaEntornoLaboralPage implements OnInit {
     return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
   }
 
+  /** Estudiantes de la misma empresa/tutor/docente que todavía no están en el listado. */
+  get candidatosDisponibles(): CandidatoActaEntorno[] {
+    const cedulasActuales = new Set(this.acta.estudiantes.map((e) => e.cedula));
+    return this.candidatos.filter((c) => !cedulasActuales.has(c.cedula));
+  }
+
+  /**
+   * Esta acta la construyen DOCENTE/COORDINADOR (agregan estudiantes,
+   * cargan el listado) — el ESTUDIANTE solo la consulta y la acepta (así
+   * la firma el documento oficial: "el estudiante aceptando su nota"), no
+   * la edita. Antes solo ESTUDIANTE podía editar, lo que hacía imposible
+   * agregar estudiantes al listado.
+   */
   ngOnInit(): void {
-    const usuario = this.auth.usuario();
-    this.soloLectura = !usuario?.roles?.includes('ESTUDIANTE');
+    this.soloLectura = !this.esDocente && !this.esCoordinador;
     this.cargarIdPractica();
   }
 
@@ -144,6 +159,10 @@ export class ActaEntornoLaboralPage implements OnInit {
         this.cdr.detectChanges();
         this.cargarIdDocumento('F11');
 
+        if (!this.soloLectura) {
+          this.buscarCandidatos();
+        }
+
       },
 
       error: () => {
@@ -153,6 +172,52 @@ export class ActaEntornoLaboralPage implements OnInit {
       }
 
     });
+  }
+
+  buscarCandidatos(): void {
+
+    if (!this.idPractica) return;
+
+    this.cargandoCandidatos = true;
+
+    this.documentos.buscarCandidatosActaEntornoLaboral(this.idPractica).subscribe({
+
+      next: (candidatos) => {
+        this.candidatos = candidatos;
+        this.cargandoCandidatos = false;
+        this.cdr.detectChanges();
+      },
+
+      error: () => {
+        this.cargandoCandidatos = false;
+        this.cdr.detectChanges();
+      }
+
+    });
+
+  }
+
+  agregarEstudiante(candidato: CandidatoActaEntorno): void {
+
+    if (this.soloLectura) return;
+
+    this.acta.estudiantes.push({
+      no: this.acta.estudiantes.length + 1,
+      nombre: candidato.nombre,
+      cedula: candidato.cedula,
+      nivel: candidato.nivel,
+      nota: candidato.nota,
+      firma: ''
+    });
+
+  }
+
+  quitarEstudiante(index: number): void {
+
+    if (this.soloLectura) return;
+
+    this.acta.estudiantes.splice(index, 1);
+
   }
 
   guardarEnBD(): void {

@@ -309,7 +309,7 @@ export class ActaInduccionSeguridadPage implements OnInit {
 
     this.acta = {
       ...acta,
-      lugarFecha: acta.lugarFecha || `Quito D.M., ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+      lugarFecha: acta.lugarFecha || `Quito D.M. ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`,
       estudiante: {
         nombre: datosEstudiante.nombre ?? '',
         cedula: datosEstudiante.cedula ?? '',
@@ -317,11 +317,17 @@ export class ActaInduccionSeguridadPage implements OnInit {
         carrera: datosEstudiante.carrera ?? datosCarrera.nucleoEstructurante ?? ''
       },
       empresa: { razonSocial: datosEmpresa.razonSocial ?? '' },
+      // Mismo texto legal (7 puntos) que ya arma DocumentoPlantillaService.getActaInduccionSeguridad
+      // en el backend; este fallback solo aplica si esa llamada falla o no
+      // encuentra al estudiante.
       textoLegal: acta.textoLegal?.length ? acta.textoLegal : [
-        '1. Se informa al estudiante sobre los riesgos inherentes al entorno laboral.',
-        '2. Se dan a conocer las medidas de prevención y protección personal.',
-        '3. Se instruye sobre el uso correcto de equipos de protección individual (EPI).',
-        '4. Se explican los procedimientos ante situaciones de emergencia.'
+        'Reconozco que toda actividad puede tener riesgos y peligros, por tal razón, he recibido una inducción sobre los potenciales riesgos de la actividad que voy a realiza en la empresa formadora-receptora, sobre la identificación de situaciones potencialmente peligrosas, así como las orientaciones sobre las medidas de prevención y normas de seguridad para prevenir accidentes.',
+        'He entendido la orientación sobre los riesgos potenciales de esa actividad y sobre sus normas de seguridad para evitarlos o prevenirlos. Por esto, de manera libre y voluntaria, acepto los mismos y me comprometo a cumplir las exigencias de seguridad, protocolos y uso correcto de equipamientos que logren mitigarlos o evitarlos, durante toda mi permanencia en la empresa formadora-receptora.',
+        'Tengo conocimiento sobre la actividad que voy a realizar y he recibido medios de protección a ser usados por mí en las actividades designadas en la empresa formadora-receptora.',
+        'En caso que tenga una discapacidad física o mental, temporal o permanente, que pueda influir en mi seguridad personal o de un tercero, reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto.',
+        'En caso que identifique una situación que considere como potencialmente peligrosa o un incidente de seguridad, reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto.',
+        'No realizaré actividades que no estén detalladas en mis actividades, o que no cuenten con el respectivo análisis de riesgos, medidas de seguridad y procedimientos de emergencia establecidos.',
+        'Reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto, sobre la pérdida o daño en el equipamiento de protección personal que haya recibido.',
       ],
       firmaEstudiante: acta.firmaEstudiante || '______________________________'
     };

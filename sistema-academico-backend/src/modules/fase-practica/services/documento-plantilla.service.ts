@@ -116,6 +116,24 @@ export class DocumentoPlantillaService {
     }
 
     if (usuario.idEmpresa) {
+      // Una empresa puede tener varios estudiantes en curso (con el mismo
+      // tutor u otro): si el tutor pide una práctica explícita (selector de
+      // plan-formacion-lista), hay que respetarla y solo validar que sea de
+      // su empresa — devolver siempre "la primera práctica de la empresa"
+      // ignoraba idPracticaSolicitado y mostraba el mismo estudiante sin
+      // importar en cuál hiciera clic el tutor (bug reportado en QA).
+      if (idPracticaSolicitado) {
+        const practica = await this.practicaRepository.findOne({
+          where: { id_practica: idPracticaSolicitado },
+        });
+
+        if (!practica || practica.id_empresa !== usuario.idEmpresa) {
+          throw new ForbiddenException('No tiene permisos sobre esta práctica.');
+        }
+
+        return practica.id_practica;
+      }
+
       const practica = await this.practicaRepository.findOne({
         where: { id_empresa: usuario.idEmpresa },
       });
@@ -695,10 +713,14 @@ export class DocumentoPlantillaService {
       } as any;
     }
 
-    if (!forzar) {
-      const guardado = await this.cargarContenidoGuardado(idPractica, 'F07');
-      if (guardado) return guardado as EvaluacionEmpresarial;
-    }
+    // F07 ya no usa el snapshot JSON como fuente de verdad: los criterios,
+    // notas e idPractica/idRubrica siempre se recalculan desde item_rubrica
+    // + detalle_evaluacion (sistema real de evaluaciones). Un snapshot viejo
+    // (guardado por guardarEvaluacionEmpresarial con la forma del modelo del
+    // frontend, sin idPractica/idRubrica) dejaba en null esos campos al
+    // recargar la página, rompiendo el guardado siguiente con "No fue
+    // posible determinar la práctica o la rúbrica a calificar".
+    void forzar;
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
@@ -734,7 +756,7 @@ export class DocumentoPlantillaService {
       notaFinalDefensa: Number(evaluacionPrincipal?.nota_final_defensa ?? 0),
       notaPonderadaDefensa: Number(evaluacionPrincipal?.nota_ponderada_defensa ?? 0),
       notaFinalEmpresa: Number(evaluacionPrincipal?.nota_final_empresa ?? promedioCriterios),
-      observaciones: 'Sin novedad',
+      observaciones: evaluacionPrincipal?.observaciones ?? '',
       idPractica,
       idEvaluacion: evaluacionPrincipal?.id_evaluacion ?? null,
       idRubrica,
@@ -819,10 +841,10 @@ export class DocumentoPlantillaService {
       } as any;
     }
 
-    if (!forzar) {
-      const guardado = await this.cargarContenidoGuardado(idPractica, 'F08');
-      if (guardado) return guardado as EvaluacionInstituto;
-    }
+    // Mismo motivo que en F07 (ver getEvaluacionEmpresarial): siempre se
+    // recalcula desde el sistema real de evaluaciones, nunca desde el
+    // snapshot JSON guardado por el POST del frontend.
+    void forzar;
 
     const datos = await this.getDatosMaestra(usuario, idPractica);
     const { estudiante, empresaBeneficiaria, carrera } = datos;
@@ -871,7 +893,7 @@ export class DocumentoPlantillaService {
       notaFinalEmpresa: notaFinalEmpresaReal,
       notaFinalInstituto: Number(evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios),
       notaFinalConsolidada: Number(((notaFinalEmpresaReal + Number(evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios)) / 2).toFixed(2)),
-      observaciones: 'Sin novedad',
+      observaciones: evaluacionPrincipal?.observaciones ?? '',
       idPractica,
       idEvaluacion: evaluacionPrincipal?.id_evaluacion ?? null,
       idRubrica,
@@ -975,7 +997,7 @@ export class DocumentoPlantillaService {
       const carreraNombre = carrera.length > 0 ? carrera[0].carrera_nombre : '';
 
       return {
-        lugarFecha: `Quito D.M., ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
+        lugarFecha: `Quito D.M. ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
         estudiante: {
           nombre: `${estudiante.nombres} ${estudiante.apellidos}`,
           cedula: estudiante.cedula,
@@ -1144,16 +1166,7 @@ export class DocumentoPlantillaService {
 
       const estudiantesConNota = await Promise.all(
         estudiantes.map(async (est: any, index: number) => {
-          let nota = '';
-          if (est.id_practica) {
-            const evaluaciones = await this.evaluacionRepository.find({
-              where: { id_practica: est.id_practica },
-            });
-            if (evaluaciones.length > 0) {
-              const promedio = Number((evaluaciones.reduce((a: number, b: any) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2));
-              nota = promedio.toString();
-            }
-          }
+          const nota = est.id_practica ? await this.calcularNotaFinalFasePractica(est.id_practica) : '';
           return {
             no: index + 1,
             nombre: est.nombre,
@@ -1248,6 +1261,75 @@ export class DocumentoPlantillaService {
     } catch (error) {
       return this.getActaEntornoLaboralVacia();
     }
+  }
+
+  /**
+   * "Nota" (acta de entorno laboral) y candidatos a agregar usan el mismo
+   * "Promedio Final Fase Práctica" que se ve en Evaluación Instituto:
+   * (nota final empresa + nota final instituto) / 2. Postgres devuelve las
+   * columnas numeric como string, así que hay que convertir con Number(...)
+   * antes de sumar — sin eso "0" + "9.21" concatena texto ("09.21") en vez
+   * de sumar, dando NaN.
+   */
+  private async calcularNotaFinalFasePractica(idPractica: number): Promise<string> {
+    const [evaluacionesEmpresa, evaluacionesInstituto] = await Promise.all([
+      this.evaluacionRepository.find({ where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' } }),
+      this.evaluacionRepository.find({ where: { id_practica: idPractica, tipo_evaluador: 'INSTITUTO' } }),
+    ]);
+
+    if (evaluacionesEmpresa.length === 0 && evaluacionesInstituto.length === 0) return '';
+
+    const notaFinalEmpresa = Number(evaluacionesEmpresa[0]?.nota_final_empresa ?? 0);
+    const notaFinalInstituto = Number(evaluacionesInstituto[0]?.nota_final_instituto ?? 0);
+
+    return ((notaFinalEmpresa + notaFinalInstituto) / 2).toFixed(2);
+  }
+
+  /**
+   * El acta de entorno laboral (F11) agrupa a TODOS los estudiantes de una
+   * misma empresa formadora, con el mismo tutor empresarial y el mismo
+   * docente (tutor académico) — así lo firma el documento oficial (un
+   * tutor empresarial, un coordinador, un tutor académico para todo el
+   * listado). idPracticaSolicitado ancla esa combinación empresa/tutor/
+   * docente (se resuelve con la misma verificación de dueño que el resto
+   * de documentos: un DOCENTE solo puede anclar en una práctica que sea
+   * suya). Devuelve los estudiantes que comparten esa combinación para que
+   * el docente los pueda agregar al listado sin tener que escribirlos a
+   * mano.
+   */
+  async buscarCandidatosActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number): Promise<Array<{
+    id_practica: number;
+    nombre: string;
+    cedula: string;
+    nivel: string;
+    nota: string;
+  }>> {
+    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+
+    const practica = await this.practicaRepository.findOne({ where: { id_practica: idPractica } });
+    if (!practica) return [];
+
+    const filas = await this.dataSource.query(
+      `SELECT p.id_practica, e.nombres || ' ' || e.apellidos as nombre, e.cedula, n.nombre as nivel
+       FROM practica_estudiante p
+       JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+       JOIN matricula m ON m.id_matricula = md.id_matricula
+       JOIN estudiante e ON e.id_estudiante = m.id_estudiante
+       JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+       JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+       JOIN nivel n ON n.id_nivel = a.id_nivel
+       WHERE p.id_empresa = $1 AND p.id_tutor_empresarial = $2 AND p.id_docente = $3
+       ORDER BY e.apellidos, e.nombres`,
+      [practica.id_empresa, practica.id_tutor_empresarial, practica.id_docente],
+    );
+
+    return Promise.all(filas.map(async (fila: any) => ({
+      id_practica: fila.id_practica,
+      nombre: fila.nombre,
+      cedula: fila.cedula,
+      nivel: fila.nivel,
+      nota: await this.calcularNotaFinalFasePractica(fila.id_practica),
+    })));
   }
 
   private formatearFecha(fecha: string): string {

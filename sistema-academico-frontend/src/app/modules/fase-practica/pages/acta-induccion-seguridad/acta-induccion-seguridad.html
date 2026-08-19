@@ -80,7 +80,7 @@
             <td class="code-cell" rowspan="4">
 
                 <strong>CÓDIGO</strong><br>
-                010210
+                DS-010210
 
             </td>
 
@@ -120,15 +120,24 @@
 
     <div class="contenido">
 
-        <p class="text-center"><strong>{{ acta.lugarFecha }}</strong></p>
+        <div class="fecha">{{ acta.lugarFecha }}</div>
 
-        <div class="caja-texto">
+        <p class="titulo-documento">
+            <strong>
+                ACTA DE RECEPCIÓN DE ORIENTACIONES DE SEGURIDAD, DE RECEPCIÓN
+                DE MEDIOS DE PROTECCIÓN PERSONAL Y DE ACEPTACIÓN DE RIESGOS
+            </strong>
+        </p>
 
-            <p><strong>OBJETIVO:</strong> Informar al estudiante sobre las normas de seguridad y salud en el entorno laboral de la empresa formadora, así como las medidas preventivas a seguir durante la práctica.</p>
-
-            <p><strong>POR CUYO MEDIO SE HACE CONSTAR:</strong> que el/La estudiante mencionado/a ha recibido la inducción de seguridad correspondiente, habiendo sido informado/a sobre los siguientes puntos:</p>
-
-        </div>
+        <p class="declaracion">
+            Yo, <span class="valor valor-fuerte">{{ acta.estudiante.nombre }}</span>
+            con cédula No.<span class="valor valor-fuerte">{{ acta.estudiante.cedula }}</span>,
+            estudiante de <span class="valor">{{ acta.estudiante.nivel }}</span>
+            del INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC, de la carrera de
+            <span class="valor valor-fuerte">{{ acta.estudiante.carrera }}</span>
+            asignado a la empresa formadora
+            <span class="valor valor-fuerte">{{ acta.empresa.razonSocial }}</span>; declaro que:
+        </p>
 
         <ul class="lista-legal">
 
@@ -138,18 +147,15 @@
 
         </ul>
 
+        <p class="constancia">Para constancia de lo indicado antes, firmo:</p>
+
         <div class="caja-firmas">
 
             <div class="firma">
                 <div class="linea"></div>
-                <span>ESTUDIANTE</span>
+                <span>Firma del estudiante</span>
                 <p>{{ acta.estudiante.nombre }}</p>
-            </div>
-
-            <div class="firma">
-                <div class="linea"></div>
-                <span>TUTOR EMPRESARIAL</span>
-                <p>{{ acta.firmaEstudiante }}</p>
+                <p>Cédula: {{ acta.estudiante.cedula }}</p>
             </div>
 
         </div>

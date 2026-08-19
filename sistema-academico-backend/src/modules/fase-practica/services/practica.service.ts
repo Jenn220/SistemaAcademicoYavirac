@@ -28,6 +28,7 @@ import { UpdateBitacoraSemanalDto } from '../dto/update-bitacora-semanal.dto';
 import { UpdateEvaluacionPracticaDto } from '../dto/update-evaluacion-practica.dto';
 import { UpdateInformeAprendizajeDto } from '../dto/update-informe-aprendizaje.dto';
 import { UpdatePlanRotacionDto } from '../dto/update-plan-rotacion.dto';
+import { UpdatePlanRotacionCompetenciasDto } from '../dto/update-plan-rotacion-competencias.dto';
 import { UpdateRegistroDiarioDto } from '../dto/update-registro-diario.dto';
 import { UpdateRubricaDto } from '../dto/update-rubrica.dto';
 import { BitacoraSemanalEntity } from '../domain/bitacora-semanal.entity';
@@ -252,6 +253,54 @@ export class PracticaService {
     }
     await this.esDuenoDePractica(usuario, plan.id_practica);
     return this.planRotacionRepository.remove(id);
+  }
+
+  /**
+   * "Competencias Necesarias" es un único bloque de texto por práctica
+   * (no por fila/id_item_pm como el resto del Plan de Rotación), así que
+   * vive en su propia tabla 1:1 con practica_estudiante en vez de en
+   * plan_rotacion. Antes este campo solo existía en memoria del
+   * navegador (viajaba al Word exportado pero nunca se guardaba).
+   */
+  async findCompetenciasRotacion(idPractica: number): Promise<{
+    conocimientos_teoricos: string;
+    procedimentales: string;
+    actitudinales: string;
+  }> {
+    const rows = await this.dataSource.query(
+      `SELECT conocimientos_teoricos, procedimentales, actitudinales
+       FROM plan_rotacion_competencias
+       WHERE id_practica = $1`,
+      [idPractica],
+    );
+
+    return {
+      conocimientos_teoricos: rows[0]?.conocimientos_teoricos ?? '',
+      procedimentales: rows[0]?.procedimentales ?? '',
+      actitudinales: rows[0]?.actitudinales ?? '',
+    };
+  }
+
+  async upsertCompetenciasRotacion(usuario: any, idPractica: number, dto: UpdatePlanRotacionCompetenciasDto): Promise<{
+    conocimientos_teoricos: string;
+    procedimentales: string;
+    actitudinales: string;
+  }> {
+    await this.esDuenoDePractica(usuario, idPractica);
+
+    const rows = await this.dataSource.query(
+      `INSERT INTO plan_rotacion_competencias (id_practica, conocimientos_teoricos, procedimentales, actitudinales, updated_at)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+       ON CONFLICT (id_practica) DO UPDATE SET
+         conocimientos_teoricos = EXCLUDED.conocimientos_teoricos,
+         procedimentales = EXCLUDED.procedimentales,
+         actitudinales = EXCLUDED.actitudinales,
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING conocimientos_teoricos, procedimentales, actitudinales`,
+      [idPractica, dto.conocimientos_teoricos ?? '', dto.procedimentales ?? '', dto.actitudinales ?? ''],
+    );
+
+    return rows[0];
   }
 
   async createInformeAprendizaje(usuario: any, dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {

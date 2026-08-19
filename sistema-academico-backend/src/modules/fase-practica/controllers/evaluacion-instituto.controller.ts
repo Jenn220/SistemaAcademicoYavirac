@@ -12,8 +12,11 @@ import { UpdateEvaluacionInstitutoDto } from '../dto/update-evaluacion-instituto
 export class EvaluacionInstitutoController {
   constructor(private readonly service: EvaluacionInstitutoService, private readonly calculoService: EvaluacionCalculoService) {}
 
+  // F08 (Evaluación Instituto) la califica exclusivamente el DOCENTE.
+  // COORDINADOR solo puede consultarla (findByPractica/findOne) — nunca
+  // crearla, editarla, borrarla ni recalcularla.
   @Post('evaluaciones-instituto')
-  @Roles('DOCENTE', 'COORDINADOR')
+  @Roles('DOCENTE')
   create(@Req() req: any, @Body() dto: CreateEvaluacionInstitutoDto) {
     return this.service.create(req.user, dto);
   }
@@ -31,19 +34,19 @@ export class EvaluacionInstitutoController {
   }
 
   @Patch('evaluaciones-instituto/:id')
-  @Roles('DOCENTE', 'COORDINADOR')
+  @Roles('DOCENTE')
   update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateEvaluacionInstitutoDto) {
     return this.service.update(req.user, Number(id), dto);
   }
 
   @Delete('evaluaciones-instituto/:id')
-  @Roles('DOCENTE', 'COORDINADOR')
+  @Roles('DOCENTE')
   remove(@Req() req: any, @Param('id') id: string) {
     return this.service.remove(req.user, Number(id)).then(() => ({ deleted: true, id: Number(id) }));
   }
 
   @Post('evaluaciones-instituto/:id/calcular')
-  @Roles('DOCENTE', 'COORDINADOR')
+  @Roles('DOCENTE')
   async calcular(@Param('id') id: string) {
     const resultado = await this.calculoService.calcularEvaluacionInstituto(Number(id));
     return resultado;

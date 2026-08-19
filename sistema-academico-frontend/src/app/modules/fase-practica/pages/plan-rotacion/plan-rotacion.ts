@@ -11,7 +11,7 @@ import { forkJoin, of, Observable } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
-import { PlanFormacion } from '../../services/plan-formacion';
+import { PlanFormacion, CompetenciasRotacion } from '../../services/plan-formacion';
 import { Documentos } from '../../services/documentos';
 
 import { ItemPlanMarco, PlanMarcoFormacion, PlanRotacion as PlanRotacionModel, PracticaSelector } from '../../interfaces';
@@ -26,18 +26,16 @@ interface EncabezadoPlanRotacion {
   carrera: string;
   nivel: string;
   empresaFormadora: string;
-  tutorAcademicoNombre: string;
-  tutorEmpresarialNombre: string;
   /** Reciclados del Plan Marco de la misma práctica, no se piden dos veces */
   horasFormacion?: number;
   nucleoEstructurante: string;
 }
 
 /**
- * "Competencias necesarias" del Formato 04: al igual que Plan Marco no
- * tiene columnas para esto en la BD, así que se llenan a mano y viajan
- * en el Word, pero no se guardan todavía (mismo criterio que estudiante/
- * carrera/nivel en el encabezado).
+ * "Competencias necesarias" del Formato 04: un solo bloque de texto por
+ * práctica (no por fila), persistido en su propia tabla
+ * (plan_rotacion_competencias) vía PlanFormacion.obtenerCompetenciasRotacion
+ * / guardarCompetenciasRotacion.
  */
 interface CompetenciasNecesarias {
   conocimientosTeoricos: string;
@@ -60,8 +58,6 @@ function encabezadoVacio(): EncabezadoPlanRotacion {
     carrera: '',
     nivel: '',
     empresaFormadora: '',
-    tutorAcademicoNombre: '',
-    tutorEmpresarialNombre: '',
     horasFormacion: undefined,
     nucleoEstructurante: ''
   };
@@ -143,16 +139,22 @@ export class PlanRotacion implements OnInit {
     forkJoin({
       practica: this.planFormacion.obtenerPractica(this.idPractica).pipe(catchError(() => of(null as PracticaSelector | null))),
       planesMarco: this.planFormacion.obtenerPlanMarcoPorPractica(this.idPractica).pipe(catchError(() => of([]))),
-      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>)))
+      datos: this.documentos.obtenerDatosMaestra(this.idPractica).pipe(catchError(() => of({} as Record<string, any>))),
+      competencias: this.planFormacion.obtenerCompetenciasRotacion(this.idPractica).pipe(
+        catchError(() => of({ conocimientos_teoricos: '', procedimentales: '', actitudinales: '' } as CompetenciasRotacion))
+      )
     }).subscribe({
 
-      next: ({ practica, planesMarco, datos }) => {
+      next: ({ practica, planesMarco, datos, competencias }) => {
+
+        this.competencias = {
+          conocimientosTeoricos: competencias.conocimientos_teoricos ?? '',
+          procedimentales: competencias.procedimentales ?? '',
+          actitudinales: competencias.actitudinales ?? ''
+        };
 
         if (practica) {
           this.encabezado.empresaFormadora = practica.empresa?.razon_social ?? '';
-          this.encabezado.tutorEmpresarialNombre = practica.tutor_empresarial
-            ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
-            : '';
         }
 
         // Igual que en plan-marco.ts: el resto del encabezado no vive en
@@ -166,7 +168,6 @@ export class PlanRotacion implements OnInit {
         this.encabezado.nivel = datosEstudiante.nivel ?? '';
         this.encabezado.periodo = datosPeriodo.nombre ?? '';
         this.encabezado.nucleoEstructurante = datosCarrera.nucleoEstructurante ?? '';
-        this.encabezado.tutorAcademicoNombre = datosCarrera.tutorAcademico ?? '';
 
         if (planesMarco.length === 0) {
           this.error = 'Esta práctica todavía no tiene un Plan Marco de Formación. Créalo primero para poder definir el Plan de Rotación.';
@@ -329,7 +330,14 @@ export class PlanRotacion implements OnInit {
 
     this.guardando = true;
 
-    const operaciones = this.filas.map((fila) => this.guardarFila(fila));
+    const operaciones: Observable<unknown>[] = [
+      ...this.filas.map((fila) => this.guardarFila(fila)),
+      this.planFormacion.guardarCompetenciasRotacion(this.idPractica, {
+        conocimientos_teoricos: this.competencias.conocimientosTeoricos,
+        procedimentales: this.competencias.procedimentales,
+        actitudinales: this.competencias.actitudinales
+      })
+    ];
 
     forkJoin(operaciones).subscribe({
 

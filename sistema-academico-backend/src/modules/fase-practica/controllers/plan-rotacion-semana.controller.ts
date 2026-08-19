@@ -25,13 +25,13 @@ export class PlanRotacionSemanaController {
   }
 
   @Get('plan-rotacion/:idPlanRotacion/semanas')
-  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
   findByPlanRotacion(@Param('idPlanRotacion') idPlanRotacion: string) {
     return this.service.findByPlanRotacion(Number(idPlanRotacion));
   }
 
   @Get('plan-rotacion-semanas/:id')
-  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
   findOne(@Param('id') id: string) {
     return this.service.findOne(Number(id));
   }

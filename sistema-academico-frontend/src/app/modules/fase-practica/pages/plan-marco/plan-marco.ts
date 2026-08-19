@@ -51,8 +51,6 @@ interface EncabezadoPlanMarco {
   empresaFormadora: string;
   direccionEmpresa: string;
   nucleoEstructuranteNombre: string;
-  tutorEmpresarialNombre: string;
-  tutorAcademicoNombre: string;
 }
 
 function encabezadoVacio(): EncabezadoPlanMarco {
@@ -63,9 +61,7 @@ function encabezadoVacio(): EncabezadoPlanMarco {
     nivel: '',
     empresaFormadora: '',
     direccionEmpresa: '',
-    nucleoEstructuranteNombre: '',
-    tutorEmpresarialNombre: '',
-    tutorAcademicoNombre: ''
+    nucleoEstructuranteNombre: ''
   };
 }
 
@@ -146,15 +142,12 @@ export class PlanMarco implements OnInit {
         if (practica) {
           this.encabezado.empresaFormadora = practica.empresa?.razon_social ?? '';
           this.encabezado.direccionEmpresa = practica.empresa?.direccion ?? '';
-          this.encabezado.tutorEmpresarialNombre = practica.tutor_empresarial
-            ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
-            : '';
         }
 
         // El resto del encabezado (estudiante, carrera, nivel, período,
-        // núcleo estructurante, tutor académico) no vive en PracticaSelector
-        // — se completa con /documentos/datos, igual que el resto de
-        // formatos del módulo (curriculum, informe-aprendizaje, etc.).
+        // núcleo estructurante) no vive en PracticaSelector — se completa
+        // con /documentos/datos, igual que el resto de formatos del módulo
+        // (curriculum, informe-aprendizaje, etc.).
         const datosEstudiante = datos?.['estudiante'] ?? {};
         const datosCarrera = datos?.['carrera'] ?? {};
         const datosPeriodo = datos?.['periodoAcademico'] ?? {};
@@ -164,7 +157,6 @@ export class PlanMarco implements OnInit {
         this.encabezado.nivel = datosEstudiante.nivel ?? '';
         this.encabezado.periodo = datosPeriodo.nombre ?? '';
         this.encabezado.nucleoEstructuranteNombre = datosCarrera.nucleoEstructurante ?? '';
-        this.encabezado.tutorAcademicoNombre = datosCarrera.tutorAcademico ?? '';
 
         if (planes.length > 0) {
           this.plan = planes[0];
@@ -243,6 +235,7 @@ export class PlanMarco implements OnInit {
       id_plan_marco: this.plan.id_plan_marco,
       resultado_aprendizaje: '',
       nivel_logro_esperado: 3,
+      nivel_real_alcanzado: 3,
       tareas_laborales: '',
       puesto_aprendizaje: '',
       semanas: undefined,
@@ -276,9 +269,16 @@ export class PlanMarco implements OnInit {
 
   }
 
+  /**
+   * "Nivel real alcanzado" se precarga con el mismo puntaje que se marca
+   * aquí (antes quedaba en blanco, forzando a adivinar/retipear un número
+   * que ya se acababa de seleccionar). Sigue siendo editable a mano después
+   * por si el desempeño real termina siendo distinto al esperado.
+   */
   seleccionarNivelEsperado(item: ItemPlanMarco, nivel: number): void {
     if (this.soloLectura) return;
     item.nivel_logro_esperado = nivel;
+    item.nivel_real_alcanzado = nivel;
   }
 
   get promedioNivelEsperado(): string {

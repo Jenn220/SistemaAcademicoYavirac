@@ -167,15 +167,22 @@
 
             <thead>
                 <tr>
-                    <th style="width:28px">No.</th>
-                    <th>Resultados de aprendizaje</th>
+                    <th rowspan="2" style="width:28px">No.</th>
+                    <th rowspan="2">Resultados de aprendizaje</th>
                     <th [attr.colspan]="4" style="width:160px">Nivel de logro esperado ({{ promedioNivelEsperado }})</th>
-                    <th style="width:70px">Nivel real alcanzado ({{ promedioNivelReal }})</th>
-                    <th>Tareas laborales</th>
-                    <th style="width:130px">Puesto de aprendizaje</th>
-                    <th style="width:60px">No. semanas</th>
-                    <th style="width:130px">Responsable</th>
-                    <th class="no-print" style="width:36px"></th>
+                    <th rowspan="2" style="width:70px">Nivel real alcanzado ({{ promedioNivelReal }})</th>
+                    <th rowspan="2">Tareas laborales</th>
+                    <th rowspan="2" style="width:130px">Puesto de aprendizaje</th>
+                    <th rowspan="2" style="width:60px">No. semanas</th>
+                    <th rowspan="2" style="width:130px">Responsable</th>
+                    <th rowspan="2" class="no-print" style="width:36px"></th>
+                </tr>
+                <tr>
+                    <!-- Sin esto no se veía qué columna corresponde a cada
+                         puntaje (1-4) al marcar la X: había que adivinar. -->
+                    @for (nivel of niveles; track nivel.nivel) {
+                    <th class="col-nivel no-print">{{ nivel.nivel }}</th>
+                    }
                 </tr>
             </thead>
 
@@ -244,22 +251,6 @@
             Agregar resultado de aprendizaje
         </button>
         }
-
-        <div class="fila-firmas">
-
-            <div class="firma">
-                <div class="linea"></div>
-                <span>Tutor Académico del ISTY</span>
-                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorAcademicoNombre" name="tutorAcademico" placeholder="Nombre" [disabled]="soloLectura">
-            </div>
-
-            <div class="firma">
-                <div class="linea"></div>
-                <span>Tutor Empresarial de la Empresa Formadora</span>
-                <input type="text" class="campo campo-firma" [(ngModel)]="encabezado.tutorEmpresarialNombre" name="tutorEmpresarial" placeholder="Nombre" [disabled]="soloLectura">
-            </div>
-
-        </div>
 
     </div>
 

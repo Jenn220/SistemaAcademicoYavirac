@@ -233,9 +233,11 @@ export const routes: Routes = [
           )
       },
       {
+        // TUTOR_EMPRESARIAL no tiene ningún rol en Plan de Rotación (no lo
+        // llena ni lo aprueba), así que no se le da acceso ni de lectura.
         path: 'fase-practica/plan-rotacion/:idPractica',
         canActivate: [roleGuard],
-        data: { roles: ['ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL'] },
+        data: { roles: ['ESTUDIANTE', 'DOCENTE', 'COORDINADOR'] },
         loadComponent: () =>
           import(
             './modules/fase-practica/pages/plan-rotacion/plan-rotacion'

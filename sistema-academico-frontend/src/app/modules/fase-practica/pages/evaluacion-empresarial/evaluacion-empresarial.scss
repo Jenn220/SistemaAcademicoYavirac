@@ -4,7 +4,7 @@
 
     display:block;
 
-    background:#e9ecef;
+    background:#f0f2f5;
 
     min-height:100vh;
 
@@ -18,7 +18,9 @@ Toolbar
 
 .toolbar{
 
-    width:297mm;
+    width:100%;
+
+    max-width:297mm;
 
     margin:0 auto 20px;
 
@@ -229,26 +231,6 @@ Tablas de evaluación (lado a lado)
 
 }
 
-.badge-solo-lectura{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    padding:6px 14px;
-
-    border-radius:4px;
-
-    background:#e2e3e5;
-
-    color:#41464b;
-
-    font-size:13px;
-
-    font-weight:bold;
-
-}
-
 .solo-print{
 
     display:none;
@@ -365,6 +347,19 @@ PDF / impresión
         min-height:auto;
         box-shadow:none;
         padding:12mm;
+    }
+
+}
+
+/*=========================
+Responsive (celular / tablet)
+=========================*/
+
+@media (max-width:768px){
+
+    :host{
+        padding:15px 0;
+        overflow-x:auto;
     }
 
 }

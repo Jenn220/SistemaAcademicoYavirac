@@ -1,9 +1,43 @@
 @import '../../_shared-documento-styles';
 
+:host {
+    display: block;
+    background: #f0f2f5;
+    min-height: 100vh;
+    padding: 30px 0;
+}
+
+/*==========================
+  Barra superior
+==========================*/
+
+.toolbar {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/*==========================
+  Hoja A4
+==========================*/
+
 .documento {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+    box-sizing: border-box;
+    width: 210mm;
+    min-height: 297mm;
+    margin: auto;
+    background: #fff;
+    padding: 15mm;
+    box-shadow: 0 0 15px rgba(0, 0, 0, .18);
+}
+
+.contenido {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12px;
+    color: #000;
 }
 
 .caja-encabezado {
@@ -53,6 +87,42 @@
     margin-bottom: 4px;
 }
 
+.btn-eliminar-fila {
+    border: none;
+    background: transparent;
+    color: #c0392b;
+    cursor: pointer;
+}
+
+.caja-candidatos {
+    margin: 20px 0;
+    padding: 10px 12px;
+    border: 1px dashed #999;
+    background: #fafafa;
+}
+
+.texto-candidatos {
+    margin: 6px 0 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.lista-candidatos {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+}
+
+.lista-candidatos li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.9em;
+}
+
 .caja-firmas {
     display: flex;
     justify-content: space-between;
@@ -82,8 +152,44 @@
     color: #666;
 }
 
+/*==========================
+  Impresión
+==========================*/
+
 @media print {
+
+    :host {
+        background: white;
+        padding: 0;
+    }
+
     .toolbar {
         display: none;
     }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .documento {
+        margin: 0;
+        width: 100%;
+        min-height: auto;
+        box-shadow: none;
+        padding: 12mm;
+    }
+
+}
+
+/*==========================
+  Responsive (celular / tablet)
+==========================*/
+
+@media (max-width:768px){
+
+    :host{
+        padding:15px 0;
+        overflow-x:auto;
+    }
+
 }

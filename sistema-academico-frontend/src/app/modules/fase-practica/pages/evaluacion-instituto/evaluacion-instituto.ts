@@ -73,9 +73,17 @@ export class EvaluacionInstituto implements OnInit {
   comentariosDocumento: string = '';
   idDocumento: number | undefined;
 
-  /** TUTOR_EMPRESARIAL crea la evaluación; DOCENTE la aprueba. */
+  /**
+   * F08 (Evaluación Instituto) la califica exclusivamente el DOCENTE.
+   * TUTOR_EMPRESARIAL y COORDINADOR solo pueden consultarla en modo
+   * lectura — nunca modificarla. El backend ya lo exige (ver
+   * verificarPermisoTutor/verificarPermisoCoordinador en
+   * detalle-evaluacion.service.ts y los @Roles de
+   * evaluacion-instituto.controller.ts), esto solo evita mostrarles una UI
+   * de edición que el back terminaría rechazando.
+   */
   get soloLectura(): boolean {
-    return !this.authService.tieneAlgunRol(['DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL']);
+    return !this.authService.tieneAlgunRol(['DOCENTE']);
   }
 
   get esEstudiante(): boolean {
@@ -94,8 +102,10 @@ export class EvaluacionInstituto implements OnInit {
     return this.authService.tieneAlgunRol(['TUTOR_EMPRESARIAL']);
   }
 
+  // El tutor empresarial ya no califica F08 (ver soloLectura), así que ya
+  // no tiene sentido que sea quien la mande a revisión.
   get puedeEnviarRevision(): boolean {
-    return this.esTutorEmpresarial && (this.estadoDocumento === 'borrador' || this.estadoDocumento === 'rechazado');
+    return false;
   }
 
   get puedeAprobar(): boolean {
@@ -176,7 +186,7 @@ export class EvaluacionInstituto implements OnInit {
 
       notaFinalEmpresa: res?.['notaFinalEmpresa'] ?? 0,
 
-      observaciones: '',
+      observaciones: res?.['observaciones'] ?? '',
 
       idEvaluacion: res?.['idEvaluacion'] ?? undefined
 
@@ -346,6 +356,11 @@ export class EvaluacionInstituto implements OnInit {
     idEvaluacion$
       .pipe(
         switchMap((idEvaluacion) => this.guardarNotas(idEvaluacion).pipe(map(() => idEvaluacion))),
+        switchMap((idEvaluacion) =>
+          this.evaluacionSvc
+            .actualizarEvaluacionInstituto(idEvaluacion, { observaciones: this.evaluacion.observaciones })
+            .pipe(map(() => idEvaluacion))
+        ),
         switchMap((idEvaluacion) => this.evaluacionSvc.calcularEvaluacionInstituto(idEvaluacion)),
         switchMap((resultado) =>
           this.documentos.guardarEvaluacionInstituto(this.evaluacion, this.idPractica ?? undefined).pipe(

@@ -4,7 +4,7 @@
 
     display:block;
 
-    background:#e9ecef;
+    background:#f0f2f5;
 
     min-height:100vh;
 
@@ -18,7 +18,9 @@ Toolbar
 
 .toolbar{
 
-    width:210mm;
+    width:100%;
+
+    max-width:210mm;
 
     margin:0 auto 20px;
 
@@ -156,6 +158,12 @@ display:none;
 
 }
 
+.no-print{
+
+display:none !important;
+
+}
+
 .documento{
 
 margin:0;
@@ -169,5 +177,18 @@ box-shadow:none;
 padding:12mm;
 
 }
+
+}
+
+/*=========================
+Responsive (celular / tablet)
+=========================*/
+
+@media (max-width:768px){
+
+    :host{
+        padding:15px 0;
+        overflow-x:auto;
+    }
 
 }

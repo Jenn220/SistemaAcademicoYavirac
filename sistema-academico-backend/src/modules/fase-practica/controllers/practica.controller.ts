@@ -25,6 +25,7 @@ import { UpdateBitacoraSemanalDto } from '../dto/update-bitacora-semanal.dto';
 import { UpdateEvaluacionPracticaDto } from '../dto/update-evaluacion-practica.dto';
 import { UpdateInformeAprendizajeDto } from '../dto/update-informe-aprendizaje.dto';
 import { UpdatePlanRotacionDto } from '../dto/update-plan-rotacion.dto';
+import { UpdatePlanRotacionCompetenciasDto } from '../dto/update-plan-rotacion-competencias.dto';
 import { UpdatePracticaDto } from '../dto/update-practica.dto';
 import { UpdateRegistroDiarioDto } from '../dto/update-registro-diario.dto';
 import { UpdateRubricaDto } from '../dto/update-rubrica.dto';
@@ -119,8 +120,9 @@ export class PracticaController {
   }
 
   // Plan de Rotación: solo ESTUDIANTE crea/edita/elimina (sobreescribe el
-  // @Roles de la clase); el GET queda abierto a los 4 roles de la clase
-  // para que DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL puedan verlo.
+  // @Roles de la clase); el GET queda abierto a ESTUDIANTE/DOCENTE/
+  // COORDINADOR. TUTOR_EMPRESARIAL no tiene ningún rol en este formato
+  // (no lo llena ni lo aprueba), así que no se le da acceso ni de lectura.
   @Post('plan-rotacion')
   @Roles('ESTUDIANTE')
   createPlanRotacion(@Req() req: any, @Body() dto: CreatePlanRotacionDto) {
@@ -128,7 +130,7 @@ export class PracticaController {
   }
 
   @Get('plan-rotacion/practica/:id')
-  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
   findPlanRotacionByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
     return this.practicaService.findPlanRotacionByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
@@ -146,6 +148,22 @@ export class PracticaController {
       deleted: true,
       id_plan_rotacion: Number(id),
     }));
+  }
+
+  // "Competencias Necesarias" del Plan de Rotación: un solo bloque de texto
+  // por práctica. TUTOR_EMPRESARIAL no tiene acceso a Plan de Rotación en
+  // absoluto (a diferencia del resto de rutas de plan-rotacion, que sí le
+  // dejan consultar).
+  @Get('plan-rotacion/competencias/:idPractica')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
+  findCompetenciasRotacion(@Param('idPractica') idPractica: string) {
+    return this.practicaService.findCompetenciasRotacion(Number(idPractica));
+  }
+
+  @Patch('plan-rotacion/competencias/:idPractica')
+  @Roles('ESTUDIANTE')
+  upsertCompetenciasRotacion(@Req() req: any, @Param('idPractica') idPractica: string, @Body() dto: UpdatePlanRotacionCompetenciasDto) {
+    return this.practicaService.upsertCompetenciasRotacion(req.user, Number(idPractica), dto);
   }
 
   // Informe de Aprendizaje / Bitácora Semanal: ESTUDIANTE escribe su

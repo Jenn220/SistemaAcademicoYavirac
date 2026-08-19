@@ -170,7 +170,7 @@ export class EvaluacionEmpresarial implements OnInit {
         ? defensaProyecto.map((c) => ({ criterio: c.criterio ?? '', nota: c.puntaje ?? 0, idItem: c.id }))
         : CRITERIOS_DEFENSA_PROYECTO.map((criterio) => ({ criterio, nota: 0 })),
 
-      observaciones: '',
+      observaciones: res?.['observaciones'] ?? '',
 
       idEvaluacion: res?.['idEvaluacion'] ?? undefined
 
@@ -334,6 +334,11 @@ export class EvaluacionEmpresarial implements OnInit {
     idEvaluacion$
       .pipe(
         switchMap((idEvaluacion) => this.guardarNotas(idEvaluacion).pipe(map(() => idEvaluacion))),
+        switchMap((idEvaluacion) =>
+          this.evaluacionSvc
+            .actualizarEvaluacionEmpresa(idEvaluacion, { observaciones: this.evaluacion.observaciones })
+            .pipe(map(() => idEvaluacion))
+        ),
         switchMap((idEvaluacion) => this.evaluacionSvc.calcularEvaluacionEmpresa(idEvaluacion)),
         switchMap((resultado) =>
           this.documentos.guardarEvaluacionEmpresarial(this.evaluacion, this.idPractica ?? undefined).pipe(

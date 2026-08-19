@@ -51,3 +51,12 @@ export interface ActaEntornoLaboral {
   estudiantes: EstudianteActaEntorno[];
   firmas: FirmasActaEntorno;
 }
+
+/** Estudiante de la misma empresa/tutor empresarial/docente, candidato a agregar al listado del acta. */
+export interface CandidatoActaEntorno {
+  id_practica: number;
+  nombre: string;
+  cedula: string;
+  nivel: string;
+  nota: string;
+}

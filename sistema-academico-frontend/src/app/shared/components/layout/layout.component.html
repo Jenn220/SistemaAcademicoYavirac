@@ -146,19 +146,23 @@
 
       }
 
-      <!-- Los 4 roles pueden ver Plan Marco/Rotación: ESTUDIANTE los edita,
-           el resto los consulta en modo solo lectura -->
+      <!-- Plan Marco: los 4 roles lo pueden ver (ESTUDIANTE lo edita, el
+           resto lo consulta en modo solo lectura) -->
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'marco'}"
          routerLinkActive="active">
         📐 Plan Marco
       </a>
 
+      <!-- Plan de Rotación: TUTOR_EMPRESARIAL no tiene ningún rol aquí
+           (no lo llena ni lo aprueba), así que no se le muestra el link -->
+      @if (!authService.tieneAlgunRol(['TUTOR_EMPRESARIAL'])) {
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'rotacion'}"
          routerLinkActive="active">
         🔄 Plan de Rotación
       </a>
+      }
 
       @if (authService.tieneAlgunRol(['COORDINADOR'])) {
       <a routerLink="/fase-practica/asignaciones"

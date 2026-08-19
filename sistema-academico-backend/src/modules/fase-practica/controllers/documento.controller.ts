@@ -63,6 +63,15 @@ export class DocumentoController {
     return this.documentoService.getActaEntornoLaboral(req.user, this.parseIdPractica(idPractica));
   }
 
+  // Estudiantes de la misma empresa/tutor empresarial/docente que la
+  // práctica ancla, para que el DOCENTE los pueda agregar al listado del
+  // acta sin escribirlos a mano. Solo DOCENTE/COORDINADOR editan esta acta.
+  @Get('acta-entorno-laboral/candidatos')
+  @Roles('DOCENTE', 'COORDINADOR')
+  buscarCandidatosActaEntornoLaboral(@Req() req: any, @Query('idPractica') idPractica?: string) {
+    return this.documentoService.buscarCandidatosActaEntornoLaboral(req.user, this.parseIdPractica(idPractica));
+  }
+
   @Get('todos')
   getTodos(@Req() req: any, @Query('idPractica') idPractica?: string) {
     return this.documentoService.getTodosLosDocumentos(req.user, this.parseIdPractica(idPractica));

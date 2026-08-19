@@ -77,6 +77,10 @@ export class DocumentoService {
     return this.plantillaService.getActaEntornoLaboral(usuario, idPractica);
   }
 
+  buscarCandidatosActaEntornoLaboral(usuario: any, idPractica?: number) {
+    return this.plantillaService.buscarCandidatosActaEntornoLaboral(usuario, idPractica);
+  }
+
   getTodosLosDocumentos(usuario: any, idPractica?: number) {
     return this.plantillaService.getTodosLosDocumentos(usuario, idPractica);
   }

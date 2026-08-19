@@ -1,3 +1,12 @@
+@import '../../_shared-documento-styles';
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
+}
+
 .datos-maestra-page {
   max-width: 900px;
   margin: 0 auto;
@@ -10,10 +19,25 @@
 }
 
 .card {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e4ecf8;
-  box-shadow: 0 8px 24px rgba(18, 56, 124, .08);
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e8ecf2;
+  box-shadow:
+    0 8px 40px rgba(22, 61, 140, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 4px;
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+    border-radius: 0 0 4px 4px;
+  }
 }
 
 .card-header {
@@ -24,7 +48,11 @@
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  color: #18386d;
+  color: #163d8c;
+}
+
+.card-header .text-muted {
+  color: #6a7a8e !important;
 }
 
 .card-body {
@@ -33,22 +61,63 @@
 
 .loading {
   text-align: center;
-  padding: 60px;
+  padding: 4rem 2rem;
+  font-size: 16px;
+  color: #6a7a8e;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  max-width: 600px;
+  margin: 2rem auto;
 }
 
 .loading p {
   margin-top: 16px;
-  color: #6c757d;
 }
 
 .form-label {
   font-weight: 600;
   font-size: 13px;
-  color: #3a4a6b;
+  color: #1e2a3a;
   margin-bottom: 6px;
 }
 
-.form-control:disabled {
+.form-control,
+.form-select {
+  border: 2px solid #e8ecf2;
+  border-radius: 8px;
+  background: #fafcff;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #163d8c;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
+}
+
+.form-control:disabled,
+.form-select:disabled {
   background-color: #f4f7fd;
   opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .card-header,
+  .card-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
 }
