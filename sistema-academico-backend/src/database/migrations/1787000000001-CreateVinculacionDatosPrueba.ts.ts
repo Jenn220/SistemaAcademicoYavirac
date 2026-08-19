@@ -217,16 +217,15 @@ export class CreateVinculacionDatosPrueba1787000000001 implements MigrationInter
                     'Los estudiantes aplicaron conocimientos teóricos en contextos reales'
                 ) ON CONFLICT DO NOTHING;
 
-                -- EVALUACIONES
-                IF v_id_rubrica IS NOT NULL THEN
-                    INSERT INTO public.evaluacion_vinculacion (id_vinculacion, id_rubrica, nota_final, fecha_evaluacion)
-                    VALUES (v_id_vinculacion1, v_id_rubrica, 8.5, CURRENT_DATE)
-                    ON CONFLICT DO NOTHING;
-
-                    INSERT INTO public.evaluacion_vinculacion (id_vinculacion, id_rubrica, nota_final, fecha_evaluacion)
-                    VALUES (v_id_vinculacion28, v_id_rubrica, 9.0, CURRENT_DATE)
-                    ON CONFLICT DO NOTHING;
-                END IF;
+                -- ⚠️ BLOQUE "EVALUACIONES" ELIMINADO A PROPÓSITO
+                -- Antes aquí se insertaba una fila en evaluacion_vinculacion con nota_final
+                -- (8.5 / 9.0) SIN insertar la fila correspondiente en evaluacion_parametros_tutor.
+                -- Eso dejaba una "nota fantasma": el informe final mostraba 8.50/Ocho con 50/100
+                -- aunque ningún docente hubiera calificado nada (parametros = null).
+                -- La nota_final debe surgir siempre de evaluacion_parametros_tutor, calculada
+                -- por el docente desde el frontend (ver InformeFinalComponent.calcularPromedio()).
+                -- Si en el futuro quieres sembrar una evaluación de prueba completa, inserta
+                -- también en evaluacion_parametros_tutor con los mismos id_vinculacion.
 
                 -- OBSERVACIONES
                 DELETE FROM public.vinculacion_reporte_observacion WHERE id_vinculacion = v_id_vinculacion1;

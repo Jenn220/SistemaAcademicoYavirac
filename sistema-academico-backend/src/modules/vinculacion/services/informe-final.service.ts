@@ -155,11 +155,14 @@ export class InformeFinalService {
         evaluacion.fechaEvaluacion = new Date();
         await this.evaluacionRepo.save(evaluacion);
       } else {
+        // ✅ Resolver id_rubrica automáticamente si no llega desde el frontend
+        const idRubrica = dto.idRubrica ?? (await this.resolverIdRubricaVinculacion());
+
         evaluacion = this.evaluacionRepo.create({
           idVinculacion: idStr,
           notaFinal: dto.notaFinal!,
           fechaEvaluacion: new Date(),
-          idRubrica: dto.idRubrica ?? undefined,
+          idRubrica: String(idRubrica), // ✅ la entidad espera string
         });
         await this.evaluacionRepo.save(evaluacion);
       }
@@ -184,9 +187,8 @@ export class InformeFinalService {
       }
     }
 
-    // ✅ 3. GUARDAR PARÁMETROS DE EVALUACIÓN
-    // Verificar si vienen parámetros en el DTO
-    const tieneParametros = 
+    // 3. GUARDAR PARÁMETROS DE EVALUACIÓN
+    const tieneParametros =
       dto.puntualidad !== undefined ||
       dto.trabajo_autonomo !== undefined ||
       dto.asistencia !== undefined ||
@@ -200,13 +202,11 @@ export class InformeFinalService {
       dto.habilidad_practica !== undefined;
 
     if (tieneParametros) {
-      // Buscar si ya existe un registro de parámetros para esta vinculación
       let parametros = await this.parametrosRepo.findOne({
         where: { idVinculacion: idStr }
       });
 
       if (parametros) {
-        // Actualizar existente
         if (dto.puntualidad !== undefined) parametros.puntualidad = dto.puntualidad;
         if (dto.trabajo_autonomo !== undefined) parametros.trabajoAutonomo = dto.trabajo_autonomo;
         if (dto.asistencia !== undefined) parametros.asistencia = dto.asistencia;
@@ -218,10 +218,9 @@ export class InformeFinalService {
         if (dto.constancia_predisposicion !== undefined) parametros.constanciaPredisposicion = dto.constancia_predisposicion;
         if (dto.responsabilidad_esmero !== undefined) parametros.responsabilidadEsmero = dto.responsabilidad_esmero;
         if (dto.habilidad_practica !== undefined) parametros.habilidadPractica = dto.habilidad_practica;
-        
+
         await this.parametrosRepo.save(parametros);
       } else {
-        // Crear nuevo
         parametros = this.parametrosRepo.create({
           idVinculacion: idStr,
           puntualidad: dto.puntualidad || 0,
@@ -241,6 +240,26 @@ export class InformeFinalService {
     }
 
     return { message: "Evaluación y observaciones guardadas correctamente" };
+  }
+
+  // ✅ NUEVO: resuelve (o crea) una rúbrica de tipo VINCULACION para que
+  // el INSERT en evaluacion_vinculacion nunca viaje con id_rubrica en null
+  private async resolverIdRubricaVinculacion(): Promise<number> {
+    const existente = await this.evaluacionRepo.manager.query(
+      `SELECT id_rubrica FROM catalogo_rubrica WHERE tipo = 'VINCULACION' ORDER BY id_rubrica ASC LIMIT 1`
+    );
+
+    if (existente && existente.length > 0) {
+      return Number(existente[0].id_rubrica);
+    }
+
+    const creada = await this.evaluacionRepo.manager.query(
+      `INSERT INTO catalogo_rubrica (nombre, tipo, estado)
+       VALUES ('Rúbrica de Evaluación de Vinculación', 'VINCULACION', 'ACTIVO')
+       RETURNING id_rubrica`
+    );
+
+    return Number(creada[0].id_rubrica);
   }
 
   async listarInformesPorDocente(idDocente: number) {
