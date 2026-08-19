@@ -178,53 +178,45 @@ export class InicioActividadesComponent implements OnInit {
   }
 
   /**
-   * Validar campos antes de guardar
-   */
-  validarCambios(): boolean {
-    // Validar nombre del proyecto
-    if (!this.editedFields.nombre_proyecto?.trim()) {
-      alert('El nombre del proyecto es obligatorio.');
-      return false;
-    }
-    
-    // Validar fecha de inicio
-    if (!this.editedFields.fecha_inicio) {
-      alert('La fecha de inicio es obligatoria.');
-      return false;
-    }
-    
-    // Validar fecha de finalización
-    if (!this.editedFields.fecha_fin) {
-      alert('La fecha de finalización es obligatoria.');
-      return false;
-    }
-    
-    // Normalizar ambas fechas para comparación
-    const fechaInicio = new Date(this.editedFields.fecha_inicio + 'T00:00:00');
-    const fechaFin = new Date(this.editedFields.fecha_fin + 'T00:00:00');
-    
-    if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
-      alert('Las fechas no son válidas.');
-      return false;
-    }
-    
-    // Validación 1: Fecha de inicio no puede ser anterior a hoy
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    if (fechaInicio.getTime() < hoy.getTime()) {
-      alert('La fecha de inicio no puede ser anterior a la fecha actual.');
-      return false;
-    }
-    
-    // Validación 2: Fecha de fin debe ser POSTERIOR a fecha de inicio
-    if (fechaFin.getTime() <= fechaInicio.getTime()) {
-      alert('La fecha de finalización debe ser posterior a la fecha de inicio.');
-      return false;
-    }
-    
-    return true;
+ * Validar campos antes de guardar
+ */
+validarCambios(): boolean {
+  // Validar nombre del proyecto
+  if (!this.editedFields.nombre_proyecto?.trim()) {
+    alert('El nombre del proyecto es obligatorio.');
+    return false;
   }
+  
+  // Validar fecha de inicio
+  if (!this.editedFields.fecha_inicio) {
+    alert('La fecha de inicio es obligatoria.');
+    return false;
+  }
+  
+  // Validar fecha de finalización
+  if (!this.editedFields.fecha_fin) {
+    alert('La fecha de finalización es obligatoria.');
+    return false;
+  }
+  
+  // Normalizar ambas fechas para comparación
+  const fechaInicio = new Date(this.editedFields.fecha_inicio + 'T00:00:00');
+  const fechaFin = new Date(this.editedFields.fecha_fin + 'T00:00:00');
+  
+  if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
+    alert('Las fechas no son válidas.');
+    return false;
+  }
+  
+  // ✅ ELIMINADO: Validación de fecha anterior a hoy
+  // Solo se valida que fecha de fin sea POSTERIOR a fecha de inicio
+  if (fechaFin.getTime() <= fechaInicio.getTime()) {
+    alert('La fecha de finalización debe ser posterior a la fecha de inicio.');
+    return false;
+  }
+  
+  return true;
+}
 
   /**
    * Guardar cambios en el backend

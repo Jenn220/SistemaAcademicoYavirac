@@ -27,10 +27,12 @@
       <p><strong>Cédula:</strong> {{ informe.datos_generales.cedula }}</p>
       <p><strong>Email:</strong> {{ informe.datos_generales.email }}</p>
       <p><strong>Teléfono:</strong> {{ informe.datos_generales.telefono }}</p>
-      <p><strong>Proyecto:</strong> {{ informe.datos_generales.nombre_proyecto }}</p>
+      <p><strong>Nombre del Proyecto:</strong> {{ informe.datos_generales.nombre_proyecto }}</p>
+      <!-- ✅ CORREGIDO: Usar formatearFecha() para fecha_inicio -->
       <p><strong>Fecha Inicio:</strong> {{ formatearFecha(informe.datos_generales.fecha_inicio) }}</p>
-      <p><strong>Fecha Final:</strong> {{ formatearFecha(informe.datos_generales.fecha_final) }}</p>
-      <p><strong>Entidad:</strong> {{ informe.datos_generales.entidad_beneficiaria }}</p>
+      <!-- ✅ CORREGIDO: Usar obtenerFechaFinal() para la fecha final -->
+      <p><strong>Fecha Final:</strong> {{ obtenerFechaFinal() }}</p>
+      <p><strong>Nombre de la Entidad beneficiaria:</strong> {{ informe.datos_generales.entidad_beneficiaria }}</p>
       <p><strong>Dirección:</strong> {{ informe.datos_generales.direccion_entidad }}</p>
       <p><strong>Teléfono entidad:</strong> {{ informe.datos_generales.telefono_entidad }}</p>
       <p><strong>Email entidad:</strong> {{ informe.datos_generales.email_entidad }}</p>
@@ -120,13 +122,18 @@
               />
             </td>
             <td>
-              <input 
-                type="text" 
-                class="input-objetivo input-avance"
-                [value]="obj.avance || '0%'"
-                (input)="actualizarObjetivo(i, 'avance', $event)"
-                placeholder="0%"
-              />
+              <div class="input-avance-wrapper">
+                <input 
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="input-objetivo input-avance"
+                  [value]="obtenerNumeroAvance(obj.avance || '0%')"
+                  (input)="actualizarObjetivo(i, 'avance', $event)"
+                  placeholder="0"
+                />
+                <span class="porcentaje-label">%</span>
+              </div>
             </td>
             <td>
               <input 

@@ -25,6 +25,7 @@
           <span><strong>Proyecto:</strong> {{ est.nombre_proyecto }}</span>
           <span><strong>Entidad:</strong> {{ est.entidad_beneficiaria }}</span>
           <span><strong>Nota:</strong> {{ est.nota_final ?? 'Sin calificar' }}</span>
+          <!-- ✅ BADGE DE ESTADO CORREGIDO -->
           <span class="estado-badge {{ getEstadoClase(est.estado_informe) }}">
             {{ getEstadoInforme(est.estado_informe) }}
           </span>
@@ -64,6 +65,7 @@
           <span><strong>Proyecto:</strong> {{ estudianteSeleccionado.nombre_proyecto }}</span>
           <span><strong>Entidad:</strong> {{ estudianteSeleccionado.entidad_beneficiaria }}</span>
           <span><strong>Nota:</strong> {{ estudianteSeleccionado.nota_final ?? 'Sin calificar' }}</span>
+          <!-- ✅ BADGE DE ESTADO CORREGIDO -->
           <span class="estado-badge {{ getEstadoClase(estudianteSeleccionado.estado_informe) }}">
             {{ getEstadoInforme(estudianteSeleccionado.estado_informe) }}
           </span>

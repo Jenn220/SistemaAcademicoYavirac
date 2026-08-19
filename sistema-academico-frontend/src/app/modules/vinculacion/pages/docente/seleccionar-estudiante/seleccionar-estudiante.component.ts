@@ -6,6 +6,7 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { EstudianteDocente } from '../../../models/vinculacion.model';
 import { finalize } from 'rxjs/operators';
+import { InformeFinalService } from '../../../services/informe-final.service';
 
 @Component({
   selector: 'app-seleccionar-estudiante',
@@ -20,6 +21,7 @@ export class SeleccionarEstudianteComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private informeFinalService = inject(InformeFinalService);
 
   estudiantes: EstudianteDocente[] = [];
   filtered: EstudianteDocente[] = [];
@@ -64,13 +66,57 @@ export class SeleccionarEstudianteComponent implements OnInit {
       this.cdr.markForCheck();
       return;
     }
+    
+    this.verificarCambiosPendientes();
     this.cargarEstudiantes();
+  }
+
+  private verificarCambiosPendientes(): void {
+    const keys = Object.keys(localStorage);
+    const cambiados = keys.filter(key => key.startsWith('estado_cambiado_'));
+    
+    cambiados.forEach(key => {
+      const idVinculacion = key.replace('estado_cambiado_', '');
+      console.log(`🔄 Hay cambio pendiente para vinculación ${idVinculacion}`);
+      localStorage.setItem(`actualizar_estado_${idVinculacion}`, 'true');
+    });
+  }
+
+  private aplicarActualizacionesPendientes(): void {
+    const keys = Object.keys(localStorage);
+    const actualizarKeys = keys.filter(key => key.startsWith('actualizar_estado_'));
+    
+    actualizarKeys.forEach(key => {
+      const idVinculacion = Number(key.replace('actualizar_estado_', ''));
+      console.log(`🔄 Actualizando estado para vinculación ${idVinculacion}`);
+      
+      const estudiante = this.estudiantes.find(e => e.id_vinculacion === idVinculacion);
+      if (estudiante) {
+        const calificado = localStorage.getItem(`estudiante_calificado_${idVinculacion}`);
+        if (calificado === 'true') {
+          estudiante.estado_informe = 'CALIFICADO';
+          const notaGuardada = localStorage.getItem(`nota_estudiante_${idVinculacion}`);
+          estudiante.nota_final = notaGuardada ? parseFloat(notaGuardada) : 0;
+        } else {
+          estudiante.estado_informe = 'PENDIENTE';
+          estudiante.nota_final = null;
+        }
+      }
+      
+      localStorage.removeItem(key);
+      localStorage.removeItem(`estado_cambiado_${idVinculacion}`);
+      localStorage.removeItem(`estudiante_calificado_${idVinculacion}`);
+      localStorage.removeItem(`nota_estudiante_${idVinculacion}`);
+    });
+    
+    this.filtered = [...this.estudiantes];
   }
 
   cargarEstudiantes(): void {
     this.loading = true;
     this.error = null;
     this.cdr.markForCheck();
+    
     this.service.obtenerEstudiantesAsignados()
       .pipe(finalize(() => {
         this.loading = false;
@@ -78,36 +124,142 @@ export class SeleccionarEstudianteComponent implements OnInit {
       }))
       .subscribe({
         next: (data) => {
+          console.log('📊 Lista de estudiantes cargada:', data);
           this.estudiantes = data;
           this.filtered = data;
-          this.cdr.markForCheck();
           
-          // ✅ VERIFICAR SI VIENE DE "VOLVER A ARCHIVOS"
+          // ✅ VERIFICAR EL ESTADO REAL DE CADA ESTUDIANTE
+          this.verificarEstadoEstudiantes();
+          
+          // ✅ APLICAR ACTUALIZACIONES PENDIENTES
+          this.aplicarActualizacionesPendientes();
+          
+          this.cdr.markForCheck();
           this.verificarEstudianteDesdeQueryParams();
         },
         error: (err) => {
+          console.error('❌ Error al cargar estudiantes:', err);
           this.error = 'No se pudieron cargar los estudiantes.';
-          console.error(err);
           this.cdr.markForCheck();
         }
       });
   }
 
-  // ✅ NUEVO MÉTODO: Verificar si hay un estudiante en los queryParams
+  // ✅ VERIFICAR ESTADO REAL CONSULTANDO EL INFORME FINAL
+  verificarEstadoEstudiantes(): void {
+    // Para cada estudiante, consultar el informe final real
+    this.estudiantes.forEach(estudiante => {
+      this.consultarEstadoReal(estudiante);
+    });
+  }
+
+  // ✅ CONSULTAR EL INFORME FINAL PARA OBTENER EL ESTADO REAL
+  consultarEstadoReal(estudiante: EstudianteDocente): void {
+    const idVinculacion = estudiante.id_vinculacion;
+    
+    this.informeFinalService.obtenerInformeFinal(idVinculacion).subscribe({
+      next: (informe) => {
+        // ✅ OBTENER LA NOTA DEL INFORME FINAL
+        const nota = informe?.evaluacion_final?.nota_final;
+        const parametros = informe?.evaluacion_final?.parametros;
+        
+        // ✅ VERIFICAR SI HAY NOTA VÁLIDA
+        const tieneNotaValida = nota && 
+                               nota !== 'Sin calificar' && 
+                               nota !== 'N/A' && 
+                               parseFloat(nota) > 0;
+        
+        // ✅ VERIFICAR SI HAY PARÁMETROS CON VALORES > 0
+        let tieneParametrosValidos = false;
+        if (parametros) {
+          tieneParametrosValidos = Object.values(parametros).some((val: any) => Number(val) > 0);
+        }
+        
+        // ✅ SI TIENE NOTA O PARÁMETROS, ESTÁ CALIFICADO
+        const estaCalificado = tieneNotaValida || tieneParametrosValidos;
+        
+        if (estaCalificado) {
+          estudiante.estado_informe = 'CALIFICADO';
+          estudiante.nota_final = tieneNotaValida ? parseFloat(nota) : 0;
+          console.log(`✅ Estudiante ${estudiante.estudiante} - CALIFICADO (Nota: ${estudiante.nota_final})`);
+        } else {
+          estudiante.estado_informe = 'PENDIENTE';
+          estudiante.nota_final = null;
+          console.log(`❌ Estudiante ${estudiante.estudiante} - SIN CALIFICAR`);
+        }
+        
+        // Actualizar el filtro
+        this.filtered = [...this.estudiantes];
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error(`❌ Error al consultar informe para ${estudiante.estudiante}:`, err);
+        // Si hay error, mantener el estado como pendiente
+        estudiante.estado_informe = 'PENDIENTE';
+        estudiante.nota_final = null;
+        this.filtered = [...this.estudiantes];
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  // ✅ VERIFICAR ESTADO DE UN ESTUDIANTE ESPECÍFICO
+  verificarEstadoEstudiante(estudiante: EstudianteDocente): void {
+    // Consultar el informe final
+    this.informeFinalService.obtenerInformeFinal(estudiante.id_vinculacion).subscribe({
+      next: (informe) => {
+        const nota = informe?.evaluacion_final?.nota_final;
+        const parametros = informe?.evaluacion_final?.parametros;
+        
+        const tieneNotaValida = nota && 
+                               nota !== 'Sin calificar' && 
+                               nota !== 'N/A' && 
+                               parseFloat(nota) > 0;
+        
+        let tieneParametrosValidos = false;
+        if (parametros) {
+          tieneParametrosValidos = Object.values(parametros).some((val: any) => Number(val) > 0);
+        }
+        
+        const estaCalificado = tieneNotaValida || tieneParametrosValidos;
+        
+        if (estaCalificado) {
+          estudiante.estado_informe = 'CALIFICADO';
+          estudiante.nota_final = tieneNotaValida ? parseFloat(nota) : 0;
+        } else {
+          estudiante.estado_informe = 'PENDIENTE';
+          estudiante.nota_final = null;
+        }
+        
+        // Actualizar el estudiante seleccionado si es el mismo
+        if (this.estudianteSeleccionado && this.estudianteSeleccionado.id_vinculacion === estudiante.id_vinculacion) {
+          this.estudianteSeleccionado = { ...estudiante };
+        }
+        
+        this.filtered = [...this.estudiantes];
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('❌ Error al verificar estado:', err);
+        estudiante.estado_informe = 'PENDIENTE';
+        estudiante.nota_final = null;
+        this.filtered = [...this.estudiantes];
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
   verificarEstudianteDesdeQueryParams(): void {
     const estudianteId = this.route.snapshot.queryParamMap.get('estudianteId');
     
     if (estudianteId) {
-      // Buscar el estudiante en la lista
       const estudiante = this.estudiantes.find(
         est => String(est.id_vinculacion) === estudianteId
       );
       
       if (estudiante) {
-        // ✅ Seleccionar automáticamente al estudiante
         this.seleccionarEstudiante(estudiante);
       } else {
-        // Si no se encuentra, limpiar el queryParam
         this.router.navigate([], {
           queryParams: { estudianteId: null },
           queryParamsHandling: 'merge'
@@ -131,9 +283,10 @@ export class SeleccionarEstudianteComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // ✅ SELECCIONAR ESTUDIANTE - Guardar ID en localStorage
   seleccionarEstudiante(estudiante: EstudianteDocente): void {
-    // ✅ Guardar el ID del estudiante en localStorage para volver después
+    // ✅ Verificar estado antes de seleccionar
+    this.verificarEstadoEstudiante(estudiante);
+    
     localStorage.setItem('estudiante_seleccionado_id', String(estudiante.id_vinculacion));
     localStorage.setItem('estudiante_seleccionado_nombre', estudiante.estudiante);
     
@@ -142,13 +295,10 @@ export class SeleccionarEstudianteComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // ✅ VOLVER A LA LISTA DE ESTUDIANTES - Limpiar localStorage
   volverALista(): void {
-    // ✅ Limpiar el ID del estudiante
     localStorage.removeItem('estudiante_seleccionado_id');
     localStorage.removeItem('estudiante_seleccionado_nombre');
     
-    // ✅ Limpiar queryParams
     this.router.navigate([], {
       queryParams: { estudianteId: null },
       queryParamsHandling: 'merge'
@@ -156,6 +306,8 @@ export class SeleccionarEstudianteComponent implements OnInit {
     
     this.estudianteSeleccionado = null;
     this.mostrandoDocumentos = false;
+    
+    this.cargarEstudiantes();
     this.cdr.markForCheck();
   }
 
@@ -166,20 +318,16 @@ export class SeleccionarEstudianteComponent implements OnInit {
   }
 
   getEstadoInforme(estado: string): string {
-    const estados: Record<string, string> = {
-      'CALIFICADO': '✅ Calificado',
-      'EN_PROCESO': '🔄 En proceso',
-      'PENDIENTE': '⏳ Pendiente'
-    };
-    return estados[estado] || estado;
+    if (estado === 'CALIFICADO') {
+      return '✅ Calificado';
+    }
+    return '❌ Sin calificar';
   }
 
   getEstadoClase(estado: string): string {
-    const clases: Record<string, string> = {
-      'CALIFICADO': 'estado-calificado',
-      'EN_PROCESO': 'estado-proceso',
-      'PENDIENTE': 'estado-pendiente'
-    };
-    return clases[estado] || '';
+    if (estado === 'CALIFICADO') {
+      return 'estado-calificado';
+    }
+    return 'estado-pendiente';
   }
 }

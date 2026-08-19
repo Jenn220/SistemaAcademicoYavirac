@@ -7,7 +7,8 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../../../auth/services/auth.service';
-import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
+import { ExcelExportService } from '../../../services/excel-export.service';
+import { InicioActividadesService } from '../../../services/inicio-actividades.service';
 
 @Component({
   selector: 'app-informe-final',
@@ -21,9 +22,10 @@ export class InformeFinalComponent implements OnInit {
   private router = inject(Router);
   private informeFinalService = inject(InformeFinalService);
   private vinculacionService = inject(VinculacionService);
+  private inicioActividadesService = inject(InicioActividadesService);
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
-  private excelService = inject(ExcelExportService); // ✅ NUEVO
+  private excelService = inject(ExcelExportService);
 
   @Input() idVinculacion: number = 0;
   esEstudiante: boolean = false;
@@ -35,6 +37,7 @@ export class InformeFinalComponent implements OnInit {
   mensajeExito: string = '';
 
   informe: any = null;
+  datosInicioActividades: any = null;
 
   observaciones: string = '';
   notaFinalCalculada: number = 0;
@@ -259,58 +262,211 @@ export class InformeFinalComponent implements OnInit {
 
     console.log('📄 Cargando informe con ID:', this.idVinculacion);
 
-    this.informeFinalService.obtenerInformeFinal(this.idVinculacion)
-      .pipe(finalize(() => {
+    // Cargar informe final e inicio-actividades en paralelo
+    Promise.all([
+      this.informeFinalService.obtenerInformeFinal(this.idVinculacion).toPromise(),
+      this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion).toPromise()
+    ])
+      .then(([informeData, inicioActividadesData]) => {
         this.loading = false;
-        this.cdr.markForCheck();
-      }))
-      .subscribe({
-        next: (data) => {
-          console.log('📄 Informe final cargado:', data);
-          
-          if (!data) {
-            this.error = '⚠️ No se encontró información para esta vinculación.';
-            this.cdr.markForCheck();
-            return;
-          }
-
-          this.informe = data;
-          this.cargarObjetivosDesdeLocalStorage();
-
-          if (data?.evaluacion_final?.parametros) {
-            const p = data.evaluacion_final.parametros;
-            this.parametros.puntualidad = p.puntualidad || 0;
-            this.parametros.trabajoAutonomo = p.trabajo_autonomo || 0;
-            this.parametros.asistencia = p.asistencia || 0;
-            this.parametros.eticaProfesional = p.etica_profesional || 0;
-            this.parametros.cumpleTareas = p.cumple_tareas || 0;
-            this.parametros.actitudProactiva = p.actitud_proactiva || 0;
-            this.parametros.cooperaPermanentemente = p.coopera_permanentemente || 0;
-            this.parametros.respetoAutoridad = p.respeto_autoridad || 0;
-            this.parametros.constanciaPredisposicion = p.constancia_predisposicion || 0;
-            this.parametros.responsabilidadEsmero = p.responsabilidad_esmero || 0;
-            this.parametros.habilidadPractica = p.habilidad_practica || 0;
-
-            this.calcularPromedio();
-          }
-
-          if (data?.evaluacion_final?.observaciones) {
-            this.observaciones = data.evaluacion_final.observaciones;
-          }
-
-          if (data?.evaluacion_final?.nota_final && data.evaluacion_final.nota_final !== 'Sin calificar') {
-            this.notaFinalCalculada = parseFloat(data.evaluacion_final.nota_final);
-            this.notaEnLetras = data.evaluacion_final.nota_letras || this.convertirNotaALetras(this.notaFinalCalculada);
-          }
-
+        this.informe = informeData;
+        this.datosInicioActividades = inicioActividadesData;
+        
+        console.log('📄 Informe final cargado:', informeData);
+        console.log('📄 Inicio Actividades cargado:', inicioActividadesData);
+        
+        // ✅ LOG DE FECHAS PARA DEPURACIÓN
+        console.log('📅 Fechas en informeData:', {
+          fecha_inicio: informeData?.datos_generales?.fecha_inicio,
+          fecha_final: informeData?.datos_generales?.fecha_final
+        });
+        console.log('📅 Fechas en inicioActividadesData:', {
+          fecha_inicio: inicioActividadesData?.fecha_inicio,
+          fecha_fin: inicioActividadesData?.fecha_fin
+        });
+        
+        if (!this.informe) {
+          this.error = '⚠️ No se encontró información para esta vinculación.';
           this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error('❌ Error al cargar informe final:', err);
-          this.error = 'Error al cargar el informe final. Por favor, intenta nuevamente.';
-          this.cdr.markForCheck();
+          return;
         }
+
+        // ✅ CORREGIR: Asegurar que ambas fechas estén presentes
+        this.asegurarFechas();
+
+        this.cargarObjetivosDesdeLocalStorage();
+
+        // ✅ INICIALIZAR PARÁMETROS: Si no vienen del backend, se ponen en 0
+        if (this.informe?.evaluacion_final?.parametros) {
+          const p = this.informe.evaluacion_final.parametros;
+          this.parametros.puntualidad = p.puntualidad ?? 0;
+          this.parametros.trabajoAutonomo = p.trabajo_autonomo ?? 0;
+          this.parametros.asistencia = p.asistencia ?? 0;
+          this.parametros.eticaProfesional = p.etica_profesional ?? 0;
+          this.parametros.cumpleTareas = p.cumple_tareas ?? 0;
+          this.parametros.actitudProactiva = p.actitud_proactiva ?? 0;
+          this.parametros.cooperaPermanentemente = p.coopera_permanentemente ?? 0;
+          this.parametros.respetoAutoridad = p.respeto_autoridad ?? 0;
+          this.parametros.constanciaPredisposicion = p.constancia_predisposicion ?? 0;
+          this.parametros.responsabilidadEsmero = p.responsabilidad_esmero ?? 0;
+          this.parametros.habilidadPractica = p.habilidad_practica ?? 0;
+        } else {
+          this.inicializarParametros();
+          console.log('🔧 Parámetros inicializados a 0 (sin datos guardados)');
+        }
+
+        this.calcularPromedio();
+
+        if (this.informe?.evaluacion_final?.observaciones) {
+          this.observaciones = this.informe.evaluacion_final.observaciones;
+        }
+
+        if (this.informe?.evaluacion_final?.nota_final && this.informe.evaluacion_final.nota_final !== 'Sin calificar') {
+          this.notaFinalCalculada = parseFloat(this.informe.evaluacion_final.nota_final);
+          this.notaEnLetras = this.informe.evaluacion_final.nota_letras || this.convertirNotaALetras(this.notaFinalCalculada);
+        } else {
+          this.notaEnLetras = this.convertirNotaALetras(this.notaFinalCalculada);
+        }
+
+        this.cdr.markForCheck();
+      })
+      .catch((err) => {
+        this.loading = false;
+        console.error('❌ Error al cargar datos:', err);
+        this.error = 'Error al cargar los datos. Por favor, intenta nuevamente.';
+        this.cdr.markForCheck();
       });
+  }
+
+  /**
+   * ✅ CORREGIDO: Asegurar que ambas fechas (inicio y final) estén presentes
+   * Si el informe no tiene fecha_inicio o fecha_final, las obtiene de inicio-actividades
+   */
+  asegurarFechas(): void {
+    if (!this.informe) return;
+    
+    // Obtener fechas desde inicio-actividades
+    const fechaInicioAct = this.datosInicioActividades?.fecha_inicio;
+    const fechaFinAct = this.datosInicioActividades?.fecha_fin;
+    
+    console.log('📅 Fechas desde inicio-actividades:', {
+      fecha_inicio: fechaInicioAct,
+      fecha_fin: fechaFinAct
+    });
+    
+    // Inicializar datos_generales si no existe
+    if (!this.informe.datos_generales) {
+      this.informe.datos_generales = {};
+    }
+    
+    // --- ACTUALIZAR FECHA DE INICIO ---
+    const fechaInicioActual = this.informe.datos_generales.fecha_inicio;
+    const fechaInicioInvalida = !fechaInicioActual || 
+                                 fechaInicioActual === 'Invalid Date' ||
+                                 fechaInicioActual === 'N/A' ||
+                                 fechaInicioActual === '';
+    
+    if (fechaInicioInvalida && fechaInicioAct) {
+      console.log('📅 Asignando fecha_inicio desde inicio-actividades:', fechaInicioAct);
+      this.informe.datos_generales.fecha_inicio = this.formatearFecha(fechaInicioAct);
+    }
+    
+    // --- ACTUALIZAR FECHA FINAL ---
+    const fechaFinalActual = this.informe.datos_generales.fecha_final;
+    const fechaFinalInvalida = !fechaFinalActual || 
+                                fechaFinalActual === 'Invalid Date' ||
+                                fechaFinalActual === 'N/A' ||
+                                fechaFinalActual === '';
+    
+    if (fechaFinalInvalida && fechaFinAct) {
+      console.log('📅 Asignando fecha_final desde inicio-actividades:', fechaFinAct);
+      this.informe.datos_generales.fecha_final = this.formatearFecha(fechaFinAct);
+    }
+    
+    // --- SI AMBAS FECHAS SON VÁLIDAS, NO HACER NADA ---
+    if (!fechaInicioInvalida && !fechaFinalInvalida) {
+      console.log('✅ Ambas fechas ya son válidas en el informe:', {
+        fecha_inicio: this.informe.datos_generales.fecha_inicio,
+        fecha_final: this.informe.datos_generales.fecha_final
+      });
+    }
+    
+    // --- LOG FINAL PARA DEPURACIÓN ---
+    console.log('📅 Fechas finales en el informe:', {
+      fecha_inicio: this.informe.datos_generales?.fecha_inicio,
+      fecha_final: this.informe.datos_generales?.fecha_final
+    });
+  }
+
+  /**
+   * ✅ Obtener la fecha final priorizando el informe, luego inicio-actividades
+   */
+  obtenerFechaFinal(): string {
+    if (!this.informe) return 'N/A';
+    
+    // Priorizar fecha del informe
+    const fechaFinalInforme = this.informe.datos_generales?.fecha_final;
+    if (fechaFinalInforme && 
+        fechaFinalInforme !== 'Invalid Date' &&
+        fechaFinalInforme !== 'N/A' &&
+        fechaFinalInforme !== '') {
+      return fechaFinalInforme;
+    }
+    
+    // Si no hay fecha en el informe, usar la de inicio-actividades
+    if (this.datosInicioActividades?.fecha_fin) {
+      return this.formatearFecha(this.datosInicioActividades.fecha_fin);
+    }
+    
+    return 'N/A';
+  }
+
+  /**
+   * ✅ Formatear fecha correctamente para mostrar en el HTML
+   * Maneja fechas ISO y formatos comunes
+   */
+  formatearFecha(fecha: string): string {
+    if (!fecha) return 'N/A';
+    try {
+      // Limpiar la fecha: remover 'Z' y 'T'
+      let fechaStr = fecha;
+      if (fechaStr.includes('T')) {
+        fechaStr = fechaStr.split('T')[0];
+      }
+      if (fechaStr.endsWith('Z')) {
+        fechaStr = fechaStr.slice(0, -1);
+      }
+      
+      // Crear fecha y verificar que sea válida
+      const date = new Date(fechaStr + 'T00:00:00');
+      if (isNaN(date.getTime())) {
+        console.warn('⚠️ Fecha inválida:', fecha);
+        return fecha; // Retornar la fecha original si no se puede formatear
+      }
+      
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('❌ Error formateando fecha:', fecha, error);
+      return fecha;
+    }
+  }
+
+  inicializarParametros(): void {
+    this.parametros.puntualidad = 0;
+    this.parametros.trabajoAutonomo = 0;
+    this.parametros.asistencia = 0;
+    this.parametros.eticaProfesional = 0;
+    this.parametros.cumpleTareas = 0;
+    this.parametros.actitudProactiva = 0;
+    this.parametros.cooperaPermanentemente = 0;
+    this.parametros.respetoAutoridad = 0;
+    this.parametros.constanciaPredisposicion = 0;
+    this.parametros.responsabilidadEsmero = 0;
+    this.parametros.habilidadPractica = 0;
   }
 
   cargarObjetivosDesdeLocalStorage(): void {
@@ -379,9 +535,30 @@ export class InformeFinalComponent implements OnInit {
 
   actualizarObjetivo(index: number, campo: string, event: any): void {
     if (this.objetivosEditados && this.objetivosEditados[index]) {
-      this.objetivosEditados[index][campo] = event.target.value;
+      let valor = event.target.value;
+      
+      if (campo === 'avance') {
+        valor = valor.replace(/%/g, '').trim();
+        if (valor === '') {
+          valor = '0';
+        }
+        const numero = parseInt(valor, 10);
+        if (!isNaN(numero) && numero >= 0) {
+          const valorFinal = Math.min(numero, 100);
+          this.objetivosEditados[index][campo] = `${valorFinal}%`;
+        } else {
+          this.objetivosEditados[index][campo] = '0%';
+        }
+      } else {
+        this.objetivosEditados[index][campo] = valor;
+      }
       this.cdr.markForCheck();
     }
+  }
+
+  obtenerNumeroAvance(avance: string): string {
+    if (!avance) return '0';
+    return avance.replace(/%/g, '').trim();
   }
 
   calcularPromedio(): void {
@@ -399,8 +576,14 @@ export class InformeFinalComponent implements OnInit {
       this.parametros.habilidadPractica
     ];
 
-    const suma = valores.reduce((acc, val) => acc + val, 0);
-    this.notaFinalCalculada = parseFloat((suma / valores.length).toFixed(2));
+    const suma = valores.reduce((acc, val) => acc + (val || 0), 0);
+    
+    if (suma === 0) {
+      this.notaFinalCalculada = 0;
+    } else {
+      this.notaFinalCalculada = parseFloat((suma / valores.length).toFixed(2));
+    }
+    
     this.notaEnLetras = this.convertirNotaALetras(this.notaFinalCalculada);
   }
 
@@ -477,6 +660,7 @@ export class InformeFinalComponent implements OnInit {
         next: (response) => {
           console.log('✅ Evaluación guardada en el backend:', response);
           this.mensajeExito = '✅ Evaluación guardada correctamente';
+          
           this.cargarInforme();
           this.editandoEvaluacion = false;
           
@@ -515,7 +699,8 @@ export class InformeFinalComponent implements OnInit {
   }
 
   obtenerValorParametro(key: string): number {
-    return this.parametros[key as keyof typeof this.parametros] || 0;
+    const valor = this.parametros[key as keyof typeof this.parametros];
+    return valor ?? 0;
   }
 
   reiniciarParametros(): void {
@@ -533,20 +718,6 @@ export class InformeFinalComponent implements OnInit {
         estudianteId: localStorage.getItem('estudiante_seleccionado_id') 
       }
     });
-  }
-
-  formatearFecha(fecha: string): string {
-    if (!fecha) return 'N/A';
-    try {
-      const date = new Date(fecha);
-      return date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch {
-      return fecha;
-    }
   }
 
   getEstadoClase(estado: string): string {
@@ -590,7 +761,6 @@ export class InformeFinalComponent implements OnInit {
     }
   }
 
-  // ✅ NUEVO: Exportar a Excel (solo esta hoja)
   async exportarExcelIndividual(): Promise<void> {
     if (!this.idVinculacion || !this.informe) {
       alert('No hay datos para exportar.');
@@ -608,7 +778,6 @@ export class InformeFinalComponent implements OnInit {
     }
   }
 
-  // ✅ NUEVO: Exportar Excel completo (7 hojas)
   async exportarExcelCompleto(): Promise<void> {
     if (!this.idVinculacion) {
       alert('No hay ID de vinculación para exportar.');

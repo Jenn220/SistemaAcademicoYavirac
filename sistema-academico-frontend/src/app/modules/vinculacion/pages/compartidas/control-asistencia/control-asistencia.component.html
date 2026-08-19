@@ -37,18 +37,19 @@
     </button>
   </div>
 
-  <!-- ✅ FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) - MOVIDO ARRIBA -->
+  <!-- ✅ FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) -->
   <div class="nueva-actividad" *ngIf="mostrandoFormulario && isEstudiante">
     <h3>📝 Nueva actividad</h3>
     
+    <!-- ✅ ERROR MOSTRADO AQUÍ ARRIBA -->
     <div *ngIf="errorHora" class="error-hora">
-      {{ errorHora }}
+      ⚠️ {{ errorHora }}
     </div>
     
     <div class="form-row">
       <div class="form-group">
         <label>Fecha</label>
-        <input type="date" [(ngModel)]="nuevaActividad.fecha" />
+        <input type="date" [(ngModel)]="nuevaActividad.fecha" (ngModelChange)="errorHora = null" />
       </div>
       <div class="form-group">
         <label>Hora entrada</label>
@@ -73,19 +74,20 @@
     </div>
   </div>
 
-  <!-- ✅ FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) - MOVIDO ARRIBA -->
+  <!-- ✅ FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) -->
   <div class="nueva-actividad" *ngIf="mostrandoModalDuplicar && isEstudiante">
     <h3>➕ Añadir fecha para la misma actividad</h3>
     <p class="info-duplicar"><strong>Actividad:</strong> {{ actividadParaDuplicar?.descripcion }}</p>
     
+    <!-- ✅ ERROR MOSTRADO AQUÍ ARRIBA -->
     <div *ngIf="errorHora" class="error-hora">
-      {{ errorHora }}
+      ⚠️ {{ errorHora }}
     </div>
     
     <div class="form-row">
       <div class="form-group">
         <label>Nueva Fecha</label>
-        <input type="date" [(ngModel)]="nuevoDiaDuplicado.fecha" />
+        <input type="date" [(ngModel)]="nuevoDiaDuplicado.fecha" (ngModelChange)="errorHora = null" />
       </div>
       <div class="form-group">
         <label>Hora entrada</label>
@@ -110,8 +112,8 @@
     </button>
   </div>
 
-  <!-- TABLA DE ACTIVIDADES -->
-  <table class="tabla-actividades" *ngIf="isEstudiante">
+  <!-- ✅ TABLA DE ACTIVIDADES (VISIBLE PARA TODOS) -->
+  <table class="tabla-actividades">
     <thead>
       <tr>
         <th>FECHA</th>
@@ -119,7 +121,7 @@
         <th>HORA SALIDA</th>
         <th>TOTAL HORAS</th>
         <th>ACTIVIDAD REALIZADA</th>
-        <th>ACCIONES</th>
+        <th *ngIf="isEstudiante">ACCIONES</th>
       </tr>
     </thead>
     <tbody>
@@ -131,35 +133,38 @@
           
           <!-- Columnas individuales por día -->
           <td>
-            <span *ngIf="editandoId !== act.id">{{ act.fecha }}</span>
-            <input *ngIf="editandoId === act.id" type="date" [(ngModel)]="editandoActividad.fecha" />
+            <!-- MODO LECTURA: Visible para todos -->
+            <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.fecha }}</span>
+            <!-- MODO EDICIÓN: Solo estudiante -->
+            <input *ngIf="isEstudiante && editandoId === act.id" type="date" [(ngModel)]="editandoActividad.fecha" />
           </td>
           <td>
-            <span *ngIf="editandoId !== act.id">{{ act.hora_entrada }}</span>
-            <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" (ngModelChange)="errorHora = null" />
+            <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_entrada }}</span>
+            <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" (ngModelChange)="errorHora = null" />
           </td>
           <td>
-            <span *ngIf="editandoId !== act.id">{{ act.hora_salida }}</span>
-            <input *ngIf="editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" (ngModelChange)="errorHora = null" />
+            <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_salida }}</span>
+            <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" (ngModelChange)="errorHora = null" />
           </td>
           <td>{{ act.total_horas | number:'1.2-2' }}</td>
 
-          <!-- ✅ ACTIVIDAD REALIZADA MEJORADA -->
+          <!-- ✅ ACTIVIDAD REALIZADA (visible para todos, editable solo estudiante) -->
           <td *ngIf="isFirst" [attr.rowspan]="grupo.actividadesDetalle.length" class="actividad-cell">
             <div class="grupo-actividad-wrapper">
-              <!-- Modo Vista de la Descripción -->
-              <div class="texto-actividad-container" *ngIf="editandoGrupoId !== grupo.ids[0]">
+              <!-- Modo Vista (para todos) -->
+              <div class="texto-actividad-container" *ngIf="!isEstudiante || editandoGrupoId !== grupo.ids[0]">
                 <span>{{ grupo.descripcion }}</span>
-                <button (click)="editarDescripcionGrupo(grupo)" class="btn-edit-desc" title="Editar descripción general">✏️</button>
+                <!-- Botón editar descripción: solo estudiante -->
+                <button *ngIf="isEstudiante" (click)="editarDescripcionGrupo(grupo)" class="btn-edit-desc" title="Editar descripción general">✏️</button>
               </div>
 
-              <!-- Modo Edición de la Descripción -->
-              <div class="texto-actividad-container" *ngIf="editandoGrupoId === grupo.ids[0]">
+              <!-- Modo Edición de la Descripción: solo estudiante -->
+              <div class="texto-actividad-container" *ngIf="isEstudiante && editandoGrupoId === grupo.ids[0]">
                 <textarea [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" rows="3" placeholder="Descripción de la actividad..."></textarea>
               </div>
               
-              <!-- Botón para añadir otra fecha -->
-              <div class="btn-agregar-fecha-container" *ngIf="!editandoId && !editandoGrupoId">
+              <!-- Botón para añadir otra fecha: solo estudiante -->
+              <div class="btn-agregar-fecha-container" *ngIf="isEstudiante && !editandoId && !editandoGrupoId">
                 <button (click)="prepararDuplicado(grupo.actividadesDetalle[0])" class="btn-add-copy">
                   ➕ Añadir fecha
                 </button>
@@ -167,8 +172,8 @@
             </div>
           </td>
 
-          <!-- ✅ BOTONES DE ACCIÓN MEJORADOS -->
-          <td class="acciones-cell">
+          <!-- ✅ BOTONES DE ACCIÓN: SOLO ESTUDIANTE -->
+          <td class="acciones-cell" *ngIf="isEstudiante">
             <div *ngIf="errorHora && editandoId === act.id" class="error-hora-small">{{ errorHora }}</div>
             
             <!-- Modo Normal -->

@@ -9,7 +9,7 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { AsistenciaTutorResponse, AsistenciaTutor, CreateAsistenciaTutorDto, UpdateAsistenciaTutorDto } from '../../../models/registro-asistencia-tutor.model';
 import { finalize } from 'rxjs/operators';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
-import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
+import { ExcelExportService } from '../../../services/excel-export.service';
 
 @Component({
   selector: 'app-registro-asistencia-tutor',
@@ -25,11 +25,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
-  private excelService = inject(ExcelExportService); // ✅ NUEVO
+  private excelService = inject(ExcelExportService);
 
   data: AsistenciaTutorResponse | null = null;
   loading = true;
   error: string | null = null;
+  errorHora: string | null = null;
   idVinculacion: number = 0;
 
   // Roles
@@ -83,8 +84,8 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     this.isCoordinador = roles.includes('COORDINADOR');
     this.isTutorEmpresarial = roles.includes('TUTOR_EMPRESARIAL');
 
-    if (this.isCoordinador) {
-      this.error = '⚠️ No tienes permisos para ver esta pantalla.';
+    if (this.isCoordinador && !this.isDocente) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo Coordinadores con rol de Docente pueden acceder.';
       this.loading = false;
       this.cdr.markForCheck();
       return;
@@ -135,20 +136,32 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
+    this.errorHora = null;
     this.cdr.markForCheck();
     console.log('🔵 Cargando Registro Asistencia Tutor para vinculación:', this.idVinculacion);
     
+    console.log('🔵 Cargando fechas del proyecto para ID:', this.idVinculacion);
+
     this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion)
       .subscribe({
         next: (data) => {
           console.log('📦 Fechas del proyecto recibidas:', data);
+          console.log('📅 fecha_inicio recibida:', data.fecha_inicio);
+          console.log('📅 fecha_fin recibida:', data.fecha_fin);
+          
           this.fechaInicioProyecto = data.fecha_inicio || '';
           this.fechaFinProyecto = data.fecha_fin || '';
+          
+          console.log('✅ fechaInicioProyecto asignada:', this.fechaInicioProyecto);
+          console.log('✅ fechaFinProyecto asignada:', this.fechaFinProyecto);
+          
           this.cdr.markForCheck();
         },
-        error: () => {
+        error: (err) => {
+          console.error('❌ Error al obtener fechas del proyecto:', err);
           this.fechaInicioProyecto = '';
           this.fechaFinProyecto = '';
+          this.cdr.markForCheck();
         }
       });
 
@@ -204,13 +217,30 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      const date = new Date(fecha);
-      return date.toLocaleDateString('es-ES', {
+      console.log('🔍 Formateando fecha:', fecha);
+      
+      let fechaStr = fecha;
+      if (fecha.includes('T')) {
+        fechaStr = fecha.split('T')[0];
+      }
+      
+      const date = new Date(fechaStr + 'T00:00:00');
+      
+      if (isNaN(date.getTime())) {
+        console.warn('⚠️ Fecha inválida:', fecha);
+        return fecha;
+      }
+      
+      const fechaFormateada = date.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
       });
-    } catch {
+      
+      console.log('✅ Fecha formateada:', fechaFormateada);
+      return fechaFormateada;
+    } catch (error) {
+      console.error('❌ Error al formatear fecha:', error);
       return fecha;
     }
   }
@@ -256,6 +286,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           console.log('✅ Observación guardada automáticamente');
           this.observacionOriginal = this.observacionEdit;
           this.observacionGuardada = true;
+          
+          // ✅ ACTUALIZAR data.totales.observaciones PARA QUE SE MUESTRE EN VISTA
+          if (this.data) {
+            this.data.totales.observaciones = this.observacionEdit;
+          }
+          
           this.mostrarFeedback('Observación guardada ✅');
           this.editandoObservacion = false;
           this.cdr.markForCheck();
@@ -295,6 +331,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   mostrarFormulario(): void {
     if (!this.puedeEditarActividades) return;
     this.mostrandoFormulario = true;
+    this.errorHora = null;
     const hoy = new Date();
     const fechaStr = hoy.toISOString().split('T')[0];
     this.nuevaActividad = {
@@ -310,18 +347,23 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
   cancelarNuevo(): void {
     this.mostrandoFormulario = false;
+    this.errorHora = null;
     this.cdr.markForCheck();
   }
 
   agregarActividad(): void {
     if (!this.puedeEditarActividades) return;
+    this.errorHora = null;
+
     if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_inicio || !this.nuevaActividad.hora_fin) {
-      alert('⚠️ Complete fecha, hora entrada y hora salida.');
+      this.errorHora = '⚠️ Complete fecha, hora entrada y hora salida.';
+      this.cdr.markForCheck();
       return;
     }
 
     if (this.nuevaActividad.hora_fin <= this.nuevaActividad.hora_inicio) {
-      alert('❌ La hora de salida debe ser posterior a la hora de entrada.');
+      this.errorHora = '❌ La hora de salida debe ser posterior a la hora de entrada.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -341,10 +383,21 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         next: () => {
           this.cargarDatos();
           this.mostrandoFormulario = false;
+          this.errorHora = null;
         },
         error: (err) => {
           console.error('❌ Error al agregar actividad:', err);
-          this.error = err.error?.message || 'Error al agregar actividad.';
+          
+          let mensaje = err.error?.message || err.message || 'Error al agregar actividad.';
+          
+          console.log('📩 Mensaje de error recibido:', mensaje);
+          
+          if (mensaje.includes('Ya existe un registro') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
+            this.errorHora = '⚠️ ' + mensaje;
+          } else {
+            this.error = mensaje;
+          }
+          
           this.cdr.markForCheck();
         }
       });
@@ -353,6 +406,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   editarActividad(act: AsistenciaTutor): void {
     if (!this.puedeEditarActividades) return;
     this.editandoId = act.id;
+    this.errorHora = null;
     this.editandoActividad = {
       fecha: act.fecha,
       hora_inicio: act.hora_entrada,
@@ -365,11 +419,13 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   cancelarEdicion(): void {
     this.editandoId = null;
     this.editandoActividad = {};
+    this.errorHora = null;
     this.cdr.markForCheck();
   }
 
   guardarEdicion(): void {
     if (!this.puedeEditarActividades || !this.editandoId) return;
+    this.errorHora = null;
 
     if (this.editandoActividad.fecha && !this.validarFecha(this.editandoActividad.fecha)) {
       return;
@@ -377,7 +433,8 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
     if (this.editandoActividad.hora_inicio && this.editandoActividad.hora_fin) {
       if (this.editandoActividad.hora_fin <= this.editandoActividad.hora_inicio) {
-        alert('❌ La hora de salida debe ser posterior a la hora de entrada.');
+        this.errorHora = '❌ La hora de salida debe ser posterior a la hora de entrada.';
+        this.cdr.markForCheck();
         return;
       }
     }
@@ -397,7 +454,15 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         },
         error: (err) => {
           console.error('❌ Error al actualizar actividad:', err);
-          this.error = err.error?.message || 'Error al actualizar actividad.';
+          
+          let mensaje = err.error?.message || err.message || 'Error al actualizar actividad.';
+          
+          if (mensaje.includes('Ya existe un registro') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
+            this.errorHora = '⚠️ ' + mensaje;
+          } else {
+            this.error = mensaje;
+          }
+          
           this.cdr.markForCheck();
         }
       });
@@ -427,7 +492,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       });
   }
 
-  // ✅ NUEVO: Exportar a Excel
+  // ✅ Exportar a Excel
   async exportarExcel(): Promise<void> {
     if (!this.idVinculacion || !this.data) {
       alert('No hay datos para exportar.');

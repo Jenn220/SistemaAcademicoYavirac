@@ -11,7 +11,6 @@ import { VolverArchivosComponent } from '../../../components/volver-archivos/vol
 import { ExcelExportService } from '../../../services/excel-export.service'; 
 import { finalize } from 'rxjs/operators';
 
-
 @Component({
   selector: 'app-control-asistencia',
   standalone: true,
@@ -76,18 +75,31 @@ export class ControlAsistenciaComponent implements OnInit {
     this.isDocente = roles.includes('DOCENTE');
     this.isCoordinador = roles.includes('COORDINADOR');
 
-    if (this.isDocente) {
-      this.cargarDatosDocente();
+    // ✅ Si es docente o coordinador, cargar datos completos (solo lectura)
+    if (this.isDocente || this.isCoordinador) {
+      this.route.params.subscribe(params => {
+        const idParam = params['id'] ? +params['id'] : 0;
+        if (idParam > 0) {
+          this.idVinculacion = idParam;
+          this.cargarDatosCompletosDocente();
+        } else {
+          this.error = 'No se encontró el ID de vinculación.';
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
+      });
       return;
     }
 
+    // Si no es estudiante, error
     if (!this.isEstudiante) {
-      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
+      this.error = '⚠️ No tienes permisos para ver esta pantalla.';
       this.loading = false;
       this.cdr.markForCheck();
       return;
     }
 
+    // Flujo para estudiante
     this.route.params.subscribe(params => {
       const idParam = params['id'] ? +params['id'] : 0;
       
@@ -101,10 +113,54 @@ export class ControlAsistenciaComponent implements OnInit {
   }
 
   // ============================================
-  // ✅ MÉTODOS DE EDICIÓN SEPARADOS Y CORREGIDOS
+  // ✅ NUEVO: Carga datos completos para DOCENTE (solo lectura)
+  // ============================================
+  cargarDatosCompletosDocente(): void {
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    // Cargar fechas del proyecto
+    this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion)
+      .subscribe({
+        next: (data) => {
+          this.fechaInicioProyecto = data.fecha_inicio || '';
+          this.fechaFinProyecto = data.fecha_fin || '';
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.fechaInicioProyecto = '';
+          this.fechaFinProyecto = '';
+        }
+      });
+
+    // Cargar asistencia completa (con actividades)
+    this.asistenciaService.obtenerAsistencia(this.idVinculacion)
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: (data) => {
+          console.log('📦 Datos de asistencia (docente):', data);
+          this.data = data;
+          this.procesarActividadesAgrupadas();
+          this.observaciones = data.totales?.observaciones || '';
+          this.observacionesOriginales = this.observaciones;
+          this.observacionGuardada = true;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('❌ Error al cargar asistencia:', err);
+          this.error = 'No se pudo cargar el control de asistencia.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  // ============================================
+  // MÉTODOS DE EDICIÓN (SOLO ESTUDIANTE)
   // ============================================
 
-  // 1️⃣ Edita únicamente una fila específica (fecha, hora entrada, hora salida)
   editarFilaIndividual(act: any): void {
     if (!this.isEstudiante) return;
     this.editandoId = act.id;
@@ -115,15 +171,14 @@ export class ControlAsistenciaComponent implements OnInit {
       fecha: act.fecha,
       hora_inicio: act.hora_entrada,
       hora_fin: act.hora_salida,
-      actividades_realizadas: act.descripcion // 👈 Añadido para que cargue el texto al editar
+      actividades_realizadas: act.descripcion
     };
     this.cdr.markForCheck();
   }
 
-  // 2️⃣ Edita la descripción compartida de todo el grupo
   editarDescripcionGrupo(grupo: ActividadAgrupada): void {
     if (!this.isEstudiante) return;
-    this.editandoId = null; // Nos aseguramos de no activar filas individuales
+    this.editandoId = null;
     this.editandoGrupoId = grupo.ids[0];
     this.errorHora = null;
 
@@ -133,7 +188,6 @@ export class ControlAsistenciaComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // 3️⃣ Guarda los cambios de una fila individual (fecha u horas)
   guardarEdicionFila(actId: number): void {
     if (!this.isEstudiante) return;
 
@@ -169,7 +223,6 @@ export class ControlAsistenciaComponent implements OnInit {
     });
   }
 
-  // 4️⃣ Guarda el cambio de la descripción en todos los elementos del grupo mediante el backend
   guardarEdicionGrupo(grupo: ActividadAgrupada): void {
     if (!this.isEstudiante || !this.editandoGrupoId) return;
 
@@ -200,95 +253,17 @@ export class ControlAsistenciaComponent implements OnInit {
       });
   }
 
+  // ============================================
+  // MÉTODO PARA DOCENTE (OBSOLETO, se reemplaza por cargarDatosCompletosDocente)
+  // ============================================
   cargarDatosDocente(): void {
-    this.loading = true;
-    this.error = null;
-    this.cdr.markForCheck();
-
-    this.route.params.subscribe(params => {
-      const idParam = params['id'] ? +params['id'] : 0;
-      if (idParam > 0) {
-        this.idVinculacion = idParam;
-        this.cargarSoloObservaciones();
-      } else {
-        this.error = 'No se encontró el ID de vinculación.';
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    });
+    // Este método queda obsoleto, pero lo mantenemos por si se usa en otro lado
+    this.cargarDatosCompletosDocente();
   }
 
-  cargarSoloObservaciones(): void {
-    this.loading = true;
-    this.cdr.markForCheck();
-
-    this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion)
-      .subscribe({
-        next: (data) => {
-          this.fechaInicioProyecto = data.fecha_inicio || '';
-          this.fechaFinProyecto = data.fecha_fin || '';
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.fechaInicioProyecto = '';
-          this.fechaFinProyecto = '';
-        }
-      });
-
-    this.asistenciaService.obtenerAsistencia(this.idVinculacion)
-      .pipe(finalize(() => {
-        this.loading = false;
-        this.cdr.markForCheck();
-      }))
-      .subscribe({
-        next: (data) => {
-          this.data = {
-            cabecera: data.cabecera || {
-              carrera: '',
-              entidad_beneficiaria: '',
-              estudiante: '',
-              nombre_proyecto: '',
-              docente_tutor: '',
-              tutor_entidad_receptora: '',
-              periodo_academico: ''
-            },
-            actividades: [],
-            totales: {
-              total_horas: 0,
-              observaciones: data.totales?.observaciones || ''
-            }
-          };
-          this.procesarActividadesAgrupadas();
-          this.observaciones = data.totales?.observaciones || '';
-          this.observacionesOriginales = this.observaciones;
-          this.observacionGuardada = true;
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.data = {
-            cabecera: {
-              carrera: '',
-              entidad_beneficiaria: '',
-              estudiante: '',
-              nombre_proyecto: '',
-              docente_tutor: '',
-              tutor_entidad_receptora: '',
-              periodo_academico: ''
-            },
-            actividades: [],
-            totales: {
-              total_horas: 0,
-              observaciones: ''
-            }
-          };
-          this.procesarActividadesAgrupadas();
-          this.observaciones = '';
-          this.observacionesOriginales = '';
-          this.observacionGuardada = true;
-          this.cdr.markForCheck();
-        }
-      });
-  }
+  // ============================================
+  // CARGA DE DATOS PARA ESTUDIANTE
+  // ============================================
 
   obtenerVinculacionActiva(): void {
     this.loading = true;
@@ -555,7 +530,8 @@ export class ControlAsistenciaComponent implements OnInit {
     this.errorHora = null;
 
     if (!this.nuevaActividad.fecha || !this.nuevaActividad.hora_inicio || !this.nuevaActividad.hora_fin) {
-      alert('⚠️ Complete fecha, hora entrada y hora salida.');
+      this.errorHora = '⚠️ Complete fecha, hora entrada y hora salida.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -586,11 +562,21 @@ export class ControlAsistenciaComponent implements OnInit {
         next: () => {
           this.cargarDatos();
           this.mostrandoFormulario = false;
+          this.errorHora = null;
         },
         error: (err) => {
           console.error('❌ Error al agregar actividad:', err);
-          const mensaje = err.error?.message || 'Error al agregar actividad.';
-          this.error = mensaje;
+          
+          let mensaje = err.error?.message || err.message || 'Error al agregar actividad.';
+          
+          console.log('📩 Mensaje de error recibido:', mensaje);
+          
+          if (mensaje.includes('Ya existe un registro') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
+            this.errorHora = '⚠️ ' + mensaje;
+          } else {
+            this.error = mensaje;
+          }
+          
           this.cdr.markForCheck();
         }
       });
@@ -665,7 +651,8 @@ export class ControlAsistenciaComponent implements OnInit {
     this.errorHora = null;
 
     if (!this.nuevoDiaDuplicado.fecha || !this.nuevoDiaDuplicado.hora_inicio || !this.nuevoDiaDuplicado.hora_fin) {
-      alert('⚠️ Complete la fecha, hora de entrada y hora de salida.');
+      this.errorHora = '⚠️ Complete la fecha, hora de entrada y hora de salida.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -700,11 +687,21 @@ export class ControlAsistenciaComponent implements OnInit {
         next: () => {
           this.cargarDatos();
           this.cancelarDuplicado();
+          this.errorHora = null;
         },
         error: (err) => {
           console.error('❌ Error al duplicar actividad:', err);
-          const mensaje = err.error?.message || 'Error al duplicar la actividad.';
-          this.error = mensaje;
+          
+          let mensaje = err.error?.message || err.message || 'Error al duplicar la actividad.';
+          
+          console.log('📩 Mensaje de error recibido:', mensaje);
+          
+          if (mensaje.includes('Ya existe un registro') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
+            this.errorHora = '⚠️ ' + mensaje;
+          } else {
+            this.error = mensaje;
+          }
+          
           this.cdr.markForCheck();
         }
       });

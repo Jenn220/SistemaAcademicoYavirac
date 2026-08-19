@@ -48,6 +48,14 @@
     </thead>
     <tbody>
       <tr *ngFor="let act of data.actividades">
+        <!-- ✅ ERROR EN EDICIÓN DE FILA -->
+        <td *ngIf="editandoId === act.id && errorHora" colspan="6" style="padding: 0.3rem; background: #fff8f8;">
+          <div style="color: #dc3545; font-weight: 600; font-size: 13px; padding: 0.3rem 0.5rem;">
+            ⚠️ {{ errorHora }}
+          </div>
+        </td>
+      </tr>
+      <tr *ngFor="let act of data.actividades">
         <td>
           <span *ngIf="editandoId !== act.id || !puedeEditarActividades">{{ act.fecha }}</span>
           <input *ngIf="editandoId === act.id && puedeEditarActividades" type="date" [(ngModel)]="editandoActividad.fecha" />
@@ -142,18 +150,24 @@
   <!-- FORMULARIO NUEVA ACTIVIDAD -->
   <div class="nueva-actividad" *ngIf="mostrandoFormulario && puedeEditarActividades">
     <h3>📝 Nueva actividad</h3>
+    
+    <!-- ✅ ERROR MOSTRADO AQUÍ ARRIBA -->
+    <div *ngIf="errorHora" class="error-hora">
+      ⚠️ {{ errorHora }}
+    </div>
+    
     <div class="form-row">
       <div class="form-group">
         <label>Fecha</label>
-        <input type="date" [(ngModel)]="nuevaActividad.fecha" />
+        <input type="date" [(ngModel)]="nuevaActividad.fecha" (ngModelChange)="errorHora = null" />
       </div>
       <div class="form-group">
         <label>Hora entrada</label>
-        <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" />
+        <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" (ngModelChange)="errorHora = null" />
       </div>
       <div class="form-group">
         <label>Hora salida</label>
-        <input type="time" [(ngModel)]="nuevaActividad.hora_fin" />
+        <input type="time" [(ngModel)]="nuevaActividad.hora_fin" (ngModelChange)="errorHora = null" />
       </div>
     </div>
     <div class="form-row">
