@@ -349,6 +349,7 @@
       margin-top: 1.2rem;
       display: flex;
       gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .form-actions {
@@ -777,4 +778,268 @@
   color: #e67e22;
   font-style: italic;
   font-weight: 400;
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .container {
+    padding: 2rem 1.5rem;
+  }
+
+  .container .section .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .container .section .anexos-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .container .section .evaluacion .evaluacion-resultados,
+  .container .section .evaluacion .evaluacion-resultados-edit {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .container {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .container::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .container .header {
+    flex-direction: column;
+    gap: 0.8rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+
+    .logo {
+      width: 50px;
+      height: 50px;
+    }
+
+    .header-text {
+      .instituto {
+        font-size: 0.65rem;
+      }
+
+      h1 {
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  .container .section {
+    margin-top: 1.5rem;
+
+    h2 {
+      font-size: 0.85rem;
+      padding: 0.4rem 1rem;
+    }
+
+    .grid-2 p {
+      font-size: 12px;
+    }
+
+    .tabla,
+    .tabla-evaluacion {
+      font-size: 11px;
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+
+      th,
+      td {
+        padding: 0.3rem 0.5rem;
+        font-size: 10px;
+      }
+
+      th {
+        font-size: 9px;
+      }
+
+      .input-nota {
+        width: 60px;
+        font-size: 11px;
+        padding: 0.2rem 0.3rem;
+      }
+    }
+
+    .evaluacion {
+      padding: 1rem;
+
+      .evaluacion-resultados,
+      .evaluacion-resultados-edit {
+        padding: 0.8rem;
+        grid-template-columns: 1fr;
+
+        .resultado-item {
+          font-size: 12px;
+          flex-direction: column;
+          gap: 0.2rem;
+
+          label {
+            font-size: 10px;
+            min-width: auto;
+          }
+
+          .nota-destacada {
+            font-size: 1.2rem;
+          }
+        }
+      }
+
+      .textarea-edit {
+        font-size: 12px;
+        padding: 0.5rem 0.8rem;
+      }
+    }
+
+    .anexos-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+
+      .anexo-item .placeholder-imagen {
+        height: 100px;
+        font-size: 12px;
+      }
+    }
+
+    .reflexion-box {
+      font-size: 12px;
+      padding: 1rem;
+    }
+
+    .acciones-objetivos {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+
+      .btn-edit-objetivos {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .ayuda {
+        font-size: 11px;
+        text-align: center;
+      }
+    }
+
+    .tabla-editable {
+      td {
+        padding: 0.2rem 0.3rem;
+        font-size: 10px;
+      }
+
+      .input-objetivo {
+        font-size: 11px;
+        padding: 0.2rem 0.3rem;
+
+        &.input-avance {
+          max-width: 50px;
+        }
+      }
+    }
+
+    .btn-agregar,
+    .btn-eliminar-fila {
+      font-size: 12px;
+      padding: 0.3rem 0.8rem;
+    }
+
+    .feedback-success,
+    .feedback-error {
+      font-size: 12px;
+      padding: 0.6rem 1rem;
+    }
+  }
+
+  .container .btn-edit,
+  .container .btn-save,
+  .container .btn-cancel {
+    font-size: 11px;
+    padding: 0.3rem 0.8rem;
+  }
+
+  .acciones-export {
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn-export-excel,
+    .btn-export-completo {
+      padding: 0.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .loading,
+  .error {
+    padding: 2rem 1rem;
+    font-size: 14px;
+    margin: 1rem auto;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.7rem;
+  }
+
+  .container .header .header-text h1 {
+    font-size: 0.9rem;
+  }
+
+  .container .section {
+    .tabla th,
+    .tabla td,
+    .tabla-evaluacion th,
+    .tabla-evaluacion td {
+      font-size: 8px;
+      padding: 0.2rem 0.3rem;
+    }
+
+    .tabla .input-nota,
+    .tabla-evaluacion .input-nota {
+      width: 40px;
+      font-size: 9px;
+    }
+
+    .evaluacion .evaluacion-resultados .resultado-item {
+      font-size: 11px;
+    }
+  }
+
+  .acciones-export .btn-export-excel,
+  .acciones-export .btn-export-completo {
+    font-size: 11px;
+    padding: 0.4rem 0.8rem;
+  }
 }

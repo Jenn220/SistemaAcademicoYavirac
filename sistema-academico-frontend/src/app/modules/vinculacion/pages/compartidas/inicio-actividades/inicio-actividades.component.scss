@@ -260,6 +260,7 @@
       display: flex;
       gap: 1rem;
       margin-top: 1.2rem;
+      flex-wrap: wrap;
 
       .btn-guardar {
         background: #28a745;
@@ -442,79 +443,6 @@
 }
 
 // ============================================
-// RESPONSIVE
-// ============================================
-@media (max-width: 768px) {
-  :host {
-    padding: 1rem 0.5rem;
-  }
-
-  .documento {
-    padding: 2rem 1.5rem;
-  }
-
-  .encabezado {
-    gap: 1rem;
-
-    .logo {
-      width: 70px;
-      height: 70px;
-      flex: 0 0 70px;
-    }
-
-    .titulo {
-      h1 {
-        font-size: 0.9rem;
-      }
-
-      h2 {
-        font-size: 1rem;
-      }
-    }
-  }
-
-  .contenido {
-    .datos-adicionales {
-      grid-template-columns: 1fr;
-    }
-
-    .anexos {
-      .anexos-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .documento {
-    padding: 1.5rem 1rem;
-  }
-
-  .encabezado {
-    flex-direction: column;
-
-    .logo {
-      width: 80px;
-      height: 80px;
-      flex: 0 0 80px;
-    }
-
-    .titulo {
-      width: 100%;
-
-      h1 {
-        font-size: 0.8rem;
-      }
-
-      h2 {
-        font-size: 0.9rem;
-      }
-    }
-  }
-}
-
-// ============================================
 // BOTÓN DE EXPORTACIÓN A EXCEL
 // ============================================
 .acciones-export {
@@ -548,6 +476,297 @@
     &:active {
       transform: translateY(0px);
       box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .documento {
+    padding: 2rem 2rem;
+  }
+
+  .encabezado {
+    gap: 1rem;
+
+    .logo {
+      width: 70px;
+      height: 70px;
+      flex: 0 0 70px;
+    }
+
+    .titulo {
+      h1 {
+        font-size: 0.9rem;
+      }
+
+      h2 {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  .contenido .datos-adicionales {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .contenido .anexos .anexos-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .documento {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .documento::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .encabezado {
+    flex-direction: column;
+    gap: 0.8rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      flex: 0 0 60px;
+    }
+
+    .titulo {
+      width: 100%;
+
+      .instituto-top {
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+      }
+
+      h1 {
+        font-size: 0.8rem;
+      }
+
+      h2 {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .contenido {
+    font-size: 12px;
+    line-height: 1.6;
+
+    .seccion {
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.8rem;
+
+      p {
+        font-size: 12px;
+        margin: 0.3rem 0;
+      }
+    }
+
+    .acciones-top {
+      .accion-editar-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+
+        .btn-editar {
+          width: 100%;
+          justify-content: center;
+          font-size: 13px;
+          padding: 0.4rem 1rem;
+        }
+
+        .ayuda {
+          font-size: 11px;
+          text-align: center;
+        }
+      }
+
+      .mensaje-editado-top {
+        font-size: 12px;
+        justify-content: center;
+      }
+    }
+
+    .datos-adicionales {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+      padding: 0.8rem 1rem;
+
+      p {
+        font-size: 12px;
+      }
+    }
+
+    .vista-edicion {
+      .campo-editable {
+        margin: 0.6rem 0;
+
+        label {
+          font-size: 10px;
+        }
+
+        .input-text,
+        .input-date {
+          font-size: 12px;
+          padding: 0.5rem 0.8rem;
+          max-width: 100%;
+        }
+
+        .input-date {
+          max-width: 100%;
+        }
+
+        .ayuda {
+          font-size: 10px;
+        }
+      }
+
+      .botones-accion {
+        flex-direction: column;
+        gap: 0.6rem;
+
+        .btn-guardar,
+        .btn-cancelar {
+          width: 100%;
+          justify-content: center;
+          font-size: 13px;
+          padding: 0.5rem 1rem;
+        }
+      }
+    }
+
+    .anexos {
+      padding: 1rem;
+
+      h3 {
+        font-size: 12px;
+      }
+
+      .anexos-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+
+        .anexo-item {
+          .placeholder-imagen {
+            height: 100px;
+            font-size: 11px;
+          }
+
+          p {
+            font-size: 11px;
+          }
+        }
+      }
+    }
+
+    .firma {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+
+      &::before {
+        font-size: 14px;
+        top: -10px;
+      }
+
+      p {
+        font-size: 12px;
+
+        strong {
+          font-size: 13px;
+        }
+      }
+    }
+  }
+
+  .acciones-export {
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn-export-excel {
+      padding: 0.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .loading,
+  .error,
+  .sin-datos {
+    padding: 2rem 1rem;
+    font-size: 14px;
+    margin: 1rem auto;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .documento {
+    padding: 1rem 0.7rem;
+  }
+
+  .encabezado {
+    .logo {
+      width: 50px;
+      height: 50px;
+      flex: 0 0 50px;
+    }
+
+    .titulo {
+      h1 {
+        font-size: 0.7rem;
+      }
+
+      h2 {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .contenido {
+    font-size: 11px;
+
+    .seccion p {
+      font-size: 11px;
+    }
+
+    .datos-adicionales p {
+      font-size: 11px;
+    }
+
+    .vista-edicion .campo-editable {
+      .input-text,
+      .input-date {
+        font-size: 11px;
+        padding: 0.4rem 0.6rem;
+      }
     }
   }
 }

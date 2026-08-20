@@ -1,4 +1,4 @@
-import { Component, signal, inject, computed } from '@angular/core';
+import { Component, signal, inject, computed, effect } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../modules/auth/services/auth.service';
 
@@ -17,20 +17,38 @@ export class LayoutShellComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
 
+  // ✅ AÑADIDO: Signal para el sidebar
+  private sidebarAbiertoSignal = signal(false);
+  sidebarAbierto = computed(() => this.sidebarAbiertoSignal());
+
+  // Signal para el menú de usuario
   menuUsuarioAbierto = signal(false);
 
+  // Computed para el nombre del usuario
   nombreUsuario = computed(() => {
     const u = this.authService.usuario();
     if (!u) return 'Usuario';
     return (u as any).nombreCompleto || (u as any).nombre || u.correo || 'Usuario';
   });
 
+  // Computed para el rol del usuario
   rolUsuario = computed(() => {
     const roles = this.authService.roles();
     if (!roles || roles.length === 0) return 'Sin Rol';
     const primerRol = roles[0];
     return primerRol.charAt(0).toUpperCase() + primerRol.slice(1).toLowerCase();
   });
+
+  constructor() {
+    // ✅ AÑADIDO: Cerrar sidebar automáticamente en pantallas pequeñas
+    this.handleResize();
+    window.addEventListener('resize', () => this.handleResize());
+  }
+
+  // ✅ AÑADIDO: Método para alternar el sidebar
+  toggleSidebar(): void {
+    this.sidebarAbiertoSignal.update(prev => !prev);
+  }
 
   // Método para verificar roles en el HTML
   tieneRol(rol: string): boolean {
@@ -53,5 +71,13 @@ export class LayoutShellComponent {
       this.authService.logout();
     }
     this.router.navigateByUrl('/auth/login', { replaceUrl: true });
+  }
+
+  // ✅ AÑADIDO: Maneja el redimensionamiento de la ventana
+  private handleResize(): void {
+    const isSmallScreen = window.innerWidth <= 900;
+    if (isSmallScreen) {
+      this.sidebarAbiertoSignal.set(false);
+    }
   }
 }

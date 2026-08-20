@@ -389,6 +389,7 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .tabla-semanas {
@@ -490,13 +491,9 @@
 /* ============================================
    8. Responsive
    ============================================ */
-@media (max-width: 768px) {
-  :host {
-    padding: 1rem 0.5rem;
-  }
-
+@media (max-width: 1024px) {
   .seguimiento-pea {
-    padding: 1.5rem 1.2rem;
+    padding: 2rem 1.5rem;
   }
 
   .crear-seguimiento {
@@ -505,7 +502,50 @@
   }
 
   .membrete {
-    grid-template-columns: 70px 1fr 80px;
+    grid-template-columns: 70px 1fr 90px;
+  }
+}
+
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .seguimiento-pea {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .seguimiento-pea::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .crear-seguimiento {
+    padding: 16px;
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    select {
+      font-size: 0.8rem;
+      padding: 0.5rem 0.8rem;
+    }
+
+    button {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .aviso-texto {
+      font-size: 0.75rem;
+    }
+  }
+
+  .membrete {
+    grid-template-columns: 60px 1fr 70px;
   }
 
   .membrete__institucion {
@@ -533,9 +573,14 @@
 
     .btn-toolbar {
       justify-content: center;
+      width: 100%;
     }
 
     .btn-link {
+      text-align: center;
+    }
+
+    .mensaje-guardado {
       text-align: center;
     }
   }
@@ -559,9 +604,23 @@
       }
     }
 
+    .acciones-representante {
+      padding: 10px 16px;
+      flex-direction: column;
+      align-items: stretch;
+
+      .btn-toolbar {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
     .tabla-semanas {
       margin: 16px 16px 0;
       width: calc(100% - 32px);
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
 
       th {
         font-size: 10px;
@@ -576,18 +635,23 @@
       textarea {
         font-size: 0.75rem;
       }
-    }
 
-    .acciones-representante {
-      padding: 10px 16px;
-      flex-wrap: wrap;
+      .col-firma {
+        min-width: 50px;
+        height: 36px;
+      }
     }
 
     .observaciones-finales {
       margin: 16px 16px 0;
 
+      h3 {
+        font-size: 0.7rem;
+      }
+
       textarea {
         font-size: 0.78rem;
+        padding: 0.5rem 0.8rem;
       }
     }
 
@@ -601,6 +665,11 @@
   .estado {
     font-size: 0.85rem;
     padding: 12px 14px;
+  }
+
+  .btn-toolbar {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.82rem;
   }
 }
 
@@ -649,6 +718,10 @@
         font-size: 0.7rem;
         padding: 4px 5px;
       }
+
+      th {
+        font-size: 8px;
+      }
     }
 
     .tabla-semanas {
@@ -661,13 +734,18 @@
         padding: 4px 5px;
       }
     }
+
+    .observaciones-finales {
+      textarea {
+        font-size: 0.72rem;
+        padding: 0.4rem 0.6rem;
+      }
+    }
   }
 
   .btn-toolbar {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.8rem;
-    width: 100%;
-    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
   }
 }
 

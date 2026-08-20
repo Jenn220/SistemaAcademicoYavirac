@@ -1,6 +1,9 @@
 <div class="layout">
 
-  <aside class="sidebar">
+  <!-- Overlay para cerrar el menú en móviles -->
+  <div class="sidebar-overlay" [class.active]="sidebarAbierto()" (click)="toggleSidebar()"></div>
+
+  <aside class="sidebar" [class.open]="sidebarAbierto()">
 
     <div class="logo">
       <img src="assets/images/logo-yavirac.png" alt="Yavirac" class="logo-image">
@@ -9,58 +12,61 @@
     <div class="menu">
 
       <div class="menu-title">Inicio</div>
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="toggleSidebar()">
         🏠 Bienvenida
       </a>
 
       <div class="menu-title">Portafolio Docente</div>
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'informe-final'}"
-         routerLinkActive="active">
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
         💼 Informe Final
       </a>
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'aceptacion-notas'}"
-         routerLinkActive="active">
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
         ✅ Aceptación de Notas
       </a>
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'seguimiento-pea'}"
-         routerLinkActive="active">
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
         🗂️ Seguimiento PEA
       </a>
 
       <div class="menu-title">Fase Práctica</div>
-      <a routerLink="/fase-practica/carta-compromiso" routerLinkActive="active">✍️ Carta Compromiso</a>
-      <a routerLink="/fase-practica/registro-asistencia" routerLinkActive="active">📅 Registro Asistencia</a>
-      <a routerLink="/fase-practica/curriculum" routerLinkActive="active">🧾 Currículo</a>
-      <a routerLink="/fase-practica/informe-aprendizaje" routerLinkActive="active">📝 Informe Aprendizaje</a>
-      <a routerLink="/fase-practica/evaluacion-empresarial" routerLinkActive="active">🏢 Evaluación Empresarial</a>
-      <a routerLink="/fase-practica/evaluacion-instituto" routerLinkActive="active">🏫 Evaluación Instituto</a>
+      <a routerLink="/fase-practica/carta-compromiso" routerLinkActive="active" (click)="toggleSidebar()">✍️ Carta Compromiso</a>
+      <a routerLink="/fase-practica/registro-asistencia" routerLinkActive="active" (click)="toggleSidebar()">📅 Registro Asistencia</a>
+      <a routerLink="/fase-practica/curriculum" routerLinkActive="active" (click)="toggleSidebar()">🧾 Currículo</a>
+      <a routerLink="/fase-practica/informe-aprendizaje" routerLinkActive="active" (click)="toggleSidebar()">📝 Informe Aprendizaje</a>
+      <a routerLink="/fase-practica/evaluacion-empresarial" routerLinkActive="active" (click)="toggleSidebar()">🏢 Evaluación Empresarial</a>
+      <a routerLink="/fase-practica/evaluacion-instituto" routerLinkActive="active" (click)="toggleSidebar()">🏫 Evaluación Instituto</a>
 
       <!-- VINCULACIÓN CON LA SOCIEDAD (según rol) -->
       @if (tieneRol('ESTUDIANTE')) {
         <div class="menu-title">Vinculación con la sociedad</div>
-        <a routerLink="/vinculacion/estudiante/inicio-actividades" routerLinkActive="active">📄 Inicio Act.</a>
-        <a routerLink="/vinculacion/estudiante/carta-compromiso" routerLinkActive="active">📄 Carta Compromiso</a>
-        <a routerLink="/vinculacion/estudiante/control-asistencia" routerLinkActive="active">📊 Control Asistencia</a>
-        <a routerLink="/vinculacion/estudiante/registro-asistencia-tutor" routerLinkActive="active">📊 Registro Asistencia Tutor</a>
-        <a routerLink="/vinculacion/estudiante/plan-aprendizaje" routerLinkActive="active">📊 Plan Aprendizaje</a>
-        <a routerLink="/vinculacion/estudiante/certificado" routerLinkActive="active">📄 Certificado</a>
-        <a routerLink="/vinculacion/estudiante/informe-final" routerLinkActive="active">📄 Informe Final</a>
+        <a routerLink="/vinculacion/estudiante/inicio-actividades" routerLinkActive="active" (click)="toggleSidebar()">📄 Inicio Act.</a>
+        <a routerLink="/vinculacion/estudiante/carta-compromiso" routerLinkActive="active" (click)="toggleSidebar()">📄 Carta Compromiso</a>
+        <a routerLink="/vinculacion/estudiante/control-asistencia" routerLinkActive="active" (click)="toggleSidebar()">📊 Control Asistencia</a>
+        <a routerLink="/vinculacion/estudiante/registro-asistencia-tutor" routerLinkActive="active" (click)="toggleSidebar()">📊 Registro Asistencia Tutor</a>
+        <a routerLink="/vinculacion/estudiante/plan-aprendizaje" routerLinkActive="active" (click)="toggleSidebar()">📊 Plan Aprendizaje</a>
+        <a routerLink="/vinculacion/estudiante/certificado" routerLinkActive="active" (click)="toggleSidebar()">📄 Certificado</a>
+        <a routerLink="/vinculacion/estudiante/informe-final" routerLinkActive="active" (click)="toggleSidebar()">📄 Informe Final</a>
       }
 
       @if (tieneRol('DOCENTE')) {
         <div class="menu-title">Vinculación con la sociedad</div>
-        <a routerLink="/vinculacion/docente/seleccionar" routerLinkActive="active">👨‍🏫 Seleccionar Estudiante</a>
+        <a routerLink="/vinculacion/docente/seleccionar" routerLinkActive="active" (click)="toggleSidebar()">👨‍🏫 Seleccionar Estudiante</a>
       }
 
       <div class="menu-title">Coordinación</div>
-      <a routerLink="/coordinacion/cierre-periodo" routerLinkActive="active">🔒 Cierre de Período</a>
+      <a routerLink="/coordinacion/cierre-periodo" routerLinkActive="active" (click)="toggleSidebar()">🔒 Cierre de Período</a>
 
       <div class="menu-title">Gestión de Accesos</div>
-      <a routerLink="/auth/coordinador/desbloquear" routerLinkActive="active">🔄 Resetear Contraseña</a>
-      <a routerLink="/auth/coordinador/generar-accesos" routerLinkActive="active">👤 Ingresar</a>
+      <a routerLink="/auth/coordinador/desbloquear" routerLinkActive="active" (click)="toggleSidebar()">🔄 Resetear Contraseña</a>
+      <a routerLink="/auth/coordinador/generar-accesos" routerLinkActive="active" (click)="toggleSidebar()">👤 Ingresar</a>
 
     </div>
 
@@ -70,6 +76,9 @@
 
     <div class="topbar">
       <div class="topbar-left">
+        <button class="hamburger-btn" (click)="toggleSidebar()" aria-label="Abrir menú">
+          ☰
+        </button>
         <span class="brand-icon">📚</span>
         <h1>Sistema Académico</h1>
       </div>

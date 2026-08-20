@@ -375,6 +375,7 @@
       display: flex;
       gap: 1rem;
       margin-top: 0.8rem;
+      flex-wrap: wrap;
     }
   }
 
@@ -385,6 +386,7 @@
     margin-top: 1.5rem;
     display: flex;
     gap: 1rem;
+    flex-wrap: wrap;
   }
 
   // ============================================
@@ -468,6 +470,7 @@
       display: flex;
       gap: 1rem;
       margin-top: 1rem;
+      flex-wrap: wrap;
     }
   }
 
@@ -626,5 +629,282 @@
       transform: translateY(0px);
       box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
     }
+  }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .container {
+    padding: 2rem 1.5rem;
+  }
+
+  .container .cabecera .datos {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .container .tabla {
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 0.4rem 0.6rem;
+    }
+
+    .input-actividad {
+      min-width: 120px;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .container {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .container::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .container .cabecera {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+
+    .header-logo {
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .logo {
+        width: 50px;
+        height: 50px;
+      }
+
+      .header-text {
+        .instituto {
+          font-size: 0.6rem;
+        }
+
+        h2 {
+          font-size: 1rem;
+        }
+      }
+    }
+
+    .datos {
+      padding: 0.6rem 1rem;
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+
+      p {
+        font-size: 12px;
+      }
+    }
+
+    .rango-fechas {
+      padding: 0.6rem 1rem;
+
+      p {
+        font-size: 12px;
+      }
+
+      .fecha-rango {
+        font-size: 12px;
+      }
+
+      .indicador {
+        font-size: 11px;
+        margin-left: 0.5rem;
+      }
+    }
+  }
+
+  .container .tabla {
+    font-size: 11px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+
+    th,
+    td {
+      padding: 0.3rem 0.4rem;
+      font-size: 10px;
+    }
+
+    th {
+      font-size: 9px;
+    }
+
+    .input-actividad {
+      min-width: 100px;
+    }
+
+    input {
+      font-size: 10px;
+      padding: 0.2rem 0.3rem;
+    }
+  }
+
+  .container .observaciones {
+    padding: 1rem;
+
+    .observaciones-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.3rem;
+
+      p {
+        font-size: 11px;
+      }
+    }
+
+    .estado-guardado {
+      justify-content: flex-start;
+    }
+
+    .texto-observacion {
+      font-size: 12px;
+      padding: 0.6rem 1rem;
+    }
+
+    .observaciones-input-wrapper {
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .textarea-obs {
+        font-size: 12px;
+        padding: 0.5rem 0.8rem;
+        min-height: 60px;
+      }
+    }
+
+    .btn-edit-obs {
+      font-size: 11px;
+    }
+
+    .btn-guardar-obs {
+      font-size: 14px;
+      padding: 0.4rem 0.8rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+
+  .container .acciones {
+    flex-direction: column;
+    gap: 0.6rem;
+
+    .btn-add,
+    .btn-edit,
+    .btn-delete,
+    .btn-save,
+    .btn-cancel {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .container .nueva-actividad {
+    padding: 1.2rem 1rem;
+
+    h3 {
+      font-size: 1rem;
+    }
+
+    .form-row {
+      flex-direction: column;
+      gap: 0.8rem;
+
+      .form-group {
+        width: 100%;
+      }
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 0.6rem;
+
+      .btn-add,
+      .btn-save,
+      .btn-cancel {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .error-hora {
+      font-size: 12px;
+      padding: 0.6rem 1rem;
+    }
+  }
+
+  .acciones-export {
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn-export-excel {
+      padding: 0.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .loading,
+  .error {
+    padding: 2rem 1rem;
+    font-size: 14px;
+    margin: 1rem auto;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.7rem;
+  }
+
+  .container .cabecera .header-logo .header-text h2 {
+    font-size: 0.85rem;
+  }
+
+  .container .tabla th,
+  .container .tabla td {
+    font-size: 8px;
+    padding: 0.2rem 0.3rem;
+  }
+
+  .container .tabla input {
+    font-size: 8px;
+    padding: 0.15rem 0.2rem;
+  }
+
+  .container .tabla .input-actividad {
+    min-width: 70px;
   }
 }

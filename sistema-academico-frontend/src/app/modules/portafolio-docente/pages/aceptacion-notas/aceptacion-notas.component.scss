@@ -190,6 +190,7 @@
   margin-top: 20px;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .btn-toolbar {
@@ -392,7 +393,23 @@
 /* ============================================
    9. Responsive
    ============================================ */
-@media (max-width: 768px) {
+/* Tablets */
+@media (max-width: 1024px) {
+  .aceptacion-notas {
+    padding: 2rem 1.5rem;
+  }
+
+  .membrete {
+    grid-template-columns: 70px 1fr 90px;
+  }
+
+  .formato-07 {
+    padding: 18px;
+  }
+}
+
+/* Móviles */
+@media (max-width: 767px) {
   :host {
     padding: 1rem 0.5rem;
   }
@@ -401,8 +418,15 @@
     padding: 1.5rem 1.2rem;
   }
 
+  .aceptacion-notas::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
   .membrete {
     grid-template-columns: 60px 1fr 70px;
+    border-radius: 8px 8px 0 0;
   }
 
   .membrete__institucion {
@@ -428,6 +452,7 @@
     flex-direction: column;
     align-items: stretch;
     padding: 12px 16px;
+    border-radius: 0 0 8px 8px;
 
     h1 {
       font-size: 1rem;
@@ -454,7 +479,7 @@
   }
 
   .formato-07 {
-    padding: 16px;
+    padding: 14px;
     font-size: 0.78rem;
     overflow-x: auto;
 
@@ -499,6 +524,7 @@
   }
 }
 
+/* Móviles pequeños */
 @media (max-width: 480px) {
   .aceptacion-notas {
     padding: 1rem 0.8rem;
@@ -538,7 +564,7 @@
   }
 
   .formato-07 {
-    padding: 12px;
+    padding: 10px;
     font-size: 0.7rem;
 
     th,
@@ -546,6 +572,11 @@
       padding: 4px 5px;
       font-size: 0.65rem;
     }
+  }
+
+  .btn-toolbar {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
   }
 }
 

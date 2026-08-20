@@ -424,13 +424,9 @@
 /* ============================================
    8. Responsive
    ============================================ */
-@media (max-width: 768px) {
-  :host {
-    padding: 1rem 0.5rem;
-  }
-
+@media (max-width: 1024px) {
   .informe-final {
-    padding: 1.5rem 1.2rem;
+    padding: 2rem 1.5rem;
   }
 
   .crear-informe {
@@ -439,7 +435,57 @@
   }
 
   .membrete {
-    grid-template-columns: 70px 1fr 80px;
+    grid-template-columns: 70px 1fr 90px;
+  }
+
+  .formato-04 {
+    section {
+      margin: 0 16px 16px;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .informe-final {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .informe-final::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .crear-informe {
+    padding: 16px;
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    input {
+      font-size: 0.8rem;
+      padding: 0.5rem 0.8rem;
+    }
+
+    button {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .btn-cancelar {
+      margin-left: 0;
+      margin-top: 8px;
+    }
+  }
+
+  .membrete {
+    grid-template-columns: 60px 1fr 70px;
   }
 
   .membrete__institucion {
@@ -461,6 +507,20 @@
     }
   }
 
+  .informe-final__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn-toolbar {
+      justify-content: center;
+      width: 100%;
+    }
+
+    .mensaje-guardado {
+      text-align: center;
+    }
+  }
+
   .formato-04 {
     h1 {
       font-size: 1rem;
@@ -468,25 +528,129 @@
     }
 
     section {
-      margin: 0 16px 16px;
+      margin: 0 16px 14px;
+
+      h2 {
+        font-size: 0.82rem;
+      }
+
+      h3 {
+        font-size: 0.78rem;
+      }
+
+      textarea {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.8rem;
+      }
+    }
+
+    .tabla-datos {
+      th,
+      td {
+        font-size: 0.75rem;
+        padding: 5px 7px;
+      }
+
+      th {
+        font-size: 10px;
+      }
+    }
+
+    .tabla-firmas {
+      margin: 16px 16px 0;
+      width: calc(100% - 32px);
+
+      th {
+        font-size: 10px;
+      }
+
+      .col-firma {
+        height: 48px;
+      }
     }
   }
 
-  .tabla-datos {
-    th,
-    td {
-      font-size: 0.75rem;
-      padding: 5px 7px;
+  .estado {
+    font-size: 0.85rem;
+    padding: 12px 14px;
+  }
+
+  .btn-toolbar {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .informe-final {
+    padding: 1rem 0.8rem;
+  }
+
+  .membrete {
+    grid-template-columns: 50px 1fr 60px;
+  }
+
+  .membrete__logo {
+    img {
+      max-height: 40px;
     }
   }
 
-  .informe-final__toolbar {
-    flex-direction: column;
-    align-items: stretch;
+  .membrete__institucion {
+    font-size: 0.6rem;
+    padding: 4px 8px;
+  }
 
-    .btn-toolbar {
-      justify-content: center;
+  .membrete__macroproceso,
+  .membrete__proceso,
+  .membrete__formato {
+    font-size: 0.55rem;
+    padding: 3px 8px;
+  }
+
+  .membrete__codigo {
+    padding: 4px 6px;
+
+    span {
+      font-size: 0.5rem;
     }
+    strong {
+      font-size: 0.65rem;
+    }
+  }
+
+  .formato-04 {
+    h1 {
+      font-size: 0.85rem;
+      margin: 12px 12px 10px;
+    }
+
+    section {
+      margin: 0 12px 10px;
+
+      h2 {
+        font-size: 0.72rem;
+        padding: 3px 0 3px 8px;
+      }
+
+      textarea {
+        font-size: 0.72rem;
+        padding: 0.4rem 0.6rem;
+      }
+    }
+
+    .tabla-datos {
+      th,
+      td {
+        font-size: 0.65rem;
+        padding: 4px 5px;
+      }
+    }
+  }
+
+  .btn-toolbar {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
   }
 }
 

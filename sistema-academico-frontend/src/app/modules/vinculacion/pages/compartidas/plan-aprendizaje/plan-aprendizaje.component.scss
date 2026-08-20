@@ -380,6 +380,7 @@
       display: flex;
       gap: 1rem;
       margin-top: 0.8rem;
+      flex-wrap: wrap;
     }
   }
 
@@ -531,5 +532,257 @@
       transform: translateY(0px);
       box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
     }
+  }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .container {
+    padding: 2rem 1.5rem;
+  }
+
+  .container .cabecera .datos {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .container .tabla,
+  .container .tabla-avance {
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 0.4rem 0.6rem;
+    }
+
+    .input-avance {
+      width: 60px;
+    }
+  }
+
+  .container .reflexion {
+    padding: 1.2rem 1.5rem;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .container {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .container::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .container .cabecera {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+
+    .header-logo {
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .logo {
+        width: 50px;
+        height: 50px;
+      }
+
+      .header-text {
+        .instituto {
+          font-size: 0.6rem;
+        }
+
+        h2 {
+          font-size: 1rem;
+        }
+      }
+    }
+
+    .datos {
+      padding: 0.6rem 1rem;
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+
+      p {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .container .tabla,
+  .container .tabla-avance {
+    font-size: 11px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+
+    th,
+    td {
+      padding: 0.3rem 0.4rem;
+      font-size: 10px;
+    }
+
+    th {
+      font-size: 9px;
+    }
+
+    .textarea-edit {
+      font-size: 10px;
+      padding: 0.2rem 0.3rem;
+      min-width: 80px;
+    }
+
+    .input-avance {
+      width: 50px;
+      font-size: 10px;
+      padding: 0.2rem 0.3rem;
+    }
+  }
+
+  .container .reflexion {
+    padding: 1rem;
+    margin-top: 1.5rem;
+
+    .reflexion-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.3rem;
+
+      p {
+        font-size: 11px;
+      }
+    }
+
+    .estado-guardado {
+      justify-content: flex-start;
+    }
+
+    .texto-reflexion {
+      font-size: 12px;
+      padding: 0.6rem 1rem;
+    }
+
+    .reflexion-input-wrapper {
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .textarea-edit {
+        font-size: 12px;
+        padding: 0.5rem 0.8rem;
+        min-height: 80px;
+      }
+    }
+
+    .btn-edit-obs {
+      font-size: 11px;
+    }
+
+    .btn-guardar-obs {
+      font-size: 14px;
+      padding: 0.4rem 0.8rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+
+  .container .avance {
+    margin-top: 1.5rem;
+
+    h4 {
+      font-size: 0.85rem;
+    }
+  }
+
+  .container .btn-edit,
+  .container .btn-save,
+  .container .btn-cancel {
+    font-size: 11px;
+    padding: 0.3rem 0.6rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .acciones-export {
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn-export-excel {
+      padding: 0.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .loading,
+  .error {
+    padding: 2rem 1rem;
+    font-size: 14px;
+    margin: 1rem auto;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.7rem;
+  }
+
+  .container .cabecera .header-logo .header-text h2 {
+    font-size: 0.85rem;
+  }
+
+  .container .tabla th,
+  .container .tabla td,
+  .container .tabla-avance th,
+  .container .tabla-avance td {
+    font-size: 8px;
+    padding: 0.2rem 0.3rem;
+  }
+
+  .container .tabla .textarea-edit {
+    font-size: 8px;
+    padding: 0.15rem 0.2rem;
+    min-width: 60px;
+  }
+
+  .container .tabla-avance .input-avance {
+    width: 40px;
+    font-size: 8px;
+  }
+
+  .container .reflexion .texto-reflexion {
+    font-size: 11px;
+  }
+
+  .container .reflexion .reflexion-input-wrapper .textarea-edit {
+    font-size: 11px;
+    min-height: 60px;
   }
 }

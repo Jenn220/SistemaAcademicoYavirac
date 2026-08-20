@@ -558,6 +558,7 @@
     margin-top: 1.5rem;
     display: flex;
     gap: 1rem;
+    flex-wrap: wrap;
   }
 
   // ============================================
@@ -657,6 +658,7 @@
       display: flex;
       gap: 1rem;
       margin-top: 1rem;
+      flex-wrap: wrap;
     }
   }
 
@@ -793,4 +795,311 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .asistencia-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .asistencia-container .cabecera .datos {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .asistencia-container .tabla-actividades {
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 0.4rem 0.6rem;
+    }
+
+    .input-actividad {
+      min-width: 120px;
+    }
+
+    .actividad-cell {
+      min-width: 160px;
+    }
+
+    .grupo-actividad-wrapper {
+      min-width: 140px;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .asistencia-container {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .asistencia-container::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .asistencia-container .cabecera {
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .datos {
+      padding: 0.6rem 1rem;
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+
+      p {
+        font-size: 12px;
+      }
+    }
+
+    .rango-fechas {
+      padding: 0.6rem 1rem;
+
+      p {
+        font-size: 12px;
+      }
+
+      .fecha-rango {
+        font-size: 12px;
+      }
+
+      .indicador {
+        font-size: 11px;
+        margin-left: 0.5rem;
+      }
+    }
+  }
+
+  .asistencia-container .tabla-actividades {
+    font-size: 11px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+
+    th,
+    td {
+      padding: 0.3rem 0.4rem;
+      font-size: 10px;
+    }
+
+    th {
+      font-size: 9px;
+    }
+
+    .input-actividad {
+      min-width: 100px;
+    }
+
+    .actividad-cell {
+      min-width: 120px;
+    }
+
+    .grupo-actividad-wrapper {
+      min-width: 100px;
+
+      .texto-actividad-container {
+        padding: 0.3rem 0.4rem;
+        min-height: 30px;
+
+        span {
+          font-size: 11px;
+        }
+      }
+    }
+
+    .acciones-cell {
+      min-width: 60px;
+
+      .btn-group-acciones .btn-action {
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+      }
+    }
+
+    tfoot td {
+      font-size: 12px;
+    }
+  }
+
+  .asistencia-container .observaciones {
+    padding: 1rem;
+
+    .observaciones-header label {
+      font-size: 11px;
+    }
+
+    .texto-observacion {
+      font-size: 12px;
+    }
+
+    .observaciones-input-wrapper .input-observaciones {
+      font-size: 12px;
+      padding: 0.5rem 0.8rem;
+    }
+
+    .btn-guardar-obs {
+      padding: 0.4rem 0.8rem;
+      font-size: 14px;
+    }
+  }
+
+  .asistencia-container .nueva-actividad {
+    padding: 1.2rem 1rem;
+
+    h3 {
+      font-size: 1rem;
+    }
+
+    .form-row {
+      flex-direction: column;
+      gap: 0.8rem;
+
+      .form-group {
+        min-width: 100%;
+      }
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 0.6rem;
+
+      .btn-add,
+      .btn-save,
+      .btn-cancel {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .error-hora {
+      font-size: 12px;
+      padding: 0.6rem 1rem;
+    }
+
+    .info-duplicar {
+      font-size: 12px;
+      padding: 0.4rem 0.8rem;
+    }
+  }
+
+  .asistencia-container .acciones {
+    flex-direction: column;
+    gap: 0.6rem;
+
+    .btn-add {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .asistencia-container .acciones-export {
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn-export-excel {
+      padding: 0.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .loading,
+  .error {
+    padding: 2rem 1rem;
+    font-size: 14px;
+    margin: 1rem auto;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .asistencia-container {
+    padding: 1rem 0.7rem;
+  }
+
+  .asistencia-container .cabecera h2 {
+    font-size: 0.9rem;
+  }
+
+  .asistencia-container .tabla-actividades {
+    font-size: 10px;
+
+    th,
+    td {
+      padding: 0.2rem 0.3rem;
+      font-size: 9px;
+    }
+
+    th {
+      font-size: 8px;
+    }
+
+    .input-actividad {
+      min-width: 80px;
+    }
+
+    .actividad-cell {
+      min-width: 100px;
+    }
+
+    .grupo-actividad-wrapper {
+      min-width: 80px;
+
+      .texto-actividad-container {
+        padding: 0.2rem 0.3rem;
+        min-height: 24px;
+
+        span {
+          font-size: 10px;
+        }
+      }
+    }
+
+    .acciones-cell {
+      min-width: 50px;
+
+      .btn-group-acciones .btn-action {
+        width: 22px;
+        height: 22px;
+        font-size: 10px;
+      }
+    }
+  }
+
+  .asistencia-container .observaciones {
+    .observaciones-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.3rem;
+    }
+
+    .estado-guardado {
+      justify-content: flex-start;
+    }
+  }
 }
