@@ -167,7 +167,7 @@ export class RegistroAsistencia implements OnInit {
       registros: res?.['registros'] ?? [],
       horasAutonomas: res?.['horasAutonomas'] ?? 0,
       subtotalHorasPractica: res?.['subtotalHorasPractica'] ?? 0,
-      horasRequeridas: res?.['horasRequeridas'] ?? datos?.proyectoEmpresarial?.horasRequeridas ?? 400,
+      horasRequeridas: res?.['horasRequeridas'] ?? datos?.['proyectoEmpresarial']?.horasRequeridas ?? 400,
     } as any;
 
   }
