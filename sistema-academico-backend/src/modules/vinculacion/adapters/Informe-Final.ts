@@ -79,35 +79,37 @@ export class InformeFinalAdapter implements IInformeFinalPort {
     return await this.repo.query(query, [idVinculacion]);
   }
 
-  async listarInformesEstudiantesPorDocente(idDocente: number): Promise<any[]> {
-    const query = `
-      SELECT 
-        vinc.id_vinculacion,
-        CONCAT(est.nombres, ' ', est.apellidos) AS estudiante,
-        est.cedula,
-        car.nombre AS carrera,
-        vinc.nombre_proyecto,
-        COALESCE(er.nombre_entidad, emp.razon_social, 'Sin Institución') AS entidad_beneficiaria,
-        ev.nota_final,
-        CASE 
-          WHEN ev.nota_final IS NOT NULL THEN 'CALIFICADO'
-          WHEN EXISTS (
-            SELECT 1 FROM vinculacion_actividad_estudiante act 
-            WHERE act.id_vinculacion = vinc.id_vinculacion
-          ) THEN 'EN_PROCESO'
-          ELSE 'PENDIENTE'
-        END AS estado_informe
-      FROM vinculacion_estudiante vinc
-      INNER JOIN matricula_detalle mat ON vinc.id_matricula_detalle = mat.id_matricula_detalle
-      INNER JOIN matricula m ON mat.id_matricula = m.id_matricula
-      INNER JOIN estudiante est ON m.id_estudiante = est.id_estudiante
-      INNER JOIN carrera car ON m.id_carrera = car.id_carrera
-      LEFT JOIN empresa emp ON vinc.id_empresa = emp.id_empresa
-      LEFT JOIN vinculacion_entidad_receptora er ON vinc.id_entidad_receptora = er.id_entidad
-      LEFT JOIN evaluacion_vinculacion ev ON vinc.id_vinculacion = ev.id_vinculacion
-      WHERE vinc.id_docente = $1
-      ORDER BY est.apellidos ASC, est.nombres ASC;
-    `;
-    return await this.repo.query(query, [idDocente]);
-  }
+ async listarInformesEstudiantesPorDocente(idDocente: number): Promise<any[]> {
+  const query = `
+    SELECT 
+      vinc.id_vinculacion,
+      CONCAT(est.nombres, ' ', est.apellidos) AS estudiante,
+      est.cedula,
+      car.nombre AS carrera,
+      vinc.nombre_proyecto,
+      COALESCE(er.nombre_entidad, emp.razon_social, 'Sin Institución') AS entidad_beneficiaria,
+      ev.nota_final,
+      per.nombre AS periodo_academico, -- Usamos el alias 'per' definido en el JOIN
+      CASE 
+        WHEN ev.nota_final IS NOT NULL THEN 'CALIFICADO'
+        WHEN EXISTS (
+          SELECT 1 FROM vinculacion_actividad_estudiante act 
+          WHERE act.id_vinculacion = vinc.id_vinculacion
+        ) THEN 'EN_PROCESO'
+        ELSE 'PENDIENTE'
+      END AS estado_informe
+    FROM vinculacion_estudiante vinc
+    INNER JOIN periodo_academico per ON vinc.id_periodo = per.id_periodo -- Nombre de tabla corregido
+    INNER JOIN matricula_detalle mat ON vinc.id_matricula_detalle = mat.id_matricula_detalle
+    INNER JOIN matricula m ON mat.id_matricula = m.id_matricula
+    INNER JOIN estudiante est ON m.id_estudiante = est.id_estudiante
+    INNER JOIN carrera car ON m.id_carrera = car.id_carrera
+    LEFT JOIN empresa emp ON vinc.id_empresa = emp.id_empresa
+    LEFT JOIN vinculacion_entidad_receptora er ON vinc.id_entidad_receptora = er.id_entidad
+    LEFT JOIN evaluacion_vinculacion ev ON vinc.id_vinculacion = ev.id_vinculacion
+    WHERE vinc.id_docente = $1
+    ORDER BY est.apellidos ASC, est.nombres ASC;
+  `;
+  return await this.repo.query(query, [idDocente]);
+}
 }
