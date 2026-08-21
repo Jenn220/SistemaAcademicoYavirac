@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TutorEmpresarialEntity } from './domain/tutor-empresarial.entity';
 import { NucleoEstructuranteEntity } from './domain/nucleo-estructurante.entity';
+import { NotificacionEntity } from './domain/notificacion.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PracticaController } from './controllers/practica.controller';
 import { EmpresaController } from './controllers/empresa.controller';
@@ -16,6 +17,8 @@ import { PlanRotacionSemanaController } from './controllers/plan-rotacion-semana
 import { PlanMarcoController } from './controllers/plan-marco.controller';
 import { ItemPlanMarcoController } from './controllers/item-plan-marco.controller';
 import { PerfilEstudianteController } from './controllers/perfil-estudiante.controller';
+import { EvaluacionPlanMarcoController } from './controllers/evaluacion-plan-marco.controller';
+import { NotificacionController } from './controllers/notificacion.controller';
 import { BitacoraSemanalEntity } from './domain/bitacora-semanal.entity';
 import { CvDatoAcademicoEntity } from './domain/cv-dato-academico.entity';
 import { CvExperienciaLaboralEntity } from './domain/cv-experiencia-laboral.entity';
@@ -55,6 +58,9 @@ import { DetalleEvaluacionService } from './services/detalle-evaluacion.service'
 import { PlanRotacionSemanaService } from './services/plan-rotacion-semana.service';
 import { PlanMarcoService } from './services/plan-marco.service';
 import { ItemPlanMarcoService } from './services/item-plan-marco.service';
+import { EvaluacionPlanMarcoService } from './services/evaluacion-plan-marco.service';
+import { NotificacionService } from './services/notificacion.service';
+import { PeriodoContextService } from './services/periodo-context.service';
 import { InformeFasePracticaPg } from './adapters/informe-fase-practica.pg';
 import {
   INFORME_FASE_PRACTICA_REPOSITORY,
@@ -76,6 +82,8 @@ import { PLAN_MARCO_REPOSITORY } from './ports/plan-marco.repository.port';
 import { PlanMarcoPg } from './adapters/plan-marco.pg';
 import { ITEM_PLAN_MARCO_REPOSITORY } from './ports/item-plan-marco.repository.port';
 import { ItemPlanMarcoPg } from './adapters/item-plan-marco.pg';
+import { EVALUACION_PLAN_MARCO_REPOSITORY } from './ports/evaluacion-plan-marco.repository.port';
+import { EvaluacionPlanMarcoPg } from './adapters/evaluacion-plan-marco.pg';
 import { INFORME_APRENDIZAJE_REPOSITORY } from './ports/informe-aprendizaje.repository.port';
 import { InformeAprendizajePg } from './adapters/informe-aprendizaje.pg';
 import { EVALUACION_PRACTICA_REPOSITORY } from './ports/evaluacion-practica.repository.port';
@@ -94,6 +102,8 @@ import { DETALLE_EVALUACION_REPOSITORY } from './ports/detalle-evaluacion.reposi
 import { DetalleEvaluacionPg } from './adapters/detalle-evaluacion.pg';
 import { ITEM_RUBRICA_REPOSITORY } from './ports/item-rubrica.repository.port';
 import { ItemRubricaPg } from './adapters/item-rubrica.pg';
+import { NOTIFICACION_REPOSITORY } from './ports/notificacion.repository.port';
+import { NotificacionPg } from './adapters/notificacion.pg';
 
 @Module({
   imports: [
@@ -119,6 +129,7 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       ItemRubricaEntity,
       TutorEmpresarialEntity,
       NucleoEstructuranteEntity,
+      NotificacionEntity,
     ]),
   ],
   controllers: [
@@ -136,6 +147,8 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       PlanMarcoController,
       ItemPlanMarcoController,
       PerfilEstudianteController,
+      EvaluacionPlanMarcoController,
+      NotificacionController,
   ],
   providers: [
     PracticaService,
@@ -185,15 +198,15 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       useClass: RubricaPg,
     },
     ItemRubricaService,
-    {
-      provide: ITEM_RUBRICA_REPOSITORY,
-      useClass: ItemRubricaPg,
-    },
-    DetalleEvaluacionService,
-    {
-      provide: DETALLE_EVALUACION_REPOSITORY,
-      useClass: DetalleEvaluacionPg,
-    },
+     {
+       provide: ITEM_RUBRICA_REPOSITORY,
+       useClass: ItemRubricaPg,
+     },
+      {
+        provide: DETALLE_EVALUACION_REPOSITORY,
+        useClass: DetalleEvaluacionPg,
+      },
+      DetalleEvaluacionService,
       PlanRotacionSemanaService,
       {
         provide: PLAN_ROTACION_SEMANA_REPOSITORY,
@@ -208,6 +221,11 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       {
         provide: ITEM_PLAN_MARCO_REPOSITORY,
         useClass: ItemPlanMarcoPg,
+      },
+      EvaluacionPlanMarcoService,
+      {
+        provide: EVALUACION_PLAN_MARCO_REPOSITORY,
+        useClass: EvaluacionPlanMarcoPg,
       },
       InformeFasePracticaService,
     {
@@ -227,17 +245,15 @@ import { ItemRubricaPg } from './adapters/item-rubrica.pg';
       provide: CV_PRACTICA_DUAL_REPOSITORY,
       useClass: CvPracticaDualPg,
     },
-    {
-      provide: DETALLE_EVALUACION_REPOSITORY,
-      useClass: DetalleEvaluacionPg,
-    },
-    {
-      provide: ITEM_RUBRICA_REPOSITORY,
-      useClass: ItemRubricaPg,
-    },
     EvaluacionCalculoService,
     EvaluacionEmpresaService,
     EvaluacionInstitutoService,
+    NotificacionService,
+    PeriodoContextService,
+    {
+      provide: NOTIFICACION_REPOSITORY,
+      useClass: NotificacionPg,
+    },
   ],
 })
 export class FasePracticaModule {}

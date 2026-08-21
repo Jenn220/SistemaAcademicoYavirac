@@ -16,6 +16,12 @@ export class InformeFasePracticaPg implements InformeFasePracticaRepository {
         'estado', p.estado,
         'total_horas_requeridas', p.total_horas_requeridas,
         'total_horas_cumplidas', p.total_horas_cumplidas,
+        'id_periodo_carrera', pc.id_periodo_carrera,
+        'id_periodo', pc.id_periodo,
+        'codigo_periodo', pa.codigo,
+        'estado_periodo_carrera', pc.estado,
+        'id_carrera', pc.id_carrera,
+        'carrera', c.nombre,
         'registros_diarios', COALESCE((
           SELECT jsonb_agg(jsonb_build_object(
             'fecha', r.fecha,
@@ -62,6 +68,11 @@ export class InformeFasePracticaPg implements InformeFasePracticaRepository {
         ), '[]'::jsonb)
       ) AS informe
       FROM practica_estudiante p
+      JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+      JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+      JOIN periodo_carrera pc ON pc.id_periodo_carrera = oa.id_periodo_carrera
+      JOIN periodo_academico pa ON pa.id_periodo = pc.id_periodo
+      JOIN carrera c ON c.id_carrera = pc.id_carrera
       WHERE p.id_practica = $1;
     `;
 

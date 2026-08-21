@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
 import { DetalleEvaluacionEntity } from '../domain/detalle-evaluacion.entity';
 import { ItemRubricaEntity } from '../domain/item-rubrica.entity';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class EvaluacionCalculoService {
@@ -14,6 +15,7 @@ export class EvaluacionCalculoService {
     private readonly detalleRepository: Repository<DetalleEvaluacionEntity>,
     @InjectRepository(ItemRubricaEntity)
     private readonly itemRubricaRepository: Repository<ItemRubricaEntity>,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   async calcularPromedioPorPractica(idPractica: number): Promise<number> {
@@ -35,6 +37,8 @@ export class EvaluacionCalculoService {
   async calcularEvaluacionEmpresarial(idEvaluacion: number) {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: idEvaluacion } });
     if (!evaluacion) return null;
+
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
 
     let items = [];
     if (evaluacion.id_rubrica) {
@@ -62,18 +66,18 @@ export class EvaluacionCalculoService {
       ? Number((desempenoDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0) / desempenoDetalles.length).toFixed(2))
       : 0;
 
-    const notaParcialDefensa = defensaDetalles.length > 0
-      ? Number((defensaDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0) / defensaDetalles.length).toFixed(2))
-      : 0;
+    const notaParcialDefensa = defensaDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0);
+
+    const notaPonderadaDesempeno = Number((promedioDesempeno * 7 / 10).toFixed(2));
 
     const notaFinalDefensa = Number((notaParcialDefensa / 2).toFixed(2));
     const notaPonderadaDefensa = Number((notaFinalDefensa * 3 / 10).toFixed(2));
-    const notaFinalEmpresa = Number((promedioDesempeno + notaPonderadaDefensa).toFixed(2));
+    const notaFinalEmpresa = Number((notaPonderadaDesempeno + notaPonderadaDefensa).toFixed(2));
 
     const saved = await this.evaluacionRepository.save({
       ...evaluacion,
       promedio_desempeno: promedioDesempeno,
-      nota_ponderada_desempeno: promedioDesempeno,
+      nota_ponderada_desempeno: notaPonderadaDesempeno,
       nota_parcial_defensa: notaParcialDefensa,
       nota_final_defensa: notaFinalDefensa,
       nota_ponderada_defensa: notaPonderadaDefensa,
@@ -84,6 +88,7 @@ export class EvaluacionCalculoService {
     return {
       evaluacion: saved,
       promedioDesempeno,
+      notaPonderadaDesempeno,
       notaParcialDefensa,
       notaFinalDefensa,
       notaPonderadaDefensa,
@@ -94,6 +99,8 @@ export class EvaluacionCalculoService {
   async calcularEvaluacionInstituto(idEvaluacion: number) {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: idEvaluacion } });
     if (!evaluacion) return null;
+
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
 
     let items = [];
     if (evaluacion.id_rubrica) {
@@ -117,9 +124,7 @@ export class EvaluacionCalculoService {
       return item && proyectoItems.find(pi => pi.id_item === item.id_item);
     });
 
-    const notaParcialDefensa = defensaDetalles.length > 0
-      ? Number((defensaDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0) / defensaDetalles.length).toFixed(2))
-      : 0;
+    const notaParcialDefensa = defensaDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0);
 
     const notaFinalDefensa = Number((notaParcialDefensa / 2).toFixed(2));
     const notaPonderadaDefensa = Number((notaFinalDefensa * 3 / 10).toFixed(2));

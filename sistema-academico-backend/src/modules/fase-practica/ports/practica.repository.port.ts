@@ -24,6 +24,7 @@ export const PRACTICA_REPOSITORY = 'PracticaRepository';
 
 export interface IPracticaRepository {
   createPractica(dto: CreatePracticaDto): Promise<PracticaEntity>;
+  findAllPracticasConContexto(skip?: number, take?: number, where?: any): Promise<PracticaEntity[]>;
   findAllPracticas(skip?: number, take?: number): Promise<PracticaEntity[]>;
   findPracticaById(id: number): Promise<PracticaEntity | null>;
   updatePractica(id: number, dto: UpdatePracticaDto): Promise<PracticaEntity>;

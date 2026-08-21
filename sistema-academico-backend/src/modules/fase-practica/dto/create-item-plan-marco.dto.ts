@@ -8,9 +8,10 @@ export class CreateItemPlanMarcoDto {
   @IsString()
   resultado_aprendizaje: string;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
-  nivel_logro_esperado: number;
+  nivel_logro_esperado?: number;
 
   @IsOptional()
   @IsString()

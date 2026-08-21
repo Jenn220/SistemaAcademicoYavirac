@@ -8,29 +8,33 @@
 
 }
 
-.student-table{
+.declaracion{
 
-    width:100%;
+    font-size:13px;
 
-    border-collapse:collapse;
+    line-height:1.9;
+
+    text-align:justify;
 
     margin-bottom:25px;
 
 }
 
-.student-table td{
+.valor{
 
-    padding:4px 6px;
+    display:inline-block;
 
-    font-size:13px;
+    min-width:60px;
 
-    vertical-align:top;
+    padding:0 2px;
+
+    border-bottom:1px solid #000;
+
+    text-align:center;
 
 }
 
-.label{
-
-    white-space:nowrap;
+.valor-fuerte{
 
     font-weight:bold;
 

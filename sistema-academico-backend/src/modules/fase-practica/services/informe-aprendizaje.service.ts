@@ -4,15 +4,18 @@ import { INFORME_APRENDIZAJE_REPOSITORY, IInformeAprendizajeRepository } from '.
 import { CreateInformeAprendizajeDto } from '../dto/create-informe-aprendizaje.dto';
 import { UpdateInformeAprendizajeDto } from '../dto/update-informe-aprendizaje.dto';
 import { InformeAprendizajeEntity } from '../domain/informe-aprendizaje.entity';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class InformeAprendizajeService {
   constructor(
     @Inject(INFORME_APRENDIZAJE_REPOSITORY)
     private readonly informeAprendizajeRepository: IInformeAprendizajeRepository,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   async create(dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
     return this.informeAprendizajeRepository.create(dto);
   }
 
@@ -27,12 +30,14 @@ export class InformeAprendizajeService {
   }
 
   async update(id: number, dto: UpdateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
-    await this.findById(id);
+    const informe = await this.findById(id);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
     return this.informeAprendizajeRepository.update(id, dto);
   }
 
   async remove(id: number): Promise<void> {
-    await this.findById(id);
+    const informe = await this.findById(id);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
     return this.informeAprendizajeRepository.remove(id);
   }
 }

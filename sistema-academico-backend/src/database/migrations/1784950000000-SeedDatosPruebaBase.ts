@@ -100,15 +100,30 @@ export class SeedDatosPruebaBase1784950000000 implements MigrationInterface {
             ON CONFLICT (id_practica) DO UPDATE SET estado = 'EN_CURSO', id_empresa = 2, id_tutor_empresarial = 1, id_docente = 1;
         `);
 
-        // 17. Usuarios de prueba
+        // 17. Usuarios de prueba (vinculados a entidades de dominio)
         await queryRunner.query(`
-            INSERT INTO usuario (correo, password_hash, estado) VALUES ('ana@empresaxyz.com', '$2a$10$W0vSCybH1fbDYR53Gaq0WOXn1blBip5jifLB3RlNdy9QdWD4Oy/M.', 'ACTIVO') ON CONFLICT (correo) DO NOTHING;
+            INSERT INTO usuario (correo, password_hash, estado, id_estudiante)
+            SELECT 'estudiante@yavirac.edu.ec', '$2a$10$W0vSCybH1fbDYR53Gaq0WOXn1blBip5jifLB3RlNdy9QdWD4Oy/M.', 'ACTIVO', e.id_estudiante
+            FROM estudiante e
+            WHERE e.cedula = '2250022114'
+            ON CONFLICT (correo) DO UPDATE SET id_estudiante = EXCLUDED.id_estudiante;
         `);
+
         await queryRunner.query(`
-            INSERT INTO usuario (correo, password_hash, estado) VALUES ('carlos@yavirac.edu.ec', '$2a$10$W0vSCybH1fbDYR53Gaq0WOXn1blBip5jifLB3RlNdy9QdWD4Oy/M.', 'ACTIVO') ON CONFLICT (correo) DO NOTHING;
+            INSERT INTO usuario (correo, password_hash, estado, id_docente)
+            SELECT 'carlos@yavirac.edu.ec', '$2a$10$W0vSCybH1fbDYR53Gaq0WOXn1blBip5jifLB3RlNdy9QdWD4Oy/M.', 'ACTIVO', d.id_docente
+            FROM docente d
+            WHERE d.cedula = '1803980844'
+            ON CONFLICT (correo) DO UPDATE SET id_docente = EXCLUDED.id_docente;
         `);
+
         await queryRunner.query(`
-            INSERT INTO usuario (correo, password_hash, estado) VALUES ('estudiante@yavirac.edu.ec', '$2a$10$W0vSCybH1fbDYR53Gaq0WOXn1blBip5jifLB3RlNdy9QdWD4Oy/M.', 'ACTIVO') ON CONFLICT (correo) DO NOTHING;
+            INSERT INTO usuario (correo, password_hash, estado, id_empresa)
+            SELECT 'ana@empresaxyz.com', '$2a$10$W0vSCybH1fbDYR53Gaq0WOXn1blBip5jifLB3RlNdy9QdWD4Oy/M.', 'ACTIVO', te.id_empresa
+            FROM tutor_empresarial te
+            JOIN empresa emp ON emp.id_empresa = te.id_empresa
+            WHERE te.correo = 'ana@empresaxyz.com' OR emp.ruc = '179001'
+            ON CONFLICT (correo) DO UPDATE SET id_empresa = EXCLUDED.id_empresa;
         `);
 
         // 18. Roles de usuario (mapeo explícito 1 a 1 -- NO cruzar todos contra todos)

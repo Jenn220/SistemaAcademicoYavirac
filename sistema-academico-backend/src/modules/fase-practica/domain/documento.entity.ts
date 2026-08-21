@@ -16,6 +16,27 @@ export class DocumentoEntity {
   @Column({ name: 'contenido', type: 'jsonb' })
   contenido!: Record<string, any>;
 
+  @Column({ name: 'id_practica', type: 'bigint', nullable: true })
+  id_practica?: number;
+
+  @Column({ name: 'id_estudiante', type: 'bigint', nullable: true })
+  id_estudiante?: number;
+
+  @Column({ name: 'id_usuario', type: 'bigint', nullable: true })
+  id_usuario?: number;
+
+  @Column({ name: 'estado', type: 'varchar', length: 50, default: 'borrador' })
+  estado!: string;
+
+  @Column({ name: 'version', type: 'int', default: 1 })
+  version!: number;
+
+  @Column({ name: 'comentarios', type: 'text', nullable: true })
+  comentarios?: string;
+
   @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at?: Date;
+
+  @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  updated_at?: Date;
 }

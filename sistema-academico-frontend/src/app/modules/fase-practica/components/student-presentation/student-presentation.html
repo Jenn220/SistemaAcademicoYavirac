@@ -1,111 +1,23 @@
 <div class="fecha">
 
     D.M. Quito,
-
     {{ carta().espacioFirma.fecha }}
 
 </div>
 
-<table class="student-table">
+<p class="declaracion">
 
-<tr>
+    Yo,
+    <span class="valor valor-fuerte">{{ carta().estudiante.nombre }}</span>
+    con C.C.
+    <span class="valor valor-fuerte">{{ carta().estudiante.cedula }}</span>
+    estudiante de
+    <span class="valor">{{ carta().estudiante.curso }}</span>
+    de la carrera
+    <span class="valor valor-fuerte">{{ carta().estudiante.carrera }}</span>
+    en modalidad dual,
+    DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC,
+    asignado/a a
+    <span class="valor valor-fuerte">{{ carta().empresaAsignada }}</span>
 
-<td class="label">
-
-Yo,
-
-</td>
-
-<td>
-
-<strong>
-
-{{ carta().estudiante.nombre }}
-
-</strong>
-
-</td>
-
-<td class="label">
-
-con C.C.
-
-</td>
-
-<td>
-
-<strong>
-
-{{ carta().estudiante.cedula }}
-
-</strong>
-
-</td>
-
-<td class="label">
-
-estudiante de
-
-</td>
-
-<td>
-
-{{ carta().estudiante.curso }}
-
-</td>
-
-</tr>
-
-<tr>
-
-<td>
-
-de la carrera
-
-</td>
-
-<td colspan="5">
-
-<strong>
-
-{{ carta().estudiante.carrera }}
-
-</strong>
-
-en modalidad dual,
-
-</td>
-
-</tr>
-
-<tr>
-
-<td colspan="4">
-
-DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC,
-
-</td>
-
-<td colspan="2">
-
-asignado/a a
-
-</td>
-
-</tr>
-
-<tr>
-
-<td colspan="6">
-
-<strong>
-
-{{ carta().empresaAsignada }}
-
-</strong>
-
-</td>
-
-</tr>
-
-</table>
+</p>

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { EMPRESA_REPOSITORY, IEmpresaRepository } from '../ports/empresa.repository.port';
 import { EmpresaEntity } from '../domain/empresa.entity';
@@ -13,7 +13,14 @@ export class EmpresaService {
   ) {}
 
   async createEmpresa(dto: CreateEmpresaDto): Promise<EmpresaEntity> {
-    return this.empresaRepository.createEmpresa(dto);
+    try {
+      return await this.empresaRepository.createEmpresa(dto);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        throw new ConflictException('El RUC ya está registrado');
+      }
+      throw error;
+    }
   }
 
   async findAllEmpresas(skip?: number, take?: number): Promise<EmpresaEntity[]> {

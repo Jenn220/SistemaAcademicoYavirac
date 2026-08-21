@@ -13,10 +13,10 @@ export class BitacoraSemanalEntity {
   @Column({ name: 'semana', type: 'int' })
   semana!: number;
 
-  @Column({ name: 'fecha_inicio_semana', type: 'date', nullable: true })
+  @Column({ name: 'fecha_inicio_semana', type: 'varchar', length: 20, nullable: true })
   fecha_inicio_semana?: string;
 
-  @Column({ name: 'fecha_fin_semana', type: 'date', nullable: true })
+  @Column({ name: 'fecha_fin_semana', type: 'varchar', length: 20, nullable: true })
   fecha_fin_semana?: string;
 
   @Column({ name: 'puesto_aprendizaje', type: 'varchar', length: 150, nullable: true })

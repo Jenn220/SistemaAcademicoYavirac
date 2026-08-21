@@ -1,5 +1,8 @@
 export interface DatosEstudiante {
+  idEstudiante: number | null;
   nombre: string;
+  nombres: string;
+  apellidos: string;
   cedula: string;
   carrera: string;
   curso: string;
@@ -11,6 +14,8 @@ export interface DatosEstudiante {
   domicilio: string;
   contactoEmergenciaNombre: string;
   contactoEmergenciaTelefono: string;
+  hornada: string;
+  paralelo: string;
 }
 
 export interface DatosCarrera {
@@ -27,6 +32,7 @@ export interface DatosProyectoEmpresarial {
   empresaAsignada: string;
   fechaInicio: string;
   fechaFin: string;
+  horasRequeridas: number;
 }
 
 export interface DatosEmpresaBeneficiaria {
@@ -56,6 +62,8 @@ export interface DatosMaestra {
   empresaBeneficiaria: DatosEmpresaBeneficiaria;
   periodoAcademico: PeriodoAcademico;
   cronograma: CronogramaFecha[];
+  /** Práctica resuelta por obtenerIdPractica — para que el front pueda usar el sistema real (informe/bitácoras, evaluaciones, CV) sin volver a resolverla. */
+  idPractica?: number;
 }
 
 export interface CartaCompromiso {
@@ -187,6 +195,7 @@ export interface CriterioEmpresarial {
 }
 
 export interface DefensaProyectoItem {
+  id?: number;
   criterio: string;
   puntaje: number;
   maximo: number;
@@ -211,6 +220,10 @@ export interface EvaluacionEmpresarial {
   notaPonderadaDefensa: number;
   notaFinalEmpresa: number;
   observaciones: string;
+  /** Datos para que el front pueda leer/escribir contra el sistema real de evaluaciones. */
+  idPractica?: number;
+  idEvaluacion: number | null;
+  idRubrica: number | null;
 }
 
 export interface CriterioInstituto {
@@ -242,6 +255,10 @@ export interface EvaluacionInstituto {
   notaFinalInstituto: number;
   notaFinalConsolidada: number;
   observaciones: string;
+  /** Datos para que el front pueda leer/escribir contra el sistema real de evaluaciones. */
+  idPractica?: number;
+  idEvaluacion: number | null;
+  idRubrica: number | null;
 }
 
 export interface ActaInduccionSeguridad {

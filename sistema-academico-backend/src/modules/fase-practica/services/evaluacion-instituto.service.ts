@@ -1,19 +1,41 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
 import { CreateEvaluacionInstitutoDto } from '../dto/create-evaluacion-instituto.dto';
 import { UpdateEvaluacionInstitutoDto } from '../dto/update-evaluacion-instituto.dto';
 import { EvaluacionInstitutoResponseDto } from '../dto/evaluacion-instituto-response.dto';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class EvaluacionInstitutoService {
   constructor(
     @InjectRepository(EvaluacionPracticaEntity)
     private readonly evaluacionRepository: Repository<EvaluacionPracticaEntity>,
+    private readonly dataSource: DataSource,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
-  async create(dto: CreateEvaluacionInstitutoDto): Promise<EvaluacionInstitutoResponseDto> {
+  private async esDuenoDePractica(usuario: any, idPractica: number): Promise<void> {
+    if (!Array.isArray(usuario?.roles) || !usuario.roles.includes('ESTUDIANTE')) {
+      return;
+    }
+    const esDueno = await this.dataSource.query(
+      `SELECT 1 FROM matricula_detalle md
+       JOIN matricula m ON m.id_matricula = md.id_matricula
+       JOIN practica_estudiante pe ON pe.id_matricula_detalle = md.id_matricula_detalle
+       WHERE pe.id_practica = $1 AND m.id_estudiante = $2`,
+      [idPractica, usuario.idEstudiante],
+    );
+    if (!esDueno || esDueno.length === 0) {
+      throw new NotFoundException('No tienes permiso para acceder a esta evaluación');
+    }
+  }
+
+  async create(usuario: any, dto: CreateEvaluacionInstitutoDto): Promise<EvaluacionInstitutoResponseDto> {
+    await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.periodoContextService.validarPeriodoActivo(dto.id_practica);
     const evaluacion = this.evaluacionRepository.create({
       id_practica: dto.id_practica,
       id_rubrica: dto.id_evaluacion_plan_marco,
@@ -55,13 +77,15 @@ export class EvaluacionInstitutoService {
     } as EvaluacionInstitutoResponseDto;
   }
 
-  async update(id: number, dto: UpdateEvaluacionInstitutoDto): Promise<EvaluacionInstitutoResponseDto> {
+  async update(usuario: any, id: number, dto: UpdateEvaluacionInstitutoDto): Promise<EvaluacionInstitutoResponseDto> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
 
-    Object.assign(evaluacion, {
-      nota_final_calculada: dto.calificacion,
-    });
+    await this.esDuenoDePractica(usuario, evaluacion.id_practica);
+    await this.periodoContextService.validarPeriodoActivo(evaluacion.id_practica);
+
+    if (dto.calificacion !== undefined) evaluacion.nota_final_calculada = dto.calificacion;
+    if (dto.observaciones !== undefined) evaluacion.observaciones = dto.observaciones;
 
     const saved = await this.evaluacionRepository.save(evaluacion);
 
@@ -70,12 +94,15 @@ export class EvaluacionInstitutoService {
       id_practica: saved.id_practica,
       id_evaluacion_plan_marco: saved.id_rubrica,
       calificacion: saved.nota_final_calculada,
+      observaciones: saved.observaciones,
     } as EvaluacionInstitutoResponseDto;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(usuario: any, id: number): Promise<void> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
+    await this.esDuenoDePractica(usuario, evaluacion.id_practica);
+    await this.periodoContextService.validarPeriodoActivo(evaluacion.id_practica);
     await this.evaluacionRepository.remove(evaluacion);
   }
 }

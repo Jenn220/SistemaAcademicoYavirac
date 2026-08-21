@@ -22,162 +22,222 @@
 
     </button>
 
+    @if (esEstudiante) {
+    <button
+        class="btn btn-success"
+        *ngIf="!editando"
+        (click)="agregarRegistro()">
+
+        <i class="bi bi-plus-circle"></i>
+
+        Nuevo
+
+    </button>
+
+    <button
+        class="btn btn-primary"
+        *ngIf="editando"
+        (click)="guardarRegistro()">
+
+        <i class="bi bi-check-circle"></i>
+
+        Guardar
+
+    </button>
+
+    <button
+        class="btn btn-danger"
+        *ngIf="editando"
+        (click)="cancelarEdicion()">
+
+        <i class="bi bi-x-circle"></i>
+
+        Cancelar
+
+    </button>
+    }
+
+    @if(puedeEnviarRevision){
+    <button
+        class="btn btn-success"
+        (click)="enviarARevision()">
+
+        <i class="bi bi-send"></i>
+
+        Enviar a revisión
+
+    </button>
+    }
+
+    @if(puedeAprobar){
+    <button
+        class="btn btn-success"
+        (click)="aprobar()">
+
+        <i class="bi bi-check-circle"></i>
+
+        Aprobar
+
+    </button>
+    }
+
+    @if(puedeSolicitarCorrecciones){
+    <button
+        class="btn btn-danger"
+        (click)="solicitarCorrecciones()">
+
+        <i class="bi bi-exclamation-circle"></i>
+
+        Solicitar correcciones
+
+    </button>
+    }
+
+    <span class="badge-estado" [class.borrador]="estadoDocumento === 'borrador'" [class.pendiente]="estadoDocumento === 'pendiente_revision'" [class.aprobado]="estadoDocumento === 'aprobado'" [class.rechazado]="estadoDocumento === 'rechazado'">
+        {{ estadoDocumento === 'borrador' ? 'Borrador' : estadoDocumento === 'pendiente_revision' ? 'Pendiente de revisión' : estadoDocumento === 'aprobado' ? 'Aprobado' : 'Rechazado' }}
+    </span>
+
 </div>
 
-<div
-    id="documento-f05"
-    class="documento">
+@if(mostrarComentarios){
+<div class="comentarios-correccion">
+    <strong>Comentarios de corrección:</strong>
+    <p>{{ comentariosDocumento }}</p>
+</div>
+}
 
-    <app-document-header
-        [titulo]="'FORMATO 05 ACTA DE ASISTENCIA'"
-        [codigo]="'010205'">
-    </app-document-header>
+<div id="documento-f05" class="documento">
+
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                010205
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 05 ACTA DE ASISTENCIA</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>EMPRESA FORMADORA:</strong></td>
+            <td>{{ registro.empresa }}</td>
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ registro.carrera }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) ACADÉMICO:</strong></td>
+            <td>{{ registro.tutorAcademico }}</td>
+            <td><strong>PERÍODO ACADÉMICO:</strong></td>
+            <td>{{ registro.periodoAcademico }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) EMPRESARIAL:</strong></td>
+            <td>{{ registro.tutorEmpresarial }}</td>
+            <td><strong>NIVEL:</strong></td>
+            <td>{{ registro.curso }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>NOMBRE DEL ESTUDIANTE:</strong></td>
+            <td>{{ registro.estudiante.nombre }}</td>
+            <td><strong>NÚCLEO ESTRUCTURANTE:</strong></td>
+            <td>{{ registro.nucleoEstructurante }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>E-MAIL INSTITUCIONAL:</strong></td>
+            <td>{{ registro.estudiante.email }}</td>
+            <td><strong>TELÉFONO DE EMERGENCIA:</strong></td>
+            <td>{{ registro.contactoEmergenciaTelefono }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TELÉFONO / MÓVIL:</strong></td>
+            <td>{{ registro.estudiante.telefono }}</td>
+            <td><strong>CONTACTO DE EMERGENCIA:</strong></td>
+            <td>{{ registro.contactoEmergenciaNombre }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>CÉDULA:</strong></td>
+            <td>{{ registro.estudiante.cedula }}</td>
+            <td><strong>TIPO DE SANGRE:</strong></td>
+            <td>{{ registro.estudiante.tipoSangre }}</td>
+
+        </tr>
+
+    </table>
 
     <div class="contenido">
-
-        <table class="datos-estudiante">
-
-            <tr>
-
-                <td>
-
-                    <strong>Empresa Formadora:</strong>
-
-                    {{ registro.empresa }}
-
-                </td>
-
-                <td>
-
-                    <strong>Carrera:</strong>
-
-                    {{ registro.carrera }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Tutor(a) Académico:</strong>
-
-                    {{ registro.tutorAcademico }}
-
-                </td>
-
-                <td>
-
-                    <strong>Período Académico:</strong>
-
-                    {{ registro.periodoAcademico }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Tutor(a) Empresarial:</strong>
-
-                    {{ registro.tutorEmpresarial }}
-
-                </td>
-
-                <td>
-
-                    <strong>Nivel:</strong>
-
-                    {{ registro.curso }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Nombre del Estudiante:</strong>
-
-                    {{ registro.estudiante.nombre }}
-
-                </td>
-
-                <td>
-
-                    <strong>Núcleo Estructurante:</strong>
-
-                    {{ registro.nucleoEstructurante }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>E-mail Institucional:</strong>
-
-                    {{ registro.estudiante.email }}
-
-                </td>
-
-                <td>
-
-                    <strong>Teléfono de Emergencia:</strong>
-
-                    {{ registro.contactoEmergenciaTelefono }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Teléfono / Móvil:</strong>
-
-                    {{ registro.estudiante.telefono }}
-
-                </td>
-
-                <td>
-
-                    <strong>Contacto de Emergencia:</strong>
-
-                    {{ registro.contactoEmergenciaNombre }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td>
-
-                    <strong>Cédula:</strong>
-
-                    {{ registro.estudiante.cedula }}
-
-                </td>
-
-                <td>
-
-                    <strong>Tipo de Sangre:</strong>
-
-                    {{ registro.estudiante.tipoSangre }}
-
-                </td>
-
-            </tr>
-
-        </table>
 
         <table class="tabla-asistencia">
 
@@ -205,13 +265,56 @@
                 <tr>
 
                     <td>{{ i + 1 }}</td>
-                    <td>{{item.fecha}}</td>
-                    <td>{{item.horaIngreso}}</td>
-                    <td>{{item.almuerzo}}</td>
-                    <td>{{item.horaSalida}}</td>
-                    <td>{{item.horasDia}}</td>
-                    <td>{{item.firma}}</td>
-                    <td>{{item.observaciones}}</td>
+                    <td>
+                      @if(esEstudiante && editando){
+                        <input type="date" class="form-control form-control-sm" [(ngModel)]="item.fecha" />
+                      } @else {
+                        {{item.fecha}}
+                      }
+                    </td>
+                    <td>
+                      @if(esEstudiante && editando){
+                        <input type="time" class="form-control form-control-sm" [(ngModel)]="item.horaIngreso" />
+                      } @else {
+                        {{item.horaIngreso}}
+                      }
+                    </td>
+                    <td>
+                      @if(esEstudiante && editando){
+                        <input type="time" class="form-control form-control-sm" [(ngModel)]="item.almuerzo" />
+                      } @else {
+                        {{item.almuerzo}}
+                      }
+                    </td>
+                    <td>
+                      @if(esEstudiante && editando){
+                        <input type="time" class="form-control form-control-sm" [(ngModel)]="item.horaSalida" />
+                      } @else {
+                        {{item.horaSalida}}
+                      }
+                    </td>
+                    <td>
+                      @if(esEstudiante && editando){
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="item.horasDia" min="0" max="10" />
+                      } @else {
+                        {{item.horasDia}}
+                      }
+                    </td>
+                    <td>
+                      &nbsp;
+                    </td>
+                    <td>
+                      @if(esEstudiante && editando){
+                        <input type="text" class="form-control form-control-sm" [(ngModel)]="item.observaciones" />
+                      } @else {
+                        {{item.observaciones}}
+                      }
+                    </td>
+                    <td *ngIf="esEstudiante && editando">
+                      <button class="btn btn-sm btn-danger" (click)="eliminarRegistro(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
 
                 </tr>
 
@@ -224,13 +327,27 @@
                     <td>-</td>
                     <td>-</td>
                     <td>-</td>
-                    <td>{{ registro.horasAutonomas }}</td>
+                    <td>{{ horasAutonomasCalculado }}</td>
                     <td></td>
                     <td>HORAS AUTÓNOMAS</td>
 
                 </tr>
 
             </tbody>
+
+            <tfoot>
+
+                <tr>
+
+                    <td colspan="5"></td>
+
+                    <td><strong>{{ subtotalHorasPracticaCalculado }}</strong></td>
+
+                    <td colspan="2"></td>
+
+                </tr>
+
+            </tfoot>
 
         </table>
 
@@ -242,7 +359,19 @@
 
             </strong>
 
-            {{ registro.subtotalHorasPractica }}
+            {{ subtotalHorasPracticaCalculado }}
+
+        </div>
+
+        <div class="totales">
+
+            <strong>
+
+                HORAS REQUERIDAS:
+
+            </strong>
+
+            {{ registro.horasRequeridas }}
 
         </div>
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { CvService } from '../services/cv.service';
 import { JwtGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -11,68 +11,107 @@ import { CreateCvPracticaDualDto } from '../dto/create-cv-practica-dual.dto';
 import { UpdateCvPracticaDualDto } from '../dto/update-cv-practica-dual.dto';
 
 @UseGuards(JwtGuard, RolesGuard)
-@Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
 @Controller('fase-practica')
 export class CvController {
   constructor(private readonly cvService: CvService) {}
 
+  /**
+   * ESTUDIANTE solo puede ver/editar su propio CV: ignora el :idEstudiante de la
+   * URL y siempre resuelve contra el JWT. DOCENTE/COORDINADOR sí pueden consultar
+   * el CV de cualquier estudiante (para revisión), por eso conservan el param.
+   */
+  private resolverIdEstudianteLectura(req: any, idEstudianteUrl: string): number {
+    if (req.user.roles?.includes('ESTUDIANTE')) {
+      if (!req.user.idEstudiante) {
+        throw new ForbiddenException('El usuario no tiene un estudiante asociado.');
+      }
+      return req.user.idEstudiante;
+    }
+    return Number(idEstudianteUrl);
+  }
+
+  private resolverIdEstudiantePropio(req: any): number {
+    if (!req.user.idEstudiante) {
+      throw new ForbiddenException('El usuario no tiene un estudiante asociado.');
+    }
+    return req.user.idEstudiante;
+  }
+
   @Get('estudiantes/:idEstudiante/cv/datos-academicos')
-  findDatosAcademicos(@Param('idEstudiante') idEstudiante: string) {
-    return this.cvService.findDatosAcademicos(Number(idEstudiante));
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
+  findDatosAcademicos(@Param('idEstudiante') idEstudiante: string, @Req() req: any) {
+    return this.cvService.findDatosAcademicos(this.resolverIdEstudianteLectura(req, idEstudiante));
   }
 
   @Post('estudiantes/:idEstudiante/cv/datos-academicos')
-  createDatoAcademico(@Param('idEstudiante') idEstudiante: string, @Body() dto: CreateCvDatoAcademicoDto) {
-    return this.cvService.createDatoAcademico(Number(idEstudiante), dto);
+  @Roles('ESTUDIANTE')
+  createDatoAcademico(@Body() dto: CreateCvDatoAcademicoDto, @Req() req: any) {
+    return this.cvService.createDatoAcademico(this.resolverIdEstudiantePropio(req), dto);
   }
 
   @Patch('cv/datos-academicos/:id')
-  updateDatoAcademico(@Param('id') id: string, @Body() dto: UpdateCvDatoAcademicoDto) {
-    return this.cvService.updateDatoAcademico(Number(id), dto);
+  @Roles('ESTUDIANTE')
+  updateDatoAcademico(@Param('id') id: string, @Body() dto: UpdateCvDatoAcademicoDto, @Req() req: any) {
+    return this.cvService.updateDatoAcademico(Number(id), dto, this.resolverIdEstudiantePropio(req));
   }
 
   @Delete('cv/datos-academicos/:id')
-  removeDatoAcademico(@Param('id') id: string) {
-    return this.cvService.removeDatoAcademico(Number(id)).then(() => ({ deleted: true, id: Number(id) }));
+  @Roles('ESTUDIANTE')
+  removeDatoAcademico(@Param('id') id: string, @Req() req: any) {
+    return this.cvService
+      .removeDatoAcademico(Number(id), this.resolverIdEstudiantePropio(req))
+      .then(() => ({ deleted: true, id: Number(id) }));
   }
 
   @Get('estudiantes/:idEstudiante/cv/experiencia-laboral')
-  findExperienciasLaborales(@Param('idEstudiante') idEstudiante: string) {
-    return this.cvService.findExperienciasLaborales(Number(idEstudiante));
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
+  findExperienciasLaborales(@Param('idEstudiante') idEstudiante: string, @Req() req: any) {
+    return this.cvService.findExperienciasLaborales(this.resolverIdEstudianteLectura(req, idEstudiante));
   }
 
   @Post('estudiantes/:idEstudiante/cv/experiencia-laboral')
-  createExperienciaLaboral(@Param('idEstudiante') idEstudiante: string, @Body() dto: CreateCvExperienciaLaboralDto) {
-    return this.cvService.createExperienciaLaboral(Number(idEstudiante), dto);
+  @Roles('ESTUDIANTE')
+  createExperienciaLaboral(@Body() dto: CreateCvExperienciaLaboralDto, @Req() req: any) {
+    return this.cvService.createExperienciaLaboral(this.resolverIdEstudiantePropio(req), dto);
   }
 
   @Patch('cv/experiencia-laboral/:id')
-  updateExperienciaLaboral(@Param('id') id: string, @Body() dto: UpdateCvExperienciaLaboralDto) {
-    return this.cvService.updateExperienciaLaboral(Number(id), dto);
+  @Roles('ESTUDIANTE')
+  updateExperienciaLaboral(@Param('id') id: string, @Body() dto: UpdateCvExperienciaLaboralDto, @Req() req: any) {
+    return this.cvService.updateExperienciaLaboral(Number(id), dto, this.resolverIdEstudiantePropio(req));
   }
 
   @Delete('cv/experiencia-laboral/:id')
-  removeExperienciaLaboral(@Param('id') id: string) {
-    return this.cvService.removeExperienciaLaboral(Number(id)).then(() => ({ deleted: true, id: Number(id) }));
+  @Roles('ESTUDIANTE')
+  removeExperienciaLaboral(@Param('id') id: string, @Req() req: any) {
+    return this.cvService
+      .removeExperienciaLaboral(Number(id), this.resolverIdEstudiantePropio(req))
+      .then(() => ({ deleted: true, id: Number(id) }));
   }
 
   @Get('estudiantes/:idEstudiante/cv/practicas-duales')
-  findPracticasDuales(@Param('idEstudiante') idEstudiante: string) {
-    return this.cvService.findPracticasDuales(Number(idEstudiante));
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
+  findPracticasDuales(@Param('idEstudiante') idEstudiante: string, @Req() req: any) {
+    return this.cvService.findPracticasDuales(this.resolverIdEstudianteLectura(req, idEstudiante));
   }
 
   @Post('estudiantes/:idEstudiante/cv/practicas-duales')
-  createPracticaDual(@Param('idEstudiante') idEstudiante: string, @Body() dto: CreateCvPracticaDualDto) {
-    return this.cvService.createPracticaDual(Number(idEstudiante), dto);
+  @Roles('ESTUDIANTE')
+  createPracticaDual(@Body() dto: CreateCvPracticaDualDto, @Req() req: any) {
+    return this.cvService.createPracticaDual(this.resolverIdEstudiantePropio(req), dto);
   }
 
   @Patch('cv/practicas-duales/:id')
-  updatePracticaDual(@Param('id') id: string, @Body() dto: UpdateCvPracticaDualDto) {
-    return this.cvService.updatePracticaDual(Number(id), dto);
+  @Roles('ESTUDIANTE')
+  updatePracticaDual(@Param('id') id: string, @Body() dto: UpdateCvPracticaDualDto, @Req() req: any) {
+    return this.cvService.updatePracticaDual(Number(id), dto, this.resolverIdEstudiantePropio(req));
   }
 
   @Delete('cv/practicas-duales/:id')
-  removePracticaDual(@Param('id') id: string) {
-    return this.cvService.removePracticaDual(Number(id)).then(() => ({ deleted: true, id: Number(id) }));
+  @Roles('ESTUDIANTE')
+  removePracticaDual(@Param('id') id: string, @Req() req: any) {
+    return this.cvService
+      .removePracticaDual(Number(id), this.resolverIdEstudiantePropio(req))
+      .then(() => ({ deleted: true, id: Number(id) }));
   }
 }
