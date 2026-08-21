@@ -21,6 +21,11 @@ export class UpdateAsistenciaTutorDto {
   @IsNumber()
   horas_total?: number;
 
+  // 🔴 AGREGAR ESTE CAMPO FALTANTE
+  @IsOptional()
+  @IsString()
+  actividad_realizada?: string;
+
   @IsOptional()
   @IsString()
   observaciones?: string;

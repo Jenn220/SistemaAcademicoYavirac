@@ -1,0 +1,119 @@
+<div class="container" *ngIf="!loading && !error && data">
+  
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
+  <div class="cabecera">
+    <h2>PLAN DE APRENDIZAJE Y SEGUIMIENTO</h2>
+    <div class="datos">
+      <p><strong>Fundación:</strong> {{ data.cabecera.fundacion }}</p>
+      <p><strong>Estudiante:</strong> {{ data.cabecera.estudiante }}</p>
+      <p><strong>Cédula:</strong> {{ data.cabecera.cedula }}</p>
+      <p><strong>Nivel:</strong> {{ data.cabecera.nivel }}</p>
+      <p><strong>Asignatura 1:</strong> {{ data.cabecera.asignatura_1 }}</p>
+      <p><strong>Asignatura 2:</strong> {{ data.cabecera.asignatura_2 }}</p>
+      <p><strong>Ciclo:</strong> {{ data.cabecera.ciclo_academico }}</p>
+      <p><strong>Inicia:</strong> {{ data.cabecera.inicia }}</p>
+      <p><strong>Finaliza:</strong> {{ data.cabecera.finaliza }}</p>
+      <p><strong>Docente Tutor:</strong> {{ data.cabecera.docente_tutor }}</p>
+      <p><strong>Proyecto:</strong> {{ data.cabecera.titulo_proyecto }}</p>
+    </div>
+  </div>
+
+  <!-- TABLA DE ACTIVIDADES -->
+<!-- TABLA DE ACTIVIDADES -->
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>SEMANA</th>
+        <th>FECHA</th>
+        <th>ACTIVIDADES</th>
+        <th>RESULTADOS DEL APRENDIZAJE</th>
+        <th>ACCIÓN</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Iteramos sobre los bloques de semanas agrupados -->
+      <tr *ngFor="let sem of semanasAgrupadas; let i = index">
+        <td class="text-center"><strong>{{ sem.semana }}</strong></td>
+        <td>{{ sem.fecha }}</td>
+        <td>{{ sem.actividad }}</td>
+        
+        <!-- RESULTADOS DEL APRENDIZAJE -->
+        <td>
+          <span *ngIf="editandoIndice !== i">{{ sem.resultado_aprendizaje || 'Sin resultado de aprendizaje especificado' }}</span>
+          <textarea *ngIf="editandoIndice === i" [(ngModel)]="resultadoEdit" rows="2" class="textarea-edit"></textarea>
+        </td>
+
+        <!-- ACCIÓN -->
+        <td>
+          <ng-container *ngIf="editandoIndice !== i">
+            <button (click)="editarResultado(i)" class="btn-edit" title="Editar">✏️</button>
+          </ng-container>
+          <ng-container *ngIf="editandoIndice === i">
+            <button (click)="guardarResultado(i)" class="btn-save" title="Guardar">💾</button>
+            <button (click)="cancelarEdicionResultado()" class="btn-cancel" title="Cancelar">❌</button>
+          </ng-container>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!-- REFLEXIÓN DEL ESTUDIANTE -->
+  <div class="reflexion">
+    <div class="reflexion-header">
+      <p><strong>Reflexión sobre el aprendizaje alcanzado:</strong></p>
+      <div class="estado-guardado" *ngIf="!editandoReflexion">
+        <span *ngIf="guardandoReflexion" class="estado guardando">⏳ Guardando...</span>
+        <span *ngIf="reflexionGuardada && !guardandoReflexion" class="estado guardado">✅ Guardado</span>
+        <span *ngIf="!reflexionGuardada && !guardandoReflexion" class="estado sin-guardar">⚠️ Sin guardar</span>
+      </div>
+    </div>
+
+    <!-- Modo visualización -->
+    <div *ngIf="!editandoReflexion">
+      <p class="texto-reflexion">{{ reflexionEdit || 'Sin reflexión registrada.' }}</p>
+      <button (click)="toggleEditReflexion()" class="btn-edit-obs">✏️ Editar reflexión</button>
+    </div>
+
+    <!-- Modo edición -->
+    <div *ngIf="editandoReflexion">
+      <div class="reflexion-input-wrapper">
+        <textarea 
+          [(ngModel)]="reflexionEdit" 
+          (ngModelChange)="onReflexionChange()"
+          rows="4" 
+          class="textarea-edit"
+          placeholder="Escriba su reflexión... (se guarda automáticamente)"
+        ></textarea>
+        <button 
+          (click)="guardarReflexion()" 
+          class="btn-guardar-obs"
+          [disabled]="guardandoReflexion || reflexionEdit === reflexionOriginal"
+          title="Guardar reflexión manualmente">
+          💾
+        </button>
+      </div>
+      <div *ngIf="mensajeFeedback" class="feedback">{{ mensajeFeedback }}</div>
+      <div class="form-actions">
+        <button (click)="toggleEditReflexion()" class="btn-cancel">❌ Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
+
+<!-- ERROR -->
+<div class="error" *ngIf="error">
+  <span class="error-icon">⚠️</span>
+  {{ error }}
+</div>

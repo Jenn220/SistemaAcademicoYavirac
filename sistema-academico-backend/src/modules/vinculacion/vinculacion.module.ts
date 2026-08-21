@@ -1,12 +1,17 @@
+// vinculacion.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // Controladores
-
-import { VinculacionEstudianteController } from './controllers/vinculacion-estudiante.controller';
-import { VinculacionReportesController } from './controllers/vinculacion-reportes.controller';
-import { VinculacionEvaluacionController } from './controllers/vinculacion-evaluacion.controller';
-import { VinculacionActividadesController } from './controllers/vinculacion-actividades.controller';
+import { EntidadReceptoraController } from './controllers/entidad-receptora.controller';
+import { InicioActividadesTutorController } from './controllers/Inicio-Actividades-Tutor.controller';
+import { ActaCompromisoController } from './controllers/Acta-Compromiso.Controller';
+import { AsistenciaEstudianteController } from './controllers/Asistencia-Estudiante.Controller';
+import { AsistenciaTutorController } from './controllers/Asistencia-Tutor.Controller';
+import { InformeActividadesController } from './controllers/Informe-Actividades.Controller';
+import { CertificadoVinculacionController } from './controllers/Certificado-Vinculacion.Controller';
+import { InformeFinalController } from './controllers/Informe-Final.Controller';
+import { VinculacionController } from './controllers/vinculacion.controller';
 
 // Entidades
 import { VinculacionActividadEstudiante } from './domain/vinculacion_actividad_estudiante.entity';
@@ -16,40 +21,42 @@ import { VinculacionInforme } from './domain/vinculacion-informe.entity';
 import { VinculacionObjetivo } from './domain/vinculacion-objetivo.entity';
 import { EvaluacionVinculacion } from './domain/vinculacion-evaluacion';
 import { DetalleEvaluacionVinculacion } from './domain/detalle-evaluacion-vinculacion.entity';
-
-// Servicios de Aplicación
-import { VinculacionEstudianteService } from './services/vinculacion-estudiante.service';
-import { VinculacionObjetivosService } from './services/vinculacion-objetivos.service';
-import { VinculacionActividadesService } from './services/vinculacion-actividades.service';
-import { VinculacionAsistenciaService } from './services/vinculacion-asistencia.service';
-import { VinculacionInformeService } from './services/vinculacion-informe.service';
-import { VinculacionEvaluacionService } from './services/vinculacion-evaluacion.service';
-import { VinculacionReportesService } from './services/vinculacion-reportes.service';
-
-// Puertos (Tokens / Interfaces)
-import { VINCULACION_ESTUDIANTE_PORT } from './ports/vinculacion-estudiante.port';
-import { VINCULACION_OBJETIVOS_PORT } from './ports/vinculacion-objetivos.port';
-import { VINCULACION_ACTIVIDADES_PORT } from './ports/vinculacion-actividades.port';
-import { VINCULACION_ASISTENCIA_PORT } from './ports/vinculacion-asistencia.port';
-import { VINCULACION_INFORME_PORT } from './ports/vinculacion-informe.port';
-import { VINCULACION_EVALUACION_PORT } from './ports/vinculacion-evaluacion.port';
-import { VINCULACION_REPORTES_PORT } from './ports/vinculacion-reportes.port';
-
-// Adaptadores de Infraestructura (TypeORM)
-import { VinculacionEstudianteAdapter } from './adapters/vinculacion-estudiante.adapter';
-import { VinculacionActividadesAdapter } from './adapters/vinculacion-actividades.adapter';
-import { VinculacionAsistenciaAdapter } from './adapters/vinculacion-asistencia.adapter';
-import { VinculacionReportesAdapter } from './adapters/vinculacion-reportes.adapter';
-import { VinculacionObjetivosAdapter } from './adapters/vinculacion-objetivos.adapter';
-import { VinculacionInformeAdapter } from './adapters/vinculacion-informe.adapter';
-import { VinculacionEvaluacionAdapter } from './adapters/vinculacion-evaluacion.adapter';
 import { VinculacionReporteObservacionEntity } from './domain/vinculacion_reporte_observacion';
 import { EntidadReceptoraEntity } from './domain/entidad-receptora.entity';
-import { EntidadReceptoraService } from './services/entidad-receptora.service';
+import { EvaluacionParametrosTutorEntity } from './domain/evaluacion-parametros-tutor.entity';
 
-import { EntidadReceptoraAdapter } from './adapters/entidad-receptora.adapter';
+// Servicios
+import { EntidadReceptoraService } from './services/entidad-receptora.service';
+import { AuthVinculacionService } from './services/auth-vinculacion.service';
+import { ActaCompromisoService } from './services/acta-compromiso.service';
+import { InicioActividadesTutorService } from './services/inicio-actividades-tutor.service';
+import { AsistenciaEstudianteService } from './services/asistencia-estudiante.service';
+import { AsistenciaTutorService } from './services/asistencia-tutor.service';
+import { InformeActividadesService } from './services/informe-actividades.service';
+import { InformeFinalService } from './services/informe-final.service';
+import { CertificadoVinculacionService } from './services/certificado-vinculacion.service';
+import { VinculacionService } from './services/vinculacion.service';
+
+// Puertos
 import { ENTIDAD_RECEPTORA_PORT } from './ports/entidad-receptora.port';
-import { EntidadReceptoraController } from './controllers/entidad-receptora.controller';
+import { VINCULACION_ACTA_PORT } from './ports/acta-compromiso.port';
+import { VINCULACION_ASISTENCIA_ESTUDIANTE_PORT } from './ports/asistencia-estudiante.port';
+// ✅ IMPORTAR CORRECTAMENTE (usando la constante exportada)
+import { VINCULACION_INICIO_ACTIVIDADES_PORT } from './ports/inicio-actividades-tutor.port';
+import { VINCULACION_ASISTENCIA_TUTOR_PORT } from './ports/asistencia-tutor.port';
+import { INFORME_ACTIVIDADES_PORT } from './ports/informe-actividades.port';
+import { CERTIFICADO_VINCULACION_PORT } from './ports/certificado-vinculacion.port';
+import { INFORME_FINAL_PORT } from './ports/informe-final.port';
+
+// Adaptadores
+import { EntidadReceptoraAdapter } from './adapters/entidad-receptora.adapter';
+import { CartaCompromisoReportesAdapter } from './adapters/Acta-Compromiso.adapter';
+import { VinculacionAsistenciaEstudianteAdapter } from './adapters/Asistencia-Estudiante';
+import { InicioActividadesTutorAdapter } from './adapters/Inicio-Actividades-Tutor';
+import { AsistenciaTutorAdapter } from './adapters/Asistencia-Tutor';
+import { InformeActividadesAdapter } from './adapters/Informe-Actividades';
+import { CertificadoVinculacionAdapter } from './adapters/Certificado-Vinculacion';
+import { InformeFinalAdapter } from './adapters/Informe-Final';
 
 @Module({
   imports: [
@@ -62,72 +69,72 @@ import { EntidadReceptoraController } from './controllers/entidad-receptora.cont
       EvaluacionVinculacion,
       DetalleEvaluacionVinculacion,
       VinculacionReporteObservacionEntity,
-      EntidadReceptoraEntity
+      EntidadReceptoraEntity,
+      EvaluacionParametrosTutorEntity,
     ]),
   ],
   controllers: [
-    // Registro de todos los controladores especializados
-    VinculacionEstudianteController,
-    VinculacionReportesController,
-    VinculacionEvaluacionController,
-    VinculacionActividadesController,
-    EntidadReceptoraController
+    EntidadReceptoraController,
+    InicioActividadesTutorController,
+    ActaCompromisoController,
+    AsistenciaEstudianteController,
+    AsistenciaTutorController,
+    InformeActividadesController,
+    CertificadoVinculacionController,
+    InformeFinalController,
+    VinculacionController,
   ],
   providers: [
-    // 1. Servicios Granulares (Capa de Aplicación)
-    VinculacionEstudianteService,
-    VinculacionObjetivosService,
-    VinculacionActividadesService,
-    VinculacionAsistenciaService,
-    VinculacionInformeService,
-    VinculacionEvaluacionService,
-    VinculacionReportesService,
+    // Servicios
     EntidadReceptoraService,
+    AuthVinculacionService,
+    ActaCompromisoService,
+    InicioActividadesTutorService,
+    AsistenciaEstudianteService,
+    AsistenciaTutorService,
+    InformeActividadesService,
+    InformeFinalService,
+    CertificadoVinculacionService,
+    VinculacionService,
 
-    // 2. Inyección de Dependencias Puerto -> Adaptador (Capa de Infraestructura)
+    // Adaptadores
     {
-      provide: VINCULACION_ESTUDIANTE_PORT,
-      useClass: VinculacionEstudianteAdapter,
+      provide: ENTIDAD_RECEPTORA_PORT,
+      useClass: EntidadReceptoraAdapter,
     },
     {
-      provide: VINCULACION_OBJETIVOS_PORT,
-      useClass: VinculacionObjetivosAdapter,
+      provide: VINCULACION_ACTA_PORT,
+      useClass: CartaCompromisoReportesAdapter,
     },
     {
-      provide: VINCULACION_ACTIVIDADES_PORT,
-      useClass: VinculacionActividadesAdapter,
+      provide: VINCULACION_ASISTENCIA_ESTUDIANTE_PORT,
+      useClass: VinculacionAsistenciaEstudianteAdapter,
     },
     {
-      provide: VINCULACION_ASISTENCIA_PORT,
-      useClass: VinculacionAsistenciaAdapter,
+      provide: VINCULACION_INICIO_ACTIVIDADES_PORT,
+      useClass: InicioActividadesTutorAdapter,
     },
     {
-      provide: VINCULACION_INFORME_PORT,
-      useClass: VinculacionInformeAdapter,
+      provide: VINCULACION_ASISTENCIA_TUTOR_PORT,
+      useClass: AsistenciaTutorAdapter,
     },
     {
-      provide: VINCULACION_EVALUACION_PORT,
-      useClass: VinculacionEvaluacionAdapter,
+      provide: INFORME_ACTIVIDADES_PORT,
+      useClass: InformeActividadesAdapter,
     },
     {
-      provide: VINCULACION_REPORTES_PORT,
-      useClass: VinculacionReportesAdapter,
+      provide: CERTIFICADO_VINCULACION_PORT,
+      useClass: CertificadoVinculacionAdapter,
     },
     {
-    provide: ENTIDAD_RECEPTORA_PORT, // 👈 Usas el nuevo nombre
-    useClass: EntidadReceptoraAdapter,
-  },
+      provide: INFORME_FINAL_PORT,
+      useClass: InformeFinalAdapter,
+    },
   ],
-  // SOLO se exportan Servicios/Providers que otros módulos puedan necesitar (NUNCA Controladores)
   exports: [
-    VinculacionEstudianteService,
-    VinculacionObjetivosService,
-    VinculacionActividadesService,
-    VinculacionAsistenciaService,
-    VinculacionInformeService,
-    VinculacionEvaluacionService,
-    VinculacionReportesService,
-    
+    EntidadReceptoraService,
+    AuthVinculacionService,
+    VinculacionService,
   ],
 })
 export class VinculacionModule {}

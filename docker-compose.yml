@@ -125,6 +125,15 @@ services:
 
     working_dir: /app
 
+    volumes:
+      - ./sistema-academico-frontend:/app
+      - /app/node_modules
+
+    command: npm start -- --host 0.0.0.0
+
+    environment:
+      CHOKIDAR_USEPOLLING: true
+
     ports:
       - "4200:4200"
 
@@ -135,25 +144,11 @@ services:
     networks:
       - academico_private
 
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://127.0.0.1:4200').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 40s
-
-    security_opt:
-      - no-new-privileges:true
 
 volumes:
   postgres_data:
     name: sistema_academico_postgres_data
+
 
 networks:
   academico_private:
