@@ -43,6 +43,15 @@
       <a routerLink="/fase-practica/informe-aprendizaje" routerLinkActive="active" (click)="toggleSidebar()">📝 Informe Aprendizaje</a>
       <a routerLink="/fase-practica/evaluacion-empresarial" routerLinkActive="active" (click)="toggleSidebar()">🏢 Evaluación Empresarial</a>
       <a routerLink="/fase-practica/evaluacion-instituto" routerLinkActive="active" (click)="toggleSidebar()">🏫 Evaluación Instituto</a>
+      <a routerLink="/fase-practica/acta-induccion-seguridad" routerLinkActive="active" (click)="toggleSidebar()">🦺 Acta Inducción Seguridad</a>
+      <a routerLink="/fase-practica/acta-entorno-laboral" routerLinkActive="active" (click)="toggleSidebar()">🏭 Acta Entorno Laboral</a>
+      <a routerLink="/fase-practica/plan-formacion" routerLinkActive="active" (click)="toggleSidebar()">📋 Plan de Formación</a>
+      @if (tieneRol('COORDINADOR')) {
+        <a routerLink="/fase-practica/asignaciones" routerLinkActive="active" (click)="toggleSidebar()">🧑‍💼 Asignaciones</a>
+      }
+      @if (tieneRol('ESTUDIANTE')) {
+        <a routerLink="/fase-practica/datos-maestra" routerLinkActive="active" (click)="toggleSidebar()">🗂️ Datos Maestra</a>
+      }
 
       <!-- VINCULACIÓN CON LA SOCIEDAD (según rol) -->
       @if (tieneRol('ESTUDIANTE')) {
