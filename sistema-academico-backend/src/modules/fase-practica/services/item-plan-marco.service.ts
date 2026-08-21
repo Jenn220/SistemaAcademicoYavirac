@@ -7,6 +7,7 @@ import { CreateItemPlanMarcoDto } from '../dto/create-item-plan-marco.dto';
 import { UpdateItemPlanMarcoDto } from '../dto/update-item-plan-marco.dto';
 import { PlanMarcoFormacionEntity } from '../domain/plan-marco-formacion.entity';
 import { PracticaEntity } from '../domain/practica.entity';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class ItemPlanMarcoService {
@@ -18,6 +19,7 @@ export class ItemPlanMarcoService {
     @InjectRepository(PracticaEntity)
     private readonly practicaRepository: Repository<PracticaEntity>,
     private readonly dataSource: DataSource,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   /**
@@ -84,6 +86,7 @@ export class ItemPlanMarcoService {
       }
       const idPractica = await this.obtenerIdPracticaDesdePlanMarco(dto.id_plan_marco);
       await this.esDuenoDePractica(usuario, idPractica);
+      await this.periodoContextService.validarPeriodoActivoDesdePractica(idPractica);
       return this.itemPlanMarcoRepo.create(dto);
     } catch (error: any) {
       console.error('Error creando item plan marco:', JSON.stringify({ dto, error: error?.message || error }));
@@ -108,6 +111,7 @@ export class ItemPlanMarcoService {
     if (!item) throw new NotFoundException(`Item plan marco con id ${id} no encontrado`);
     const idPractica = await this.obtenerIdPracticaDesdePlanMarco(item.id_plan_marco);
     await this.esDuenoDePractica(usuario, idPractica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(idPractica);
     return this.itemPlanMarcoRepo.update(id, dto);
   }
 
@@ -116,6 +120,7 @@ export class ItemPlanMarcoService {
     if (!item) throw new NotFoundException(`Item plan marco con id ${id} no encontrado`);
     const idPractica = await this.obtenerIdPracticaDesdePlanMarco(item.id_plan_marco);
     await this.esDuenoDePractica(usuario, idPractica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(idPractica);
     await this.itemPlanMarcoRepo.remove(id);
     return { deleted: true, id_item_pm: id };
   }

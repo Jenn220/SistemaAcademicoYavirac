@@ -30,7 +30,8 @@ function registroVacio(): Registro {
     contactoEmergenciaTelefono: '',
     registros: [],
     horasAutonomas: 0,
-    subtotalHorasPractica: 0
+    subtotalHorasPractica: 0,
+    horasRequeridas: 400,
   };
 }
 
@@ -92,6 +93,14 @@ export class RegistroAsistencia implements OnInit {
 
   get mostrarComentarios(): boolean {
     return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
+  }
+
+  get subtotalHorasPracticaCalculado(): number {
+    return this.registro.registros.reduce((sum, r) => sum + (Number(r.horasDia) || 0), 0);
+  }
+
+  get horasAutonomasCalculado(): number {
+    return Math.max(0, (this.registro as any)?.horasRequeridas ?? 400 - this.subtotalHorasPracticaCalculado);
   }
 
   ngOnInit(): void {
@@ -157,8 +166,9 @@ export class RegistroAsistencia implements OnInit {
       contactoEmergenciaTelefono: res?.['contactoEmergenciaTelefono'] ?? datosEstudiante.contactoEmergenciaTelefono ?? '',
       registros: res?.['registros'] ?? [],
       horasAutonomas: res?.['horasAutonomas'] ?? 0,
-      subtotalHorasPractica: res?.['subtotalHorasPractica'] ?? 0
-    };
+      subtotalHorasPractica: res?.['subtotalHorasPractica'] ?? 0,
+      horasRequeridas: res?.['horasRequeridas'] ?? datos?.proyectoEmpresarial?.horasRequeridas ?? 400,
+    } as any;
 
   }
 

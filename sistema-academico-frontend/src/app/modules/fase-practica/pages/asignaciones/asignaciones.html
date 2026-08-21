@@ -61,6 +61,14 @@
                 <strong>{{ fila.practica.estudiante?.nombre || 'Estudiante sin asignar' }}</strong>
                 <span class="cedula">{{ fila.practica.estudiante?.cedula || '—' }}</span>
                 <span class="practica-id">Práctica #{{ fila.practica.id_practica }}</span>
+                @if (fila.practica.codigo_periodo) {
+                <span class="periodo">{{ fila.practica.codigo_periodo }}</span>
+                }
+                @if (fila.practica.estado_periodo_carrera) {
+                <span class="badge-estado" [class.borrador]="fila.practica.estado_periodo_carrera === 'ACTIVO'" [class.pendiente]="fila.practica.estado_periodo_carrera !== 'ACTIVO'">
+                  {{ fila.practica.estado_periodo_carrera }}
+                </span>
+                }
             </div>
 
             <div class="celda-empresa">

@@ -9,6 +9,7 @@ import { PracticaEntity } from '../domain/practica.entity';
 import { ITEM_PLAN_MARCO_REPOSITORY, IItemPlanMarcoRepository } from '../ports/item-plan-marco.repository.port';
 import { PLAN_ROTACION_REPOSITORY, IPlanRotacionRepository } from '../ports/plan-rotacion.repository.port';
 import { PLAN_ROTACION_SEMANA_REPOSITORY, IPlanRotacionSemanaRepository } from '../ports/plan-rotacion-semana.repository.port';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class PlanMarcoService {
@@ -24,6 +25,7 @@ export class PlanMarcoService {
     @Inject(PLAN_ROTACION_SEMANA_REPOSITORY)
     private readonly planRotacionSemanaRepo: IPlanRotacionSemanaRepository,
     private readonly dataSource: DataSource,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   /**
@@ -78,6 +80,7 @@ export class PlanMarcoService {
    */
   async create(usuario: any, dto: CreatePlanMarcoDto) {
     await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
 
     const existentes = await this.planMarcoRepo.findByPractica(dto.id_practica);
     if (existentes.length > 0) return existentes[0];
@@ -101,6 +104,7 @@ export class PlanMarcoService {
     const plan = await this.planMarcoRepo.findById(id);
     if (!plan) throw new NotFoundException(`Plan marco con id ${id} no encontrado`);
     await this.esDuenoDePractica(usuario, plan.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(plan.id_practica);
     return this.planMarcoRepo.update(id, dto);
   }
 
@@ -108,6 +112,7 @@ export class PlanMarcoService {
     const plan = await this.planMarcoRepo.findById(id);
     if (!plan) throw new NotFoundException(`Plan marco con id ${id} no encontrado`);
     await this.esDuenoDePractica(usuario, plan.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(plan.id_practica);
     await this.planMarcoRepo.remove(id);
     return { deleted: true, id_plan_marco: id };
   }

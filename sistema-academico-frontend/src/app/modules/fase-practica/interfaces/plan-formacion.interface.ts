@@ -13,6 +13,12 @@ export interface PracticaSelector {
   estado?: string;
   fecha_inicio?: string;
   fecha_fin?: string;
+  id_periodo_carrera?: number;
+  id_periodo?: number;
+  codigo_periodo?: string;
+  estado_periodo_carrera?: string;
+  id_carrera?: number;
+  carrera?: string;
   /** id_docente asignado en crudo — para preseleccionarlo en Asignaciones. */
   id_docente?: number;
   /** Semestre/periodo académico (ej. "2025-1"). */

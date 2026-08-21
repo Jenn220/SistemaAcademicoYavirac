@@ -86,6 +86,14 @@
                 @if (practica.jornada) {
                 <span><strong>Jornada:</strong> {{ practica.jornada }}</span>
                 }
+                @if (practica.codigo_periodo) {
+                <span><strong>Período:</strong> {{ practica.codigo_periodo }}</span>
+                }
+                @if (practica.estado_periodo_carrera) {
+                <span class="badge-estado" [class.borrador]="practica.estado_periodo_carrera === 'ACTIVO'" [class.pendiente]="practica.estado_periodo_carrera !== 'ACTIVO'">
+                  {{ practica.estado_periodo_carrera }}
+                </span>
+                }
                 <span class="tarjeta-id">Práctica #{{ practica.id_practica }}</span>
             </div>
 

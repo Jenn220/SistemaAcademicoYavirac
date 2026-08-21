@@ -32,6 +32,7 @@ export interface DatosProyectoEmpresarial {
   empresaAsignada: string;
   fechaInicio: string;
   fechaFin: string;
+  horasRequeridas: number;
 }
 
 export interface DatosEmpresaBeneficiaria {

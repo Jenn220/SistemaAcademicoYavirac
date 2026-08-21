@@ -38,6 +38,7 @@ import {
   ActaInduccionSeguridad,
   ActaEntornoLaboral,
 } from '../dto/documentos.types';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class DocumentoPlantillaService {
@@ -67,6 +68,7 @@ export class DocumentoPlantillaService {
     @Inject(DOCUMENTO_REPOSITORY)
     private readonly documentoRepository: Repository<DocumentoEntity>,
     private readonly dataSource: DataSource,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   private async cargarContenidoGuardado(idPractica: number, codigoFormato: string): Promise<any> {
@@ -247,22 +249,17 @@ export class DocumentoPlantillaService {
     let fechaInicioFase = '';
     let fechaFinFase = '';
 
-    const matricula = await this.dataSource.query(
-      `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, c.codigo as carrera_codigo
-        FROM matricula m
-        JOIN carrera c ON c.id_carrera = m.id_carrera
-         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
-        LIMIT 1`,
-      [estudiante.id_estudiante],
-    );
+    let contexto = null;
+    try {
+      contexto = await this.periodoContextService.obtenerContextoDesdePractica(idPractica!);
+    } catch {
+      contexto = null;
+    }
 
-    if (matricula.length > 0) {
-      const m = matricula[0];
-      carreraNombre = m.carrera_nombre ?? '';
-
+    if (contexto) {
       const periodo = await this.dataSource.query(
         `SELECT codigo, nombre, fecha_inicio, fecha_fin FROM periodo_academico WHERE id_periodo = $1 LIMIT 1`,
-        [m.id_periodo],
+        [contexto.id_periodo],
       );
       if (periodo.length > 0) {
         periodoCodigo = periodo[0].codigo ?? '';
@@ -276,9 +273,9 @@ export class DocumentoPlantillaService {
                 doc.nombres as coordinador_nombres, doc.apellidos as coordinador_apellidos
          FROM periodo_carrera pc
          LEFT JOIN docente doc ON doc.id_docente = pc.id_coordinador
-         WHERE pc.id_periodo = $1 AND pc.id_carrera = $2
+         WHERE pc.id_periodo_carrera = $1
          LIMIT 1`,
-        [m.id_periodo, m.id_carrera],
+        [contexto.id_periodo_carrera],
       );
 
       if (periodoCarrera.length > 0) {
@@ -289,15 +286,21 @@ export class DocumentoPlantillaService {
           : '';
       }
 
+      const carreraRow = await this.dataSource.query(
+        `SELECT c.nombre as carrera_nombre FROM carrera c WHERE c.id_carrera = $1 LIMIT 1`,
+        [contexto.id_carrera],
+      );
+      carreraNombre = carreraRow[0]?.carrera_nombre ?? '';
+
       const nivel = await this.dataSource.query(
         `SELECT n.nombre as nivel_nombre
          FROM matricula_detalle md
          JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
          JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
          JOIN nivel n ON n.id_nivel = a.id_nivel
-         WHERE md.id_matricula = $1
+         WHERE md.id_matricula_detalle = $1
          LIMIT 1`,
-        [m.id_matricula],
+        [practica.id_matricula_detalle],
       );
 
       if (nivel.length > 0) {
@@ -316,8 +319,8 @@ export class DocumentoPlantillaService {
       }
     }
 
-    const nucleo = matricula.length > 0
-      ? await this.nucleoRepository.findOne({ where: { id_carrera: matricula[0].id_carrera } })
+    const nucleo = contexto
+      ? await this.nucleoRepository.findOne({ where: { id_carrera: contexto.id_carrera } })
       : null;
 
     const carrera: DatosCarrera = {
@@ -334,6 +337,7 @@ export class DocumentoPlantillaService {
       empresaAsignada: practica?.nombre_empresa ?? empresa?.razon_social ?? '',
       fechaInicio: fechaInicioFase || (practica?.fecha_inicio ?? ''),
       fechaFin: fechaFinFase || (practica?.fecha_fin ?? ''),
+      horasRequeridas: practica?.total_horas_requeridas ?? 400,
     };
 
     const empresaBeneficiaria: DatosEmpresaBeneficiaria = {
@@ -422,6 +426,7 @@ export class DocumentoPlantillaService {
         empresaAsignada: '',
         fechaInicio: '',
         fechaFin: '',
+        horasRequeridas: 0,
       },
       empresaBeneficiaria: {
         razonSocial: '',
@@ -574,17 +579,23 @@ export class DocumentoPlantillaService {
       order: { fecha: 'ASC' },
     });
 
-    const registrosFormateados: RegistroAsistenciaDia[] = registros.map(registro => ({
-      fecha: registro.fecha,
-      horaIngreso: registro.hora_ingreso ?? '',
-      almuerzo: registro.hora_salida_almuerzo && registro.hora_regreso_almuerzo
-        ? `${this.formatearHora(registro.hora_salida_almuerzo)} - ${this.formatearHora(registro.hora_regreso_almuerzo)}`
-        : '',
-      horaSalida: this.formatearHora(registro.hora_salida ?? ''),
-      horasDia: 8,
-      firma: registro.firma_estudiante ? 'S' : 'N',
-      observaciones: registro.observaciones ?? '',
-    }));
+    const registrosFormateados: RegistroAsistenciaDia[] = registros.map(registro => {
+      const horasDia = this.calcularHorasDia(registro.hora_ingreso, registro.hora_salida, registro.hora_salida_almuerzo, registro.hora_regreso_almuerzo);
+      return {
+        fecha: registro.fecha,
+        horaIngreso: registro.hora_ingreso ?? '',
+        almuerzo: registro.hora_salida_almuerzo && registro.hora_regreso_almuerzo
+          ? `${this.formatearHora(registro.hora_salida_almuerzo)} - ${this.formatearHora(registro.hora_regreso_almuerzo)}`
+          : '',
+        horaSalida: this.formatearHora(registro.hora_salida ?? ''),
+        horasDia,
+        firma: registro.firma_estudiante ? 'S' : 'N',
+        observaciones: registro.observaciones ?? '',
+      };
+    });
+
+    const subtotalHorasPractica = registrosFormateados.reduce((sum, r) => sum + (r.horasDia || 0), 0);
+    const horasAutonomas = Math.max(0, (datos.proyectoEmpresarial?.horasRequeridas ?? 0) - subtotalHorasPractica);
 
     return {
       empresa: empresaBeneficiaria.razonSocial,
@@ -605,8 +616,8 @@ export class DocumentoPlantillaService {
         domicilio: estudiante.domicilio,
       },
       registros: registrosFormateados,
-      horasAutonomas: 0,
-      subtotalHorasPractica: registrosFormateados.length * 8,
+      horasAutonomas,
+      subtotalHorasPractica,
     };
   }
 
@@ -985,16 +996,17 @@ export class DocumentoPlantillaService {
 
       const nivelNombre = nivel.length > 0 ? nivel[0].nivel_nombre : '';
 
-      const carrera = await this.dataSource.query(
-        `SELECT m.id_carrera, c.nombre as carrera_nombre
-         FROM matricula m
-         JOIN carrera c ON c.id_carrera = m.id_carrera
-         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
-         LIMIT 1`,
-        [estudiante.id_estudiante],
-      );
-
-      const carreraNombre = carrera.length > 0 ? carrera[0].carrera_nombre : '';
+      let carreraNombre = '';
+      try {
+        const contexto = await this.periodoContextService.obtenerContextoDesdePractica(idPractica);
+        const carreraRow = await this.dataSource.query(
+          `SELECT c.nombre as carrera_nombre FROM carrera c WHERE c.id_carrera = $1 LIMIT 1`,
+          [contexto.id_carrera],
+        );
+        carreraNombre = carreraRow[0]?.carrera_nombre ?? '';
+      } catch {
+        carreraNombre = '';
+      }
 
       return {
         lugarFecha: `Quito D.M. ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
@@ -1063,87 +1075,72 @@ export class DocumentoPlantillaService {
 
   async getActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<ActaEntornoLaboral> {
     try {
-      let idPractica: number | undefined;
-
-      if (usuario.idEstudiante) {
-        const matriculaRows = await this.dataSource.query(
-          `SELECT p.id_practica
-           FROM practica_estudiante p
-           JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
-           JOIN matricula m ON m.id_matricula = md.id_matricula
-           WHERE m.id_estudiante = $1
-           ORDER BY p.id_practica DESC
-           LIMIT 1`,
-          [usuario.idEstudiante],
-        );
-
-        if (matriculaRows.length > 0) {
-          idPractica = matriculaRows[0].id_practica;
-        }
-      }
-
-      if (!idPractica) {
-        idPractica = idPracticaSolicitado ?? (await this.obtenerIdPractica(usuario, idPracticaSolicitado));
-      }
+      const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
 
       if (idPractica && !forzar) {
         const guardado = await this.cargarContenidoGuardado(idPractica, 'F11');
         if (guardado) return guardado as ActaEntornoLaboral;
       }
 
-      let idEstudiante = usuario.idEstudiante;
-      let matricula: any[] = [];
+      const practica = await this.practicaRepository.findOne({
+        where: { id_practica: idPractica },
+        relations: ['empresa'],
+      });
 
-      if (idEstudiante) {
-        matricula = await this.dataSource.query(
-          `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, p.codigo as periodo_codigo, p.nombre as periodo_nombre
-           FROM matricula m
-           JOIN carrera c ON c.id_carrera = m.id_carrera
-           JOIN periodo_academico p ON p.id_periodo = m.id_periodo
-        WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
-           LIMIT 1`,
-          [idEstudiante],
-        );
-      }
-
-      let practica: any = null;
-
-      if (matricula.length === 0) {
-        const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
-        practica = await this.practicaRepository.findOne({
-          where: { id_practica: idPractica },
-          relations: ['empresa'],
-        });
-
-        if (!practica?.id_matricula_detalle) {
-          return this.getActaEntornoLaboralVacia();
-        }
-
-        const matriculaDetalle = await this.dataSource.query(
-          `SELECT md.id_matricula FROM matricula_detalle md WHERE md.id_matricula_detalle = $1 LIMIT 1`,
-          [practica.id_matricula_detalle],
-        );
-
-        if (matriculaDetalle.length > 0) {
-          matricula = await this.dataSource.query(
-            `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, p.codigo as periodo_codigo, p.nombre as periodo_nombre
-             FROM matricula m
-             JOIN carrera c ON c.id_carrera = m.id_carrera
-             JOIN periodo_academico p ON p.id_periodo = m.id_periodo
-             WHERE m.id_matricula = $1 AND m.estado = 'ACTIVA'
-             LIMIT 1`,
-            [matriculaDetalle[0].id_matricula],
-          );
-        }
-      }
-
-      if (matricula.length === 0) {
+      if (!practica?.id_matricula_detalle) {
         return this.getActaEntornoLaboralVacia();
       }
 
-      const m = matricula[0];
-      const idCarrera = m.id_carrera;
-      const idPeriodo = m.id_periodo;
+      const contexto = await this.periodoContextService.obtenerContextoDesdePractica(idPractica);
+      const idCarrera = contexto.id_carrera;
+      const idPeriodo = contexto.id_periodo;
+      const idPeriodoCarrera = contexto.id_periodo_carrera;
+
+      const periodoCarrera = await this.dataSource.query(
+        `SELECT pc.id_coordinador, doc.nombres as coordinador_nombres, doc.apellidos as coordinador_apellidos, doc.cedula as coordinador_cedula
+         FROM periodo_carrera pc
+         LEFT JOIN docente doc ON doc.id_docente = pc.id_coordinador
+         WHERE pc.id_periodo_carrera = $1
+         LIMIT 1`,
+        [idPeriodoCarrera],
+      );
+
+      const coordinador = periodoCarrera.length > 0 ? {
+        nombre: periodoCarrera[0].coordinador_nombres && periodoCarrera[0].coordinador_apellidos
+          ? `${periodoCarrera[0].coordinador_nombres} ${periodoCarrera[0].coordinador_apellidos}`
+          : '',
+        cedula: periodoCarrera[0].coordinador_cedula ?? '',
+      } : { nombre: '', cedula: '' };
+
+      const tutorAcademico = await this.dataSource.query(
+        `SELECT d.nombres, d.apellidos, d.cedula
+         FROM practica_estudiante p
+         JOIN docente d ON d.id_docente = p.id_docente
+         WHERE p.id_practica = $1
+         LIMIT 1`,
+        [practica.id_practica],
+      );
+
+      const tutorAcademicoNombre = tutorAcademico.length > 0
+        ? `${tutorAcademico[0].nombres} ${tutorAcademico[0].apellidos}`
+        : '';
+
+      const tutorEmpresarialNombre = practica?.tutor_empresarial
+        ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
+        : '';
+
+      const periodo = await this.dataSource.query(
+        `SELECT codigo, nombre FROM periodo_academico WHERE id_periodo = $1 LIMIT 1`,
+        [idPeriodo],
+      );
+      const periodoCodigo = periodo[0]?.codigo ?? '';
+      const periodoNombre = periodo[0]?.nombre ?? '';
+
+      const carrera = await this.dataSource.query(
+        `SELECT c.nombre as carrera_nombre FROM carrera c WHERE c.id_carrera = $1 LIMIT 1`,
+        [idCarrera],
+      );
+      const carreraNombre = carrera[0]?.carrera_nombre ?? '';
 
       const estudiantes = await this.dataSource.query(
         `SELECT 
@@ -1151,17 +1148,17 @@ export class DocumentoPlantillaService {
            e.cedula,
            n.nombre as nivel,
            p.id_practica
-         FROM matricula m
-         JOIN matricula_detalle md ON md.id_matricula = m.id_matricula
+         FROM practica_estudiante p
+         JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+         JOIN matricula m ON m.id_matricula = md.id_matricula
          JOIN estudiante e ON e.id_estudiante = m.id_estudiante
          JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
          JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
          JOIN nivel n ON n.id_nivel = a.id_nivel
-         JOIN practica_estudiante p ON p.id_matricula_detalle = md.id_matricula_detalle
-         WHERE m.id_carrera = $1 AND m.id_periodo = $2 AND m.estado = 'ACTIVA'
-           AND m.id_estudiante = $3
+         WHERE oa.id_periodo_carrera = $1
+           AND p.id_empresa = $2 AND p.id_tutor_empresarial = $3 AND p.id_docente = $4
          ORDER BY e.apellidos, e.nombres`,
-        [idCarrera, idPeriodo, idEstudiante],
+        [idPeriodoCarrera, practica.id_empresa, practica.id_tutor_empresarial, practica.id_docente],
       );
 
       const estudiantesConNota = await Promise.all(
@@ -1178,59 +1175,18 @@ export class DocumentoPlantillaService {
         }),
       );
 
-      if (!practica) {
-        const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
-        practica = await this.practicaRepository.findOne({
-          where: { id_practica: idPractica },
-          relations: ['empresa', 'tutor_empresarial'],
-        });
-      }
-
-      const periodoCarrera = await this.dataSource.query(
-        `SELECT pc.id_coordinador, doc.nombres as coordinador_nombres, doc.apellidos as coordinador_apellidos, doc.cedula as coordinador_cedula
-         FROM periodo_carrera pc
-         LEFT JOIN docente doc ON doc.id_docente = pc.id_coordinador
-         WHERE pc.id_periodo = $1 AND pc.id_carrera = $2
-         LIMIT 1`,
-        [idPeriodo, idCarrera],
-      );
-
-      const coordinador = periodoCarrera.length > 0 ? {
-        nombre: periodoCarrera[0].coordinador_nombres && periodoCarrera[0].coordinador_apellidos
-          ? `${periodoCarrera[0].coordinador_nombres} ${periodoCarrera[0].coordinador_apellidos}`
-          : '',
-        cedula: periodoCarrera[0].coordinador_cedula ?? '',
-      } : { nombre: '', cedula: '' };
-
-      const tutorAcademico = await this.dataSource.query(
-        `SELECT d.nombres, d.apellidos, d.cedula
-         FROM practica_estudiante p
-         JOIN docente d ON d.id_docente = p.id_docente
-         WHERE p.id_practica = $1
-         LIMIT 1`,
-        [practica?.id_practica ?? 0],
-      );
-
-      const tutorAcademicoNombre = tutorAcademico.length > 0
-        ? `${tutorAcademico[0].nombres} ${tutorAcademico[0].apellidos}`
-        : '';
-
-      const tutorEmpresarialNombre = practica?.tutor_empresarial
-        ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
-        : '';
-
       return {
         encabezado: {
           instituto: 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC',
           titulo: 'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL',
           fecha: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
-          carrera: m.carrera_nombre,
-          periodoAcademico: `${m.periodo_codigo} - ${m.periodo_nombre}`,
+          carrera: carreraNombre,
+          periodoAcademico: `${periodoCodigo} - ${periodoNombre}`,
           entidadReceptora: practica?.empresa?.razon_social ?? '',
         },
         textoLegal: [
           'La planificación de la formación práctica en el entorno laboral real tiene como objetivo: desarrollar en los estudiantes nuevas habilidades de pensamiento, destrezas sensoriales y motoras, hábitos y actitudes requeridos para el trabajo profesional y consolidar las capacidades prácticas adquiridas en el entorno académico en integración con los factores tecnológicos y socio laborales propios del entorno laboral real, cuyos escenarios concretos son las entidades formadoras seleccionadas de forma pertinente, con las que el instituto mantiene compromisos mutuos.',
-          `La presente acta válida el desarrollo del aprendizaje en el entorno laboral real de los estudiantes de la carrera de ${m.carrera_nombre} del Instituto Superior Tecnológico de Turismo y Patrimonio Yavirac, los mismos que han ejecutado sus prácticas preprofesionales acorde a lo estipulado en el Reglamento de Régimen Académico, en el Reglamento para las Carreras y Programas en Modalidad de Formación Dual y con el convenio de prácticas preprofesionales suscrito y vigente entre el instituto y la respectiva entidad receptora formadora.`,
+          `La presente acta válida el desarrollo del aprendizaje en el entorno laboral real de los estudiantes de la carrera de ${carreraNombre} del Instituto Superior Tecnológico de Turismo y Patrimonio Yavirac, los mismos que han ejecutado sus prácticas preprofesionales acorde a lo estipulado en el Reglamento de Régimen Académico, en el Reglamento para las Carreras y Programas en Modalidad de Formación Dual y con el convenio de prácticas preprofesionales suscrito y vigente entre el instituto y la respectiva entidad receptora formadora.`,
           'Además, al acta se anexan siete documentos que permiten garantizar la formación práctica en el entorno laboral real de los estudiantes, a través del seguimiento, control y evaluación de las actividades desarrolladas. Estos documentos son:',
         ],
         anexos: [
@@ -1336,6 +1292,28 @@ export class DocumentoPlantillaService {
     if (!fecha) return '';
     const [y, m, d] = fecha.split('-');
     return `${d}/${m}/${y}`;
+  }
+
+  private toMinutes(hhmm?: string): number | null {
+    if (!hhmm) return null;
+    const [h, m] = hhmm.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return null;
+    return h * 60 + m;
+  }
+
+  private calcularHorasDia(horaIngreso?: string, horaSalida?: string, horaSalidaAlmuerzo?: string, horaRegresoAlmuerzo?: string): number {
+    const ingreso = this.toMinutes(horaIngreso);
+    const salida = this.toMinutes(horaSalida);
+    const almuerzoIn = this.toMinutes(horaSalidaAlmuerzo);
+    const almuerzoOut = this.toMinutes(horaRegresoAlmuerzo);
+    if (ingreso !== null && salida !== null) {
+      let minutos = salida - ingreso;
+      if (almuerzoIn !== null && almuerzoOut !== null) {
+        minutos -= almuerzoOut - almuerzoIn;
+      }
+      return Math.max(0, Math.round(minutos / 60));
+    }
+    return 0;
   }
 
   private formatearHora(hora: string): string {

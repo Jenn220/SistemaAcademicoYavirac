@@ -5,12 +5,14 @@ import { PLAN_ROTACION_SEMANA_REPOSITORY, IPlanRotacionSemanaRepository } from '
 import { CreatePlanRotacionSemanaDto } from '../dto/create-plan-rotacion-semana.dto';
 import { UpdatePlanRotacionSemanaDto } from '../dto/update-plan-rotacion-semana.dto';
 import { PlanRotacionSemanaEntity } from '../domain/plan-rotacion-semana.entity';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class PlanRotacionSemanaService {
   constructor(
     @Inject(PLAN_ROTACION_SEMANA_REPOSITORY) private readonly repo: IPlanRotacionSemanaRepository,
     private readonly dataSource: DataSource,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   private async esDuenoDePractica(usuario: any, idPractica: number): Promise<void> {
@@ -43,6 +45,7 @@ export class PlanRotacionSemanaService {
   async create(usuario: any, dto: CreatePlanRotacionSemanaDto): Promise<PlanRotacionSemanaEntity> {
     const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(dto.id_plan_rotacion!);
     await this.esDuenoDePractica(usuario, idPractica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(idPractica);
     const existentes = await this.repo.findByPlanRotacion(dto.id_plan_rotacion!);
     if (existentes.length >= 8) {
       throw new BadRequestException('El plan de rotación no puede tener más de 8 semanas.');
@@ -69,6 +72,7 @@ export class PlanRotacionSemanaService {
     if (!entity) throw new NotFoundException(`Semana de plan de rotación con id ${id} no encontrada`);
     const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(entity.id_plan_rotacion);
     await this.esDuenoDePractica(usuario, idPractica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(idPractica);
     return this.repo.update(id, dto);
   }
 
@@ -77,6 +81,7 @@ export class PlanRotacionSemanaService {
     if (!entity) throw new NotFoundException(`Semana de plan de rotación con id ${id} no encontrada`);
     const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(entity.id_plan_rotacion);
     await this.esDuenoDePractica(usuario, idPractica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(idPractica);
     return this.repo.remove(id);
   }
 

@@ -6,6 +6,7 @@ import { DocumentoPlantillaService } from './documento-plantilla.service';
 import { NotificacionService } from './notificacion.service';
 import { EstadoDocumento } from '../dto/actualizar-estado-documento.dto';
 import { DataSource } from 'typeorm';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class DocumentoService {
@@ -15,6 +16,7 @@ export class DocumentoService {
     private readonly plantillaService: DocumentoPlantillaService,
     private readonly notificacionService: NotificacionService,
     private readonly dataSource: DataSource,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   async guardarDocumento(
@@ -26,6 +28,17 @@ export class DocumentoService {
     idUsuario?: number,
     estado?: string,
   ): Promise<DocumentoEntity> {
+    if (idPractica) {
+      try {
+        await this.periodoContextService.validarPeriodoActivoDesdePractica(idPractica);
+      } catch (error: any) {
+        if (error?.response?.statusCode === 409) {
+          throw new ForbiddenException('El período académico se encuentra finalizado y es de solo consulta.');
+        }
+        throw error;
+      }
+    }
+
     try {
       const documento = await this.documentoRepository.guardarDocumento(codigo, titulo, contenido, idPractica, idEstudiante, idUsuario, estado);
       console.log('Documento guardado', { codigo, idPractica, idDocumento: documento.id_documento });

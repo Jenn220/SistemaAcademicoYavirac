@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PRACTICA_REPOSITORY, IPracticaRepository } from '../ports/practica.repository.port';
@@ -38,6 +38,7 @@ import { PlanRotacionEntity } from '../domain/plan-rotacion.entity';
 import { RegistroDiarioEntity } from '../domain/registro-diario.entity';
 import { RubricaEntity } from '../domain/rubrica.entity';
 import { PlanRotacionService } from './plan-rotacion.service';
+import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class PracticaService {
@@ -59,15 +60,20 @@ export class PracticaService {
     @Inject(ITEM_PLAN_MARCO_REPOSITORY)
     private readonly itemPlanMarcoRepository: IItemPlanMarcoRepository,
     private readonly dataSource: DataSource,
+    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   async createPractica(dto: CreatePracticaDto): Promise<PracticaEntity> {
-    const data = {
+    const contexto = await this.periodoContextService.validarPeriodoActivo(dto.id_matricula_detalle);
+
+    const data: any = {
       ...dto,
+      id_periodo: contexto.id_periodo,
       total_horas_requeridas: dto.total_horas_requeridas ?? 400,
       total_horas_cumplidas: dto.total_horas_cumplidas ?? 0,
       estado: dto.estado ?? 'EN_CURSO',
     };
+
     return this.practicaRepository.createPractica(data);
   }
 
@@ -82,8 +88,27 @@ export class PracticaService {
    * (id_docente), TUTOR_EMPRESARIAL solo los de su empresa (id_empresa),
    * ESTUDIANTE solo el suyo. COORDINADOR ve todos (es quien asigna).
    */
-  async findAllPracticas(usuario: any, skip?: number, take?: number): Promise<any[]> {
-    const practicas = await this.practicaRepository.findAllPracticas(skip, take);
+  async findAllPracticas(usuario: any, skip?: number, take?: number, idPeriodoCarrera?: number): Promise<any[]> {
+    const where: any = {};
+    if (idPeriodoCarrera) {
+      const rows = await this.dataSource.query(
+        `SELECT 1 FROM periodo_carrera pc
+         JOIN oferta_asignatura oa ON oa.id_periodo_carrera = pc.id_periodo_carrera
+         JOIN matricula_detalle md ON md.id_oferta_asignatura = oa.id_oferta_asignatura
+         JOIN practica_estudiante p ON p.id_matricula_detalle = md.id_matricula_detalle
+         WHERE pc.id_periodo_carrera = $1
+         LIMIT 1`,
+        [idPeriodoCarrera],
+      );
+      if (rows.length === 0) {
+        return [];
+      }
+      where.id_periodo_carrera = idPeriodoCarrera;
+    } else {
+      where.estado_periodo_carrera = 'ACTIVO';
+    }
+
+    const practicas = await this.practicaRepository.findAllPracticasConContexto(skip, take, where);
     if (practicas.length === 0) return practicas;
 
     const idsMatriculaDetalle = practicas.map((p) => p.id_matricula_detalle);
@@ -142,8 +167,15 @@ export class PracticaService {
   }
 
   async updatePractica(id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
-    await this.findPracticaById(id);
-    return this.practicaRepository.updatePractica(id, dto);
+    const practica = await this.findPracticaById(id);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(id);
+
+    const data: any = { ...dto };
+    if (Object.keys(data).length === 0) {
+      return practica;
+    }
+
+    return this.practicaRepository.updatePractica(id, data);
   }
 
   /** Catálogo para el select de "docente académico" en la pantalla de Asignaciones. */
@@ -169,6 +201,7 @@ export class PracticaService {
 
   async removePractica(id: number): Promise<void> {
     await this.findPracticaById(id);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(id);
     await this.practicaRepository.removePractica(id);
   }
 
@@ -193,6 +226,7 @@ export class PracticaService {
 
   async createRegistroDiario(usuario: any, dto: CreateRegistroDiarioDto): Promise<RegistroDiarioEntity> {
     await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
     return this.registroDiarioRepository.create(dto);
   }
 
@@ -206,6 +240,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el registro diario con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, registro.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(registro.id_practica);
     return this.registroDiarioRepository.update(id, dto);
   }
 
@@ -215,11 +250,13 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el registro diario con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, registro.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(registro.id_practica);
     return this.registroDiarioRepository.remove(id);
   }
 
   async createPlanRotacion(usuario: any, dto: CreatePlanRotacionDto): Promise<PlanRotacionEntity> {
     await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
     const itemPlanMarco = await this.itemPlanMarcoRepository.findById(dto.id_item_pm);
     if (!itemPlanMarco) {
       throw new NotFoundException(`Item plan marco con id ${dto.id_item_pm} no encontrado`);
@@ -243,6 +280,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, plan.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(plan.id_practica);
     return this.planRotacionRepository.update(id, dto);
   }
 
@@ -252,6 +290,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, plan.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(plan.id_practica);
     return this.planRotacionRepository.remove(id);
   }
 
@@ -305,6 +344,7 @@ export class PracticaService {
 
   async createInformeAprendizaje(usuario: any, dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
     await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
     return this.informeAprendizajeRepository.create(dto);
   }
 
@@ -318,6 +358,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el informe con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
     return this.informeAprendizajeRepository.update(id, dto);
   }
 
@@ -327,11 +368,13 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el informe con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
     return this.informeAprendizajeRepository.remove(id);
   }
 
   async createEvaluacionPractica(usuario: any, dto: CreateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
     await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
     return this.evaluacionPracticaRepository.create(dto);
   }
 
@@ -351,6 +394,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, evaluacion.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
     return this.evaluacionPracticaRepository.update(id, dto);
   }
 
@@ -360,6 +404,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, evaluacion.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
     return this.evaluacionPracticaRepository.remove(id);
   }
 
@@ -369,6 +414,7 @@ export class PracticaService {
       throw new NotFoundException(`No existe el informe con id ${dto.id_informe} para la bitácora`);
     }
     await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
     return this.bitacoraSemanalRepository.create(dto);
   }
 
@@ -386,6 +432,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el informe asociado a la bitácora con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
     return this.bitacoraSemanalRepository.update(id, dto);
   }
 
@@ -399,6 +446,7 @@ export class PracticaService {
       throw new NotFoundException(`No se encontró el informe asociado a la bitácora con id ${id}`);
     }
     await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
     return this.bitacoraSemanalRepository.remove(id);
   }
 
