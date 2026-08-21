@@ -283,58 +283,141 @@ export const routes: Routes = [
         path: 'vinculacion',
         children: [
           {
+            path: 'estudiante',
+            canActivate: [roleGuard],
+            data: { roles: ['ESTUDIANTE'] },
+            children: [
+              {
+                path: 'inicio-actividades',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/inicio-actividades/inicio-actividades.component'
+                  ).then(
+                    m => m.InicioActividadesComponent
+                  )
+              },
+              {
+                path: 'carta-compromiso',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/carta-compromiso/carta-compromiso.component'
+                  ).then(
+                    m => m.CartaCompromisoComponent
+                  )
+              },
+              {
+                path: 'control-asistencia',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/control-asistencia/control-asistencia.component'
+                  ).then(
+                    m => m.ControlAsistenciaComponent
+                  )
+              },
+              {
+                path: 'registro-asistencia-tutor',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor.component'
+                  ).then(
+                    m => m.RegistroAsistenciaTutorComponent
+                  )
+              },
+              {
+                path: 'plan-aprendizaje',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/plan-aprendizaje/plan-aprendizaje.component'
+                  ).then(
+                    m => m.PlanAprendizajeComponent
+                  )
+              },
+              {
+                path: 'certificado',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/certificado/certificado.component'
+                  ).then(
+                    m => m.CertificadoComponent
+                  )
+              },
+              {
+                path: 'informe-final',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/informe-final/informe-final.component'
+                  ).then(
+                    m => m.InformeFinalComponent
+                  )
+              },
+              {
+                path: '',
+                redirectTo: 'inicio-actividades',
+                pathMatch: 'full'
+              }
+            ]
+          },
+          {
+            path: 'docente',
+            canActivate: [roleGuard],
+            data: { roles: ['DOCENTE'] },
+            children: [
+              {
+                path: 'seleccionar',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/docente/seleccionar-estudiante/seleccionar-estudiante.component'
+                  ).then(
+                    m => m.SeleccionarEstudianteComponent
+                  )
+              },
+              {
+                path: 'estudiante/:id/inicio-actividades',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/inicio-actividades/inicio-actividades.component'
+                  ).then(
+                    m => m.InicioActividadesComponent
+                  )
+              },
+              {
+                path: 'estudiante/:id/control-asistencia',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/control-asistencia/control-asistencia.component'
+                  ).then(
+                    m => m.ControlAsistenciaComponent
+                  )
+              },
+              {
+                path: 'estudiante/:id/registro-asistencia-tutor',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/registro-asistencia-tutor/registro-asistencia-tutor.component'
+                  ).then(
+                    m => m.RegistroAsistenciaTutorComponent
+                  )
+              },
+              {
+                path: 'estudiante/:id/informe-final',
+                loadComponent: () =>
+                  import(
+                    './modules/vinculacion/pages/compartidas/informe-final/informe-final.component'
+                  ).then(
+                    m => m.InformeFinalComponent
+                  )
+              },
+              {
+                path: '',
+                redirectTo: 'seleccionar',
+                pathMatch: 'full'
+              }
+            ]
+          },
+          {
             path: '',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/lista-vinculacion/lista-vinculacion.component'
-              ).then(
-                m => m.ListaVinculacionComponent
-              )
-          },
-          {
-            path: 'nuevo',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/nuevo-vinculacion/nuevo-vinculacion.component'
-              ).then(
-                m => m.NuevoVinculacionComponent
-              )
-          },
-          {
-            path: 'actividades',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/actividades-vinculacion/actividades-vinculacion.component'
-              ).then(
-                m => m.ActividadesVinculacionComponent
-              )
-          },
-          {
-            path: 'asistencia',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/asistencia-tutor/asistencia-tutor.component'
-              ).then(
-                m => m.AsistenciaTutorComponent
-              )
-          },
-          {
-            path: 'informes',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/informes-vinculacion/informes-vinculacion.component'
-              ).then(
-                m => m.InformesVinculacionComponent
-              )
-          },
-          {
-            path: ':id',
-            loadComponent: () =>
-              import(
-                './modules/vinculacion/pages/detalle-vinculacion/detalle-vinculacion.component'
-              ).then(
-                m => m.DetalleVinculacionComponent
-              )
+            redirectTo: 'estudiante',
+            pathMatch: 'full'
           }
         ]
       },

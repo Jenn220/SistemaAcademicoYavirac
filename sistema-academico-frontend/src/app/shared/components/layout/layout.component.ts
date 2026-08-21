@@ -1,4 +1,5 @@
-import { Component, signal, inject, computed, effect } from '@angular/core';
+import { Component, signal, inject, computed, effect, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../modules/auth/services/auth.service';
 import { NotificacionesService } from '../../../modules/fase-practica/services/notificaciones.service';
@@ -49,6 +50,10 @@ export class LayoutShellComponent implements OnInit {
     // ✅ AÑADIDO: Cerrar sidebar automáticamente en pantallas pequeñas
     this.handleResize();
     window.addEventListener('resize', () => this.handleResize());
+  }
+
+  ngOnInit(): void {
+    this.notificacionesService.iniciarPolling();
   }
 
   // ✅ AÑADIDO: Método para alternar el sidebar
