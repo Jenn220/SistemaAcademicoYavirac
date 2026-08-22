@@ -95,10 +95,12 @@ export class RegistroAsistencia implements OnInit {
     return this.estadoDocumento === 'rechazado' && !!this.comentariosDocumento;
   }
 
+  // Suma las horas de práctica registradas por día
   get subtotalHorasPracticaCalculado(): number {
     return this.registro.registros.reduce((sum, r) => sum + (Number(r.horasDia) || 0), 0);
   }
 
+  // Calcula las horas autónomas requeridas para completar la práctica
   get horasAutonomasCalculado(): number {
     return Math.max(0, (this.registro as any)?.horasRequeridas ?? 400 - this.subtotalHorasPracticaCalculado);
   }
