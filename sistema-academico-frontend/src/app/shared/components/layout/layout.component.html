@@ -37,20 +37,43 @@
       </a>
 
       <div class="menu-title">Fase Práctica</div>
-      <a routerLink="/fase-practica/carta-compromiso" routerLinkActive="active" (click)="toggleSidebar()">✍️ Carta Compromiso</a>
-      <a routerLink="/fase-practica/registro-asistencia" routerLinkActive="active" (click)="toggleSidebar()">📅 Registro Asistencia</a>
-      <a routerLink="/fase-practica/curriculum" routerLinkActive="active" (click)="toggleSidebar()">🧾 Currículo</a>
-      <a routerLink="/fase-practica/informe-aprendizaje" routerLinkActive="active" (click)="toggleSidebar()">📝 Informe Aprendizaje</a>
-      <a routerLink="/fase-practica/evaluacion-empresarial" routerLinkActive="active" (click)="toggleSidebar()">🏢 Evaluación Empresarial</a>
-      <a routerLink="/fase-practica/evaluacion-instituto" routerLinkActive="active" (click)="toggleSidebar()">🏫 Evaluación Instituto</a>
-      <a routerLink="/fase-practica/acta-induccion-seguridad" routerLinkActive="active" (click)="toggleSidebar()">🦺 Acta Inducción Seguridad</a>
-      <a routerLink="/fase-practica/acta-entorno-laboral" routerLinkActive="active" (click)="toggleSidebar()">🏭 Acta Entorno Laboral</a>
-      <a routerLink="/fase-practica/plan-formacion" routerLinkActive="active" (click)="toggleSidebar()">📋 Plan de Formación</a>
-      @if (tieneRol('COORDINADOR')) {
-        <a routerLink="/fase-practica/asignaciones" routerLinkActive="active" (click)="toggleSidebar()">🧑‍💼 Asignaciones</a>
+
+      <!-- ESTUDIANTE entra directo (el back resuelve su propia práctica
+           sola); DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL necesitan elegir de
+           una lista a qué estudiante quieren ver, así que pasan primero
+           por el selector /fase-practica/plan-formacion -->
+      @if (authService.tieneAlgunRol(['ESTUDIANTE'])) {
+        <a routerLink="/fase-practica/datos-maestra" routerLinkActive="active" (click)="toggleSidebar()">✏️ Mis Datos</a>
+        <a routerLink="/fase-practica/carta-compromiso" routerLinkActive="active" (click)="toggleSidebar()">✍️ Carta Compromiso</a>
+        <a routerLink="/fase-practica/registro-asistencia" routerLinkActive="active" (click)="toggleSidebar()">📅 Registro Asistencia</a>
+        <a routerLink="/fase-practica/curriculum" routerLinkActive="active" (click)="toggleSidebar()">🧾 Currículo</a>
+        <a routerLink="/fase-practica/informe-aprendizaje" routerLinkActive="active" (click)="toggleSidebar()">📝 Informe Aprendizaje</a>
+        <a routerLink="/fase-practica/evaluacion-empresarial" routerLinkActive="active" (click)="toggleSidebar()">🏢 Evaluación Empresarial</a>
+        <a routerLink="/fase-practica/evaluacion-instituto" routerLinkActive="active" (click)="toggleSidebar()">🏫 Evaluación Instituto</a>
+        <a routerLink="/fase-practica/acta-induccion-seguridad" routerLinkActive="active" (click)="toggleSidebar()">🛡️ Acta Inducción Seguridad</a>
+        <a routerLink="/fase-practica/acta-entorno-laboral" routerLinkActive="active" (click)="toggleSidebar()">🏭 Acta Entorno Laboral</a>
+      } @else {
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'carta-compromiso'}" routerLinkActive="active" (click)="toggleSidebar()">✍️ Carta Compromiso</a>
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'registro-asistencia'}" routerLinkActive="active" (click)="toggleSidebar()">📅 Registro Asistencia</a>
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'curriculum'}" routerLinkActive="active" (click)="toggleSidebar()">🧾 Currículo</a>
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'informe-aprendizaje'}" routerLinkActive="active" (click)="toggleSidebar()">📝 Informe Aprendizaje</a>
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'evaluacion-empresarial'}" routerLinkActive="active" (click)="toggleSidebar()">🏢 Evaluación Empresarial</a>
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'evaluacion-instituto'}" routerLinkActive="active" (click)="toggleSidebar()">🏫 Evaluación Instituto</a>
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'acta-induccion-seguridad'}" routerLinkActive="active" (click)="toggleSidebar()">🛡️ Acta Inducción Seguridad</a>
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'acta-entorno-laboral'}" routerLinkActive="active" (click)="toggleSidebar()">🏭 Acta Entorno Laboral</a>
       }
-      @if (tieneRol('ESTUDIANTE')) {
-        <a routerLink="/fase-practica/datos-maestra" routerLinkActive="active" (click)="toggleSidebar()">🗂️ Datos Maestra</a>
+
+      <!-- Plan Marco: los 4 roles lo pueden ver (ESTUDIANTE lo edita, el
+           resto lo consulta en modo solo lectura) -->
+      <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'marco'}" routerLinkActive="active" (click)="toggleSidebar()">📐 Plan Marco</a>
+
+      <!-- Plan de Rotación: TUTOR_EMPRESARIAL no tiene ningún rol aquí -->
+      @if (!authService.tieneAlgunRol(['TUTOR_EMPRESARIAL'])) {
+        <a routerLink="/fase-practica/plan-formacion" [queryParams]="{modo: 'rotacion'}" routerLinkActive="active" (click)="toggleSidebar()">🔄 Plan de Rotación</a>
+      }
+
+      @if (tieneRol('COORDINADOR')) {
+        <a routerLink="/fase-practica/asignaciones" routerLinkActive="active" (click)="toggleSidebar()">🧑‍🏫 Asignaciones</a>
       }
 
       <!-- VINCULACIÓN CON LA SOCIEDAD (según rol) -->
