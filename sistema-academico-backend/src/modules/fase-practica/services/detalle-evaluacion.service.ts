@@ -8,7 +8,6 @@ import { CreateDetalleEvaluacionDto } from '../dto/create-detalle-evaluacion.dto
 import { UpdateDetalleEvaluacionDto } from '../dto/update-detalle-evaluacion.dto';
 import { DetalleEvaluacionEntity } from '../domain/detalle-evaluacion.entity';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
-import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class DetalleEvaluacionService {
@@ -18,7 +17,6 @@ export class DetalleEvaluacionService {
     @InjectRepository(EvaluacionPracticaEntity)
     private readonly evaluacionRepository: Repository<EvaluacionPracticaEntity>,
     private readonly dataSource: DataSource,
-    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   /**
@@ -96,11 +94,6 @@ export class DetalleEvaluacionService {
 
   async create(usuario: any, dto: CreateDetalleEvaluacionDto): Promise<DetalleEvaluacionEntity> {
     await this.verificarAcceso(usuario, dto.id_evaluacion!);
-    const evaluacion = await this.evaluacionRepo.findById(dto.id_evaluacion!);
-    if (!evaluacion) {
-      throw new NotFoundException(`No se encontró la evaluación con id ${dto.id_evaluacion}`);
-    }
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
     return this.repo.create(dto);
   }
 
@@ -117,22 +110,12 @@ export class DetalleEvaluacionService {
   async update(usuario: any, id: number, dto: UpdateDetalleEvaluacionDto): Promise<DetalleEvaluacionEntity> {
     const detalle = await this.findOne(id);
     await this.verificarAcceso(usuario, detalle.id_evaluacion);
-    const evaluacion = await this.evaluacionRepo.findById(detalle.id_evaluacion);
-    if (!evaluacion) {
-      throw new NotFoundException(`No se encontró la evaluación con id ${detalle.id_evaluacion}`);
-    }
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
     return this.repo.update(id, dto);
   }
 
   async remove(usuario: any, id: number): Promise<void> {
     const detalle = await this.findOne(id);
     await this.verificarAcceso(usuario, detalle.id_evaluacion);
-    const evaluacion = await this.evaluacionRepo.findById(detalle.id_evaluacion);
-    if (!evaluacion) {
-      throw new NotFoundException(`No se encontró la evaluación con id ${detalle.id_evaluacion}`);
-    }
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
     return this.repo.remove(id);
   }
 }

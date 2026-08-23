@@ -8,7 +8,6 @@ import { ItemRubricaEntity } from '../domain/item-rubrica.entity';
 import { CreateEvaluacionEmpresaDto } from '../dto/create-evaluacion-empresa.dto';
 import { UpdateEvaluacionEmpresaDto } from '../dto/update-evaluacion-empresa.dto';
 import { EvaluacionEmpresaResponseDto } from '../dto/evaluacion-empresa-response.dto';
-import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class EvaluacionEmpresaService {
@@ -20,7 +19,6 @@ export class EvaluacionEmpresaService {
     @InjectRepository(ItemRubricaEntity)
     private readonly itemRubricaRepository: Repository<ItemRubricaEntity>,
     private readonly dataSource: DataSource,
-    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   private async esDuenoDePractica(usuario: any, idPractica: number): Promise<void> {
@@ -41,7 +39,6 @@ export class EvaluacionEmpresaService {
 
   async create(usuario: any, dto: CreateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
     await this.esDuenoDePractica(usuario, dto.id_practica);
-    await this.periodoContextService.validarPeriodoActivo(dto.id_practica);
     const evaluacion = this.evaluacionRepository.create({
       id_practica: dto.id_practica,
       id_rubrica: dto.id_evaluacion_plan_marco,
@@ -105,7 +102,6 @@ export class EvaluacionEmpresaService {
     if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
 
     await this.esDuenoDePractica(usuario, evaluacion.id_practica);
-    await this.periodoContextService.validarPeriodoActivo(evaluacion.id_practica);
 
     if (dto.calificacion !== undefined) evaluacion.nota_final_calculada = dto.calificacion;
     if (dto.observaciones !== undefined) evaluacion.observaciones = dto.observaciones;
@@ -128,7 +124,6 @@ export class EvaluacionEmpresaService {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
     await this.esDuenoDePractica(usuario, evaluacion.id_practica);
-    await this.periodoContextService.validarPeriodoActivo(evaluacion.id_practica);
     await this.evaluacionRepository.remove(evaluacion);
   }
 }

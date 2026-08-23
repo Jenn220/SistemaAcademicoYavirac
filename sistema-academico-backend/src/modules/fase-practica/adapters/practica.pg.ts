@@ -48,87 +48,12 @@ export class PracticaPg implements IPracticaRepository {
     return this.practicaRepository.save(practica);
   }
 
-  async findAllPracticasConContexto(skip?: number, take?: number, where?: any): Promise<PracticaEntity[]> {
-    const query = this.practicaRepository.createQueryBuilder('p')
-      .leftJoinAndSelect('p.empresa', 'empresa')
-      .leftJoinAndSelect('p.tutor_empresarial', 'tutor_empresarial')
-      .leftJoin('matricula_detalle', 'md', 'md.id_matricula_detalle = p.id_matricula_detalle')
-      .leftJoin('oferta_asignatura', 'oa', 'oa.id_oferta_asignatura = md.id_oferta_asignatura')
-      .leftJoin('periodo_carrera', 'pc', 'pc.id_periodo_carrera = oa.id_periodo_carrera')
-      .addSelect('pc.id_periodo_carrera', 'id_periodo_carrera')
-      .addSelect('pc.id_periodo', 'id_periodo')
-      .addSelect('pc.id_carrera', 'id_carrera')
-      .addSelect('pc.estado', 'estado_periodo_carrera')
-      .addSelect('pc.fecha_inicio_fase_practica', 'fecha_inicio_fase_practica')
-      .addSelect('pc.fecha_fin_fase_practica', 'fecha_fin_fase_practica')
-      .addSelect('pc.id_coordinador', 'id_coordinador');
-
-    if (where?.id_periodo_carrera) {
-      query.andWhere('pc.id_periodo_carrera = :id_periodo_carrera', { id_periodo_carrera: where.id_periodo_carrera });
-    } else if (where?.estado_periodo_carrera) {
-      query.andWhere('pc.estado = :estado', { estado: where.estado_periodo_carrera });
-    }
-
-    if (skip !== undefined) query.skip(skip);
-    if (take !== undefined) query.take(take);
-
-    const resultados = await query.getRawMany();
-    return resultados.map((r: any) => ({
-      id_practica: Number(r.p_id_practica ?? r.id_practica),
-      id_periodo: Number(r.p_id_periodo ?? r.id_periodo ?? 0),
-      id_matricula_detalle: Number(r.p_id_matricula_detalle ?? r.id_matricula_detalle ?? 0),
-      id_empresa: Number(r.p_id_empresa ?? r.id_empresa ?? 0),
-      id_tutor_empresarial: Number(r.p_id_tutor_empresarial ?? r.id_tutor_empresarial ?? 0),
-      id_docente: Number(r.p_id_docente ?? r.id_docente ?? 0),
-      total_horas_requeridas: Number(r.p_total_horas_requeridas ?? r.total_horas_requeridas ?? 400),
-      total_horas_cumplidas: Number(r.p_total_horas_cumplidas ?? r.total_horas_cumplidas ?? 0),
-      estado: r.p_estado ?? r.estado ?? 'EN_CURSO',
-      empresa: r.empresa,
-      tutor_empresarial: r.tutor_empresarial,
-      id_periodo_carrera: r.id_periodo_carrera ? Number(r.id_periodo_carrera) : undefined,
-      id_carrera: r.id_carrera ? Number(r.id_carrera) : undefined,
-      codigo_periodo: r.codigo_periodo ?? undefined,
-      estado_periodo_carrera: r.estado_periodo_carrera ?? undefined,
-      fecha_inicio_fase_practica: r.fecha_inicio_fase_practica ?? undefined,
-      fecha_fin_fase_practica: r.fecha_fin_fase_practica ?? undefined,
-      id_coordinador: r.id_coordinador ? Number(r.id_coordinador) : undefined,
-      nombre_periodo: r.p_nombre_periodo ?? r.nombre_periodo ?? undefined,
-      nombre_carrera: r.p_nombre_carrera ?? r.nombre_carrera ?? undefined,
-      nombre_nivel: r.p_nombre_nivel ?? r.nombre_nivel ?? undefined,
-      nombre_nucleo: r.p_nombre_nucleo ?? r.nombre_nucleo ?? undefined,
-      nombre_tutor_academico: r.p_nombre_tutor_academico ?? r.nombre_tutor_academico ?? undefined,
-      nombre_coordinador: r.p_nombre_coordinador ?? r.nombre_coordinador ?? undefined,
-      nombre_empresa: r.p_nombre_empresa ?? r.nombre_empresa ?? undefined,
-      nombre_tutor_empresarial: r.p_nombre_tutor_empresarial ?? r.nombre_tutor_empresarial ?? undefined,
-      tipo_sangre: r.p_tipo_sangre ?? r.tipo_sangre ?? undefined,
-      contacto_emergencia_nombre: r.p_contacto_emergencia_nombre ?? r.contacto_emergencia_nombre ?? undefined,
-      contacto_emergencia_telefono: r.p_contacto_emergencia_telefono ?? r.contacto_emergencia_telefono ?? undefined,
-      hornada: r.p_hornada ?? r.hornada ?? undefined,
-      paralelo: r.p_paralelo ?? r.paralelo ?? undefined,
-    })) as any;
-  }
-
   async findAllPracticas(skip?: number, take?: number): Promise<PracticaEntity[]> {
     return this.practicaRepository.find({ skip, take });
   }
 
   async findPracticaById(id: number): Promise<PracticaEntity | null> {
-    const raw = await this.practicaRepository.createQueryBuilder('p')
-      .leftJoinAndSelect('p.empresa', 'empresa')
-      .leftJoinAndSelect('p.tutor_empresarial', 'tutor_empresarial')
-      .leftJoin('matricula_detalle', 'md', 'md.id_matricula_detalle = p.id_matricula_detalle')
-      .leftJoin('oferta_asignatura', 'oa', 'oa.id_oferta_asignatura = md.id_oferta_asignatura')
-      .leftJoin('periodo_carrera', 'pc', 'pc.id_periodo_carrera = oa.id_periodo_carrera')
-      .addSelect('pc.id_periodo_carrera', 'id_periodo_carrera')
-      .addSelect('pc.id_periodo', 'id_periodo')
-      .addSelect('pc.id_carrera', 'id_carrera')
-      .addSelect('pc.estado', 'estado_periodo_carrera')
-      .addSelect('pc.fecha_inicio_fase_practica', 'fecha_inicio_fase_practica')
-      .addSelect('pc.fecha_fin_fase_practica', 'fecha_fin_fase_practica')
-      .addSelect('pc.id_coordinador', 'id_coordinador')
-      .where('p.id_practica = :id', { id })
-      .getRawOne();
-    return (raw as PracticaEntity) ?? null;
+    return this.practicaRepository.findOne({ where: { id_practica: id } });
   }
 
   async updatePractica(id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {

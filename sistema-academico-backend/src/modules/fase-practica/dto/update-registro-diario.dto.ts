@@ -1,6 +1,10 @@
-import { IsBoolean, IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateRegistroDiarioDto {
+  @IsOptional()
+  @IsNumber()
+  id_practica?: number;
+
   @IsOptional()
   @IsDateString()
   fecha?: string;

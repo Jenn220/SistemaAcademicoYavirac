@@ -5,7 +5,6 @@ import { CreatePlanRotacionDto } from '../dto/create-plan-rotacion.dto';
 import { UpdatePlanRotacionDto } from '../dto/update-plan-rotacion.dto';
 import { PlanRotacionEntity } from '../domain/plan-rotacion.entity';
 import { ITEM_PLAN_MARCO_REPOSITORY, IItemPlanMarcoRepository } from '../ports/item-plan-marco.repository.port';
-import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class PlanRotacionService {
@@ -14,7 +13,6 @@ export class PlanRotacionService {
     private readonly planRotacionRepository: IPlanRotacionRepository,
     @Inject(ITEM_PLAN_MARCO_REPOSITORY)
     private readonly itemPlanMarcoRepository: IItemPlanMarcoRepository,
-    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   async create(dto: CreatePlanRotacionDto): Promise<PlanRotacionEntity> {
@@ -22,8 +20,6 @@ export class PlanRotacionService {
     if (!itemPlanMarco) {
       throw new NotFoundException(`Item plan marco con id ${dto.id_item_pm} no encontrado`);
     }
-
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
 
     const data = {
       id_practica: dto.id_practica,
@@ -45,14 +41,12 @@ export class PlanRotacionService {
   }
 
   async update(id: number, dto: UpdatePlanRotacionDto): Promise<PlanRotacionEntity> {
-    const plan = await this.findById(id);
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(plan.id_practica);
+    await this.findById(id);
     return this.planRotacionRepository.update(id, dto);
   }
 
   async remove(id: number): Promise<void> {
-    const plan = await this.findById(id);
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(plan.id_practica);
+    await this.findById(id);
     return this.planRotacionRepository.remove(id);
   }
 }

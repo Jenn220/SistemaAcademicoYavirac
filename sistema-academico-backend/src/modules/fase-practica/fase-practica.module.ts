@@ -60,7 +60,6 @@ import { PlanMarcoService } from './services/plan-marco.service';
 import { ItemPlanMarcoService } from './services/item-plan-marco.service';
 import { EvaluacionPlanMarcoService } from './services/evaluacion-plan-marco.service';
 import { NotificacionService } from './services/notificacion.service';
-import { PeriodoContextService } from './services/periodo-context.service';
 import { InformeFasePracticaPg } from './adapters/informe-fase-practica.pg';
 import {
   INFORME_FASE_PRACTICA_REPOSITORY,
@@ -249,7 +248,6 @@ import { NotificacionPg } from './adapters/notificacion.pg';
     EvaluacionEmpresaService,
     EvaluacionInstitutoService,
     NotificacionService,
-    PeriodoContextService,
     {
       provide: NOTIFICACION_REPOSITORY,
       useClass: NotificacionPg,

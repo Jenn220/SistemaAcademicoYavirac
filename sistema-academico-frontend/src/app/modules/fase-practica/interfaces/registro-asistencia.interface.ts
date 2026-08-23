@@ -56,6 +56,4 @@ export interface RegistroAsistencia{
 
     subtotalHorasPractica:number;
 
-    horasRequeridas:number;
-
 }

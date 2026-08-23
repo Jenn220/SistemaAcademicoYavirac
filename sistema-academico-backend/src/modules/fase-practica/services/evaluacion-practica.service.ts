@@ -4,21 +4,18 @@ import { EVALUACION_PRACTICA_REPOSITORY, IEvaluacionPracticaRepository } from '.
 import { CreateEvaluacionPracticaDto } from '../dto/create-evaluacion-practica.dto';
 import { UpdateEvaluacionPracticaDto } from '../dto/update-evaluacion-practica.dto';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
-import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class EvaluacionPracticaService {
   constructor(
     @Inject(EVALUACION_PRACTICA_REPOSITORY)
     private readonly evaluacionPracticaRepository: IEvaluacionPracticaRepository,
-    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   async create(dto: CreateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
     if (dto.nota_final_calculada !== undefined && (dto.nota_final_calculada < 0 || dto.nota_final_calculada > 10)) {
       throw new BadRequestException('La nota final calculada debe estar entre 0 y 10');
     }
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
     return this.evaluacionPracticaRepository.create(dto);
   }
 
@@ -36,14 +33,12 @@ export class EvaluacionPracticaService {
     if (dto.nota_final_calculada !== undefined && (dto.nota_final_calculada < 0 || dto.nota_final_calculada > 10)) {
       throw new BadRequestException('La nota final calculada debe estar entre 0 y 10');
     }
-    const evaluacion = await this.findById(id);
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
+    await this.findById(id);
     return this.evaluacionPracticaRepository.update(id, dto);
   }
 
   async remove(id: number): Promise<void> {
-    const evaluacion = await this.findById(id);
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
+    await this.findById(id);
     return this.evaluacionPracticaRepository.remove(id);
   }
 }

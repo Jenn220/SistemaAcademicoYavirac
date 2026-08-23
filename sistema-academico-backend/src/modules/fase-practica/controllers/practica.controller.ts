@@ -49,8 +49,8 @@ export class PracticaController {
    * docente veía estudiantes de otros profesores.
    */
   @Get('practicas')
-  findAllPracticas(@Req() req: any, @Query('skip') skip?: string, @Query('take') take?: string, @Query('id_periodo_carrera') idPeriodoCarrera?: string) {
-    return this.practicaService.findAllPracticas(req.user, skip ? Number(skip) : undefined, take ? Number(take) : undefined, idPeriodoCarrera ? Number(idPeriodoCarrera) : undefined);
+  findAllPracticas(@Req() req: any, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findAllPracticas(req.user, skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Get('practicas/:id')

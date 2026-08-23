@@ -3,6 +3,10 @@ import { IsDateString, IsNumber, IsOptional, IsString, MaxLength, Min, Max } fro
 export class UpdateEvaluacionPracticaDto {
   @IsOptional()
   @IsNumber()
+  id_practica?: number;
+
+  @IsOptional()
+  @IsNumber()
   id_rubrica?: number;
 
   @IsOptional()

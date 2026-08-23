@@ -327,27 +327,13 @@
                     <td>-</td>
                     <td>-</td>
                     <td>-</td>
-                    <td>{{ horasAutonomasCalculado }}</td>
+                    <td>{{ registro.horasAutonomas }}</td>
                     <td></td>
                     <td>HORAS AUTÓNOMAS</td>
 
                 </tr>
 
             </tbody>
-
-            <tfoot>
-
-                <tr>
-
-                    <td colspan="5"></td>
-
-                    <td><strong>{{ subtotalHorasPracticaCalculado }}</strong></td>
-
-                    <td colspan="2"></td>
-
-                </tr>
-
-            </tfoot>
 
         </table>
 
@@ -359,19 +345,7 @@
 
             </strong>
 
-            {{ subtotalHorasPracticaCalculado }}
-
-        </div>
-
-        <div class="totales">
-
-            <strong>
-
-                HORAS REQUERIDAS:
-
-            </strong>
-
-            {{ registro.horasRequeridas }}
+            {{ registro.subtotalHorasPractica }}
 
         </div>
 
