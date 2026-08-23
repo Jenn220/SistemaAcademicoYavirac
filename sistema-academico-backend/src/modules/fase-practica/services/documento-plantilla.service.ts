@@ -663,7 +663,7 @@ export class DocumentoPlantillaService {
     });
 
     const bitacoras = await this.bitacoraRepository.find({
-      where: { id_informe: informe?.id_informe ?? 1 },
+      where: informe?.id_informe ? { id_informe: informe.id_informe } : {},
       order: { semana: 'ASC' },
     });
 
@@ -1083,7 +1083,7 @@ export class DocumentoPlantillaService {
       }
 
       if (!idPractica) {
-        idPractica = idPracticaSolicitado ?? (await this.obtenerIdPractica(usuario, idPracticaSolicitado));
+        idPractica = idPracticaSolicitado ? await this.obtenerIdPractica(usuario, idPracticaSolicitado) : undefined;
       }
 
       if (idPractica && !forzar) {

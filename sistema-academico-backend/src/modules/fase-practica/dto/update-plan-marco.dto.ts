@@ -1,10 +1,6 @@
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsOptional, IsString, Min } from 'class-validator';
 
 export class UpdatePlanMarcoDto {
-  @IsOptional()
-  @IsInt()
-  id_practica?: number;
-
   @IsOptional()
   @IsInt()
   horas_formacion?: number;

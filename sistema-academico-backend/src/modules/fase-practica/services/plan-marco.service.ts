@@ -122,17 +122,23 @@ export class PlanMarcoService {
     const planesRotacion = await this.planRotacionRepo.findByPractica(planMarco.id_practica);
 
     let planRotacion = planesRotacion[0] || null;
+
     if (!planRotacion) {
-      planRotacion = await this.planRotacionRepo.create({
-        id_practica: planMarco.id_practica,
-        id_item_pm: items[0]?.id_item_pm || 0,
-        puesto_aprendizaje: items[0]?.puesto_aprendizaje || '',
-      });
+      const existentes = await this.planRotacionSemanaRepo.findByPlanRotacion(planRotacion?.id_plan_rotacion ?? 0);
+      if (existentes.length === 0) {
+        planRotacion = await this.planRotacionRepo.create({
+          id_practica: planMarco.id_practica,
+          id_item_pm: items[0]?.id_item_pm || 0,
+          puesto_aprendizaje: items[0]?.puesto_aprendizaje || '',
+        });
+      }
     }
 
-    const existentes = await this.planRotacionSemanaRepo.findByPlanRotacion(planRotacion.id_plan_rotacion);
-    if (existentes.length > 0) {
-      await this.planRotacionSemanaRepo.deleteByPlanRotacion(planRotacion.id_plan_rotacion);
+    if (planRotacion) {
+      const existentes = await this.planRotacionSemanaRepo.findByPlanRotacion(planRotacion.id_plan_rotacion);
+      if (existentes.length > 0) {
+        await this.planRotacionSemanaRepo.deleteByPlanRotacion(planRotacion.id_plan_rotacion);
+      }
     }
 
     for (const item of items) {

@@ -1,7 +1,8 @@
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateRegistroDiarioDto {
   @IsNumber()
+  @Min(1)
   id_practica!: number;
 
   @IsDateString()

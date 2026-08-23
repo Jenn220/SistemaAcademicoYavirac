@@ -3,10 +3,6 @@ import { IsNumber, IsOptional, IsString, Max, MaxLength } from 'class-validator'
 export class UpdateDetalleEvaluacionDto {
   @IsOptional()
   @IsNumber()
-  id_evaluacion?: number;
-
-  @IsOptional()
-  @IsNumber()
   id_item?: number;
 
   @IsOptional()

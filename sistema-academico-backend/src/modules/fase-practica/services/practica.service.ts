@@ -61,9 +61,10 @@ export class PracticaService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async createPractica(dto: CreatePracticaDto): Promise<PracticaEntity> {
+  async createPractica(usuario: any, dto: CreatePracticaDto): Promise<PracticaEntity> {
     const data = {
       ...dto,
+      id_docente: usuario.idDocente,
       total_horas_requeridas: dto.total_horas_requeridas ?? 400,
       total_horas_cumplidas: dto.total_horas_cumplidas ?? 0,
       estado: dto.estado ?? 'EN_CURSO',
@@ -133,16 +134,17 @@ export class PracticaService {
     });
   }
 
-  async findPracticaById(id: number): Promise<PracticaEntity> {
+  async findPracticaById(usuario: any, id: number): Promise<PracticaEntity> {
     const practica = await this.practicaRepository.findPracticaById(id);
     if (!practica) {
       throw new NotFoundException(`No se encontró la práctica con id ${id}`);
     }
+    await this.verificarAccesoPractica(usuario, practica);
     return practica;
   }
 
-  async updatePractica(id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
-    await this.findPracticaById(id);
+  async updatePractica(usuario: any, id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
+    await this.esDuenoDePractica(usuario, id);
     return this.practicaRepository.updatePractica(id, dto);
   }
 
@@ -167,8 +169,8 @@ export class PracticaService {
     );
   }
 
-  async removePractica(id: number): Promise<void> {
-    await this.findPracticaById(id);
+  async removePractica(usuario: any, id: number): Promise<void> {
+    await this.esDuenoDePractica(usuario, id);
     await this.practicaRepository.removePractica(id);
   }
 
@@ -177,18 +179,31 @@ export class PracticaService {
     if (!practica) {
       throw new NotFoundException(`Práctica con id ${idPractica} no encontrada`);
     }
-    if (!Array.isArray(usuario?.roles) || !usuario.roles.includes('ESTUDIANTE')) {
-      return;
+    await this.verificarAccesoPractica(usuario, practica);
+  }
+
+  private async verificarAccesoPractica(usuario: any, practica: PracticaEntity): Promise<void> {
+    if (!practica) {
+      throw new NotFoundException('Práctica no encontrada');
     }
-    const esDueno = await this.dataSource.query(
-      `SELECT 1 FROM matricula_detalle md
-       JOIN matricula m ON m.id_matricula = md.id_matricula
-       WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
-      [practica.id_matricula_detalle, usuario.idEstudiante],
-    );
-    if (!esDueno || esDueno.length === 0) {
-      throw new BadRequestException('No tienes permiso para modificar esta práctica');
+
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    if (roles.includes('DOCENTE') && Number(practica.id_docente) === Number(usuario.idDocente)) return;
+    if (roles.includes('TUTOR_EMPRESARIAL') && Number(practica.id_empresa) === Number(usuario.idEmpresa)) return;
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
+        [practica.id_matricula_detalle, usuario.idEstudiante],
+      );
+      if (esDueno && esDueno.length > 0) return;
     }
+
+    throw new ForbiddenException('No tiene permisos para acceder a esta práctica.');
   }
 
   async createRegistroDiario(usuario: any, dto: CreateRegistroDiarioDto): Promise<RegistroDiarioEntity> {

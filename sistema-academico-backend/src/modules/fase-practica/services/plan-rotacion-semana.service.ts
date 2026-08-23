@@ -14,18 +14,38 @@ export class PlanRotacionSemanaService {
   ) {}
 
   private async esDuenoDePractica(usuario: any, idPractica: number): Promise<void> {
-    if (!Array.isArray(usuario?.roles) || !usuario.roles.includes('ESTUDIANTE')) {
-      return;
-    }
-    const esDueno = await this.dataSource.query(
-      `SELECT 1 FROM matricula_detalle md
-       JOIN matricula m ON m.id_matricula = md.id_matricula
-       JOIN practica_estudiante pe ON pe.id_matricula_detalle = md.id_matricula_detalle
-       WHERE pe.id_practica = $1 AND m.id_estudiante = $2`,
-      [idPractica, usuario.idEstudiante],
-    );
-    if (!esDueno || esDueno.length === 0) {
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    const esDocente = roles.includes('DOCENTE');
+    const esTutor = roles.includes('TUTOR_EMPRESARIAL');
+    const esEstudiante = roles.includes('ESTUDIANTE');
+    if (!esDocente && !esTutor && !esEstudiante) return;
+
+    if (esDocente || esTutor) {
+      const practica = await this.dataSource.query(
+        `SELECT id_docente, id_empresa FROM practica_estudiante WHERE id_practica = $1 LIMIT 1`,
+        [idPractica],
+      );
+      if (practica.length === 0) {
+        throw new NotFoundException('No tienes permiso para modificar este plan de rotación');
+      }
+      if (esDocente && Number(practica[0].id_docente) === Number(usuario.idDocente)) return;
+      if (esTutor && Number(practica[0].id_empresa) === Number(usuario.idEmpresa)) return;
       throw new NotFoundException('No tienes permiso para modificar este plan de rotación');
+    }
+
+    if (esEstudiante) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         JOIN practica_estudiante pe ON pe.id_matricula_detalle = md.id_matricula_detalle
+         WHERE pe.id_practica = $1 AND m.id_estudiante = $2`,
+        [idPractica, usuario.idEstudiante],
+      );
+      if (!esDueno || esDueno.length === 0) {
+        throw new NotFoundException('No tienes permiso para modificar este plan de rotación');
+      }
     }
   }
 
@@ -83,18 +103,26 @@ export class PlanRotacionSemanaService {
   async guardarMatrizSemanas(usuario: any, idPlanRotacion: number, semanas: { id_item_pm?: number; semana: number; es_defensa_proyecto?: boolean }[]): Promise<PlanRotacionSemanaEntity[]> {
     const idPractica = await this.obtenerIdPracticaDesdePlanRotacion(idPlanRotacion);
     await this.esDuenoDePractica(usuario, idPractica);
-    await this.repo.deleteByPlanRotacion(idPlanRotacion);
-    const resultados: PlanRotacionSemanaEntity[] = [];
-    for (const s of semanas) {
-      const data: any = {
-        id_plan_rotacion: idPlanRotacion,
-        semana: s.semana,
-        id_item_pm: s.es_defensa_proyecto ? null : s.id_item_pm,
-        es_defensa_proyecto: s.es_defensa_proyecto || false,
-      };
-      const creada = await this.repo.create(data);
-      resultados.push(creada);
-    }
-    return resultados;
+
+    return this.dataSource.manager.transaction(async (manager) => {
+      await manager.createQueryBuilder()
+        .delete()
+        .from('plan_rotacion_semana')
+        .where('id_plan_rotacion = :idPlanRotacion', { idPlanRotacion })
+        .execute();
+
+      const resultados: PlanRotacionSemanaEntity[] = [];
+      for (const s of semanas) {
+        const data: any = {
+          id_plan_rotacion: idPlanRotacion,
+          semana: s.semana,
+          id_item_pm: s.es_defensa_proyecto ? null : s.id_item_pm,
+          es_defensa_proyecto: s.es_defensa_proyecto || false,
+        };
+        const creada = await manager.getRepository(PlanRotacionSemanaEntity).save(data);
+        resultados.push(creada);
+      }
+      return resultados;
+    });
   }
 }

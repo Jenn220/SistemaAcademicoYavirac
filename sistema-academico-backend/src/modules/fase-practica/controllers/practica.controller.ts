@@ -38,8 +38,8 @@ export class PracticaController {
   constructor(private readonly practicaService: PracticaService) {}
 
   @Post('practicas')
-  createPractica(@Body() dto: CreatePracticaDto) {
-    return this.practicaService.createPractica(dto);
+  createPractica(@Req() req: any, @Body() dto: CreatePracticaDto) {
+    return this.practicaService.createPractica(req.user, dto);
   }
 
   /**
@@ -54,12 +54,12 @@ export class PracticaController {
   }
 
   @Get('practicas/:id')
-  findPracticaById(@Param('id') id: string) {
+  findPracticaById(@Req() req: any, @Param('id') id: string) {
     const idNum = Number(id);
     if (!Number.isInteger(idNum) || idNum <= 0) {
       throw new BadRequestException('Identificador de práctica inválido.');
     }
-    return this.practicaService.findPracticaById(idNum);
+    return this.practicaService.findPracticaById(req.user, idNum);
   }
 
   /**
@@ -68,8 +68,8 @@ export class PracticaController {
    */
   @Patch('practicas/:id')
   @Roles('COORDINADOR')
-  updatePractica(@Param('id') id: string, @Body() dto: UpdatePracticaDto) {
-    return this.practicaService.updatePractica(Number(id), dto);
+  updatePractica(@Req() req: any, @Param('id') id: string, @Body() dto: UpdatePracticaDto) {
+    return this.practicaService.updatePractica(req.user, Number(id), dto);
   }
 
   /** Catálogos de solo lectura para los selects de la pantalla de Asignaciones. */
@@ -86,8 +86,8 @@ export class PracticaController {
   }
 
   @Delete('practicas/:id')
-  removePractica(@Param('id') id: string) {
-    return this.practicaService.removePractica(Number(id)).then(() => ({
+  removePractica(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.removePractica(req.user, Number(id)).then(() => ({
       deleted: true,
       id_practica: Number(id),
     }));

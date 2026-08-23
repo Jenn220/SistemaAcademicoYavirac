@@ -78,12 +78,12 @@ export class DocumentoController {
   }
 
   @Get('buscar')
-  buscarIdDocumento(@Query('idPractica') idPractica: string, @Query('codigoFormato') codigoFormato: string) {
+  buscarIdDocumento(@Req() req: any, @Query('idPractica') idPractica: string, @Query('codigoFormato') codigoFormato: string) {
     const idNum = Number(idPractica);
     if (!Number.isInteger(idNum) || idNum <= 0) {
       throw new BadRequestException('Identificador de práctica inválido.');
     }
-    return this.documentoService.buscarIdDocumento(idNum, codigoFormato);
+    return this.documentoService.buscarIdDocumento(req.user, idNum, codigoFormato);
   }
 
   @Patch(':id/estado')
@@ -98,21 +98,18 @@ export class DocumentoController {
 
   @Get(':id')
   @Roles('DOCENTE', 'ESTUDIANTE', 'TUTOR_EMPRESARIAL', 'COORDINADOR')
-  buscarPorId(@Param('id') id: string) {
+  buscarPorId(@Req() req: any, @Param('id') id: string) {
     const idNum = Number(id);
     if (!Number.isInteger(idNum) || idNum <= 0) {
       throw new BadRequestException('Identificador de documento inválido.');
     }
-    return this.documentoService.buscarPorId(idNum);
+    return this.documentoService.buscarPorId(req.user, idNum);
   }
 
   // Los POST tienen su propio @Roles por formato (más restrictivo que el de
   // la clase): TUTOR_EMPRESARIAL nunca guarda F01/F02/F05/F06/F10/F11;
   // ESTUDIANTE nunca guarda F07/F08. F07/F08 ahora los crea TUTOR_EMPRESARIAL
   // y los aprueba el DOCENTE (tutor académico asignado).
-
-  @Post('carta-compromiso')
-  @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
 
   @Post('carta-compromiso')
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
@@ -132,10 +129,7 @@ export class DocumentoController {
   @Roles('DOCENTE', 'ESTUDIANTE', 'COORDINADOR')
   async createRegistroAsistencia(@Body() dto: CreateDocumentoDto, @Req() req: any, @Query('idPractica') idPractica?: string) {
     const contenido = dto?.contenido ?? await this.documentoService.getRegistroAsistencia(req.user, this.parseIdPractica(idPractica));
-    console.log('Guardando registro de asistencia', { idPractica: this.parseIdPractica(idPractica), userId: req.user.sub, contenidoKeys: Object.keys(contenido || {}) });
-    const resultado = await this.documentoService.guardarDocumento('F05', 'Registro de Asistencia', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub);
-    console.log('Registro de asistencia guardado', { idDocumento: resultado.id_documento });
-    return resultado;
+    return this.documentoService.guardarDocumento('F05', 'Registro de Asistencia', contenido, this.parseIdPractica(idPractica), req.user.idEstudiante ?? undefined, req.user.sub);
   }
 
   @Post('informe-aprendizaje')

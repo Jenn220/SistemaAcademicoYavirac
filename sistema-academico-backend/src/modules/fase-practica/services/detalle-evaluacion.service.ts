@@ -94,6 +94,17 @@ export class DetalleEvaluacionService {
 
   async create(usuario: any, dto: CreateDetalleEvaluacionDto): Promise<DetalleEvaluacionEntity> {
     await this.verificarAcceso(usuario, dto.id_evaluacion!);
+
+    if (dto.puntaje_asignado !== undefined && dto.puntaje_asignado !== null) {
+      const item = await this.dataSource.query(
+        `SELECT puntaje_maximo FROM item_rubrica WHERE id_item = $1 LIMIT 1`,
+        [dto.id_item],
+      );
+      if (item.length > 0 && Number(dto.puntaje_asignado) > Number(item[0].puntaje_maximo)) {
+        throw new BadRequestException(`El puntaje asignado (${dto.puntaje_asignado}) excede el puntaje máximo del criterio (${item[0].puntaje_maximo}).`);
+      }
+    }
+
     return this.repo.create(dto);
   }
 
@@ -110,6 +121,17 @@ export class DetalleEvaluacionService {
   async update(usuario: any, id: number, dto: UpdateDetalleEvaluacionDto): Promise<DetalleEvaluacionEntity> {
     const detalle = await this.findOne(id);
     await this.verificarAcceso(usuario, detalle.id_evaluacion);
+
+    if (dto.puntaje_asignado !== undefined && dto.puntaje_asignado !== null) {
+      const item = await this.dataSource.query(
+        `SELECT puntaje_maximo FROM item_rubrica WHERE id_item = $1 LIMIT 1`,
+        [detalle.id_item],
+      );
+      if (item.length > 0 && Number(dto.puntaje_asignado) > Number(item[0].puntaje_maximo)) {
+        throw new BadRequestException(`El puntaje asignado (${dto.puntaje_asignado}) excede el puntaje máximo del criterio (${item[0].puntaje_maximo}).`);
+      }
+    }
+
     return this.repo.update(id, dto);
   }
 
