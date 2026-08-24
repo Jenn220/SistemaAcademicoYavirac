@@ -27,14 +27,14 @@ export class DetalleEvaluacionController {
 
   @Get('evaluaciones/:idEvaluacion/detalles')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  findByEvaluacion(@Param('idEvaluacion') idEvaluacion: string) {
-    return this.service.findByEvaluacion(Number(idEvaluacion));
+  findByEvaluacion(@Req() req: any, @Param('idEvaluacion') idEvaluacion: string) {
+    return this.service.findByEvaluacion(req.user, Number(idEvaluacion));
   }
 
   @Get('detalles-evaluacion/:id')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR', 'TUTOR_EMPRESARIAL')
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(Number(id));
+  findOne(@Req() req: any, @Param('id') id: string) {
+    return this.service.findOne(req.user, Number(id));
   }
 
   @Patch('detalles-evaluacion/:id')

@@ -108,13 +108,15 @@ export class DetalleEvaluacionService {
     return this.repo.create(dto);
   }
 
-  async findByEvaluacion(idEvaluacion: number): Promise<DetalleEvaluacionEntity[]> {
+  async findByEvaluacion(usuario: any, idEvaluacion: number): Promise<DetalleEvaluacionEntity[]> {
+    await this.verificarAcceso(usuario, idEvaluacion);
     return this.repo.findByEvaluacion(idEvaluacion);
   }
 
-  async findOne(id: number): Promise<DetalleEvaluacionEntity> {
+  async findOne(usuario: any, id: number): Promise<DetalleEvaluacionEntity> {
     const detalle = await this.repo.findOne(id);
     if (!detalle) throw new NotFoundException(`Detalle de evaluación con id ${id} no encontrado`);
+    await this.verificarAcceso(usuario, detalle.id_evaluacion);
     return detalle;
   }
 
