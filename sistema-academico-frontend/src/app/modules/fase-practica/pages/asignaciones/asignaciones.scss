@@ -1,0 +1,164 @@
+@import '../../_shared-documento-styles';
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 24px;
+}
+
+.contenedor {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.75rem 2rem;
+  box-shadow:
+    0 8px 40px rgba(22, 61, 140, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.cabecera {
+  margin-bottom: 20px;
+  position: relative;
+
+  .btn-volver {
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    margin: 0 0 4px;
+    color: #163d8c;
+    font-weight: 700;
+  }
+
+  .subtitulo {
+    color: #6a7a8e;
+    margin: 0;
+  }
+}
+
+.buscador {
+  margin-bottom: 16px;
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e8ecf2;
+    border-radius: 8px;
+    background: #fafcff;
+    font-size: 14px;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #163d8c;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
+    }
+  }
+}
+
+.tabla-asignaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fila-encabezado,
+.fila-asignacion {
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 1.3fr 1.6fr .8fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.fila-encabezado {
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #163d8c;
+}
+
+.fila-asignacion {
+  background: #fff;
+  border: 1px solid #e8ecf2;
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: box-shadow .2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 10px rgba(22, 61, 140, .08);
+  }
+}
+
+.celda-estudiante {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .cedula,
+  .practica-id {
+    font-size: 12px;
+    color: #6a7a8e;
+  }
+}
+
+.celda-empresa {
+  font-size: 13px;
+  color: #1e2a3a;
+}
+
+.celda-select select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 2px solid #e8ecf2;
+  border-radius: 8px;
+  background: #fafcff;
+  font-size: 13px;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #163d8c;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
+  }
+}
+
+.celda-guardar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+
+  .contenedor {
+    padding: 1.25rem 1.2rem;
+  }
+
+  .fila-encabezado {
+    display: none;
+  }
+
+  .fila-asignacion {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .celda-guardar {
+    justify-content: flex-start;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+}

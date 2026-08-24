@@ -1,10 +1,12 @@
 export class ReporteDto {
+  id_reporte_notas: number;
   carrera: string;
   nivel: string;
   asignatura: string;
   paralelo: string;
   jornada: string;
   docente: string;
+  coordinador: string | null;
   periodo: string;
   tipo_reporte: string;
   fecha_generacion: Date;

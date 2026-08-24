@@ -1,0 +1,100 @@
+<div class="contenedor">
+
+    <div class="cabecera">
+
+        <h2>{{ titulo() }}</h2>
+
+        <p class="subtitulo">Busca al estudiante por nombre, cédula o empresa y selecciona su práctica.</p>
+
+    </div>
+
+    @if (!cargando() && !error() && practicas().length > 0) {
+
+    <div class="buscador">
+        <input
+            type="text"
+            placeholder="Buscar por nombre, cédula o empresa..."
+            [value]="busqueda()"
+            (input)="buscar($any($event.target).value)">
+        @if (semestresDisponibles().length > 0) {
+        <select (change)="setFiltroSemestre($any($event.target).value)">
+            <option value="">Semestre</option>
+            @for (semestre of semestresDisponibles(); track semestre) {
+            <option [value]="semestre" [selected]="filtroSemestre() === semestre">{{ semestre }}</option>
+            }
+        </select>
+        }
+        @if (paralelosDisponibles().length > 0) {
+        <select (change)="setFiltroParalelo($any($event.target).value)">
+            <option value="">Paralelo</option>
+            @for (paralelo of paralelosDisponibles(); track paralelo) {
+            <option [value]="paralelo" [selected]="filtroParalelo() === paralelo">{{ paralelo }}</option>
+            }
+        </select>
+        }
+        @if (jornadasDisponibles().length > 0) {
+        <select (change)="setFiltroJornada($any($event.target).value)">
+            <option value="">Jornada</option>
+            @for (jornada of jornadasDisponibles(); track jornada) {
+            <option [value]="jornada" [selected]="filtroJornada() === jornada">{{ jornada }}</option>
+            }
+        </select>
+        }
+    </div>
+
+    }
+
+    @if (cargando()) {
+
+    <p class="text-center text-muted my-4">Cargando prácticas...</p>
+
+    } @else if (error()) {
+
+    <p class="text-center text-danger my-4">{{ error() }}</p>
+
+    } @else if (practicas().length === 0) {
+
+    <p class="text-center text-muted my-4">No hay prácticas registradas todavía.</p>
+
+    } @else if (practicasFiltradas().length === 0) {
+
+    <p class="text-center text-muted my-4">Ningún estudiante coincide con los filtros aplicados.</p>
+
+    } @else {
+
+    <div class="lista-practicas">
+
+        @for (practica of practicasFiltradas(); track practica.id_practica) {
+
+        <button class="tarjeta-practica" type="button" (click)="seleccionar(practica)">
+
+            <div class="tarjeta-titulo">
+                {{ nombreEstudiante(practica) }}
+                <span class="badge-estado">{{ practica.estado || 'EN_CURSO' }}</span>
+            </div>
+
+            <div class="tarjeta-detalle">
+                <span><strong>Cédula:</strong> {{ practica.estudiante?.cedula || '—' }}</span>
+                <span><strong>Empresa:</strong> {{ nombreEmpresa(practica) }}</span>
+                <span><strong>Tutor empresarial:</strong> {{ nombreTutor(practica) }}</span>
+                @if (practica.semestre) {
+                <span><strong>Semestre:</strong> {{ practica.semestre }}</span>
+                }
+                @if (practica.paralelo) {
+                <span><strong>Paralelo:</strong> {{ practica.paralelo }}</span>
+                }
+                @if (practica.jornada) {
+                <span><strong>Jornada:</strong> {{ practica.jornada }}</span>
+                }
+                <span class="tarjeta-id">Práctica #{{ practica.id_practica }}</span>
+            </div>
+
+        </button>
+
+        }
+
+    </div>
+
+    }
+
+</div>

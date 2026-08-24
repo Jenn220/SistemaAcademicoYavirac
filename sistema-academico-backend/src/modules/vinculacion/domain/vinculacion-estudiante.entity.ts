@@ -1,10 +1,10 @@
 import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 @Entity('vinculacion_estudiante')
-@Unique(['id_matricula_detalle']) // Mapea la restricción UNIQUE de la base de datos
+@Unique(['id_matricula_detalle'])
 export class VinculacionEstudianteEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id_vinculacion: string; // JavaScript maneja bigint como string en TypeORM para evitar pérdida de precisión
+  id_vinculacion: string;
 
   @Column({ type: 'bigint' })
   id_periodo: string;
@@ -17,6 +17,10 @@ export class VinculacionEstudianteEntity {
 
   @Column({ type: 'bigint' })
   id_docente: string;
+
+  // 👇 AGREGAR ESTA COLUMNA
+  @Column({ type: 'bigint', nullable: true })
+  id_entidad_receptora: string | null;
 
   @Column({ type: 'varchar', length: 255 })
   nombre_proyecto: string;

@@ -1,0 +1,274 @@
+<div class="toolbar no-print">
+
+    <button class="btn btn-outline-secondary" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </button>
+
+    <button class="btn btn-primary" (click)="descargarWord()">
+        <i class="bi bi-file-earmark-word-fill"></i>
+        Descargar Word
+    </button>
+
+    @if (!soloLectura) {
+    <button class="btn btn-warning text-white" [disabled]="guardando" (click)="guardarEnBD()">
+        <i class="bi bi-save"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
+
+    @if(puedeEnviarRevision){
+    <button class="btn btn-success" (click)="enviarARevision()">
+        <i class="bi bi-send"></i>
+        Enviar a revisión
+    </button>
+    }
+
+    @if(puedeAprobar){
+    <button class="btn btn-success" (click)="aprobar()">
+        <i class="bi bi-check-circle"></i>
+        Aprobar
+    </button>
+    }
+
+    @if(puedeSolicitarCorrecciones){
+    <button class="btn btn-danger" (click)="solicitarCorrecciones()">
+        <i class="bi bi-exclamation-circle"></i>
+        Solicitar correcciones
+    </button>
+    }
+
+    <span class="badge-estado" [class.borrador]="estadoDocumento === 'borrador'" [class.pendiente]="estadoDocumento === 'pendiente_revision'" [class.aprobado]="estadoDocumento === 'aprobado'" [class.rechazado]="estadoDocumento === 'rechazado'">
+        {{ estadoDocumento === 'borrador' ? 'Borrador' : estadoDocumento === 'pendiente_revision' ? 'Pendiente de revisión' : estadoDocumento === 'aprobado' ? 'Aprobado' : 'Rechazado' }}
+    </span>
+
+</div>
+
+@if(mostrarComentarios){
+<div class="comentarios-correccion">
+    <strong>Comentarios de corrección:</strong>
+    <p>{{ comentariosDocumento }}</p>
+</div>
+}
+
+<div id="acta-entorno-laboral" class="documento">
+
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                <strong>CÓDIGO</strong><br>
+                010211
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 11 ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>FECHA:</strong></td>
+            <td>{{ acta.encabezado.fecha }}</td>
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ acta.encabezado.carrera }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>PERÍODO ACADÉMICO:</strong></td>
+            <td>{{ acta.encabezado.periodoAcademico }}</td>
+            <td><strong>ENTIDAD RECEPTORA FORMADORA:</strong></td>
+            <td>{{ acta.encabezado.entidadReceptora }}</td>
+
+        </tr>
+
+    </table>
+
+    <div class="contenido">
+
+        <p class="text-center"><strong>{{ acta.encabezado.fecha }}</strong></p>
+
+        <h3 class="text-center">{{ acta.encabezado.titulo }}</h3>
+
+        <div class="caja-texto">
+
+            @for (parrafo of acta.textoLegal; track $index) {
+                <p>{{ parrafo }}</p>
+            }
+
+        </div>
+
+        @if (acta.anexos?.length) {
+
+            <div class="caja-anexos">
+
+                <strong>ANEXOS:</strong>
+
+                <ol>
+                    @for (anexo of acta.anexos; track $index) {
+                        <li>{{ anexo }}</li>
+                    }
+                </ol>
+
+            </div>
+
+        }
+
+        @if (acta.estudiantes?.length) {
+
+        <h4>Listado de Estudiantes</h4>
+
+        <table class="tabla-datos">
+
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Nombre</th>
+                    <th>Cédula</th>
+                    <th>Nivel</th>
+                    <th>Nota</th>
+                    <th>Firma</th>
+                    @if (!soloLectura) {
+                    <th class="no-print"></th>
+                    }
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (est of acta.estudiantes; track $index) {
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ est.nombre }}</td>
+                        <td>{{ est.cedula }}</td>
+                        <td>{{ est.nivel }}</td>
+                        <td>{{ est.nota }}</td>
+                        <td>{{ est.firma }}</td>
+                        @if (!soloLectura) {
+                        <td class="text-center no-print">
+                            <button type="button" class="btn-eliminar-fila" (click)="quitarEstudiante($index)" title="Quitar estudiante">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                        }
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+        }
+
+        @if (!soloLectura) {
+
+        <div class="caja-candidatos no-print">
+
+            <strong>Agregar estudiantes (misma empresa, tutor empresarial y docente)</strong>
+
+            @if (cargandoCandidatos) {
+            <p class="texto-candidatos">Buscando estudiantes...</p>
+            } @else if (candidatosDisponibles.length === 0) {
+            <p class="texto-candidatos">No hay más estudiantes disponibles para agregar.</p>
+            } @else {
+            <ul class="lista-candidatos">
+                @for (candidato of candidatosDisponibles; track candidato.cedula) {
+                <li>
+                    <span>{{ candidato.nombre }} — {{ candidato.cedula }} (Nivel {{ candidato.nivel }}, Nota {{ candidato.nota || '—' }})</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarEstudiante(candidato)">
+                        <i class="bi bi-plus-lg"></i>
+                        Agregar
+                    </button>
+                </li>
+                }
+            </ul>
+            }
+
+        </div>
+
+        }
+
+        <div class="caja-firmas">
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>TUTOR EMPRESARIAL</span>
+                <p>{{ acta.firmas.tutorEmpresarial.nombre }}</p>
+                <p>Cédula: {{ acta.firmas.tutorEmpresarial.cedula }}</p>
+            </div>
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>COORDINADOR</span>
+                <p>{{ acta.firmas.coordinador.nombre }}</p>
+                <p>Cédula: {{ acta.firmas.coordinador.cedula }}</p>
+            </div>
+
+            <div class="firma">
+                <div class="linea"></div>
+                <span>TUTOR ACADÉMICO</span>
+                <p>{{ acta.firmas.tutorAcademico.nombre }}</p>
+                <p>Cédula: {{ acta.firmas.tutorAcademico.cedula }}</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

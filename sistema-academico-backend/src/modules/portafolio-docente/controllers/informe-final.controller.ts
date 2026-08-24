@@ -1,21 +1,36 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, ParseIntPipe, Req, UseGuards } from '@nestjs/common';
 import { InformeFinalService } from '../services/informe-final.service';
 import { CreateInformeFinalDto } from '../dto/create-informe-final.dto';
+import { UpdateHorarioInformeFinalDto } from '../dto/update-horario-informe-final.dto';
+import { JwtGuard } from '../../auth/guards/jwt.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../../auth/interfaces/authenticated-request.interface';
 
+@UseGuards(JwtGuard, RolesGuard)
+@Roles('DOCENTE')
 @Controller('portafolio/informe-final')
 export class InformeFinalController {
   constructor(private readonly informeFinalService: InformeFinalService) {}
 
-  @Get(':id_docente/:id_periodo')
+  @Get(':id_oferta_asignatura')
   getInformeFinal(
-    @Param('id_docente', ParseIntPipe) idDocente: number,
-    @Param('id_periodo', ParseIntPipe) idPeriodo: number,
+    @Req() req: AuthenticatedRequest,
+    @Param('id_oferta_asignatura', ParseIntPipe) idOfertaAsignatura: number,
   ) {
-    return this.informeFinalService.getInformeFinal(idDocente, idPeriodo);
+    return this.informeFinalService.getInformeFinal(req.user.idDocente!, idOfertaAsignatura);
   }
 
   @Post()
   createInformeFinal(@Body() dto: CreateInformeFinalDto) {
     return this.informeFinalService.createInformeFinal(dto);
+  }
+
+  @Patch(':id_informe_final')
+  actualizarHorario(
+    @Param('id_informe_final', ParseIntPipe) idInformeFinal: number,
+    @Body() dto: UpdateHorarioInformeFinalDto,
+  ) {
+    return this.informeFinalService.actualizarHorario(idInformeFinal, dto.horario);
   }
 }

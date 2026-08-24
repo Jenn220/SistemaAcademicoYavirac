@@ -1,0 +1,23 @@
+<div class="fecha">
+
+    D.M. Quito,
+    {{ carta().espacioFirma.fecha }}
+
+</div>
+
+<p class="declaracion">
+
+    Yo,
+    <span class="valor valor-fuerte">{{ carta().estudiante.nombre }}</span>
+    con C.C.
+    <span class="valor valor-fuerte">{{ carta().estudiante.cedula }}</span>
+    estudiante de
+    <span class="valor">{{ carta().estudiante.curso }}</span>
+    de la carrera
+    <span class="valor valor-fuerte">{{ carta().estudiante.carrera }}</span>
+    en modalidad dual,
+    DEL INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC,
+    asignado/a a
+    <span class="valor valor-fuerte">{{ carta().empresaAsignada }}</span>
+
+</p>

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   INFORME_FASE_PRACTICA_REPOSITORY,
   InformeFasePracticaRepository,
-} from '../ports/informe-fase-practica.repository';
+} from '../ports/informe-fase-practica.repository.port';
 
 @Injectable()
 export class InformeFasePracticaService {

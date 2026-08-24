@@ -19,6 +19,42 @@ export class EvaluacionPracticaEntity {
   @Column({ name: 'nota_final_calculada', type: 'numeric', nullable: true })
   nota_final_calculada?: number;
 
-  @Column({ name: 'fecha_evaluacion', type: 'date', nullable: true })
+  @Column({ name: 'fecha_evaluacion', type: 'date', nullable: true, default: () => 'CURRENT_DATE' })
   fecha_evaluacion?: string;
+
+  @Column({ name: 'id_tutor_empresarial', type: 'bigint', nullable: true })
+  id_tutor_empresarial?: number;
+
+  @Column({ name: 'estado', type: 'varchar', length: 20, nullable: true, default: 'BORRADOR' })
+  estado?: string;
+
+  @Column({ name: 'observaciones', type: 'text', nullable: true })
+  observaciones?: string;
+
+  @Column({ name: 'promedio_desempeno', type: 'numeric', nullable: true })
+  promedio_desempeno?: number;
+
+  @Column({ name: 'nota_ponderada_desempeno', type: 'numeric', nullable: true })
+  nota_ponderada_desempeno?: number;
+
+  @Column({ name: 'nota_parcial_defensa', type: 'numeric', nullable: true })
+  nota_parcial_defensa?: number;
+
+  @Column({ name: 'nota_final_defensa', type: 'numeric', nullable: true })
+  nota_final_defensa?: number;
+
+  @Column({ name: 'nota_ponderada_defensa', type: 'numeric', nullable: true })
+  nota_ponderada_defensa?: number;
+
+  @Column({ name: 'nota_final_empresa', type: 'numeric', nullable: true })
+  nota_final_empresa?: number;
+
+  @Column({ name: 'promedio_proyecto_empresarial', type: 'numeric', nullable: true })
+  promedio_proyecto_empresarial?: number;
+
+  @Column({ name: 'nota_ponderada_proyecto', type: 'numeric', nullable: true })
+  nota_ponderada_proyecto?: number;
+
+  @Column({ name: 'nota_final_instituto', type: 'numeric', nullable: true })
+  nota_final_instituto?: number;
 }

@@ -1,0 +1,334 @@
+@use '../../styles/auth-theme';
+
+// ============================================
+// PERFIL - ESTILO PROFESIONAL
+// ============================================
+
+:host {
+  display: block;
+  background: #f0f2f5;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.perfil-container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 2.5rem 3rem;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 4px;
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+    border-radius: 0 0 4px 4px;
+  }
+
+  .perfil-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e8ecf2;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #163d8c 0%, #ff7b22 50%, #163d8c 100%);
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #163d8c, #1a4fa8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 2.2rem;
+      font-weight: 700;
+      font-family: 'Roboto', sans-serif;
+      flex-shrink: 0;
+    }
+
+    .info {
+      flex: 1;
+
+      h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #163d8c;
+        margin: 0 0 0.2rem 0;
+      }
+
+      .rol {
+        font-size: 0.9rem;
+        color: #6a7a8e;
+        font-weight: 500;
+        font-family: 'Roboto', sans-serif;
+      }
+    }
+  }
+
+  .perfil-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2.5rem;
+
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+
+      label {
+        font-family: 'Roboto', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #8a9aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .valor {
+        font-size: 1rem;
+        color: #1e2a3a;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #e8ecf2;
+        font-family: 'Times New Roman', Times, serif;
+      }
+
+      .valor-edit {
+        padding: 0.5rem 0.8rem;
+        border: 2px solid #e8ecf2;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: 'Times New Roman', Times, serif;
+        background: #fafcff;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #163d8c;
+          background: #ffffff;
+          box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
+        }
+      }
+    }
+
+    .campo-full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .perfil-acciones {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e8ecf2;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    .btn-editar {
+      background: #ff7b22;
+      color: #ffffff;
+      border: none;
+      padding: 0.7rem 2rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Roboto', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(255, 123, 34, 0.25);
+
+      &:hover {
+        background: #e06a1a;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 123, 34, 0.35);
+      }
+    }
+
+    .btn-guardar {
+      background: #28a745;
+      color: #ffffff;
+      border: none;
+      padding: 0.7rem 2rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Roboto', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.25);
+
+      &:hover:not(:disabled) {
+        background: #1e7e34;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.35);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+
+    .btn-cancelar {
+      background: #6c757d;
+      color: #ffffff;
+      border: none;
+      padding: 0.7rem 2rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Roboto', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover:not(:disabled) {
+        background: #5a6268;
+        transform: translateY(-2px);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .perfil-container {
+    padding: 2rem 2rem;
+  }
+
+  .perfil-container .perfil-body {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .perfil-container {
+    padding: 1.5rem 1.2rem;
+    border-radius: 12px;
+  }
+
+  .perfil-container::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .perfil-container .perfil-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      font-size: 1.8rem;
+    }
+
+    .info h1 {
+      font-size: 1.3rem;
+    }
+
+    .info .rol {
+      font-size: 0.8rem;
+    }
+  }
+
+  .perfil-container .perfil-body {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    .campo {
+      label {
+        font-size: 0.7rem;
+      }
+
+      .valor {
+        font-size: 0.9rem;
+      }
+
+      .valor-edit {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+      }
+    }
+  }
+
+  .perfil-container .perfil-acciones {
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 2rem;
+    padding-top: 1.2rem;
+
+    .btn-editar,
+    .btn-guardar,
+    .btn-cancelar {
+      width: 100%;
+      justify-content: center;
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .perfil-container {
+    padding: 1rem 0.8rem;
+  }
+
+  .perfil-container .perfil-header .info h1 {
+    font-size: 1.1rem;
+  }
+
+  .perfil-container .perfil-header .avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
+  }
+
+  .perfil-container .perfil-body .campo .valor {
+    font-size: 0.8rem;
+  }
+
+  .perfil-container .perfil-body .campo .valor-edit {
+    font-size: 0.78rem;
+  }
+}

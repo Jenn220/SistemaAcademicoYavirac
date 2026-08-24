@@ -1,0 +1,257 @@
+<div class="toolbar no-print">
+
+    <button class="btn btn-outline-secondary" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </button>
+
+    <button class="btn btn-primary" (click)="descargarWord()">
+        <i class="bi bi-file-earmark-word-fill"></i>
+        Descargar Word
+    </button>
+
+    @if (!soloLectura) {
+    <button class="btn btn-warning text-white" [disabled]="guardando" (click)="guardarEnBD()">
+        <i class="bi bi-save"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
+
+</div>
+
+<div id="documento-plan-marco" class="documento">
+
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                010203
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 03 PLAN MARCO DE FORMACIÓN</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>NOMBRE(S) DE ESTUDIANTE(S):</strong></td>
+            <td>{{ encabezado.estudianteNombre }}</td>
+            <td><strong>PERÍODO:</strong></td>
+            <td>{{ encabezado.periodo }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ encabezado.carrera }}</td>
+            <td><strong>NIVEL:</strong></td>
+            <td>{{ encabezado.nivel }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>EMPRESA FORMADORA:</strong></td>
+            <td>{{ encabezado.empresaFormadora }}</td>
+            <td><strong>HORAS DE FORMACIÓN PRÁCTICA:</strong></td>
+            <td>{{ plan.horas_formacion }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>NÚCLEO ESTRUCTURANTE:</strong></td>
+            <td colspan="3">{{ encabezado.nucleoEstructuranteNombre }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>DIRECCIÓN EMPRESA:</strong></td>
+            <td colspan="3">{{ encabezado.direccionEmpresa }}</td>
+
+        </tr>
+
+    </table>
+
+    <div class="contenido">
+
+        <div class="caja-niveles">
+
+            <strong>NIVELES DE LOGRO ESPERADO</strong>
+
+            @for (nivel of niveles; track nivel.nivel) {
+
+            <p class="nivel-item">
+                <strong>{{ nivel.nivel }}: {{ nivel.titulo }}:</strong>
+                {{ nivel.descripcion }}
+            </p>
+
+            }
+
+        </div>
+
+        <div class="caja-objetivo">
+
+            <strong>OBJETIVOS DE LA FASE PRÁCTICA</strong>
+
+            <textarea class="campo campo-textarea" rows="2" [(ngModel)]="plan.objetivos_fase_practica" name="objetivosFasePractica" [disabled]="soloLectura"></textarea>
+
+        </div>
+
+        <div class="caja-objetivo">
+
+            <strong>OBJETIVOS DE APRENDIZAJE</strong>
+
+            <p class="intro-objetivos">Al finalizar la fase práctica, el/la estudiante estará en capacidad de:</p>
+
+        </div>
+
+        <table class="tabla-items">
+
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width:28px">No.</th>
+                    <th rowspan="2">Resultados de aprendizaje</th>
+                    <th [attr.colspan]="4" style="width:160px">Nivel de logro esperado ({{ promedioNivelEsperado }})</th>
+                    <th rowspan="2" style="width:70px">Nivel real alcanzado ({{ promedioNivelReal }})</th>
+                    <th rowspan="2">Tareas laborales</th>
+                    <th rowspan="2" style="width:130px">Puesto de aprendizaje</th>
+                    <th rowspan="2" style="width:60px">No. semanas</th>
+                    <th rowspan="2" style="width:130px">Responsable</th>
+                    <th rowspan="2" class="no-print" style="width:36px"></th>
+                </tr>
+                <tr>
+                    <!-- Sin esto no se veía qué columna corresponde a cada
+                         puntaje (1-4) al marcar la X: había que adivinar. -->
+                    @for (nivel of niveles; track nivel.nivel) {
+                    <th class="col-nivel no-print">{{ nivel.nivel }}</th>
+                    }
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (item of items; track $index; let i = $index) {
+
+                <tr>
+                    <td class="text-center">{{ i + 1 }}</td>
+
+                    <td>
+                        <textarea class="campo campo-textarea" rows="2" [(ngModel)]="item.resultado_aprendizaje" name="resultado-{{ i }}" [disabled]="soloLectura"></textarea>
+                    </td>
+
+                    @for (nivel of niveles; track nivel.nivel) {
+                    <td
+                        class="celda-nivel no-print"
+                        [class.seleccionada]="item.nivel_logro_esperado === nivel.nivel"
+                        [class.deshabilitada]="soloLectura"
+                        (click)="seleccionarNivelEsperado(item, nivel.nivel)">
+                        @if (item.nivel_logro_esperado === nivel.nivel) { X }
+                    </td>
+                    }
+
+                    <td class="text-center solo-print" [attr.colspan]="4">{{ item.nivel_logro_esperado }}</td>
+
+                    <td class="text-center">
+                        <input
+                            type="number"
+                            class="campo campo-nota"
+                            min="1" max="4"
+                            [(ngModel)]="item.nivel_real_alcanzado"
+                            name="nivelReal-{{ i }}"
+                            [disabled]="soloLectura">
+                    </td>
+
+                    <td>
+                        <textarea class="campo campo-textarea" rows="2" [(ngModel)]="item.tareas_laborales" name="tareas-{{ i }}" [disabled]="soloLectura"></textarea>
+                    </td>
+
+                    <td><input type="text" class="campo" [(ngModel)]="item.puesto_aprendizaje" name="puesto-{{ i }}" [disabled]="soloLectura"></td>
+
+                    <td class="text-center"><input type="number" class="campo campo-nota" [(ngModel)]="item.semanas" name="semanas-{{ i }}" [disabled]="soloLectura" min="1" max="8"></td>
+
+                    <td><input type="text" class="campo" [(ngModel)]="item.responsable_puesto" name="responsable-{{ i }}" [disabled]="soloLectura"></td>
+
+                    <td class="text-center no-print">
+                        @if (!soloLectura) {
+                        <button type="button" class="btn-eliminar-fila" (click)="eliminarFila(item)" title="Eliminar fila">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        }
+                    </td>
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        @if (!soloLectura) {
+        <button type="button" class="btn btn-outline-secondary btn-agregar-fila no-print" (click)="agregarFila()">
+            <i class="bi bi-plus-lg"></i>
+            Agregar resultado de aprendizaje
+        </button>
+        }
+
+    </div>
+
+</div>

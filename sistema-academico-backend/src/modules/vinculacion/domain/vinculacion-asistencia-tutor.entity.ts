@@ -19,7 +19,8 @@ export class VinculacionAsistenciaTutor {
 
   @Column({ type: 'numeric', precision: 5, scale: 2 })
   horas_total: number;
-
+@Column({ type: 'text', name: 'actividad_realizada', nullable: true })
+actividad_realizada?: string;
   @Column({ type: 'text', nullable: true })
   observaciones: string;
 }
