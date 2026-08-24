@@ -162,8 +162,8 @@ export class PracticaController {
   // dejan consultar).
   @Get('plan-rotacion/competencias/:idPractica')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
-  findCompetenciasRotacion(@Param('idPractica') idPractica: string) {
-    return this.practicaService.findCompetenciasRotacion(Number(idPractica));
+  findCompetenciasRotacion(@Req() req: any, @Param('idPractica') idPractica: string) {
+    return this.practicaService.findCompetenciasRotacion(req.user, Number(idPractica));
   }
 
   @Patch('plan-rotacion/competencias/:idPractica')
