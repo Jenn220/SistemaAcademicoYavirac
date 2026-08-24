@@ -198,10 +198,6 @@ export class DocumentoService {
     return documento;
   }
 
-  async buscarPorId(idDocumento: number): Promise<DocumentoEntity | null> {
-    return this.documentoRepository.buscarPorId(idDocumento);
-  }
-
   private async notificarCambioEstado(documento: DocumentoEntity, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<void> {
     if (!documento.id_practica) {
       return;

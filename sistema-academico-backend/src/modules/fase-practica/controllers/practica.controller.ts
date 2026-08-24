@@ -138,7 +138,7 @@ export class PracticaController {
   @Get('plan-rotacion/:id')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
   findPlanRotacionById(@Req() req: any, @Param('id') id: string) {
-    return this.practicaService.findPlanRotacionById(req.user, Number(id));
+    return this.practicaService.findPlanRotacionByPractica(req.user, Number(id));
   }
 
   @Patch('plan-rotacion/:id')

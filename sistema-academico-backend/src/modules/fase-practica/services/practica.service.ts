@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PRACTICA_REPOSITORY, IPracticaRepository } from '../ports/practica.repository.port';
@@ -144,7 +144,7 @@ export class PracticaService {
   }
 
   async updatePractica(usuario: any, id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
-    await this.esDuenoDePractica(usuario, id);
+    await this.verificarAccesoPorIdPractica(usuario, id);
     return this.practicaRepository.updatePractica(id, dto);
   }
 

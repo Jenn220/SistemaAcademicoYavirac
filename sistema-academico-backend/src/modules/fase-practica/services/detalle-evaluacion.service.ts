@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -121,7 +121,7 @@ export class DetalleEvaluacionService {
   }
 
   async update(usuario: any, id: number, dto: UpdateDetalleEvaluacionDto): Promise<DetalleEvaluacionEntity> {
-    const detalle = await this.findOne(id);
+    const detalle = await this.findOne(usuario, id);
     await this.verificarAcceso(usuario, detalle.id_evaluacion);
 
     if (dto.puntaje_asignado !== undefined && dto.puntaje_asignado !== null) {
@@ -138,7 +138,7 @@ export class DetalleEvaluacionService {
   }
 
   async remove(usuario: any, id: number): Promise<void> {
-    const detalle = await this.findOne(id);
+    const detalle = await this.findOne(usuario, id);
     await this.verificarAcceso(usuario, detalle.id_evaluacion);
     return this.repo.remove(id);
   }
