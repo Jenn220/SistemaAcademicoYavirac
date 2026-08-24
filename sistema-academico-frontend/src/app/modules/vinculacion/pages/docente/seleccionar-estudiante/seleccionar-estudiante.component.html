@@ -24,8 +24,9 @@
           <span><strong>Carrera:</strong> {{ est.carrera }}</span>
           <span><strong>Proyecto:</strong> {{ est.nombre_proyecto }}</span>
           <span><strong>Entidad:</strong> {{ est.entidad_beneficiaria }}</span>
+          <!-- ✅ CON OPERADOR DE SEGURIDAD (?) -->
+          <span><strong>Período:</strong> {{ est.periodo_academico || 'Sin período' }}</span>
           <span><strong>Nota:</strong> {{ est.nota_final ?? 'Sin calificar' }}</span>
-          <!-- ✅ BADGE DE ESTADO CORREGIDO -->
           <span class="estado-badge {{ getEstadoClase(est.estado_informe) }}">
             {{ getEstadoInforme(est.estado_informe) }}
           </span>
@@ -64,8 +65,9 @@
           <span><strong>Carrera:</strong> {{ estudianteSeleccionado.carrera }}</span>
           <span><strong>Proyecto:</strong> {{ estudianteSeleccionado.nombre_proyecto }}</span>
           <span><strong>Entidad:</strong> {{ estudianteSeleccionado.entidad_beneficiaria }}</span>
+          <!-- ✅ CON OPERADOR DE SEGURIDAD (?) -->
+          <span><strong>Período:</strong> {{ estudianteSeleccionado.periodo_academico || 'Sin período' }}</span>
           <span><strong>Nota:</strong> {{ estudianteSeleccionado.nota_final ?? 'Sin calificar' }}</span>
-          <!-- ✅ BADGE DE ESTADO CORREGIDO -->
           <span class="estado-badge {{ getEstadoClase(estudianteSeleccionado.estado_informe) }}">
             {{ getEstadoInforme(estudianteSeleccionado.estado_informe) }}
           </span>
@@ -73,7 +75,7 @@
       </div>
     </div>
 
-    <!-- ✅ LISTA DE DOCUMENTOS (SOLO 4) -->
+    <!-- ✅ LISTA DE DOCUMENTOS -->
     <div class="documentos-grid">
       <div 
         class="documento-card" 

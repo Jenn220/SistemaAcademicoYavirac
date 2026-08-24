@@ -75,7 +75,6 @@ export class ControlAsistenciaComponent implements OnInit {
     this.isDocente = roles.includes('DOCENTE');
     this.isCoordinador = roles.includes('COORDINADOR');
 
-    // ✅ Si es docente o coordinador, cargar datos completos (solo lectura)
     if (this.isDocente || this.isCoordinador) {
       this.route.params.subscribe(params => {
         const idParam = params['id'] ? +params['id'] : 0;
@@ -91,7 +90,6 @@ export class ControlAsistenciaComponent implements OnInit {
       return;
     }
 
-    // Si no es estudiante, error
     if (!this.isEstudiante) {
       this.error = '⚠️ No tienes permisos para ver esta pantalla.';
       this.loading = false;
@@ -99,7 +97,6 @@ export class ControlAsistenciaComponent implements OnInit {
       return;
     }
 
-    // Flujo para estudiante
     this.route.params.subscribe(params => {
       const idParam = params['id'] ? +params['id'] : 0;
       
@@ -113,27 +110,37 @@ export class ControlAsistenciaComponent implements OnInit {
   }
 
   // ============================================
-  // ✅ NUEVO: Carga datos completos para DOCENTE (solo lectura)
+  // CARGA DE DATOS PARA DOCENTE
   // ============================================
   cargarDatosCompletosDocente(): void {
     this.loading = true;
     this.cdr.markForCheck();
 
-    // Cargar fechas del proyecto
+    console.log('🔵 Cargando fechas del proyecto para ID:', this.idVinculacion);
+
     this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion)
       .subscribe({
         next: (data) => {
+          console.log('📦 Fechas del proyecto recibidas:', data);
+          console.log('📅 fecha_inicio recibida:', data.fecha_inicio);
+          console.log('📅 fecha_fin recibida:', data.fecha_fin);
+          
           this.fechaInicioProyecto = data.fecha_inicio || '';
           this.fechaFinProyecto = data.fecha_fin || '';
+          
+          console.log('✅ fechaInicioProyecto asignada:', this.fechaInicioProyecto);
+          console.log('✅ fechaFinProyecto asignada:', this.fechaFinProyecto);
+          
           this.cdr.markForCheck();
         },
-        error: () => {
+        error: (err) => {
+          console.error('❌ Error al obtener fechas del proyecto:', err);
           this.fechaInicioProyecto = '';
           this.fechaFinProyecto = '';
+          this.cdr.markForCheck();
         }
       });
 
-    // Cargar asistencia completa (con actividades)
     this.asistenciaService.obtenerAsistencia(this.idVinculacion)
       .pipe(finalize(() => {
         this.loading = false;
@@ -253,11 +260,7 @@ export class ControlAsistenciaComponent implements OnInit {
       });
   }
 
-  // ============================================
-  // MÉTODO PARA DOCENTE (OBSOLETO, se reemplaza por cargarDatosCompletosDocente)
-  // ============================================
   cargarDatosDocente(): void {
-    // Este método queda obsoleto, pero lo mantenemos por si se usa en otro lado
     this.cargarDatosCompletosDocente();
   }
 
@@ -296,18 +299,28 @@ export class ControlAsistenciaComponent implements OnInit {
     this.error = null;
     this.cdr.markForCheck();
     console.log('🔵 Cargando asistencia para vinculación:', this.idVinculacion);
+    console.log('🔵 Cargando fechas del proyecto para ID:', this.idVinculacion);
     
     this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion)
       .subscribe({
         next: (data) => {
           console.log('📦 Fechas del proyecto recibidas:', data);
+          console.log('📅 fecha_inicio recibida:', data.fecha_inicio);
+          console.log('📅 fecha_fin recibida:', data.fecha_fin);
+          
           this.fechaInicioProyecto = data.fecha_inicio || '';
           this.fechaFinProyecto = data.fecha_fin || '';
+          
+          console.log('✅ fechaInicioProyecto asignada:', this.fechaInicioProyecto);
+          console.log('✅ fechaFinProyecto asignada:', this.fechaFinProyecto);
+          
           this.cdr.markForCheck();
         },
-        error: () => {
+        error: (err) => {
+          console.error('❌ Error al obtener fechas del proyecto:', err);
           this.fechaInicioProyecto = '';
           this.fechaFinProyecto = '';
+          this.cdr.markForCheck();
         }
       });
 
@@ -414,13 +427,30 @@ export class ControlAsistenciaComponent implements OnInit {
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      const date = new Date(fecha);
-      return date.toLocaleDateString('es-ES', {
+      console.log('🔍 Formateando fecha:', fecha);
+      
+      let fechaStr = fecha;
+      if (fecha.includes('T')) {
+        fechaStr = fecha.split('T')[0];
+      }
+      
+      const date = new Date(fechaStr + 'T00:00:00');
+      
+      if (isNaN(date.getTime())) {
+        console.warn('⚠️ Fecha inválida:', fecha);
+        return fecha;
+      }
+      
+      const fechaFormateada = date.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
       });
-    } catch {
+      
+      console.log('✅ Fecha formateada:', fechaFormateada);
+      return fechaFormateada;
+    } catch (error) {
+      console.error('❌ Error al formatear fecha:', error);
       return fecha;
     }
   }

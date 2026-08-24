@@ -1463,38 +1463,84 @@ export class ExcelExportService {
     this.celda(ws, 'C25', datos.docente_tutor || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'C25:G25', ESTILO_FIELD_VALUE);
 
-    // 2. Resumen de actividades
-    this.celda(ws, 'A28', '2.      RESUMEN DE ACTIVIDADES REALIZADAS', ESTILO_SECCION);
-    this.merge(ws, 'A28:G28', ESTILO_SECCION);
+    // 2. Resumen de actividades (AGRUPADAS)
+this.celda(ws, 'A28', '2.      RESUMEN DE ACTIVIDADES REALIZADAS', ESTILO_SECCION);
+this.merge(ws, 'A28:G28', ESTILO_SECCION);
 
-    this.celda(ws, 'A29', 'Nro.', ESTILO_HEADER_TABLA);
-    this.celda(ws, 'B29', 'Fecha', ESTILO_HEADER_TABLA);
-    this.celda(ws, 'C29', 'Actividades', ESTILO_HEADER_TABLA);
-    this.merge(ws, 'C29:D29', ESTILO_HEADER_TABLA);
-    this.celda(ws, 'E29', 'Horas cumplidas', ESTILO_HEADER_TABLA);
-    this.celda(ws, 'F29', 'Observaciones', ESTILO_HEADER_TABLA);
-    this.merge(ws, 'F29:G29', ESTILO_HEADER_TABLA);
+this.celda(ws, 'A29', 'Nro.', ESTILO_HEADER_TABLA);
+this.celda(ws, 'B29', 'Fecha', ESTILO_HEADER_TABLA);
+this.celda(ws, 'C29', 'Actividades', ESTILO_HEADER_TABLA);
+this.merge(ws, 'C29:D29', ESTILO_HEADER_TABLA);
+this.celda(ws, 'E29', 'Horas cumplidas', ESTILO_HEADER_TABLA);
+this.celda(ws, 'F29', 'Observaciones', ESTILO_HEADER_TABLA);
+this.merge(ws, 'F29:G29', ESTILO_HEADER_TABLA);
 
-    const filaHeaderAct = 29;
-    actividades.forEach((act, i) => {
-      const fila = filaHeaderAct + 1 + i;
-      const estCentrado = this.filaCebra(ESTILO_CENTRADO, i);
-      const estCelda = this.filaCebra(ESTILO_CELDA_TABLA, i);
-      this.celda(ws, `A${fila}`, i + 1, estCentrado);
-      this.celda(ws, `B${fila}`, act.fecha || '', estCelda);
-      this.celda(ws, `C${fila}`, act.actividades || '', estCelda);
-      this.merge(ws, `C${fila}:D${fila}`, estCelda);
-      this.celda(ws, `E${fila}`, act.horas_cumplidas || 0, estCentrado);
-      this.celda(ws, `F${fila}`, act.observaciones || 'Ninguna', estCelda);
-      this.merge(ws, `F${fila}:G${fila}`, estCelda);
-      this.filaAltura(ws, fila, 26);
+// ✅ AGRUPAR ACTIVIDADES POR DESCRIPCIÓN (igual que en Control de Asistencia)
+const actividadesOriginales: any[] = data?.resumen_actividades || [];
+const mapaActividades = new Map<string, any>();
+
+actividadesOriginales.forEach((act: any) => {
+  const clave = (act.actividades || '').trim().toLowerCase();
+  if (!mapaActividades.has(clave)) {
+    mapaActividades.set(clave, {
+      actividades: act.actividades,
+      fechas: [act.fecha],
+      horas: act.horas_cumplidas || 0,
+      observaciones: act.observaciones || 'Sin observaciones'
     });
+  } else {
+    const grupo = mapaActividades.get(clave)!;
+    grupo.fechas.push(act.fecha);
+    grupo.horas += (act.horas_cumplidas || 0);
+  }
+});
 
-    const filaTotalAct = filaHeaderAct + 1 + actividades.length;
-    this.celda(ws, `C${filaTotalAct}`, 'Total Horas Cumplidas', ESTILO_FIELD_LABEL);
-    this.merge(ws, `C${filaTotalAct}:D${filaTotalAct}`, ESTILO_FIELD_LABEL);
-    // El backend ya trae el total acumulado calculado (total_horas_cumplidas)
-    this.celda(ws, `E${filaTotalAct}`, data?.total_horas_cumplidas ?? 0, { font: { bold: true }, border: allBorders(), alignment: { horizontal: 'center' } });
+const actividadesAgrupadas = Array.from(mapaActividades.values()).map((grupo) => {
+  const fechasOrdenadas = grupo.fechas.sort((a: string, b: string) => 
+    new Date(a).getTime() - new Date(b).getTime()
+  );
+  
+  const fechaInicio = this.fmtFecha(fechasOrdenadas[0]);
+  const fechaFin = this.fmtFecha(fechasOrdenadas[fechasOrdenadas.length - 1]);
+  
+  let fechaTexto = fechaInicio;
+  if (fechasOrdenadas.length > 1) {
+    fechaTexto = `${fechaInicio} al ${fechaFin} (${fechasOrdenadas.length} días)`;
+  }
+  
+  return {
+    fecha: fechaTexto,
+    actividades: grupo.actividades,
+    horas: grupo.horas,
+    observaciones: grupo.observaciones
+  };
+});
+
+const filaHeaderAct = 29;
+if (actividadesAgrupadas.length === 0) {
+  const fila = filaHeaderAct + 1;
+  this.celda(ws, `A${fila}`, 'No hay actividades registradas', ESTILO_CELDA_TABLA);
+  this.merge(ws, `A${fila}:G${fila}`, ESTILO_CELDA_TABLA);
+} else {
+  actividadesAgrupadas.forEach((grupo, i) => {
+    const fila = filaHeaderAct + 1 + i;
+    const estCentrado = this.filaCebra(ESTILO_CENTRADO, i);
+    const estCelda = this.filaCebra(ESTILO_CELDA_TABLA, i);
+    this.celda(ws, `A${fila}`, i + 1, estCentrado);
+    this.celda(ws, `B${fila}`, grupo.fecha, estCelda);
+    this.celda(ws, `C${fila}`, grupo.actividades || '', estCelda);
+    this.merge(ws, `C${fila}:D${fila}`, estCelda);
+    this.celda(ws, `E${fila}`, grupo.horas || 0, estCentrado);
+    this.celda(ws, `F${fila}`, grupo.observaciones || 'Ninguna', estCelda);
+    this.merge(ws, `F${fila}:G${fila}`, estCelda);
+    this.filaAltura(ws, fila, 26);
+  });
+}
+
+const filaTotalAct = filaHeaderAct + 1 + Math.max(actividadesAgrupadas.length, 1);
+this.celda(ws, `C${filaTotalAct}`, 'Total Horas Cumplidas', ESTILO_FIELD_LABEL);
+this.merge(ws, `C${filaTotalAct}:D${filaTotalAct}`, ESTILO_FIELD_LABEL);
+this.celda(ws, `E${filaTotalAct}`, data?.total_horas_cumplidas ?? 0, { font: { bold: true }, border: allBorders(), alignment: { horizontal: 'center' } });
 
     // 3. Objetivos
     const filaObjTitulo = filaTotalAct + 3;

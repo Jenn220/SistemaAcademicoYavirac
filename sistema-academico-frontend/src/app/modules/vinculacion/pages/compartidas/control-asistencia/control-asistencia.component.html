@@ -129,73 +129,81 @@
       <ng-container *ngFor="let grupo of actividadesAgrupadas">
         
         <!-- Recorremos cada DÍA dentro del grupo -->
-        <tr *ngFor="let act of grupo.actividadesDetalle; let isFirst = first">
+        <ng-container *ngFor="let act of grupo.actividadesDetalle; let isFirst = first; let isLast = last">
           
-          <!-- Columnas individuales por día -->
-          <td>
-            <!-- MODO LECTURA: Visible para todos -->
-            <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.fecha }}</span>
-            <!-- MODO EDICIÓN: Solo estudiante -->
-            <input *ngIf="isEstudiante && editandoId === act.id" type="date" [(ngModel)]="editandoActividad.fecha" />
-          </td>
-          <td>
-            <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_entrada }}</span>
-            <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" (ngModelChange)="errorHora = null" />
-          </td>
-          <td>
-            <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_salida }}</span>
-            <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" (ngModelChange)="errorHora = null" />
-          </td>
-          <td>{{ act.total_horas | number:'1.2-2' }}</td>
+          <!-- ✅ TR con clases para identificar el grupo -->
+          <tr 
+            [class.grupo-actividad]="true"
+            [class.grupo-actividad-primera]="isFirst"
+            [class.grupo-actividad-ultima]="isLast"
+          >
+            
+            <!-- Columnas individuales por día -->
+            <td>
+              <!-- MODO LECTURA: Visible para todos -->
+              <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.fecha }}</span>
+              <!-- MODO EDICIÓN: Solo estudiante -->
+              <input *ngIf="isEstudiante && editandoId === act.id" type="date" [(ngModel)]="editandoActividad.fecha" />
+            </td>
+            <td>
+              <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_entrada }}</span>
+              <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" (ngModelChange)="errorHora = null" />
+            </td>
+            <td>
+              <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_salida }}</span>
+              <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" (ngModelChange)="errorHora = null" />
+            </td>
+            <td>{{ act.total_horas | number:'1.2-2' }}</td>
 
-          <!-- ✅ ACTIVIDAD REALIZADA (visible para todos, editable solo estudiante) -->
-          <td *ngIf="isFirst" [attr.rowspan]="grupo.actividadesDetalle.length" class="actividad-cell">
-            <div class="grupo-actividad-wrapper">
-              <!-- Modo Vista (para todos) -->
-              <div class="texto-actividad-container" *ngIf="!isEstudiante || editandoGrupoId !== grupo.ids[0]">
-                <span>{{ grupo.descripcion }}</span>
-                <!-- Botón editar descripción: solo estudiante -->
-                <button *ngIf="isEstudiante" (click)="editarDescripcionGrupo(grupo)" class="btn-edit-desc" title="Editar descripción general">✏️</button>
+            <!-- ✅ ACTIVIDAD REALIZADA (visible para todos, editable solo estudiante) -->
+            <td *ngIf="isFirst" [attr.rowspan]="grupo.actividadesDetalle.length" class="actividad-cell">
+              <div class="grupo-actividad-wrapper">
+                <!-- Modo Vista (para todos) -->
+                <div class="texto-actividad-container" *ngIf="!isEstudiante || editandoGrupoId !== grupo.ids[0]">
+                  <span>{{ grupo.descripcion }}</span>
+                  <!-- Botón editar descripción: solo estudiante -->
+                  <button *ngIf="isEstudiante" (click)="editarDescripcionGrupo(grupo)" class="btn-edit-desc" title="Editar descripción general">✏️</button>
+                </div>
+
+                <!-- Modo Edición de la Descripción: solo estudiante -->
+                <div class="texto-actividad-container" *ngIf="isEstudiante && editandoGrupoId === grupo.ids[0]">
+                  <textarea [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" rows="3" placeholder="Descripción de la actividad..."></textarea>
+                </div>
+                
+                <!-- Botón para añadir otra fecha: solo estudiante -->
+                <div class="btn-agregar-fecha-container" *ngIf="isEstudiante && !editandoId && !editandoGrupoId">
+                  <button (click)="prepararDuplicado(grupo.actividadesDetalle[0])" class="btn-add-copy">
+                    ➕ Añadir fecha
+                  </button>
+                </div>
               </div>
+            </td>
 
-              <!-- Modo Edición de la Descripción: solo estudiante -->
-              <div class="texto-actividad-container" *ngIf="isEstudiante && editandoGrupoId === grupo.ids[0]">
-                <textarea [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" rows="3" placeholder="Descripción de la actividad..."></textarea>
+            <!-- ✅ BOTONES DE ACCIÓN: SOLO ESTUDIANTE -->
+            <td class="acciones-cell" *ngIf="isEstudiante">
+              <div *ngIf="errorHora && editandoId === act.id" class="error-hora-small">{{ errorHora }}</div>
+              
+              <!-- Modo Normal -->
+              <div class="btn-group-acciones" *ngIf="editandoId !== act.id && editandoGrupoId !== grupo.ids[0]">
+                <button (click)="editarFilaIndividual(act)" class="btn-action btn-edit" title="Editar fecha u horas de este día">✏️</button>
+                <button (click)="eliminarActividad(act.id)" class="btn-action btn-delete" title="Eliminar este día">🗑️</button>
               </div>
               
-              <!-- Botón para añadir otra fecha: solo estudiante -->
-              <div class="btn-agregar-fecha-container" *ngIf="isEstudiante && !editandoId && !editandoGrupoId">
-                <button (click)="prepararDuplicado(grupo.actividadesDetalle[0])" class="btn-add-copy">
-                  ➕ Añadir fecha
-                </button>
+              <!-- Modo Guardar/Cancelar Fila Individual -->
+              <div class="btn-group-acciones" *ngIf="editandoId === act.id">
+                <button (click)="guardarEdicionFila(act.id)" class="btn-action btn-save" title="Guardar cambios de la fila">💾</button>
+                <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
               </div>
-            </div>
-          </td>
 
-          <!-- ✅ BOTONES DE ACCIÓN: SOLO ESTUDIANTE -->
-          <td class="acciones-cell" *ngIf="isEstudiante">
-            <div *ngIf="errorHora && editandoId === act.id" class="error-hora-small">{{ errorHora }}</div>
-            
-            <!-- Modo Normal -->
-            <div class="btn-group-acciones" *ngIf="editandoId !== act.id && editandoGrupoId !== grupo.ids[0]">
-              <button (click)="editarFilaIndividual(act)" class="btn-action btn-edit" title="Editar fecha u horas de este día">✏️</button>
-              <button (click)="eliminarActividad(act.id)" class="btn-action btn-delete" title="Eliminar este día">🗑️</button>
-            </div>
-            
-            <!-- Modo Guardar/Cancelar Fila Individual -->
-            <div class="btn-group-acciones" *ngIf="editandoId === act.id">
-              <button (click)="guardarEdicionFila(act.id)" class="btn-action btn-save" title="Guardar cambios de la fila">💾</button>
-              <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
-            </div>
+              <!-- Modo Guardar/Cancelar Grupo (Descripción) -->
+              <div class="btn-group-acciones" *ngIf="editandoGrupoId === grupo.ids[0] && isFirst">
+                <button (click)="guardarEdicionGrupo(grupo)" class="btn-action btn-save" title="Guardar cambios del grupo">💾</button>
+                <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
+              </div>
+            </td>
 
-            <!-- Modo Guardar/Cancelar Grupo (Descripción) -->
-            <div class="btn-group-acciones" *ngIf="editandoGrupoId === grupo.ids[0] && isFirst">
-              <button (click)="guardarEdicionGrupo(grupo)" class="btn-action btn-save" title="Guardar cambios del grupo">💾</button>
-              <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
-            </div>
-          </td>
-
-        </tr>
+          </tr>
+        </ng-container>
       </ng-container>
     </tbody>
     <tfoot>

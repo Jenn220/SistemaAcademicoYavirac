@@ -19,8 +19,12 @@ export class Dashboard implements OnInit {
   };
 
   isLoading = true;
-  error: string | null = null;  // <--- AGREGADO
+  error: string | null = null;
   rolUsuario: string = '';
+
+  get nombreUsuario(): string {
+    return this.authService.nombreUsuario();
+  }
 
   constructor(
     private dashboardService: DashboardService,
@@ -30,7 +34,9 @@ export class Dashboard implements OnInit {
   ngOnInit() {
     this.rolUsuario = this.authService.roles()[0] || 'USUARIO';
     
-    // Cargar estadísticas DIRECTAMENTE sin llamadas HTTP
+    console.log('👤 Usuario autenticado:', this.authService.usuario());
+    console.log('📛 Nombre completo:', this.nombreUsuario);
+    
     this.dashboardService.getStats().subscribe({
       next: (data: DashboardStats) => {
         this.stats = data;
@@ -41,7 +47,6 @@ export class Dashboard implements OnInit {
       error: (err) => {
         console.error('❌ Error:', err);
         this.error = 'Error al cargar estadísticas';
-        // Forzar datos por defecto
         this.stats = this.getDatosPorDefecto();
         this.isLoading = false;
       }

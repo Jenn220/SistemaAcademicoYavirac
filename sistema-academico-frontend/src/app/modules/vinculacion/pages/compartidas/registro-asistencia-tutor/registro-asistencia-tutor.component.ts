@@ -43,11 +43,11 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   fechaInicioProyecto: string = '';
   fechaFinProyecto: string = '';
 
-  // Edición de actividades
+  // Edición de actividades (SOLO DOCENTE)
   editandoId: number | null = null;
   editandoActividad: UpdateAsistenciaTutorDto = {};
 
-  // Observaciones - auto-guardado
+  // Observaciones - auto-guardado (SOLO DOCENTE y TUTOR_EMPRESARIAL)
   observacionEdit: string = '';
   observacionOriginal: string = '';
   guardandoObservacion: boolean = false;
@@ -56,7 +56,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   mensajeFeedback: string = '';
   editandoObservacion = false;
 
-  // Nueva actividad
+  // Nueva actividad (SOLO DOCENTE)
   nuevaActividad: CreateAsistenciaTutorDto = {
     id_vinculacion: 0,
     fecha: '',
@@ -67,14 +67,20 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   };
   mostrandoFormulario = false;
 
-  // Getter: puede editar actividades (ESTUDIANTE o DOCENTE)
+  // ✅ GETTERS CORREGIDOS
+  // SOLO DOCENTE puede editar actividades (EL ESTUDIANTE NO)
   get puedeEditarActividades(): boolean {
-    return this.isEstudiante || this.isDocente;
+    return this.isDocente;
   }
 
-  // Getter: puede editar observaciones (DOCENTE o TUTOR_EMPRESARIAL)
+  // DOCENTE y TUTOR_EMPRESARIAL pueden editar observaciones
   get puedeEditarObservaciones(): boolean {
     return this.isDocente || this.isTutorEmpresarial;
+  }
+
+  // ✅ ESTUDIANTE solo puede ver (modo lectura)
+  get esSoloLectura(): boolean {
+    return this.isEstudiante;
   }
 
   ngOnInit(): void {
@@ -246,7 +252,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   // ============================================
-  // OBSERVACIONES - AUTO-GUARDADO
+  // OBSERVACIONES - AUTO-GUARDADO (SOLO DOCENTE Y TUTOR_EMPRESARIAL)
   // ============================================
   onObservacionChange(): void {
     if (!this.puedeEditarObservaciones) return;
@@ -287,7 +293,6 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           this.observacionOriginal = this.observacionEdit;
           this.observacionGuardada = true;
           
-          // ✅ ACTUALIZAR data.totales.observaciones PARA QUE SE MUESTRE EN VISTA
           if (this.data) {
             this.data.totales.observaciones = this.observacionEdit;
           }
@@ -326,7 +331,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   }
 
   // ============================================
-  // CRUD ACTIVIDADES (ESTUDIANTE Y DOCENTE)
+  // CRUD ACTIVIDADES (SOLO DOCENTE)
   // ============================================
   mostrarFormulario(): void {
     if (!this.puedeEditarActividades) return;
@@ -492,7 +497,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       });
   }
 
-  // ✅ Exportar a Excel
+  // ✅ Exportar a Excel (visible para TODOS)
   async exportarExcel(): Promise<void> {
     if (!this.idVinculacion || !this.data) {
       alert('No hay datos para exportar.');

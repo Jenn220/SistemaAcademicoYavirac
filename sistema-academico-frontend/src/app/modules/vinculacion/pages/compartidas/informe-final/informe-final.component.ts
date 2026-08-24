@@ -38,6 +38,7 @@ export class InformeFinalComponent implements OnInit {
 
   informe: any = null;
   datosInicioActividades: any = null;
+  actividadesAgrupadas: any[] = [];
 
   observaciones: string = '';
   notaFinalCalculada: number = 0;
@@ -275,21 +276,14 @@ export class InformeFinalComponent implements OnInit {
         console.log('📄 Informe final cargado:', informeData);
         console.log('📄 Inicio Actividades cargado:', inicioActividadesData);
         
-        // ✅ LOG DE FECHAS PARA DEPURACIÓN
-        console.log('📅 Fechas en informeData:', {
-          fecha_inicio: informeData?.datos_generales?.fecha_inicio,
-          fecha_final: informeData?.datos_generales?.fecha_final
-        });
-        console.log('📅 Fechas en inicioActividadesData:', {
-          fecha_inicio: inicioActividadesData?.fecha_inicio,
-          fecha_fin: inicioActividadesData?.fecha_fin
-        });
-        
         if (!this.informe) {
           this.error = '⚠️ No se encontró información para esta vinculación.';
           this.cdr.markForCheck();
           return;
         }
+
+        // ✅ PROCESAR ACTIVIDADES AGRUPADAS
+        this.actividadesAgrupadas = this.procesarActividadesAgrupadas();
 
         // ✅ CORREGIR: Asegurar que ambas fechas estén presentes
         this.asegurarFechas();
@@ -336,6 +330,58 @@ export class InformeFinalComponent implements OnInit {
         this.error = 'Error al cargar los datos. Por favor, intenta nuevamente.';
         this.cdr.markForCheck();
       });
+  }
+
+  // ============================================
+  // ✅ MÉTODO DE AGRUPACIÓN DE ACTIVIDADES
+  // ============================================
+  procesarActividadesAgrupadas(): any[] {
+    if (!this.informe?.resumen_actividades || this.informe.resumen_actividades.length === 0) {
+      return [];
+    }
+
+    const mapa = new Map<string, any>();
+
+    this.informe.resumen_actividades.forEach((act: any) => {
+      const clave = (act.actividades || '').trim().toLowerCase();
+
+      if (!mapa.has(clave)) {
+        mapa.set(clave, {
+          actividades: act.actividades,
+          fechas: [act.fecha],
+          horas: act.horas_cumplidas || 0,
+          observaciones: act.observaciones || 'Sin observaciones',
+          count: 1
+        });
+      } else {
+        const grupo = mapa.get(clave)!;
+        grupo.fechas.push(act.fecha);
+        grupo.horas += (act.horas_cumplidas || 0);
+        grupo.count++;
+      }
+    });
+
+    return Array.from(mapa.values()).map((grupo, index) => {
+      const fechasOrdenadas = grupo.fechas.sort((a: string, b: string) => 
+        new Date(a).getTime() - new Date(b).getTime()
+      );
+      
+      const fechaInicio = this.formatearFecha(fechasOrdenadas[0]);
+      const fechaFin = this.formatearFecha(fechasOrdenadas[fechasOrdenadas.length - 1]);
+      
+      let fechaTexto = fechaInicio;
+      if (fechasOrdenadas.length > 1) {
+        fechaTexto = `${fechaInicio} al ${fechaFin} (${fechasOrdenadas.length} días)`;
+      }
+
+      return {
+        nro: index + 1,
+        fecha: fechaTexto,
+        actividades: grupo.actividades,
+        horas: grupo.horas,
+        observaciones: grupo.observaciones
+      };
+    });
   }
 
   /**

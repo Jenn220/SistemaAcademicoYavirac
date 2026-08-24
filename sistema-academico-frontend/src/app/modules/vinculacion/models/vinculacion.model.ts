@@ -20,6 +20,7 @@ export interface EstudianteDocente {
   carrera: string;
   nombre_proyecto: string;
   entidad_beneficiaria: string;
+  periodo_academico?: string; 
   nota_final: number | null;
   estado_informe: string;
 }

@@ -170,6 +170,46 @@
       }
     }
 
+    // ============================================
+    // ✅ ESTILOS PARA GRUPOS DE ACTIVIDAD
+    // ============================================
+
+    // Fila que pertenece a un grupo (bordes laterales más oscuros)
+    tr.grupo-actividad {
+      td {
+        background: #fafcff;
+        border-left-color: #b0c4de;
+        border-right-color: #b0c4de;
+      }
+
+      td:first-child {
+        border-left: 4px solid #5681d6;
+      }
+
+      td:last-child {
+        border-right: 4px solid #5681d6;
+      }
+    }
+
+    // Primera fila del grupo (borde superior más oscuro)
+    tr.grupo-actividad-primera {
+      td {
+        border-top: 3px solid #5681d6;
+      }
+    }
+
+    // Última fila del grupo (borde inferior más oscuro)
+    tr.grupo-actividad-ultima {
+      td {
+        border-bottom: 3px solid #5681d6;
+      }
+    }
+
+    // Fila con grupo de actividad (hover)
+    tr.grupo-actividad:hover td {
+      background: #f0f7ff;
+    }
+
     tfoot td {
       font-weight: 700;
       background: #f0f4fc;
@@ -829,6 +869,15 @@
     .grupo-actividad-wrapper {
       min-width: 140px;
     }
+
+    // ✅ Ajustes responsivos para grupos
+    tr.grupo-actividad td:first-child {
+      border-left-width: 3px;
+    }
+
+    tr.grupo-actividad td:last-child {
+      border-right-width: 3px;
+    }
   }
 }
 
@@ -934,6 +983,23 @@
 
     tfoot td {
       font-size: 12px;
+    }
+
+    // ✅ Ajustes responsivos para grupos en móvil
+    tr.grupo-actividad td:first-child {
+      border-left-width: 2px;
+    }
+
+    tr.grupo-actividad td:last-child {
+      border-right-width: 2px;
+    }
+
+    tr.grupo-actividad-primera td {
+      border-top-width: 2px;
+    }
+
+    tr.grupo-actividad-ultima td {
+      border-bottom-width: 2px;
     }
   }
 
@@ -1088,6 +1154,23 @@
         height: 22px;
         font-size: 10px;
       }
+    }
+
+    // ✅ Ajustes responsivos para grupos en móvil pequeño
+    tr.grupo-actividad td:first-child {
+      border-left-width: 2px;
+    }
+
+    tr.grupo-actividad td:last-child {
+      border-right-width: 2px;
+    }
+
+    tr.grupo-actividad-primera td {
+      border-top-width: 2px;
+    }
+
+    tr.grupo-actividad-ultima td {
+      border-bottom-width: 2px;
     }
   }
 

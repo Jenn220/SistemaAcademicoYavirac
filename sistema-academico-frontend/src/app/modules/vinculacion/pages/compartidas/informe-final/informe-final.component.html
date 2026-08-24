@@ -28,9 +28,7 @@
       <p><strong>Email:</strong> {{ informe.datos_generales.email }}</p>
       <p><strong>Teléfono:</strong> {{ informe.datos_generales.telefono }}</p>
       <p><strong>Nombre del Proyecto:</strong> {{ informe.datos_generales.nombre_proyecto }}</p>
-      <!-- ✅ CORREGIDO: Usar formatearFecha() para fecha_inicio -->
       <p><strong>Fecha Inicio:</strong> {{ formatearFecha(informe.datos_generales.fecha_inicio) }}</p>
-      <!-- ✅ CORREGIDO: Usar obtenerFechaFinal() para la fecha final -->
       <p><strong>Fecha Final:</strong> {{ obtenerFechaFinal() }}</p>
       <p><strong>Nombre de la Entidad beneficiaria:</strong> {{ informe.datos_generales.entidad_beneficiaria }}</p>
       <p><strong>Dirección:</strong> {{ informe.datos_generales.direccion_entidad }}</p>
@@ -41,24 +39,39 @@
     </div>
   </section>
 
-  <!-- 2. RESUMEN DE ACTIVIDADES -->
+  <!-- 2. RESUMEN DE ACTIVIDADES REALIZADAS (AGRUPADAS) -->
   <section class="section">
     <h2>2. RESUMEN DE ACTIVIDADES REALIZADAS</h2>
     <table class="tabla">
       <thead>
-        <tr><th>Nro.</th><th>Fecha</th><th>Actividades</th><th>Horas</th><th>Observaciones</th></tr>
+        <tr>
+          <th>Nro.</th>
+          <th>Fecha</th>
+          <th>Actividades</th>
+          <th>Horas</th>
+          <th>Observaciones</th>
+        </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let act of informe.resumen_actividades; let i = index">
-          <td>{{ i+1 }}</td>
+        <!-- ✅ USAMOS actividadesAgrupadas en lugar de resumen_actividades -->
+        <tr *ngFor="let act of actividadesAgrupadas">
+          <td>{{ act.nro }}</td>
           <td>{{ act.fecha }}</td>
           <td>{{ act.actividades }}</td>
-          <td>{{ act.horas_cumplidas || 0 }}</td>
-          <td>{{ act.observaciones || 'Sin observaciones' }}</td>
+          <td>{{ act.horas | number:'1.2-2' }}</td>
+          <td>{{ act.observaciones }}</td>
+        </tr>
+        <!-- ✅ Mostrar mensaje si no hay actividades -->
+        <tr *ngIf="actividadesAgrupadas.length === 0">
+          <td colspan="5" class="text-center">No hay actividades registradas</td>
         </tr>
       </tbody>
       <tfoot>
-        <tr><td colspan="3"><strong>Total Horas Cumplidas</strong></td><td><strong>{{ informe.total_horas_cumplidas || 0 }}</strong></td><td></td></tr>
+        <tr>
+          <td colspan="3"><strong>Total Horas Cumplidas</strong></td>
+          <td><strong>{{ informe.total_horas_cumplidas || 0 | number:'1.2-2' }}</strong></td>
+          <td></td>
+        </tr>
       </tfoot>
     </table>
   </section>
@@ -99,7 +112,7 @@
     <div *ngIf="editandoObjetivos && esEstudiante">
       <table class="tabla tabla-editable">
         <thead>
-          <tr><th>Objetivos</th><th>Actividades</th><th>Avance %</th><th>Resultados</th></tr>
+          <tr><th>Objetivos</th><th>Actividades</th><th>Avance %</th><th>Resultados</th><th></th></tr>
         </thead>
         <tbody>
           <tr *ngFor="let obj of objetivosEditados; let i = index">

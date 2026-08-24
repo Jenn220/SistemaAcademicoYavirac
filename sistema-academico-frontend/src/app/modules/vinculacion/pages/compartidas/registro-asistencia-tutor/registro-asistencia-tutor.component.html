@@ -1,7 +1,7 @@
 <div class="container" *ngIf="!loading && !error && data">
   <app-volver-archivos *ngIf="isDocente" />
   
-  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL (VISIBLE PARA TODOS) -->
   <div class="acciones-export">
     <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
       📊 Exportar a Excel
@@ -43,37 +43,40 @@
         <th>HORA SALIDA</th>
         <th>TOTAL HORAS</th>
         <th>ACTIVIDAD REALIZADA</th>
-        <th *ngIf="puedeEditarActividades">ACCIONES</th>
+        <!-- ✅ SOLO DOCENTE ve la columna ACCIONES -->
+        <th *ngIf="isDocente">ACCIONES</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let act of data.actividades">
-        <!-- ✅ ERROR EN EDICIÓN DE FILA -->
-        <td *ngIf="editandoId === act.id && errorHora" colspan="6" style="padding: 0.3rem; background: #fff8f8;">
+        <!-- ✅ ERROR EN EDICIÓN DE FILA (SOLO DOCENTE) -->
+        <td *ngIf="editandoId === act.id && errorHora && isDocente" colspan="6" style="padding: 0.3rem; background: #fff8f8;">
           <div style="color: #dc3545; font-weight: 600; font-size: 13px; padding: 0.3rem 0.5rem;">
             ⚠️ {{ errorHora }}
           </div>
         </td>
       </tr>
       <tr *ngFor="let act of data.actividades">
+        <!-- ✅ SOLO DOCENTE puede editar, ESTUDIANTE solo ve texto -->
         <td>
-          <span *ngIf="editandoId !== act.id || !puedeEditarActividades">{{ act.fecha }}</span>
-          <input *ngIf="editandoId === act.id && puedeEditarActividades" type="date" [(ngModel)]="editandoActividad.fecha" />
+          <span *ngIf="editandoId !== act.id || !isDocente">{{ act.fecha }}</span>
+          <input *ngIf="editandoId === act.id && isDocente" type="date" [(ngModel)]="editandoActividad.fecha" />
         </td>
         <td>
-          <span *ngIf="editandoId !== act.id || !puedeEditarActividades">{{ act.hora_entrada }}</span>
-          <input *ngIf="editandoId === act.id && puedeEditarActividades" type="time" [(ngModel)]="editandoActividad.hora_inicio" />
+          <span *ngIf="editandoId !== act.id || !isDocente">{{ act.hora_entrada }}</span>
+          <input *ngIf="editandoId === act.id && isDocente" type="time" [(ngModel)]="editandoActividad.hora_inicio" />
         </td>
         <td>
-          <span *ngIf="editandoId !== act.id || !puedeEditarActividades">{{ act.hora_salida }}</span>
-          <input *ngIf="editandoId === act.id && puedeEditarActividades" type="time" [(ngModel)]="editandoActividad.hora_fin" />
+          <span *ngIf="editandoId !== act.id || !isDocente">{{ act.hora_salida }}</span>
+          <input *ngIf="editandoId === act.id && isDocente" type="time" [(ngModel)]="editandoActividad.hora_fin" />
         </td>
         <td>{{ act.total_horas | number:'1.2-2' }}</td>
         <td>
-          <span *ngIf="editandoId !== act.id || !puedeEditarActividades">{{ act.actividad_realizada }}</span>
-          <input *ngIf="editandoId === act.id && puedeEditarActividades" type="text" [(ngModel)]="editandoActividad.actividad_realizada" class="input-actividad" />
+          <span *ngIf="editandoId !== act.id || !isDocente">{{ act.actividad_realizada }}</span>
+          <input *ngIf="editandoId === act.id && isDocente" type="text" [(ngModel)]="editandoActividad.actividad_realizada" class="input-actividad" />
         </td>
-        <td *ngIf="puedeEditarActividades">
+        <!-- ✅ SOLO DOCENTE ve los botones de acción -->
+        <td *ngIf="isDocente">
           <ng-container *ngIf="editandoId !== act.id">
             <button (click)="editarActividad(act)" class="btn-edit" title="Editar">✏️</button>
             <button (click)="eliminarActividad(act.id)" class="btn-delete" title="Eliminar">🗑️</button>
@@ -99,7 +102,7 @@
     <div class="observaciones-header">
       <p><strong>OBSERVACIONES:</strong></p>
       
-      <!-- Estado de guardado SOLO si puede editar -->
+      <!-- Estado de guardado SOLO si puede editar observaciones -->
       <div *ngIf="puedeEditarObservaciones && !editandoObservacion" class="estado-guardado">
         <span *ngIf="guardandoObservacion" class="estado guardando">⏳ Guardando...</span>
         <span *ngIf="observacionGuardada && !guardandoObservacion" class="estado guardado">✅ Guardado</span>
@@ -107,15 +110,20 @@
       </div>
     </div>
 
-    <!-- Modo visualización -->
-    <div *ngIf="!editandoObservacion">
+    <!-- ✅ ESTUDIANTE: solo lectura -->
+    <div *ngIf="!puedeEditarObservaciones">
+      <p class="texto-observacion">{{ data.totales.observaciones || 'Ninguna' }}</p>
+    </div>
+
+    <!-- Modo visualización (DOCENTE / TUTOR_EMPRESARIAL) -->
+    <div *ngIf="puedeEditarObservaciones && !editandoObservacion">
       <p class="texto-observacion">{{ data.totales.observaciones || 'Ninguna' }}</p>
       <button *ngIf="puedeEditarObservaciones" (click)="toggleEditObservacion()" class="btn-edit-obs">
         ✏️ Editar observación
       </button>
     </div>
 
-    <!-- Modo edición (DOCENTE / TUTOR_EMPRESARIAL) -->
+    <!-- Modo edición (SOLO DOCENTE / TUTOR_EMPRESARIAL) -->
     <div *ngIf="editandoObservacion && puedeEditarObservaciones">
       <div class="observaciones-input-wrapper">
         <textarea 
@@ -142,16 +150,15 @@
     <p><strong>Coordinador:</strong> {{ data.totales.coordinador_carrera }}</p>
   </div>
 
-  <!-- BOTÓN AGREGAR -->
+  <!-- ✅ BOTÓN AGREGAR (SOLO DOCENTE) -->
   <div class="acciones" *ngIf="puedeEditarActividades">
     <button *ngIf="!mostrandoFormulario" (click)="mostrarFormulario()" class="btn-add">+ Agregar actividad</button>
   </div>
 
-  <!-- FORMULARIO NUEVA ACTIVIDAD -->
+  <!-- ✅ FORMULARIO NUEVA ACTIVIDAD (SOLO DOCENTE) -->
   <div class="nueva-actividad" *ngIf="mostrandoFormulario && puedeEditarActividades">
     <h3>📝 Nueva actividad</h3>
     
-    <!-- ✅ ERROR MOSTRADO AQUÍ ARRIBA -->
     <div *ngIf="errorHora" class="error-hora">
       ⚠️ {{ errorHora }}
     </div>
