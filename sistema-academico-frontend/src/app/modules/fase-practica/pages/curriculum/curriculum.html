@@ -1,0 +1,380 @@
+<div class="toolbar no-print">
+
+    <button
+        class="btn btn-outline-secondary"
+        (click)="volver()">
+
+        <i class="bi bi-arrow-left"></i>
+
+        Volver
+
+    </button>
+
+    <button
+        class="btn btn-primary"
+        (click)="descargarWord()">
+
+        <i class="bi bi-file-earmark-word-fill"></i>
+
+        Descargar Word
+
+    </button>
+
+    @if (esEstudiante) {
+    <button
+        class="btn btn-warning text-white"
+        [disabled]="guardando"
+        (click)="guardarEnBD()">
+
+        <i class="bi bi-save"></i>
+
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+
+    </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
+
+    @if(puedeEnviarRevision){
+    <button
+        class="btn btn-success"
+        (click)="enviarARevision()">
+
+        <i class="bi bi-send"></i>
+
+        Enviar a revisión
+
+    </button>
+    }
+
+    @if(puedeAprobar){
+    <button
+        class="btn btn-success"
+        (click)="aprobar()">
+
+        <i class="bi bi-check-circle"></i>
+
+        Aprobar
+
+    </button>
+    }
+
+    @if(puedeSolicitarCorrecciones){
+    <button
+        class="btn btn-danger"
+        (click)="solicitarCorrecciones()">
+
+        <i class="bi bi-exclamation-circle"></i>
+
+        Solicitar correcciones
+
+    </button>
+    }
+
+    <span class="badge-estado" [class.borrador]="estadoDocumento === 'borrador'" [class.pendiente]="estadoDocumento === 'pendiente_revision'" [class.aprobado]="estadoDocumento === 'aprobado'" [class.rechazado]="estadoDocumento === 'rechazado'">
+        {{ estadoDocumento === 'borrador' ? 'Borrador' : estadoDocumento === 'pendiente_revision' ? 'Pendiente de revisión' : estadoDocumento === 'aprobado' ? 'Aprobado' : 'Rechazado' }}
+    </span>
+
+</div>
+
+@if(mostrarComentarios){
+<div class="comentarios-correccion">
+    <strong>Comentarios de corrección:</strong>
+    <p>{{ comentariosDocumento }}</p>
+</div>
+}
+
+<div
+    id="documento-f02"
+    class="documento">
+
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                010202
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 02 CURRÍCULO ESTANDARIZADO</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td colspan="4"><strong>CÓDIGO:</strong> {{ curriculum.datosPersonales.cedula }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td colspan="4"><strong>PERÍODO ACADÉMICO:</strong> {{ curriculum.periodoAcademico }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td colspan="4"><strong>1. DATOS PERSONALES</strong></td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>Nombres y apellidos:</strong></td>
+            <td>{{ curriculum.datosPersonales.nombre }}</td>
+            <td><strong># identificación:</strong></td>
+            <td>{{ curriculum.datosPersonales.cedula }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>Estado civil:</strong></td>
+            <td>{{ curriculum.datosPersonales.estadoCivil }}</td>
+            <td><strong>Teléfono:</strong></td>
+            <td>{{ curriculum.datosPersonales.telefono }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>Domicilio:</strong></td>
+            <td>{{ curriculum.datosPersonales.domicilio }}</td>
+            <td><strong>Email institucional:</strong></td>
+            <td>{{ curriculum.datosPersonales.emailInstitucional }}</td>
+
+        </tr>
+
+    </table>
+
+    <div class="contenido">
+
+        @if(cargando){
+
+        <p class="text-center text-muted my-4">Cargando datos base...</p>
+
+        } @else {
+
+        <h4>2. DATOS ACADÉMICOS</h4>
+
+        <table class="tabla-lista">
+
+            <thead>
+                <tr>
+                    <th style="width:10%">Año</th>
+                    <th>Institución</th>
+                    <th>Título o mención</th>
+                    <th style="width:14%">Nota final</th>
+                    <th class="no-print" style="width:40px"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for(fila of curriculum.datosAcademicos; track $index; let i = $index){
+
+                <tr>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.anio" name="da-anio-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="da-inst-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.tituloMencion" name="da-titulo-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.notaFinal" name="da-nota-{{ i }}"></td>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarDatoAcademico(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarDatoAcademico()" [disabled]="!esEstudiante">
+            <i class="bi bi-plus-circle"></i> Agregar dato académico
+        </button>
+
+        <h4>3. EXPERIENCIA LABORAL</h4>
+
+        <table class="tabla-lista">
+
+            <thead>
+                <tr>
+                    <th style="width:10%">Año</th>
+                    <th>Institución o empresa</th>
+                    <th>Cargo</th>
+                    <th>Actividades desarrolladas</th>
+                    <th class="no-print" style="width:40px"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for(fila of curriculum.experienciaLaboral; track $index; let i = $index){
+
+                <tr>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.anio" name="exp-anio-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="exp-inst-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.cargo" name="exp-cargo-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.actividades" name="exp-act-{{ i }}"></td>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarExperiencia(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarExperiencia()" [disabled]="!esEstudiante">
+            <i class="bi bi-plus-circle"></i> Agregar experiencia laboral
+        </button>
+
+        <h4>4. PRÁCTICAS DUALES</h4>
+
+        <table class="tabla-lista">
+
+            <thead>
+                <tr>
+                    <th style="width:10%">Año</th>
+                    <th>Institución o empresa</th>
+                    <th>Puesto de aprendizaje</th>
+                    <th>Actividades desarrolladas</th>
+                    <th class="no-print" style="width:40px"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for(fila of curriculum.practicasDuales; track $index; let i = $index){
+
+                <tr>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.anio" name="pd-anio-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="pd-inst-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.puestoAprendizaje" name="pd-puesto-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.actividades" name="pd-act-{{ i }}"></td>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarPracticaDual(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarPracticaDual()" [disabled]="!esEstudiante">
+            <i class="bi bi-plus-circle"></i> Agregar práctica dual
+        </button>
+
+        <h4>5. INFORMACIÓN ADICIONAL (LOGROS RELEVANTES, HABILIDADES, ETC.)</h4>
+
+        <table class="tabla-lista">
+
+            <thead>
+                <tr>
+                    <th style="width:10%">Año</th>
+                    <th>Institución</th>
+                    <th>Logro o hecho relevante</th>
+                    <th>Detalle del logro o hecho relevante</th>
+                    <th class="no-print" style="width:40px"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for(fila of curriculum.informacionAdicional; track $index; let i = $index){
+
+                <tr>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.anio" name="ia-anio-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.institucion" name="ia-inst-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.logro" name="ia-logro-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.detalle" name="ia-detalle-{{ i }}"></td>
+                    <td class="no-print text-center" [class.no-print]="!esEstudiante">
+                        <button type="button" class="btn-quitar" (click)="quitarInformacionAdicional(i)" [disabled]="!esEstudiante"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarInformacionAdicional()" [disabled]="!esEstudiante">
+            <i class="bi bi-plus-circle"></i> Agregar información adicional
+        </button>
+
+        <div class="firma">
+
+            <p>Atentamente,</p>
+
+            <div class="linea"></div>
+
+            <strong>{{ curriculum.datosPersonales.nombre || 'NOMBRE DEL ESTUDIANTE' }}</strong>
+
+            <br>
+
+            NOMBRE Y FIRMA ESTUDIANTE
+
+        </div>
+
+        }
+
+    </div>
+
+</div>

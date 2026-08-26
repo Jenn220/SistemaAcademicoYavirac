@@ -1,404 +1,357 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
+import { DOCUMENTO_REPOSITORY, IDocumentoRepository } from '../ports/documento.repository.port';
 import { DocumentoEntity } from '../domain/documento.entity';
-
-export interface DatosEstudiante {
-  nombre: string;
-  cedula: string;
-  carrera: string;
-  nivel: string;
-  email: string;
-  telefono: string;
-  estadoCivil: string;
-  tipoSangre: string;
-  domicilio: string;
-  contactoEmergencia: string;
-}
-
-export interface DatosCarrera {
-  coordinador: string;
-  tutorAcademico: string;
-}
-
-export interface DatosProyectoEmpresarial {
-  nombre: string;
-  cobertura: string;
-  plazo: string;
-  fechaInicio: string;
-  fechaFin: string;
-}
-
-export interface DatosEmpresaBeneficiaria {
-  razonSocial: string;
-  representanteLegal: string;
-  tutorEmpresarial: string;
-  direccion: string;
-  ubicacion: string;
-}
-
-export interface CronogramaFecha {
-  fecha: string;
-  descripcion: string;
-}
-
-export interface DatosMaestra {
-  estudiante: DatosEstudiante;
-  carrera: DatosCarrera;
-  proyectoEmpresarial: DatosProyectoEmpresarial;
-  empresaBeneficiaria: DatosEmpresaBeneficiaria;
-  cronograma: CronogramaFecha[];
-}
-
-export interface CartaCompromiso {
-  encabezado: string;
-  destinatario: string;
-  cuerpo: string[];
-  obligaciones: string[];
-  prohibiciones: string[];
-  compromisosConfidencialidad: string[];
-  estudiante: { nombre: string; cedula: string };
-  espacioFirma: { lugar: string; fecha: string };
-}
-
-export interface Curriculum {
-  datosPersonales: DatosEstudiante;
-  datosAcademicos: { carrera: string; nivel: string; institucion: string; promedio: string };
-  experienciaLaboral: { empresa: string; cargo: string; periodo: string; funciones: string }[];
-  practicasDualesPrevias: { empresa: string; periodo: string; horas: number }[];
-  informacionAdicional: { logros: string[]; idiomas: string[]; habilidades: string[] };
-}
-
-export interface RegistroAsistenciaDia {
-  fecha: string;
-  horaIngreso: string;
-  almuerzo: string;
-  horaSalida: string;
-  horasDia: number;
-  firma: string;
-  observaciones: string;
-}
-
-export interface RegistroAsistencia {
-  estudiante: { nombre: string; cedula: string };
-  empresa: string;
-  registros: RegistroAsistenciaDia[];
-  horasAutonomas: number;
-  subtotalHorasPractica: number;
-}
-
-export interface InformeSemana {
-  semana: number;
-  rangoFechas: string;
-  puestoAprendizaje: string;
-  actividadesRealizadas: string;
-  actividadesAutonomas: string;
-  reflexion: string;
-  observacionesEmpresa: string;
-}
-
-export interface InformeAprendizaje {
-  estudiante: { nombre: string; cedula: string };
-  empresa: string;
-  semanas: InformeSemana[];
-  totalSemanas: number;
-}
-
-export interface CriterioEmpresarial {
-  id: number;
-  criterio: string;
-  puntaje: number;
-  maximo: number;
-}
-
-export interface EvaluacionEmpresarial {
-  estudiante: { nombre: string; cedula: string };
-  empresa: string;
-  tutorEmpresarial: string;
-  criterios: CriterioEmpresarial[];
-  defensaProyecto: { notaParcial: number; notaFinal: number };
-  promedioCriterios: number;
-  notaFinalEmpresa: number;
-}
-
-export interface CriterioInstituto {
-  id: number;
-  criterio: string;
-  puntaje: number;
-  maximo: number;
-}
-
-export interface EvaluacionInstituto {
-  estudiante: { nombre: string; cedula: string };
-  instituto: string;
-  tutorAcademico: string;
-  defensaProyecto: { nota: number };
-  criteriosProyecto: CriterioInstituto[];
-  notaFinalEmpresa: number;
-  notaFinalInstituto: number;
-  notaFinalConsolidada: number;
-}
+import { DocumentoPlantillaService } from './documento-plantilla.service';
+import { NotificacionService } from './notificacion.service';
+import { EstadoDocumento } from '../dto/actualizar-estado-documento.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DocumentoService {
   constructor(
-    @InjectRepository(DocumentoEntity)
-    private readonly documentoRepository: Repository<DocumentoEntity>,
+    @Inject(DOCUMENTO_REPOSITORY)
+    private readonly documentoRepository: IDocumentoRepository,
+    private readonly plantillaService: DocumentoPlantillaService,
+    private readonly notificacionService: NotificacionService,
+    private readonly dataSource: DataSource,
   ) {}
-
-  private readonly datosMaestra: DatosMaestra = {
-    estudiante: {
-      nombre: 'MARÍA FERNANDA QUISPE ÑAUPARI',
-      cedula: '1750123456',
-      carrera: 'Tecnología Superior en Desarrollo de Software',
-      nivel: 'Sexto Nivel - Fase Práctica',
-      email: 'maria.quispe@estudiante.yavirac.edu.ec',
-      telefono: '0987654321',
-      estadoCivil: 'Soltera',
-      tipoSangre: 'O+',
-      domicilio: 'Calle Los Capulíes N23-45 y Av. Amazonas, Quito',
-      contactoEmergencia: 'LUZ MARÍA ÑAUPARI - 0991234567 (Madre)',
-    },
-    carrera: {
-      coordinador: 'ING. PATRICIO RAMÍREZ',
-      tutorAcademico: 'ING. CARLOS MONTENEGRO',
-    },
-    proyectoEmpresarial: {
-      nombre: 'Sistema de Gestión Académica Yavirac',
-      cobertura: 'Institucional - Campus Matriz',
-      plazo: '6 meses',
-      fechaInicio: '2025-12-01',
-      fechaFin: '2026-05-29',
-    },
-    empresaBeneficiaria: {
-      razonSocial: 'INSTITUTO TECNOLÓGICO SUPERIOR YAVIRAC',
-      representanteLegal: 'LIC. ANA BELÉN TORRES',
-      tutorEmpresarial: 'ING. DIANA VÁSQUEZ',
-      direccion: 'Av. 12 de Octubre N12-10 y Wilson, Quito',
-      ubicacion: 'Quito - Ecuador',
-    },
-    cronograma: [
-      { fecha: '2025-12-01', descripcion: 'Inicio de fase práctica' },
-      { fecha: '2025-12-08', descripcion: 'Inducción y plan de rotación' },
-      { fecha: '2026-02-15', descripcion: 'Seguimiento intermedio' },
-      { fecha: '2026-04-30', descripcion: 'Entrega de informe final' },
-      { fecha: '2026-05-29', descripcion: 'Defensa de proyecto' },
-    ],
-  };
-
-  getDatosMaestra(): DatosMaestra {
-    return this.datosMaestra;
-  }
-
-  getCartaCompromiso(): CartaCompromiso {
-    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
-    return {
-      encabezado: 'CARTA DE COMPROMISO (Formato 01)',
-      destinatario: `A la ${empresaBeneficiaria.razonSocial}`,
-      cuerpo: [
-        `Yo, ${estudiante.nombre}, con cédula ${estudiante.cedula}, estudiante de la ${estudiante.carrera}, me presento para cumplir mi fase práctica pre profesional.`,
-        'Me comprometo a cumplir el horario establecido y las normativas de la institución y la empresa beneficiaria.',
-      ],
-      obligaciones: [
-        'Cumplir el horario y plan de rotación acordado.',
-        'Ejecutar las actividades asignadas con responsabilidad.',
-        'Entregar los informes y bitácoras en los plazos establecidos.',
-        'Cuidar los recursos y equipos asignados.',
-      ],
-      prohibiciones: [
-        'Consumo de bebidas alcohólicas dentro de la jornada y las instalaciones.',
-        'Consumo o porte de sustancias estupefacientes o psicotrópicas.',
-        'Malos tratos, acoso o cualquier forma de violencia hacia el personal.',
-        'Abandono del puesto de trabajo sin autorización.',
-      ],
-      compromisosConfidencialidad: [
-        'Mantener reserva de la información confidencial a la que tenga acceso.',
-        'No divulgar datos de la empresa beneficiaria ni de terceros.',
-        'Devolver toda la documentación y activos al finalizar la práctica.',
-      ],
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      espacioFirma: { lugar: 'Quito', fecha: '2025-12-01' },
-    };
-  }
-
-  getCurriculum(): Curriculum {
-    const { estudiante } = this.datosMaestra;
-    return {
-      datosPersonales: estudiante,
-      datosAcademicos: {
-        carrera: estudiante.carrera,
-        nivel: estudiante.nivel,
-        institucion: 'Instituto Tecnológico Superior Yavirac',
-        promedio: '8.92',
-      },
-      experienciaLaboral: [
-        {
-          empresa: 'Empresa Demo S.A.',
-          cargo: 'Practicante de Soporte Técnico',
-          periodo: '2024-06 a 2024-08',
-          funciones: 'Soporte a usuarios, mantenimiento de equipos y redes.',
-        },
-      ],
-      practicasDualesPrevias: [
-        { empresa: 'Tech Solutions', periodo: '2024', horas: 120 },
-      ],
-      informacionAdicional: {
-        logros: [
-          'Primer puesto en feria de proyectos 2024.',
-          'Certificación en Scrum Foundation.',
-        ],
-        idiomas: ['Español (nativo)', 'Inglés (B1)'],
-        habilidades: ['JavaScript', 'TypeScript', 'NestJS', 'PostgreSQL', 'Git'],
-      },
-    };
-  }
-
-  getRegistroAsistencia(): RegistroAsistencia {
-    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
-    const registros: RegistroAsistenciaDia[] = [];
-    const inicio = new Date('2025-12-01T00:00:00');
-    let agregados = 0;
-    while (agregados < 36) {
-      const dia = inicio.getDay();
-      if (dia !== 0 && dia !== 6) {
-        const fecha = inicio.toISOString().slice(0, 10);
-        registros.push({
-          fecha,
-          horaIngreso: '08:00',
-          almuerzo: '13:00 - 14:00',
-          horaSalida: '18:00',
-          horasDia: 10,
-          firma: '',
-          observaciones: '',
-        });
-        agregados++;
-      }
-      inicio.setDate(inicio.getDate() + 1);
-    }
-    return {
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      empresa: empresaBeneficiaria.razonSocial,
-      registros,
-      horasAutonomas: 0,
-      subtotalHorasPractica: 36 * 10,
-    };
-  }
-
-  getInformeAprendizaje(): InformeAprendizaje {
-    const { estudiante, empresaBeneficiaria } = this.datosMaestra;
-    const puestos = [
-      'Desarrollo de Backend',
-      'Desarrollo de Frontend',
-      'Análisis de Requisitos',
-      'Pruebas de Software',
-      'Base de Datos',
-      'Documentación Técnica',
-      'Soporte e Integración',
-      'Despliegue y DevOps',
-    ];
-    const semanas: InformeSemana[] = puestos.map((puesto, i) => ({
-      semana: i + 1,
-      rangoFechas: `Semana ${i + 1}`,
-      puestoAprendizaje: puesto,
-      actividadesRealizadas: `Apoyo en tareas de ${puesto.toLowerCase()} dentro del proyecto institucional.`,
-      actividadesAutonomas: 'Estudio de documentación y cursos complementarios.',
-      reflexion: 'He reforzado mis conocimientos prácticos y el trabajo en equipo.',
-      observacionesEmpresa: 'Buen desempeño y compromiso.',
-    }));
-    return {
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      empresa: empresaBeneficiaria.razonSocial,
-      semanas,
-      totalSemanas: semanas.length,
-    };
-  }
-
-  getEvaluacionEmpresarial(): EvaluacionEmpresarial {
-    const { estudiante, empresaBeneficiaria, carrera } = this.datosMaestra;
-    const criteriosBase = [
-      'Puntualidad y asistencia',
-      'Responsabilidad',
-      'Trabajo en equipo',
-      'Capacidad técnica',
-      'Iniciativa',
-      'Comunicación',
-      'Resolución de problemas',
-      'Ética profesional',
-      'Adaptabilidad',
-      'Calidad del trabajo',
-    ];
-    const puntajes = [6, 6, 5.5, 6, 5.5, 6, 5.5, 6, 6, 5.5];
-    const criterios: CriterioEmpresarial[] = criteriosBase.map((criterio, i) => ({
-      id: i + 1,
-      criterio,
-      puntaje: puntajes[i],
-      maximo: 6,
-    }));
-    const suma = puntajes.reduce((a, b) => a + b, 0);
-    const promedioCriterios = Number((suma / criterios.length).toFixed(2));
-    return {
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      empresa: empresaBeneficiaria.razonSocial,
-      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
-      criterios,
-      defensaProyecto: { notaParcial: 6.2, notaFinal: 6.5 },
-      promedioCriterios,
-      notaFinalEmpresa: 6.45,
-    };
-  }
-
-  getEvaluacionInstituto(): EvaluacionInstituto {
-    const { estudiante, carrera } = this.datosMaestra;
-    const criteriosBase = [
-      'Alcance del proyecto',
-      'Metodología',
-      'Innovación',
-      'Documentación',
-      'Sostenibilidad',
-      'Impacto institucional',
-      'Presentación y defensa',
-    ];
-    const puntajes = [7.5, 7, 7, 7.5, 6.5, 7, 7.5];
-    const criterios: CriterioInstituto[] = criteriosBase.map((criterio, i) => ({
-      id: i + 1,
-      criterio,
-      puntaje: puntajes[i],
-      maximo: 10,
-    }));
-    return {
-      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
-      instituto: 'Instituto Tecnológico Superior Yavirac',
-      tutorAcademico: carrera.tutorAcademico,
-      defensaProyecto: { nota: 7.2 },
-      criteriosProyecto: criterios,
-      notaFinalEmpresa: 6.45,
-      notaFinalInstituto: 7.2,
-      notaFinalConsolidada: 7.175,
-    };
-  }
 
   async guardarDocumento(
     codigo: string,
     titulo: string,
-    contenido: Record<string, any>,
+    contenido: any,
+    idPractica?: number,
+    idEstudiante?: number,
+    idUsuario?: number,
+    estado?: string,
   ): Promise<DocumentoEntity> {
-    const documento = this.documentoRepository.create({
-      codigo_formato: codigo,
-      titulo,
-      contenido,
-    });
-    return this.documentoRepository.save(documento);
+    return this.documentoRepository.guardarDocumento(codigo, titulo, contenido, idPractica, idEstudiante, idUsuario, estado);
   }
 
-  getTodosLosDocumentos() {
-    return {
-      datos: this.getDatosMaestra(),
-      cartaCompromiso: this.getCartaCompromiso(),
-      curriculum: this.getCurriculum(),
-      registroAsistencia: this.getRegistroAsistencia(),
-      informeAprendizaje: this.getInformeAprendizaje(),
-      evaluacionEmpresarial: this.getEvaluacionEmpresarial(),
-      evaluacionInstituto: this.getEvaluacionInstituto(),
+  async buscarIdDocumento(usuario: any, idPractica: number, codigoFormato: string): Promise<{ id_documento: number } | null> {
+    const documento = await this.documentoRepository.buscarPorPracticaYCodigo(idPractica, codigoFormato);
+    if (!documento) return null;
+    await this.verificarAccesoDocumento(usuario, documento);
+    return { id_documento: documento.id_documento };
+  }
+
+  async buscarPorId(usuario: any, idDocumento: number): Promise<DocumentoEntity | null> {
+    const documento = await this.documentoRepository.buscarPorId(idDocumento);
+    if (!documento) return null;
+    await this.verificarAccesoDocumento(usuario, documento);
+    return documento;
+  }
+
+  private async verificarAccesoDocumento(usuario: any, documento: DocumentoEntity): Promise<void> {
+    if (!documento.id_practica) {
+      return;
+    }
+
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    const practica = await this.dataSource.query(
+      `SELECT id_docente, id_empresa, id_matricula_detalle
+       FROM practica_estudiante
+       WHERE id_practica = $1 LIMIT 1`,
+      [documento.id_practica],
+    );
+
+    if (practica.length === 0) {
+      throw new ForbiddenException('No tiene permisos para acceder a este documento.');
+    }
+
+    const p = practica[0];
+
+    if (roles.includes('DOCENTE') && Number(p.id_docente) === Number(usuario.idDocente)) return;
+    if (roles.includes('TUTOR_EMPRESARIAL') && Number(p.id_empresa) === Number(usuario.idEmpresa)) return;
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
+        [p.id_matricula_detalle, usuario.idEstudiante],
+      );
+      if (esDueno && esDueno.length > 0) return;
+    }
+
+    throw new ForbiddenException('No tiene permisos para acceder a este documento.');
+  }
+
+  getDatosMaestra(usuario: any, idPractica?: number) {
+    return this.plantillaService.getDatosMaestra(usuario, idPractica);
+  }
+
+  getCartaCompromiso(usuario: any, idPractica?: number) {
+    return this.plantillaService.getCartaCompromiso(usuario, idPractica);
+  }
+
+  getCurriculum(usuario: any, idPractica?: number) {
+    return this.plantillaService.getCurriculum(usuario, idPractica);
+  }
+
+  getRegistroAsistencia(usuario: any, idPractica?: number) {
+    return this.plantillaService.getRegistroAsistencia(usuario, idPractica);
+  }
+
+  getInformeAprendizaje(usuario: any, idPractica?: number) {
+    return this.plantillaService.getInformeAprendizaje(usuario, idPractica);
+  }
+
+  getEvaluacionEmpresarial(usuario: any, idPractica?: number) {
+    return this.plantillaService.getEvaluacionEmpresarial(usuario, idPractica);
+  }
+
+  getEvaluacionInstituto(usuario: any, idPractica?: number) {
+    return this.plantillaService.getEvaluacionInstituto(usuario, idPractica);
+  }
+
+  getActaInduccionSeguridad(usuario: any, idPractica?: number) {
+    return this.plantillaService.getActaInduccionSeguridad(usuario, idPractica);
+  }
+
+  getActaEntornoLaboral(usuario: any, idPractica?: number) {
+    return this.plantillaService.getActaEntornoLaboral(usuario, idPractica);
+  }
+
+  buscarCandidatosActaEntornoLaboral(usuario: any, idPractica?: number) {
+    return this.plantillaService.buscarCandidatosActaEntornoLaboral(usuario, idPractica);
+  }
+
+  getTodosLosDocumentos(usuario: any, idPractica?: number) {
+    return this.plantillaService.getTodosLosDocumentos(usuario, idPractica);
+  }
+
+  async actualizarDocumentosPorPractica(usuario: any, idPractica: number): Promise<void> {
+    const documentos = await this.documentoRepository.listarPorPractica(idPractica);
+
+    await this.dataSource.manager.transaction(async (manager) => {
+      const generadores: Record<string, (usuario: any, idPractica?: number) => Promise<any>> = {
+        F01: (u, id) => this.plantillaService.getCartaCompromiso(u, id, true),
+        F02: (u, id) => this.plantillaService.getCurriculum(u, id, true),
+        F05: (u, id) => this.plantillaService.getRegistroAsistencia(u, id, true),
+        F06: (u, id) => this.plantillaService.getInformeAprendizaje(u, id, true),
+        F07: (u, id) => this.plantillaService.getEvaluacionEmpresarial(u, id, true),
+        F08: (u, id) => this.plantillaService.getEvaluacionInstituto(u, id, true),
+        F10: (u, id) => this.plantillaService.getActaInduccionSeguridad(u, id, true),
+        F11: (u, id) => this.plantillaService.getActaEntornoLaboral(u, id, true),
+      };
+
+      for (const documento of documentos) {
+        const generador = generadores[documento.codigo_formato];
+        if (!generador) continue;
+
+        try {
+          const contenidoActualizado = await generador(usuario, idPractica);
+          documento.contenido = contenidoActualizado;
+          documento.updated_at = new Date();
+          await manager.getRepository(DocumentoEntity).save(documento);
+        } catch (error) {
+          console.error(`Error actualizando documento ${documento.codigo_formato} para práctica ${idPractica}`, error);
+          throw error;
+        }
+      }
+    });
+  }
+
+  async cambiarEstado(idDocumento: number, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<DocumentoEntity | null> {
+    if (!usuarioOrigen?.roles) {
+      throw new Error('No autorizado');
+    }
+
+    const roles = usuarioOrigen.roles;
+    const esEstudiante = roles.includes('ESTUDIANTE');
+    const esDocente = roles.includes('DOCENTE');
+    const esTutorEmpresarial = roles.includes('TUTOR_EMPRESARIAL');
+    const esCoordinador = roles.includes('COORDINADOR');
+
+    if (!esEstudiante && !esDocente && !esTutorEmpresarial && !esCoordinador) {
+      throw new ForbiddenException('No autorizado para cambiar el estado del documento');
+    }
+
+    const documento = await this.documentoRepository.actualizarEstado(idDocumento, estado, comentarios);
+    if (!documento) {
+      return null;
+    }
+
+    const transicionesPermitidas: Record<string, string[]> = {
+      'borrador': ['pendiente_revision'],
+      'pendiente_revision': ['aprobado', 'rechazado'],
+      'rechazado': ['pendiente_revision'],
     };
+
+    const estadoActual = documento.estado ?? 'borrador';
+    const permitidos = transicionesPermitidas[estadoActual] ?? [];
+
+    if (!permitidos.includes(estado)) {
+      throw new ForbiddenException(`No se puede cambiar el estado de "${estadoActual}" a "${estado}".`);
+    }
+
+    if ((esEstudiante || esTutorEmpresarial) && estado !== 'pendiente_revision') {
+      throw new ForbiddenException('El estudiante o tutor empresarial solo puede enviar documentos a revisión');
+    }
+
+    await this.notificarCambioEstado(documento, estado, comentarios, usuarioOrigen);
+
+    return documento;
+  }
+
+  private async notificarCambioEstado(documento: DocumentoEntity, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<void> {
+    if (!documento.id_practica) {
+      return;
+    }
+
+    const notificaEstudiante = !!documento.id_estudiante;
+    const esEvaluacionEmpresa = ['F07', 'F08'].includes(documento.codigo_formato);
+
+    const tipoMap: Record<string, string> = {
+      [EstadoDocumento.PENDIENTE_REVISION]: 'documento_enviado_revision',
+      [EstadoDocumento.APROBADO]: 'documento_aprobado',
+      [EstadoDocumento.RECHAZADO]: 'documento_rechazado',
+    };
+
+    const tipo = tipoMap[estado];
+    if (!tipo) {
+      return;
+    }
+
+    const mensaje = this.construirMensajeNotificacion(documento.codigo_formato, estado, comentarios);
+    const idUsuarioOrigen = usuarioOrigen?.sub ? Number(usuarioOrigen.sub) : undefined;
+
+    switch (estado) {
+      case EstadoDocumento.PENDIENTE_REVISION:
+        await this.notificarDocenteOTutor(documento, mensaje, idUsuarioOrigen);
+        break;
+      case EstadoDocumento.APROBADO:
+        if (notificaEstudiante) {
+          await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        }
+        if (esEvaluacionEmpresa) {
+          await this.notificarTutorEmpresarial(documento, mensaje, idUsuarioOrigen);
+        }
+        break;
+      case EstadoDocumento.RECHAZADO:
+        if (notificaEstudiante) {
+          await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        }
+        if (esEvaluacionEmpresa) {
+          await this.notificarTutorEmpresarial(documento, mensaje, idUsuarioOrigen);
+        }
+        break;
+    }
+  }
+
+  private construirMensajeNotificacion(codigoFormato: string, estado: string, comentarios?: string): string {
+    const nombreDocumento = this.obtenerNombreDocumento(codigoFormato);
+    const estadoTexto = this.obtenerTextoEstado(estado);
+
+    let mensaje = `El documento ${nombreDocumento} cambió a estado: ${estadoTexto}.`;
+
+    if (comentarios && estado === EstadoDocumento.RECHAZADO) {
+      mensaje += ` Comentarios: ${comentarios}`;
+    }
+
+    return mensaje;
+  }
+
+  private obtenerNombreDocumento(codigo: string): string {
+    const nombres: Record<string, string> = {
+      F01: 'Carta Compromiso',
+      F02: 'Currículo',
+      F05: 'Registro de Asistencia',
+      F06: 'Informe de Aprendizaje',
+      F07: 'Evaluación Empresarial',
+      F08: 'Evaluación Instituto',
+      F10: 'Acta de Inducción de Seguridad',
+      F11: 'Acta del Entorno Laboral',
+    };
+    return nombres[codigo] || codigo;
+  }
+
+  private obtenerTextoEstado(estado: string): string {
+    const textos: Record<string, string> = {
+      [EstadoDocumento.PENDIENTE_REVISION]: 'Pendiente de revisión',
+      [EstadoDocumento.APROBADO]: 'Aprobado',
+      [EstadoDocumento.RECHAZADO]: 'Rechazado',
+    };
+    return textos[estado] || estado;
+  }
+
+  private async notificarDocenteOTutor(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_practica) return;
+
+    try {
+      const practicaRows = await this.dataSource.query(
+        `SELECT id_docente FROM practica_estudiante WHERE id_practica = $1 LIMIT 1`,
+        [documento.id_practica],
+      );
+
+      if (practicaRows.length === 0) return;
+
+      const idDocente = practicaRows[0].id_docente;
+
+      if (idDocente) {
+        const docenteUsuario = await this.dataSource.query(
+          `SELECT id_usuario FROM usuario WHERE id_docente = $1 AND estado = 'ACTIVO' LIMIT 1`,
+          [idDocente],
+        );
+
+        if (docenteUsuario.length > 0) {
+          await this.notificacionService.crearNotificacion(
+            Number(docenteUsuario[0].id_usuario),
+            'documento_enviado_revision',
+            mensaje,
+            idUsuarioOrigen,
+            documento.id_practica,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error notificando docente', error);
+    }
+  }
+
+  private async notificarEstudiante(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_estudiante) return;
+
+    await this.notificacionService.crearNotificacion(
+      documento.id_estudiante,
+      'documento_estado_cambiado',
+      mensaje,
+      idUsuarioOrigen,
+      documento.id_practica,
+    );
+  }
+
+  /** Notifica al TUTOR_EMPRESARIAL de la práctica (para F07/F08 aprobados/rechazados). */
+  private async notificarTutorEmpresarial(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_practica) return;
+
+    try {
+      const rows = await this.dataSource.query(
+        `SELECT u.id_usuario
+         FROM usuario u
+         JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+         JOIN rol r ON r.id_rol = ur.id_rol
+         WHERE r.nombre = 'TUTOR_EMPRESARIAL' AND u.estado = 'ACTIVO'
+         AND u.id_empresa = (SELECT id_empresa FROM practica_estudiante WHERE id_practica = $1 LIMIT 1)
+         LIMIT 1`,
+        [documento.id_practica],
+      );
+
+      if (rows.length > 0) {
+        await this.notificacionService.crearNotificacion(
+          Number(rows[0].id_usuario),
+          'documento_estado_cambiado',
+          mensaje,
+          idUsuarioOrigen,
+          documento.id_practica,
+        );
+      }
+    } catch (error) {
+      console.error('Error notificando tutor empresarial', error);
+    }
   }
 }

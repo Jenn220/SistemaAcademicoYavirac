@@ -1,0 +1,1349 @@
+import { ForbiddenException, BadRequestException, Injectable, Inject } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { EstudianteEntity } from '../domain/estudiante.entity';
+import { EmpresaEntity } from '../domain/empresa.entity';
+import { PracticaEntity } from '../domain/practica.entity';
+import { RegistroDiarioEntity } from '../domain/registro-diario.entity';
+import { InformeAprendizajeEntity } from '../domain/informe-aprendizaje.entity';
+import { BitacoraSemanalEntity } from '../domain/bitacora-semanal.entity';
+import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
+import { CvDatoAcademicoEntity } from '../domain/cv-dato-academico.entity';
+import { CvExperienciaLaboralEntity } from '../domain/cv-experiencia-laboral.entity';
+import { CvPracticaDualEntity } from '../domain/cv-practica-dual.entity';
+import { NucleoEstructuranteEntity } from '../domain/nucleo-estructurante.entity';
+import { DocumentoEntity } from '../domain/documento.entity';
+import { DOCUMENTO_REPOSITORY } from '../ports/documento.repository.port';
+import {
+  DatosEstudiante,
+  DatosCarrera,
+  DatosProyectoEmpresarial,
+  DatosEmpresaBeneficiaria,
+  PeriodoAcademico,
+  CronogramaFecha,
+  DatosMaestra,
+  CartaCompromiso,
+  Curriculum,
+  RegistroAsistenciaDia,
+  RegistroAsistencia,
+  InformeAprendizajeEncabezado,
+  InformeSemana,
+  InformeAprendizaje,
+  CriterioEmpresarial,
+  DefensaProyectoItem,
+  EvaluacionEmpresarial,
+  CriterioInstituto,
+  EvaluacionInstituto,
+  ActaInduccionSeguridad,
+  ActaEntornoLaboral,
+} from '../dto/documentos.types';
+
+@Injectable()
+export class DocumentoPlantillaService {
+  constructor(
+    @InjectRepository(EstudianteEntity)
+    private readonly estudianteRepository: Repository<EstudianteEntity>,
+    @InjectRepository(EmpresaEntity)
+    private readonly empresaRepository: Repository<EmpresaEntity>,
+    @InjectRepository(PracticaEntity)
+    private readonly practicaRepository: Repository<PracticaEntity>,
+    @InjectRepository(RegistroDiarioEntity)
+    private readonly registroDiarioRepository: Repository<RegistroDiarioEntity>,
+    @InjectRepository(InformeAprendizajeEntity)
+    private readonly informeRepository: Repository<InformeAprendizajeEntity>,
+    @InjectRepository(BitacoraSemanalEntity)
+    private readonly bitacoraRepository: Repository<BitacoraSemanalEntity>,
+    @InjectRepository(EvaluacionPracticaEntity)
+    private readonly evaluacionRepository: Repository<EvaluacionPracticaEntity>,
+    @InjectRepository(CvDatoAcademicoEntity)
+    private readonly cvDatoAcademicoRepository: Repository<CvDatoAcademicoEntity>,
+    @InjectRepository(CvExperienciaLaboralEntity)
+    private readonly cvExperienciaLaboralRepository: Repository<CvExperienciaLaboralEntity>,
+    @InjectRepository(CvPracticaDualEntity)
+    private readonly cvPracticaDualRepository: Repository<CvPracticaDualEntity>,
+    @InjectRepository(NucleoEstructuranteEntity)
+    private readonly nucleoRepository: Repository<NucleoEstructuranteEntity>,
+    @Inject(DOCUMENTO_REPOSITORY)
+    private readonly documentoRepository: Repository<DocumentoEntity>,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  private async cargarContenidoGuardado(idPractica: number, codigoFormato: string): Promise<any> {
+    const guardado = await this.documentoRepository.findOne({
+      where: { id_practica: idPractica, codigo_formato: codigoFormato },
+      order: { id_documento: 'DESC' },
+    });
+    return guardado?.contenido ?? null;
+  }
+
+  /**
+   * Resuelve el id_practica que le corresponde consultar al usuario logueado.
+   * ESTUDIANTE y TUTOR_EMPRESARIAL siempre ven SU práctica (por matrícula o
+   * por empresa) — nunca pueden pedir la de otro. DOCENTE debe indicar
+   * explícitamente qué práctica quiere ver (idPracticaSolicitado) y solo se
+   * la resuelve si es el docente asignado. COORDINADOR puede pedir
+   * cualquier práctica explícita, sin restricción de dueño.
+   *
+   * Antes esto caía silenciosamente a "la primera práctica que exista" para
+   * cualquier usuario sin idEmpresa — permitía que un docente o tutor sin
+   * relación con la práctica igual viera sus datos (ver hallazgos de QA
+   * IA-12 / EE-12 / EI-11 / PMF-07).
+   */
+  private async obtenerIdPractica(usuario: any, idPracticaSolicitado?: number): Promise<number> {
+
+    if (idPracticaSolicitado !== undefined && (!Number.isInteger(idPracticaSolicitado) || idPracticaSolicitado <= 0)) {
+      throw new BadRequestException('Identificador de práctica inválido.');
+    }
+
+    if (usuario.idEstudiante) {
+      const rows = await this.dataSource.query(
+        `SELECT p.id_practica
+         FROM practica_estudiante p
+         JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE m.id_estudiante = $1
+         ORDER BY p.id_practica DESC
+         LIMIT 1`,
+        [usuario.idEstudiante],
+      );
+
+      if (rows.length === 0) {
+        throw new ForbiddenException('No tiene una práctica registrada.');
+      }
+
+      return rows[0].id_practica;
+    }
+
+    if (usuario.idEmpresa) {
+      // Una empresa puede tener varios estudiantes en curso (con el mismo
+      // tutor u otro): si el tutor pide una práctica explícita (selector de
+      // plan-formacion-lista), hay que respetarla y solo validar que sea de
+      // su empresa — devolver siempre "la primera práctica de la empresa"
+      // ignoraba idPracticaSolicitado y mostraba el mismo estudiante sin
+      // importar en cuál hiciera clic el tutor (bug reportado en QA).
+      if (idPracticaSolicitado) {
+        const practica = await this.practicaRepository.findOne({
+          where: { id_practica: idPracticaSolicitado },
+        });
+
+        if (!practica || practica.id_empresa !== usuario.idEmpresa) {
+          throw new ForbiddenException('No tiene permisos sobre esta práctica.');
+        }
+
+        return practica.id_practica;
+      }
+
+      const practica = await this.practicaRepository.findOne({
+        where: { id_empresa: usuario.idEmpresa },
+      });
+
+      if (!practica) {
+        throw new ForbiddenException('No tiene una práctica vinculada a su empresa.');
+      }
+
+      return practica.id_practica;
+    }
+
+    // COORDINADOR tiene alcance total y va antes que la validación de
+    // dueño de DOCENTE: rav.villa, por ejemplo, tiene ambos roles
+    // (COORDINADOR + DOCENTE con idDocente propio) y no debe quedar
+    // restringida a solo sus propias prácticas asignadas.
+    const roles: string[] = usuario.roles ?? [];
+
+    if (roles.includes('COORDINADOR')) {
+      if (!idPracticaSolicitado) {
+        throw new ForbiddenException('Debe indicar la práctica que desea consultar.');
+      }
+
+      return idPracticaSolicitado;
+    }
+
+    if (usuario.idDocente) {
+      if (!idPracticaSolicitado) {
+        throw new ForbiddenException('Debe indicar la práctica que desea consultar.');
+      }
+
+      const practica = await this.practicaRepository.findOne({
+        where: { id_practica: idPracticaSolicitado },
+      });
+
+      if (!practica || practica.id_docente !== usuario.idDocente) {
+        throw new ForbiddenException('No tiene permisos sobre esta práctica.');
+      }
+
+      return practica.id_practica;
+    }
+
+    if (idPracticaSolicitado) {
+      return idPracticaSolicitado;
+    }
+
+    throw new ForbiddenException('No fue posible resolver la práctica del usuario.');
+  }
+
+  async getDatosMaestra(usuario: any, idPracticaSolicitado?: number): Promise<DatosMaestra> {
+    let idPractica: number | undefined;
+    let practica: any = null;
+
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+      practica = await this.practicaRepository.findOne({
+        where: { id_practica: idPractica },
+        relations: ['empresa', 'tutor_empresarial'],
+      });
+    } catch (error) {
+      practica = null;
+    }
+
+    if (!practica) {
+      return this.getDatosMaestraVacia();
+    }
+
+    let estudiante: any = null;
+
+    if (usuario.idEstudiante) {
+      estudiante = await this.estudianteRepository.findOne({
+        where: { id_estudiante: usuario.idEstudiante },
+      });
+    } else if (practica.id_matricula_detalle) {
+      const matriculaDetalle = await this.dataSource.query(
+        `SELECT md.id_matricula FROM matricula_detalle md WHERE md.id_matricula_detalle = $1 LIMIT 1`,
+        [practica.id_matricula_detalle],
+      );
+
+      if (matriculaDetalle.length > 0) {
+        const matricula = await this.dataSource.query(
+          `SELECT id_estudiante FROM matricula WHERE id_matricula = $1 LIMIT 1`,
+          [matriculaDetalle[0].id_matricula],
+        );
+
+        if (matricula.length > 0) {
+          estudiante = await this.estudianteRepository.findOne({
+            where: { id_estudiante: matricula[0].id_estudiante },
+          });
+        }
+      }
+    }
+
+    if (!estudiante) {
+      return this.getDatosMaestraVacia();
+    }
+
+    const empresa = await this.empresaRepository.findOne({
+      where: { id_empresa: practica.id_empresa },
+    });
+
+    const tutorEmpresarial = practica.tutor_empresarial;
+
+    let carreraNombre = '';
+    let nivelNombre = '';
+    let periodoCodigo = '';
+    let periodoNombre = '';
+    let periodoInicio = '';
+    let periodoFin = '';
+    let coordinadorNombre = '';
+    let tutorAcademicoNombre = '';
+    let fechaInicioFase = '';
+    let fechaFinFase = '';
+
+    const matricula = await this.dataSource.query(
+      `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, c.codigo as carrera_codigo
+        FROM matricula m
+        JOIN carrera c ON c.id_carrera = m.id_carrera
+         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
+        LIMIT 1`,
+      [estudiante.id_estudiante],
+    );
+
+    if (matricula.length > 0) {
+      const m = matricula[0];
+      carreraNombre = m.carrera_nombre ?? '';
+
+      const periodo = await this.dataSource.query(
+        `SELECT codigo, nombre, fecha_inicio, fecha_fin FROM periodo_academico WHERE id_periodo = $1 LIMIT 1`,
+        [m.id_periodo],
+      );
+      if (periodo.length > 0) {
+        periodoCodigo = periodo[0].codigo ?? '';
+        periodoNombre = periodo[0].nombre ?? '';
+        periodoInicio = periodo[0].fecha_inicio ?? '';
+        periodoFin = periodo[0].fecha_fin ?? '';
+      }
+
+      const periodoCarrera = await this.dataSource.query(
+        `SELECT pc.fecha_inicio_fase_practica, pc.fecha_fin_fase_practica, pc.id_coordinador,
+                doc.nombres as coordinador_nombres, doc.apellidos as coordinador_apellidos
+         FROM periodo_carrera pc
+         LEFT JOIN docente doc ON doc.id_docente = pc.id_coordinador
+         WHERE pc.id_periodo = $1 AND pc.id_carrera = $2
+         LIMIT 1`,
+        [m.id_periodo, m.id_carrera],
+      );
+
+      if (periodoCarrera.length > 0) {
+        fechaInicioFase = periodoCarrera[0].fecha_inicio_fase_practica ?? '';
+        fechaFinFase = periodoCarrera[0].fecha_fin_fase_practica ?? '';
+        coordinadorNombre = periodoCarrera[0].coordinador_nombres && periodoCarrera[0].coordinador_apellidos
+          ? `${periodoCarrera[0].coordinador_nombres} ${periodoCarrera[0].coordinador_apellidos}`
+          : '';
+      }
+
+      const nivel = await this.dataSource.query(
+        `SELECT n.nombre as nivel_nombre
+         FROM matricula_detalle md
+         JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+         JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+         JOIN nivel n ON n.id_nivel = a.id_nivel
+         WHERE md.id_matricula = $1
+         LIMIT 1`,
+        [m.id_matricula],
+      );
+
+      if (nivel.length > 0) {
+        nivelNombre = nivel[0].nivel_nombre ?? '';
+      }
+    }
+
+    if (practica) {
+      const tutor = await this.dataSource.query(
+        `SELECT nombres, apellidos FROM docente WHERE id_docente = $1 LIMIT 1`,
+        [practica.id_docente],
+      );
+
+      if (tutor.length > 0) {
+        tutorAcademicoNombre = `${tutor[0].nombres} ${tutor[0].apellidos}`;
+      }
+    }
+
+    const nucleo = matricula.length > 0
+      ? await this.nucleoRepository.findOne({ where: { id_carrera: matricula[0].id_carrera } })
+      : null;
+
+    const carrera: DatosCarrera = {
+      coordinador: practica?.nombre_coordinador ?? coordinadorNombre,
+      tutorAcademico: practica?.nombre_tutor_academico ?? tutorAcademicoNombre,
+      nucleoEstructurante: practica?.nombre_nucleo ?? nucleo?.nombre ?? '',
+      objetivoNucleoEstructurante: nucleo?.objetivo ?? '',
+    };
+
+    const proyectoEmpresarial: DatosProyectoEmpresarial = {
+      nombre: practica?.nombre_proyecto ?? '',
+      cobertura: practica?.cobertura_localizacion ?? '',
+      plazo: practica?.plazo_ejecucion ?? '',
+      empresaAsignada: practica?.nombre_empresa ?? empresa?.razon_social ?? '',
+      fechaInicio: fechaInicioFase || (practica?.fecha_inicio ?? ''),
+      fechaFin: fechaFinFase || (practica?.fecha_fin ?? ''),
+    };
+
+    const empresaBeneficiaria: DatosEmpresaBeneficiaria = {
+      razonSocial: practica?.nombre_empresa ?? empresa?.razon_social ?? '',
+      representanteLegal: empresa?.representante_legal ?? '',
+      tutorEmpresarial: practica?.nombre_tutor_empresarial ?? (tutorEmpresarial ? `${tutorEmpresarial.nombres} ${tutorEmpresarial.apellidos}` : ''),
+      direccion: empresa?.direccion ?? '',
+      ubicacion: '',
+    };
+
+    const periodoAcademico: PeriodoAcademico = {
+      codigo: periodoCodigo,
+      nombre: practica?.nombre_periodo ?? periodoNombre,
+      fechaInicio: periodoInicio,
+      fechaFin: periodoFin,
+    };
+
+    const cronograma: CronogramaFecha[] = [];
+    if (fechaInicioFase) {
+      cronograma.push({ fecha: fechaInicioFase, descripcion: 'Inicio de fase práctica' });
+    }
+    if (fechaFinFase) {
+      cronograma.push({ fecha: fechaFinFase, descripcion: 'Fin de fase práctica' });
+    }
+
+    return {
+      estudiante: {
+        idEstudiante: estudiante?.id_estudiante ?? null,
+        nombre: estudiante ? `${estudiante.nombres} ${estudiante.apellidos}` : '',
+        nombres: estudiante?.nombres ?? '',
+        apellidos: estudiante?.apellidos ?? '',
+        cedula: estudiante?.cedula ?? '',
+         carrera: practica?.nombre_carrera ?? carreraNombre,
+         curso: practica?.nombre_nivel ?? nivelNombre,
+         nivel: practica?.nombre_nivel ?? nivelNombre,
+        email: estudiante?.correo ?? '',
+        telefono: estudiante?.telefono ?? '',
+        estadoCivil: estudiante?.estado_civil ?? '',
+        tipoSangre: estudiante?.tipo_sangre ?? '',
+        domicilio: estudiante?.domicilio ?? '',
+        contactoEmergenciaNombre: estudiante?.contacto_emergencia_nombre ?? '',
+        contactoEmergenciaTelefono: estudiante?.contacto_emergencia_telefono ?? '',
+        hornada: practica?.hornada ?? '',
+        paralelo: practica?.paralelo ?? '',
+      },
+      carrera,
+      proyectoEmpresarial,
+      empresaBeneficiaria,
+      periodoAcademico,
+      cronograma,
+      idPractica,
+    };
+  }
+
+  private getDatosMaestraVacia(): DatosMaestra {
+    return {
+      estudiante: {
+        idEstudiante: null,
+        nombre: '',
+        nombres: '',
+        apellidos: '',
+        cedula: '',
+        carrera: '',
+        curso: '',
+        nivel: '',
+        email: '',
+        telefono: '',
+        estadoCivil: '',
+        tipoSangre: '',
+        domicilio: '',
+        contactoEmergenciaNombre: '',
+        contactoEmergenciaTelefono: '',
+        hornada: '',
+        paralelo: '',
+      },
+      carrera: {
+        coordinador: '',
+        tutorAcademico: '',
+        nucleoEstructurante: '',
+        objetivoNucleoEstructurante: '',
+      },
+      proyectoEmpresarial: {
+        nombre: '',
+        cobertura: '',
+        plazo: '',
+        empresaAsignada: '',
+        fechaInicio: '',
+        fechaFin: '',
+      },
+      empresaBeneficiaria: {
+        razonSocial: '',
+        representanteLegal: '',
+        tutorEmpresarial: '',
+        direccion: '',
+        ubicacion: '',
+      },
+      periodoAcademico: {
+        codigo: '',
+        nombre: '',
+        fechaInicio: '',
+        fechaFin: '',
+      },
+      cronograma: [],
+    };
+  }
+
+  async getCartaCompromiso(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<CartaCompromiso> {
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica && !forzar) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F01');
+      if (guardado) return guardado as CartaCompromiso;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
+    const { estudiante, empresaBeneficiaria } = datos;
+
+    return {
+      encabezado: `D.M. Quito, ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
+      cuerpo: [
+        'De acuerdo con el proyecto de carrera aprobado y vigente, en cumplimiento del currículo de la carrera, y en el marco del convenio firmado, me presento y, expreso mi interés y predisposición de realizar prácticas de formación dual, con el fin de cumplir con la planificación, ejecución, control y evaluación del proceso de desarrollo de las competencias laborales como estudiante de la carrera.',
+        'Soy una persona que cumple con el perfil de ingreso de la carrera, y busco aprender y desarrollar los conocimientos, habilidades-destrezas y actitudes del perfil de egreso, y lograr las competencias como profesional de mi carrera.',
+        'Por lo cual, solicito su aceptación para realizar mi proceso de formación práctica en el entorno laboral real en modalidad dual.',
+        'A la vez que, me comprometo con acatar la normativa general vigente con las obligaciones establecidas en el Artículo 16 (Obligaciones generales del estudiante en modalidad dual) del Reglamento para Carreras y Programas en Modalidad de Formación Dual vigente, así como también, la normativa interna de la entidad formadora y, la normativa del Instituto.',
+        'Reconociendo y aceptando entre otras prohibiciones expresas durante la Fase Práctica, las que se determinan a continuación:',
+        'También me comprometo en:',
+        'Y así mismo, me comprometo en elaborar y presentar todos los documentos necesarios para validar el proceso de formación en modalidad dual, de acuerdo con lo establecido por la entidad receptora formadora y/o el Instituto, los cuáles deberán estar correctamente llenos y firmados.',
+        'El incumplimiento a lo comprometido con la entidad receptora formadora y/o del Instituto, será causal para la toma de medidas disciplinarias conforme a las responsabilidades del proceso de formación en modalidad dual .',
+        'De no dar cumplimiento con lo antes citado, puede conllevar bajo el debido proceso a la pérdida de la fase práctica.',
+        'De manera libre y voluntaria acepto lo expresado y firmo como esta acta compromiso como constancia.',
+      ],
+      prohibicionesIntro: 'Reconociendo y aceptando entre otras prohibiciones expresas durante la Fase Práctica, las que se determinan a continuación:',
+      prohibiciones: [
+        'Prohibición de consumo de alcohol.',
+        'Prohibición de consumo de sustancias estupefacientes, psicotrópicos y estimulantes.',
+        'Prohibición de tratos groseros e irrespetuosos a compañeros y del entorno (compañeros y demás personas involucradas)',
+        'Prohibición de desacatar las directrices de tutores empresariales y también de tutores académicos del instituto.',
+      ],
+      compromisosIntro: 'También me comprometo en:',
+      compromisosConfidencialidad: [
+        'Garantizar la confidencialidad, reserva y protección de los datos e información proporcionados por la entidad receptora formadora, durante y después de mi fase práctica.',
+        'Y, promover un entorno social armónico, precautelar y salvaguardar la propiedad ajena y los bienes que pertenecen al sitio.',
+      ],
+      cierre: [
+        'Y así mismo, me comprometo en elaborar y presentar todos los documentos necesarios para validar el proceso de formación en modalidad dual, de acuerdo con lo establecido por la entidad receptora formadora y/o el Instituto, los cuáles deberán estar correctamente llenados y firmados.',
+        'El incumplimiento a lo comprometido con la entidad receptora formadora y/o del Instituto, será causal para la toma de medidas disciplinarias conforme a las responsabilidades del proceso de formación en modalidad dual.',
+        'De manera libre y voluntaria acepto lo expresado y firmo como esta acta compromiso como constancia.',
+      ],
+      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
+      espacioFirma: { lugar: 'D.M. Quito', fecha: new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
+    };
+  }
+
+  async getCurriculum(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<Curriculum> {
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica && !forzar) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F02');
+      if (guardado) return guardado as Curriculum;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
+    const { estudiante } = datos;
+
+    const datosAcademicos = await this.cvDatoAcademicoRepository.find({
+      where: { id_estudiante: usuario.idEstudiante },
+    });
+
+    const experienciaLaboral = await this.cvExperienciaLaboralRepository.find({
+      where: { id_estudiante: usuario.idEstudiante },
+    });
+
+    const practicasDuales = await this.cvPracticaDualRepository.find({
+      where: { id_estudiante: usuario.idEstudiante },
+    });
+
+    return {
+      datosPersonales: {
+        nombre: estudiante.nombre,
+        cedula: estudiante.cedula,
+        estadoCivil: estudiante.estadoCivil,
+        telefono: estudiante.telefono,
+        domicilio: estudiante.domicilio,
+        emailInstitucional: estudiante.email,
+      },
+      datosAcademicos: datosAcademicos.map(item => ({
+        anio: item.anio,
+        institucion: item.institucion,
+        tituloMencion: item.titulo_mencion,
+        notaFinal: item.nota_final?.toString() ?? '',
+      })),
+      experienciaLaboral: experienciaLaboral.map(item => ({
+        anio: item.anio,
+        institucion: item.institucion,
+        cargo: item.cargo,
+        actividades: item.actividades,
+      })),
+      practicasDualesPrevias: practicasDuales.map(item => ({
+        anio: item.anio_periodo,
+        institucion: item.institucion,
+        cargo: item.cargo,
+        actividadesRealizadas: item.actividades_realizadas,
+      })),
+      informacionAdicional: [],
+    };
+  }
+
+  async getRegistroAsistencia(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<RegistroAsistencia> {
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (idPractica && !forzar) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F05');
+      if (guardado) return guardado as RegistroAsistencia;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
+    const { estudiante, empresaBeneficiaria, carrera, periodoAcademico } = datos;
+
+    const idPracticaResuelto = idPractica ?? datos.idPractica;
+
+    const registros = await this.registroDiarioRepository.find({
+      where: idPracticaResuelto ? { id_practica: idPracticaResuelto } : {},
+      order: { fecha: 'ASC' },
+    });
+
+    const registrosFormateados: RegistroAsistenciaDia[] = registros.map(registro => ({
+      fecha: registro.fecha,
+      horaIngreso: registro.hora_ingreso ?? '',
+      almuerzo: registro.hora_salida_almuerzo && registro.hora_regreso_almuerzo
+        ? `${this.formatearHora(registro.hora_salida_almuerzo)} - ${this.formatearHora(registro.hora_regreso_almuerzo)}`
+        : '',
+      horaSalida: this.formatearHora(registro.hora_salida ?? ''),
+      horasDia: 8,
+      firma: registro.firma_estudiante ? 'S' : 'N',
+      observaciones: registro.observaciones ?? '',
+    }));
+
+    return {
+      empresa: empresaBeneficiaria.razonSocial,
+      carrera: estudiante.carrera,
+      tutorAcademico: carrera.tutorAcademico,
+      periodoAcademico: periodoAcademico.nombre,
+      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
+      nivel: estudiante.nivel,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      estudiante: {
+        nombre: estudiante.nombre,
+        cedula: estudiante.cedula,
+        email: estudiante.email,
+        telefono: estudiante.telefono,
+        contactoEmergenciaNombre: estudiante.contactoEmergenciaNombre,
+        contactoEmergenciaTelefono: estudiante.contactoEmergenciaTelefono,
+        tipoSangre: estudiante.tipoSangre,
+        domicilio: estudiante.domicilio,
+      },
+      registros: registrosFormateados,
+      horasAutonomas: 0,
+      subtotalHorasPractica: registrosFormateados.length * 8,
+    };
+  }
+
+  async getInformeAprendizaje(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<InformeAprendizaje> {
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (!idPractica) {
+      return {
+        estudiante: { nombre: '', cedula: '', email: '', telefono: '', tipoSangre: '' },
+        empresa: '',
+        carrera: '',
+        curso: '',
+        periodoAcademico: '',
+        nucleoEstructurante: '',
+        tutorAcademico: '',
+        tutorEmpresarial: '',
+        contactoEmergenciaNombre: '',
+        contactoEmergenciaTelefono: '',
+        registros: [],
+        horasAutonomas: 0,
+        subtotalHorasPractica: 0
+      } as any;
+    }
+
+    if (!forzar) {
+      const guardado = await this.cargarContenidoGuardado(idPractica, 'F06');
+      if (guardado) return guardado as InformeAprendizaje;
+    }
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
+    const { empresaBeneficiaria, periodoAcademico, carrera } = datos;
+
+    const encabezado: InformeAprendizajeEncabezado = {
+      empresa: empresaBeneficiaria.razonSocial,
+      nivel: datos.estudiante.nivel,
+      cicloAcademico: periodoAcademico.nombre,
+      fechaInicio: datos.proyectoEmpresarial.fechaInicio,
+      fechaFin: datos.proyectoEmpresarial.fechaFin,
+      tutorAcademico: carrera.tutorAcademico,
+      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      carrera: datos.estudiante.carrera,
+      objetivoNucleoEstructurante: carrera.objetivoNucleoEstructurante,
+      totalSemanas: 8,
+    };
+
+    const informe = await this.informeRepository.findOne({
+      where: { id_practica: idPractica },
+    });
+
+    const bitacoras = await this.bitacoraRepository.find({
+      where: informe?.id_informe ? { id_informe: informe.id_informe } : {},
+      order: { semana: 'ASC' },
+    });
+
+    const semanas: InformeSemana[] = bitacoras.map(bitacora => ({
+      semana: bitacora.semana,
+      fechaInicio: bitacora.fecha_inicio_semana ?? '',
+      fechaFin: bitacora.fecha_fin_semana ?? '',
+      rangoFechas: `${bitacora.fecha_inicio_semana ?? ''} - ${bitacora.fecha_fin_semana ?? ''}`,
+      puestoAprendizaje: bitacora.puesto_aprendizaje ?? '',
+      actividadesRealizadas: bitacora.actividades_realizadas ?? '',
+      actividadesAutonomas: bitacora.actividades_autonomas ?? '',
+      reflexion: '',
+      observacionesEmpresa: '',
+    }));
+
+    return {
+      encabezado,
+      semanas,
+      reflexionAprendizaje: '',
+      observacionesEmpresa: '',
+    };
+  }
+
+  async getEvaluacionEmpresarial(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<EvaluacionEmpresarial> {
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (!idPractica) {
+      return {
+        estudiante: { nombre: '', cedula: '' },
+        empresa: '',
+        tutorEmpresarial: '',
+        nivel: '',
+        cicloAcademico: '',
+        nucleoEstructurante: '',
+        carrera: '',
+        fechaInicio: '',
+        fechaFin: '',
+        criterios: [],
+        defensaProyecto: '',
+        promedioCriterios: 0,
+        notaPonderadaSobre7: 0,
+      } as any;
+    }
+
+    // F07 ya no usa el snapshot JSON como fuente de verdad: los criterios,
+    // notas e idPractica/idRubrica siempre se recalculan desde item_rubrica
+    // + detalle_evaluacion (sistema real de evaluaciones). Un snapshot viejo
+    // (guardado por guardarEvaluacionEmpresarial con la forma del modelo del
+    // frontend, sin idPractica/idRubrica) dejaba en null esos campos al
+    // recargar la página, rompiendo el guardado siguiente con "No fue
+    // posible determinar la práctica o la rúbrica a calificar".
+    void forzar;
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
+    const { estudiante, empresaBeneficiaria, carrera } = datos;
+
+    const evaluaciones = await this.evaluacionRepository.find({
+      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
+    });
+
+    const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
+
+    const evaluacionPrincipal = evaluaciones[0];
+
+    const { criterios, defensaProyecto, idRubrica } = await this.obtenerCriteriosRubrica(
+      'EMPRESARIAL',
+      evaluacionPrincipal?.id_evaluacion,
+    );
+
+    return {
+      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
+      empresa: empresaBeneficiaria.razonSocial,
+      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
+      nivel: estudiante.nivel,
+      cicloAcademico: datos.periodoAcademico.nombre,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      carrera: estudiante.carrera,
+      fechaInicio: datos.proyectoEmpresarial.fechaInicio,
+      fechaFin: datos.proyectoEmpresarial.fechaFin,
+      criterios,
+      defensaProyecto,
+      promedioCriterios: Number(evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios),
+      notaPonderadaSobre7: Number((Number(evaluacionPrincipal?.promedio_desempeno ?? promedioCriterios) * 7 / 6).toFixed(2)),
+      notaParcialDefensa: Number(evaluacionPrincipal?.nota_parcial_defensa ?? 0),
+      notaFinalDefensa: Number(evaluacionPrincipal?.nota_final_defensa ?? 0),
+      notaPonderadaDefensa: Number(evaluacionPrincipal?.nota_ponderada_defensa ?? 0),
+      notaFinalEmpresa: Number(evaluacionPrincipal?.nota_final_empresa ?? promedioCriterios),
+      observaciones: evaluacionPrincipal?.observaciones ?? '',
+      idPractica,
+      idEvaluacion: evaluacionPrincipal?.id_evaluacion ?? null,
+      idRubrica,
+    };
+  }
+
+  /**
+   * Trae los criterios (item_rubrica) de la rúbrica activa del tipo pedido,
+   * con la nota ya guardada en detalle_evaluacion (si existe evaluación).
+   * Los ítems de defensa se identifican por puntaje_maximo <= 5 (sembrados
+   * en 4.00, escala 1-4) vs. los de desempeño/parámetros en 10.00 — ver
+   * migración SeedCatalogoRubricaFasePractica.
+   */
+  private async obtenerCriteriosRubrica(
+    tipo: 'EMPRESARIAL' | 'INSTITUTO',
+    idEvaluacion?: number,
+  ): Promise<{ criterios: CriterioEmpresarial[]; defensaProyecto: DefensaProyectoItem[]; idRubrica: number | null }> {
+    const rubricaRows = await this.dataSource.query(
+      `SELECT id_rubrica FROM catalogo_rubrica WHERE tipo = $1 AND estado = 'ACTIVO' ORDER BY id_rubrica LIMIT 1`,
+      [tipo],
+    );
+    const idRubrica: number | null = rubricaRows[0]?.id_rubrica ?? null;
+
+    if (!idRubrica) {
+      return { criterios: [], defensaProyecto: [], idRubrica: null };
+    }
+
+    const items = await this.dataSource.query(
+      `SELECT ir.id_item, ir.descripcion_criterio, ir.puntaje_maximo, de.puntaje_asignado
+       FROM item_rubrica ir
+       LEFT JOIN detalle_evaluacion de ON de.id_item = ir.id_item AND de.id_evaluacion = $1
+       WHERE ir.id_rubrica = $2
+       ORDER BY ir.id_item`,
+      [idEvaluacion ?? 0, idRubrica],
+    );
+
+    const criterios: CriterioEmpresarial[] = items
+      .filter((i: any) => Number(i.puntaje_maximo) > 5)
+      .map((i: any) => ({
+        id: Number(i.id_item),
+        criterio: i.descripcion_criterio,
+        puntaje: i.puntaje_asignado !== null ? Number(i.puntaje_asignado) : 0,
+        maximo: Number(i.puntaje_maximo),
+      }));
+
+    const defensaProyecto: DefensaProyectoItem[] = items
+      .filter((i: any) => Number(i.puntaje_maximo) <= 5)
+      .map((i: any) => ({
+        id: Number(i.id_item),
+        criterio: i.descripcion_criterio,
+        puntaje: i.puntaje_asignado !== null ? Number(i.puntaje_asignado) : 0,
+        maximo: Number(i.puntaje_maximo),
+      }));
+
+    return { criterios, defensaProyecto, idRubrica };
+  }
+
+  async getEvaluacionInstituto(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<EvaluacionInstituto> {
+    let idPractica: number | undefined;
+    try {
+      idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+    } catch {
+      idPractica = undefined;
+    }
+
+    if (!idPractica) {
+      return {
+        estudiante: { nombre: '', cedula: '' },
+        empresa: '',
+        tutorEmpresarial: '',
+        nivel: '',
+        cicloAcademico: '',
+        nucleoEstructurante: '',
+        carrera: '',
+        fechaInicio: '',
+        fechaFin: '',
+        criterios: [],
+        defensaProyecto: '',
+        promedioCriterios: 0,
+        notaPonderadaSobre7: 0,
+        notaFinalConsolidada: 0,
+      } as any;
+    }
+
+    // Mismo motivo que en F07 (ver getEvaluacionEmpresarial): siempre se
+    // recalcula desde el sistema real de evaluaciones, nunca desde el
+    // snapshot JSON guardado por el POST del frontend.
+    void forzar;
+
+    const datos = await this.getDatosMaestra(usuario, idPractica);
+    const { estudiante, empresaBeneficiaria, carrera } = datos;
+
+    const evaluaciones = await this.evaluacionRepository.find({
+      where: { id_practica: idPractica, tipo_evaluador: 'INSTITUTO' },
+    });
+
+    const evaluacionesEmpresa = await this.evaluacionRepository.find({
+      where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' },
+    });
+    const evaluacionEmpresaPrincipal = evaluacionesEmpresa[0];
+    // TypeORM devuelve las columnas numeric como string: sin el Number(...)
+    // aquí, "8.3" + "9" concatena texto ("8.39") en vez de sumar (17.3),
+    // dejando notaFinalConsolidada mal calculada (bug detectado al verificar
+    // esta fase con datos reales).
+    const notaFinalEmpresaReal = Number(evaluacionEmpresaPrincipal?.nota_final_empresa ?? 0);
+
+    const promedioCriterios = evaluaciones.length > 0 ? Number((evaluaciones.reduce((a, b) => a + (b.nota_final_calculada ?? 0), 0) / evaluaciones.length).toFixed(2)) : 0;
+
+    const evaluacionPrincipal = evaluaciones[0];
+
+    const { criterios: criteriosProyecto, defensaProyecto, idRubrica } = await this.obtenerCriteriosRubrica(
+      'INSTITUTO',
+      evaluacionPrincipal?.id_evaluacion,
+    );
+
+    return {
+      estudiante: { nombre: estudiante.nombre, cedula: estudiante.cedula },
+      empresa: empresaBeneficiaria.razonSocial,
+      tutorEmpresarial: empresaBeneficiaria.tutorEmpresarial,
+      tutorAcademico: carrera.tutorAcademico,
+      nivel: estudiante.nivel,
+      cicloAcademico: datos.periodoAcademico.nombre,
+      nucleoEstructurante: carrera.nucleoEstructurante,
+      carrera: estudiante.carrera,
+      fechaInicio: datos.proyectoEmpresarial.fechaInicio,
+      fechaFin: datos.proyectoEmpresarial.fechaFin,
+      defensaProyecto,
+      notaParcialDefensa: Number(evaluacionPrincipal?.nota_parcial_defensa ?? 0),
+      notaFinalDefensa: Number(evaluacionPrincipal?.nota_final_defensa ?? 0),
+      notaPonderadaDefensa: Number(evaluacionPrincipal?.nota_ponderada_defensa ?? 0),
+      criteriosProyecto,
+      promedioProyecto: Number(evaluacionPrincipal?.promedio_proyecto_empresarial ?? promedioCriterios),
+      notaPonderadaProyecto: Number(evaluacionPrincipal?.nota_ponderada_proyecto ?? (promedioCriterios * 7 / 10).toFixed(2)),
+      notaFinalEmpresa: notaFinalEmpresaReal,
+      notaFinalInstituto: Number(evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios),
+      notaFinalConsolidada: Number(((notaFinalEmpresaReal + Number(evaluacionPrincipal?.nota_final_instituto ?? promedioCriterios)) / 2).toFixed(2)),
+      observaciones: evaluacionPrincipal?.observaciones ?? '',
+      idPractica,
+      idEvaluacion: evaluacionPrincipal?.id_evaluacion ?? null,
+      idRubrica,
+    };
+  }
+
+  async getTodosLosDocumentos(usuario: any, idPracticaSolicitado?: number) {
+    const datosMaestra = await this.getDatosMaestra(usuario, idPracticaSolicitado);
+    const cartaCompromiso = await this.getCartaCompromiso(usuario, idPracticaSolicitado);
+    const curriculum = await this.getCurriculum(usuario, idPracticaSolicitado);
+    const registroAsistencia = await this.getRegistroAsistencia(usuario, idPracticaSolicitado);
+    const informeAprendizaje = await this.getInformeAprendizaje(usuario, idPracticaSolicitado);
+    const evaluacionEmpresarial = await this.getEvaluacionEmpresarial(usuario, idPracticaSolicitado);
+    const evaluacionInstituto = await this.getEvaluacionInstituto(usuario, idPracticaSolicitado);
+    const actaInduccionSeguridad = await this.getActaInduccionSeguridad(usuario, idPracticaSolicitado);
+    const actaEntornoLaboral = await this.getActaEntornoLaboral(usuario, idPracticaSolicitado);
+
+    return {
+      datos: datosMaestra,
+      cartaCompromiso,
+      curriculum,
+      registroAsistencia,
+      informeAprendizaje,
+      evaluacionEmpresarial,
+      evaluacionInstituto,
+      actaInduccionSeguridad,
+      actaEntornoLaboral,
+    };
+  }
+
+  async getActaInduccionSeguridad(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<ActaInduccionSeguridad> {
+    try {
+      const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+
+      if (idPractica && !forzar) {
+        const guardado = await this.cargarContenidoGuardado(idPractica, 'F10');
+        if (guardado) return guardado as ActaInduccionSeguridad;
+      }
+
+      const practica = await this.practicaRepository.findOne({
+        where: { id_practica: idPractica },
+        relations: ['empresa', 'tutor_empresarial'],
+      });
+
+      if (!practica) {
+        return this.getActaInduccionSeguridadVacia();
+      }
+
+      let estudiante: any = null;
+
+      if (usuario.idEstudiante) {
+        estudiante = await this.estudianteRepository.findOne({
+          where: { id_estudiante: usuario.idEstudiante },
+        });
+      } else if (practica.id_matricula_detalle) {
+        const matriculaDetalle = await this.dataSource.query(
+          `SELECT md.id_matricula FROM matricula_detalle md WHERE md.id_matricula_detalle = $1 LIMIT 1`,
+          [practica.id_matricula_detalle],
+        );
+
+        if (matriculaDetalle.length > 0) {
+          const matricula = await this.dataSource.query(
+            `SELECT id_estudiante FROM matricula WHERE id_matricula = $1 LIMIT 1`,
+            [matriculaDetalle[0].id_matricula],
+          );
+
+          if (matricula.length > 0) {
+            estudiante = await this.estudianteRepository.findOne({
+              where: { id_estudiante: matricula[0].id_estudiante },
+            });
+          }
+        }
+      }
+
+      if (!estudiante) {
+        return this.getActaInduccionSeguridadVacia();
+      }
+
+      const nivel = await this.dataSource.query(
+        `SELECT n.nombre as nivel_nombre
+         FROM matricula_detalle md
+         JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+         JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+         JOIN nivel n ON n.id_nivel = a.id_nivel
+         WHERE md.id_matricula_detalle = $1
+         LIMIT 1`,
+        [practica.id_matricula_detalle],
+      );
+
+      const nivelNombre = nivel.length > 0 ? nivel[0].nivel_nombre : '';
+
+      const carrera = await this.dataSource.query(
+        `SELECT m.id_carrera, c.nombre as carrera_nombre
+         FROM matricula m
+         JOIN carrera c ON c.id_carrera = m.id_carrera
+         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
+         LIMIT 1`,
+        [estudiante.id_estudiante],
+      );
+
+      const carreraNombre = carrera.length > 0 ? carrera[0].carrera_nombre : '';
+
+      return {
+        lugarFecha: `Quito D.M. ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
+        estudiante: {
+          nombre: `${estudiante.nombres} ${estudiante.apellidos}`,
+          cedula: estudiante.cedula,
+          nivel: nivelNombre,
+          carrera: carreraNombre,
+        },
+        empresa: {
+          razonSocial: practica.empresa?.razon_social ?? '',
+        },
+        textoLegal: [
+          'Reconozco que toda actividad puede tener riesgos y peligros, por tal razón, he recibido una inducción sobre los potenciales riesgos de la actividad que voy a realiza en la empresa formadora-receptora, sobre la identificación de situaciones potencialmente peligrosas, así como las orientaciones sobre las medidas de prevención y normas de seguridad para prevenir accidentes.',
+          'He entendido la orientación sobre los riesgos potenciales de esa actividad y sobre sus normas de seguridad para evitarlos o prevenirlos. Por esto, de manera libre y voluntaria, acepto los mismos y me comprometo a cumplir las exigencias de seguridad, protocolos y uso correcto de equipamientos que logren mitigarlos o evitarlos, durante toda mi permanencia en la empresa formadora-receptora.',
+          'Tengo conocimiento sobre la actividad que voy a realizar y he recibido medios de protección a ser usados por mí en las actividades designadas en la empresa formadora-receptora.',
+          'En caso que tenga una discapacidad física o mental, temporal o permanente, que pueda influir en mi seguridad personal o de un tercero, reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto.',
+          'En caso que identifique una situación que considere como potencialmente peligrosa o un incidente de seguridad, reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto.',
+          'No realizaré actividades que no estén detalladas en mis actividades, o que no cuenten con el respectivo análisis de riesgos, medidas de seguridad y procedimientos de emergencia establecidos.',
+          'Reportaré de inmediato a mis superiores o encargados, tanto de la empresa formadora-receptora, como del Instituto, sobre la pérdida o daño en el equipamiento de protección personal que haya recibido.',
+        ],
+        firmaEstudiante: '______________________________',
+      };
+    } catch (error) {
+      return this.getActaInduccionSeguridadVacia();
+    }
+  }
+
+  private getActaInduccionSeguridadVacia(): ActaInduccionSeguridad {
+    return {
+      lugarFecha: '',
+      estudiante: {
+        nombre: '',
+        cedula: '',
+        nivel: '',
+        carrera: '',
+      },
+      empresa: {
+        razonSocial: '',
+      },
+      textoLegal: [],
+      firmaEstudiante: '______________________________',
+    };
+  }
+
+  private getActaEntornoLaboralVacia(): ActaEntornoLaboral {
+    return {
+      encabezado: {
+        instituto: 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC',
+        titulo: 'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL',
+        fecha: '',
+        carrera: '',
+        periodoAcademico: '',
+        entidadReceptora: '',
+      },
+      textoLegal: [],
+      anexos: [],
+      estudiantes: [],
+      firmas: {
+        tutorEmpresarial: { nombre: '', cedula: '' },
+        coordinador: { nombre: '', cedula: '' },
+        tutorAcademico: { nombre: '', cedula: '' },
+      },
+    };
+  }
+
+  async getActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number, forzar: boolean = false): Promise<ActaEntornoLaboral> {
+    try {
+      let idPractica: number | undefined;
+
+      if (usuario.idEstudiante) {
+        const matriculaRows = await this.dataSource.query(
+          `SELECT p.id_practica
+           FROM practica_estudiante p
+           JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+           JOIN matricula m ON m.id_matricula = md.id_matricula
+           WHERE m.id_estudiante = $1
+           ORDER BY p.id_practica DESC
+           LIMIT 1`,
+          [usuario.idEstudiante],
+        );
+
+        if (matriculaRows.length > 0) {
+          idPractica = matriculaRows[0].id_practica;
+        }
+      }
+
+      if (!idPractica) {
+        idPractica = idPracticaSolicitado ? await this.obtenerIdPractica(usuario, idPracticaSolicitado) : undefined;
+      }
+
+      if (idPractica && !forzar) {
+        const guardado = await this.cargarContenidoGuardado(idPractica, 'F11');
+        if (guardado) return guardado as ActaEntornoLaboral;
+      }
+
+      let idEstudiante = usuario.idEstudiante;
+      let matricula: any[] = [];
+
+      if (idEstudiante) {
+        matricula = await this.dataSource.query(
+          `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, p.codigo as periodo_codigo, p.nombre as periodo_nombre
+           FROM matricula m
+           JOIN carrera c ON c.id_carrera = m.id_carrera
+           JOIN periodo_academico p ON p.id_periodo = m.id_periodo
+        WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
+           LIMIT 1`,
+          [idEstudiante],
+        );
+      }
+
+      let practica: any = null;
+
+      if (matricula.length === 0) {
+        const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+        practica = await this.practicaRepository.findOne({
+          where: { id_practica: idPractica },
+          relations: ['empresa'],
+        });
+
+        if (!practica?.id_matricula_detalle) {
+          return this.getActaEntornoLaboralVacia();
+        }
+
+        const matriculaDetalle = await this.dataSource.query(
+          `SELECT md.id_matricula FROM matricula_detalle md WHERE md.id_matricula_detalle = $1 LIMIT 1`,
+          [practica.id_matricula_detalle],
+        );
+
+        if (matriculaDetalle.length > 0) {
+          matricula = await this.dataSource.query(
+            `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, p.codigo as periodo_codigo, p.nombre as periodo_nombre
+             FROM matricula m
+             JOIN carrera c ON c.id_carrera = m.id_carrera
+             JOIN periodo_academico p ON p.id_periodo = m.id_periodo
+             WHERE m.id_matricula = $1 AND m.estado = 'ACTIVA'
+             LIMIT 1`,
+            [matriculaDetalle[0].id_matricula],
+          );
+        }
+      }
+
+      if (matricula.length === 0) {
+        return this.getActaEntornoLaboralVacia();
+      }
+
+      const m = matricula[0];
+      const idCarrera = m.id_carrera;
+      const idPeriodo = m.id_periodo;
+
+      const estudiantes = await this.dataSource.query(
+        `SELECT 
+           e.nombres || ' ' || e.apellidos as nombre,
+           e.cedula,
+           n.nombre as nivel,
+           p.id_practica
+         FROM matricula m
+         JOIN matricula_detalle md ON md.id_matricula = m.id_matricula
+         JOIN estudiante e ON e.id_estudiante = m.id_estudiante
+         JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+         JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+         JOIN nivel n ON n.id_nivel = a.id_nivel
+         JOIN practica_estudiante p ON p.id_matricula_detalle = md.id_matricula_detalle
+         WHERE m.id_carrera = $1 AND m.id_periodo = $2 AND m.estado = 'ACTIVA'
+           AND m.id_estudiante = $3
+         ORDER BY e.apellidos, e.nombres`,
+        [idCarrera, idPeriodo, idEstudiante],
+      );
+
+      const estudiantesConNota = await Promise.all(
+        estudiantes.map(async (est: any, index: number) => {
+          const nota = est.id_practica ? await this.calcularNotaFinalFasePractica(est.id_practica) : '';
+          return {
+            no: index + 1,
+            nombre: est.nombre,
+            cedula: est.cedula,
+            nivel: est.nivel,
+            nota,
+            firma: '',
+          };
+        }),
+      );
+
+      if (!practica) {
+        const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+        practica = await this.practicaRepository.findOne({
+          where: { id_practica: idPractica },
+          relations: ['empresa', 'tutor_empresarial'],
+        });
+      }
+
+      const periodoCarrera = await this.dataSource.query(
+        `SELECT pc.id_coordinador, doc.nombres as coordinador_nombres, doc.apellidos as coordinador_apellidos, doc.cedula as coordinador_cedula
+         FROM periodo_carrera pc
+         LEFT JOIN docente doc ON doc.id_docente = pc.id_coordinador
+         WHERE pc.id_periodo = $1 AND pc.id_carrera = $2
+         LIMIT 1`,
+        [idPeriodo, idCarrera],
+      );
+
+      const coordinador = periodoCarrera.length > 0 ? {
+        nombre: periodoCarrera[0].coordinador_nombres && periodoCarrera[0].coordinador_apellidos
+          ? `${periodoCarrera[0].coordinador_nombres} ${periodoCarrera[0].coordinador_apellidos}`
+          : '',
+        cedula: periodoCarrera[0].coordinador_cedula ?? '',
+      } : { nombre: '', cedula: '' };
+
+      const tutorAcademico = await this.dataSource.query(
+        `SELECT d.nombres, d.apellidos, d.cedula
+         FROM practica_estudiante p
+         JOIN docente d ON d.id_docente = p.id_docente
+         WHERE p.id_practica = $1
+         LIMIT 1`,
+        [practica?.id_practica ?? 0],
+      );
+
+      const tutorAcademicoNombre = tutorAcademico.length > 0
+        ? `${tutorAcademico[0].nombres} ${tutorAcademico[0].apellidos}`
+        : '';
+
+      const tutorEmpresarialNombre = practica?.tutor_empresarial
+        ? `${practica.tutor_empresarial.nombres} ${practica.tutor_empresarial.apellidos}`
+        : '';
+
+      return {
+        encabezado: {
+          instituto: 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC',
+          titulo: 'ACTA DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL',
+          fecha: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
+          carrera: m.carrera_nombre,
+          periodoAcademico: `${m.periodo_codigo} - ${m.periodo_nombre}`,
+          entidadReceptora: practica?.empresa?.razon_social ?? '',
+        },
+        textoLegal: [
+          'La planificación de la formación práctica en el entorno laboral real tiene como objetivo: desarrollar en los estudiantes nuevas habilidades de pensamiento, destrezas sensoriales y motoras, hábitos y actitudes requeridos para el trabajo profesional y consolidar las capacidades prácticas adquiridas en el entorno académico en integración con los factores tecnológicos y socio laborales propios del entorno laboral real, cuyos escenarios concretos son las entidades formadoras seleccionadas de forma pertinente, con las que el instituto mantiene compromisos mutuos.',
+          `La presente acta válida el desarrollo del aprendizaje en el entorno laboral real de los estudiantes de la carrera de ${m.carrera_nombre} del Instituto Superior Tecnológico de Turismo y Patrimonio Yavirac, los mismos que han ejecutado sus prácticas preprofesionales acorde a lo estipulado en el Reglamento de Régimen Académico, en el Reglamento para las Carreras y Programas en Modalidad de Formación Dual y con el convenio de prácticas preprofesionales suscrito y vigente entre el instituto y la respectiva entidad receptora formadora.`,
+          'Además, al acta se anexan siete documentos que permiten garantizar la formación práctica en el entorno laboral real de los estudiantes, a través del seguimiento, control y evaluación de las actividades desarrolladas. Estos documentos son:',
+        ],
+        anexos: [
+          'Listado de estudiantes',
+          'Plan marco de formación',
+          'Plan de rotación del estudiante',
+          'Registro de asistencia',
+          'Informe de aprendizaje de fase práctica (Bitácora)',
+          'Ficha de Evaluación por parte del instituto',
+          'Ficha de evaluación por parte de la empresa',
+        ],
+        estudiantes: estudiantesConNota,
+        firmas: {
+          tutorEmpresarial: {
+            nombre: tutorEmpresarialNombre,
+            cedula: practica?.tutor_empresarial?.cedula ?? '',
+          },
+          coordinador: {
+            nombre: coordinador.nombre,
+            cedula: coordinador.cedula,
+          },
+          tutorAcademico: {
+            nombre: tutorAcademicoNombre,
+            cedula: tutorAcademico.length > 0 ? tutorAcademico[0].cedula : '',
+          },
+        },
+      };
+    } catch (error) {
+      return this.getActaEntornoLaboralVacia();
+    }
+  }
+
+  /**
+   * "Nota" (acta de entorno laboral) y candidatos a agregar usan el mismo
+   * "Promedio Final Fase Práctica" que se ve en Evaluación Instituto:
+   * (nota final empresa + nota final instituto) / 2. Postgres devuelve las
+   * columnas numeric como string, así que hay que convertir con Number(...)
+   * antes de sumar — sin eso "0" + "9.21" concatena texto ("09.21") en vez
+   * de sumar, dando NaN.
+   */
+  private async calcularNotaFinalFasePractica(idPractica: number): Promise<string> {
+    const [evaluacionesEmpresa, evaluacionesInstituto] = await Promise.all([
+      this.evaluacionRepository.find({ where: { id_practica: idPractica, tipo_evaluador: 'EMPRESA' } }),
+      this.evaluacionRepository.find({ where: { id_practica: idPractica, tipo_evaluador: 'INSTITUTO' } }),
+    ]);
+
+    if (evaluacionesEmpresa.length === 0 && evaluacionesInstituto.length === 0) return '';
+
+    const notaFinalEmpresa = Number(evaluacionesEmpresa[0]?.nota_final_empresa ?? 0);
+    const notaFinalInstituto = Number(evaluacionesInstituto[0]?.nota_final_instituto ?? 0);
+
+    return ((notaFinalEmpresa + notaFinalInstituto) / 2).toFixed(2);
+  }
+
+  /**
+   * El acta de entorno laboral (F11) agrupa a TODOS los estudiantes de una
+   * misma empresa formadora, con el mismo tutor empresarial y el mismo
+   * docente (tutor académico) — así lo firma el documento oficial (un
+   * tutor empresarial, un coordinador, un tutor académico para todo el
+   * listado). idPracticaSolicitado ancla esa combinación empresa/tutor/
+   * docente (se resuelve con la misma verificación de dueño que el resto
+   * de documentos: un DOCENTE solo puede anclar en una práctica que sea
+   * suya). Devuelve los estudiantes que comparten esa combinación para que
+   * el docente los pueda agregar al listado sin tener que escribirlos a
+   * mano.
+   */
+  async buscarCandidatosActaEntornoLaboral(usuario: any, idPracticaSolicitado?: number): Promise<Array<{
+    id_practica: number;
+    nombre: string;
+    cedula: string;
+    nivel: string;
+    nota: string;
+  }>> {
+    const idPractica = await this.obtenerIdPractica(usuario, idPracticaSolicitado);
+
+    const practica = await this.practicaRepository.findOne({ where: { id_practica: idPractica } });
+    if (!practica) return [];
+
+    const filas = await this.dataSource.query(
+      `SELECT p.id_practica, e.nombres || ' ' || e.apellidos as nombre, e.cedula, n.nombre as nivel
+       FROM practica_estudiante p
+       JOIN matricula_detalle md ON md.id_matricula_detalle = p.id_matricula_detalle
+       JOIN matricula m ON m.id_matricula = md.id_matricula
+       JOIN estudiante e ON e.id_estudiante = m.id_estudiante
+       JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+       JOIN asignatura a ON a.id_asignatura = oa.id_asignatura
+       JOIN nivel n ON n.id_nivel = a.id_nivel
+       WHERE p.id_empresa = $1 AND p.id_tutor_empresarial = $2 AND p.id_docente = $3
+       ORDER BY e.apellidos, e.nombres`,
+      [practica.id_empresa, practica.id_tutor_empresarial, practica.id_docente],
+    );
+
+    return Promise.all(filas.map(async (fila: any) => ({
+      id_practica: fila.id_practica,
+      nombre: fila.nombre,
+      cedula: fila.cedula,
+      nivel: fila.nivel,
+      nota: await this.calcularNotaFinalFasePractica(fila.id_practica),
+    })));
+  }
+
+  private formatearFecha(fecha: string): string {
+    if (!fecha) return '';
+    const [y, m, d] = fecha.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  private formatearHora(hora: string): string {
+    if (!hora) return '';
+    if (hora.includes(':')) {
+      const [h, m] = hora.split(':');
+      return `${h}:${m}`;
+    }
+    return hora;
+  }
+}

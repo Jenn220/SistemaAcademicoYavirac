@@ -1,0 +1,208 @@
+@import '../../_shared-documento-styles';
+
+:host{
+    display:block;
+    background:#f0f2f5;
+    min-height:100vh;
+    padding:30px 0;
+}
+
+/*==========================
+  Barra superior
+==========================*/
+
+.toolbar{
+
+    width:100%;
+
+    max-width:210mm;
+
+    margin:0 auto 20px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+/*==========================
+  Hoja A4
+==========================*/
+
+.documento{
+
+    box-sizing:border-box;
+
+    width:210mm;
+
+    min-height:297mm;
+
+    margin:auto;
+
+    background:#fff;
+
+    padding:15mm;
+
+    box-shadow:0 0 15px rgba(0,0,0,.18);
+
+}
+
+/*==========================
+  Contenido
+==========================*/
+
+.contenido{
+
+    margin-top:20px;
+
+    font-family:"Times New Roman", Times, serif;
+
+    font-size:13px;
+
+    line-height:1.8;
+
+    color:#000;
+
+}
+
+.contenido p{
+
+    text-align:justify;
+
+    margin-bottom:14px;
+
+}
+
+/*==========================
+  Titulos
+==========================*/
+
+h4{
+
+    margin-top:28px;
+
+    margin-bottom:15px;
+
+    text-align:center;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+    text-transform:uppercase;
+
+}
+
+/*==========================
+  Listas
+==========================*/
+
+ol{
+
+    padding-left:22px;
+
+}
+
+li{
+
+    margin-bottom:8px;
+
+    text-align:justify;
+
+}
+
+/*==========================
+  Firma
+==========================*/
+
+.tabla-firma{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-top:60px;
+
+}
+
+.tabla-firma th,
+.tabla-firma td{
+
+    border:1px solid black;
+
+    padding:10px;
+
+    text-align:center;
+
+}
+
+.tabla-firma th{
+
+    background:#efefef;
+
+}
+
+.tabla-firma td{
+
+    height:60px;
+
+    vertical-align:bottom;
+
+}
+
+/*==========================
+  PDF
+==========================*/
+
+@media print{
+
+:host{
+
+        background:white;
+
+        padding:0;
+
+    }
+
+    .toolbar{
+
+        display:none;
+
+    }
+
+    .no-print{
+
+        display:none !important;
+
+    }
+
+    .documento{
+
+        margin:0;
+
+        width:100%;
+
+        min-height:auto;
+
+        box-shadow:none;
+
+        padding:12mm;
+
+    }
+
+}
+
+/*==========================
+  Responsive (celular / tablet)
+==========================*/
+
+@media (max-width:768px){
+
+    :host{
+        padding:15px 0;
+        overflow-x:auto;
+    }
+
+}

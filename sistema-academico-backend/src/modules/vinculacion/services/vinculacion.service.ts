@@ -1,316 +1,152 @@
-import { Injectable, NotFoundException, Inject, ConflictException, InternalServerErrorException } from '@nestjs/common';
-import { VinculacionActividadEstudiante } from '../domain/vinculacion_actividad_estudiante.entity'; 
-import { VinculacionAsistenciaTutor } from '../domain/vinculacion-asistencia-tutor.entity';
-import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
-import { VinculacionInforme } from '../domain/vinculacion-informe.entity';
+// 📁 src/modules/vinculacion/services/vinculacion.service.ts
 
-import { CreateAsistenciaTutorDto } from '../dto/create-asistencia-tutor.dto'; // Importamos el nuevo DTO
-import { IVinculacionRepository, VINCULACION_REPOSITORY } from '../ports/vinculacion.repository.port';
-import { CreateActividadEstudianteDto } from '../dto/create-actividad-estudiante.dto';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { VinculacionEstudianteEntity } from '../domain/vinculacion-estudiante.entity';
 import { CreateVinculacionDto } from '../dto/create-vinculacion.dto';
-import { CreateInformeDto } from '../dto/create-informe.dto';
+// Importa también tu DTO de actualización si lo tienes (ej: UpdateVinculacionDto)
 
 @Injectable()
 export class VinculacionService {
   constructor(
-    @Inject(VINCULACION_REPOSITORY)
-    private readonly vinculacionRepository: IVinculacionRepository,
+    @InjectRepository(VinculacionEstudianteEntity)
+    private readonly vinculacionRepo: Repository<VinculacionEstudianteEntity>,
   ) {}
 
-  async obtenerTodasLasActividades(): Promise<VinculacionActividadEstudiante[]> {
-    return await this.vinculacionRepository.obtenerTodasLasActividades();
-  }
+  /**
+   * ✅ Crear vinculación obteniendo automáticamente el id_periodo y validando el período activo
+   */
+  async create(createDto: CreateVinculacionDto): Promise<any> {
+    const queryRuta = `
+      SELECT 
+        pc.id_periodo_carrera,
+        pc.id_periodo,
+        pc.estado AS estado_periodo
+      FROM matricula_detalle md
+      INNER JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+      INNER JOIN periodo_carrera pc ON pc.id_periodo_carrera = oa.id_periodo_carrera
+      WHERE md.id_matricula_detalle = $1
+      LIMIT 1
+    `;
 
-  async obtenerAsistenciasTutor(): Promise<VinculacionAsistenciaTutor[]> {
-    return await this.vinculacionRepository.obtenerAsistenciasTutor();
-  }
+    const resultadosRuta = await this.vinculacionRepo.query(queryRuta, [createDto.id_matricula_detalle]);
 
-  async obtenerVinculacionesEstudiantes(): Promise<VinculacionEstudianteEntity[]> {
-    return await this.vinculacionRepository.obtenerVinculacionesEstudiantes();
-  }
-
-  async obtenerInformes(): Promise<VinculacionInforme[]> {
-    return await this.vinculacionRepository.obtenerInformes();
-  }
-
-
-
-async crearActividadEstudiante(datos: CreateActividadEstudianteDto) {
-    try {
-      const resultado = await this.vinculacionRepository.crearActividadEstudiante(datos);
-      
-      return {
-        statusCode: 201,
-        message: 'Actividad de estudiante registrada exitosamente',
-        data: resultado
-      };
-    } catch (error) {
-      const mensaje = error instanceof Error ? error.message : String(error);
-      throw new InternalServerErrorException(`Error interno al registrar la actividad: ${mensaje}`);
-    }
-  }
-
-
-
-
-
-  async obtenerReporteConsolidado(idVinculacion: number) {
-    // TIPEO CORREGIDO: Asegúrate de que en tu puerto e interfaz se llame "obtenerReporteConsolidadoRaw"
-    const resultados = await this.vinculacionRepository.obtainReporteConsolidadoRaw(idVinculacion);
-
-    if (!resultados || resultados.length === 0) {
-      throw new NotFoundException(`No se encontró información para el proyecto de vinculación con ID ${idVinculacion}`);
+    if (resultadosRuta.length === 0) {
+      throw new NotFoundException(`No se encontró la ruta académica para el id_matricula_detalle: ${createDto.id_matricula_detalle}`);
     }
 
-    const primerRegistro = resultados[0];
+    const { id_periodo, estado_periodo } = resultadosRuta[0];
+
+    if (estado_periodo !== 'ACTIVO') {
+      throw new BadRequestException(`No se puede crear la vinculación. El período asociado no está activo (Estado actual: ${estado_periodo}).`);
+    }
+
+    const queryInsert = `
+      INSERT INTO vinculacion_estudiante (
+        id_periodo,
+        id_matricula_detalle,
+        id_empresa,
+        id_docente,
+        id_entidad_receptora,
+        nombre_proyecto,
+        fecha_inicio,
+        fecha_fin,
+        total_horas_estudiante,
+        total_horas_docente,
+        estado
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *
+    `;
+
+    const values = [
+      id_periodo,
+      createDto.id_matricula_detalle,
+      createDto.id_empresa,
+      createDto.id_docente,
+      createDto.id_entidad_receptora || null,
+      createDto.nombre_proyecto,
+      createDto.fecha_inicio,
+      createDto.fecha_fin,
+      createDto.total_horas_estudiante ?? 0,
+      createDto.total_horas_docente ?? 0,
+      createDto.estado || 'EN_CURSO',
+    ];
+
+    const nuevaVinculacion = await this.vinculacionRepo.query(queryInsert, values);
+    return nuevaVinculacion[0];
+  }
+
+  /**
+   * ✅ Actualizar vinculación respetando la regla del periodo ACTIVO (Regla 8)
+   */
+  async update(idVinculacion: number, updateDto: any): Promise<any> {
+    // 1. Verificar que la vinculación exista y obtener su ruta para chequear el estado del período
+    const queryRutaVinculacion = `
+      SELECT 
+        vinc.id_vinculacion,
+        pc.estado AS estado_periodo
+      FROM vinculacion_estudiante vinc
+      INNER JOIN matricula_detalle md ON md.id_matricula_detalle = vinc.id_matricula_detalle
+      INNER JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+      INNER JOIN periodo_carrera pc ON pc.id_periodo_carrera = oa.id_periodo_carrera
+      WHERE vinc.id_vinculacion = $1
+      LIMIT 1
+    `;
+
+    const resultado = await this.vinculacionRepo.query(queryRutaVinculacion, [idVinculacion]);
+
+    if (resultado.length === 0) {
+      throw new NotFoundException(`No se encontró la vinculación con ID ${idVinculacion}`);
+    }
+
+    const { estado_periodo } = resultado[0];
+
+    // 2. REGLA INSTITUCIONAL: Si el período está FINALIZADO, no se permite modificar nada
+    if (estado_periodo === 'FINALIZADO') {
+      throw new BadRequestException('No se puede modificar la vinculación porque el período académico/carrera se encuentra FINALIZADO.');
+    }
+
+    // 3. Proceder con la actualización si el período está ACTIVO (u otro estado permitido)
+    // Aquí puedes construir dinámicamente tu query de UPDATE o usar el repositorio de TypeORM
+    const vinculacionExistente = await this.vinculacionRepo.findOne({ where: { id_vinculacion: idVinculacion as any } });
     
-    const actividades = resultados
-      .filter((row: any) => row.fecha !== null)
-      .map((row: any) => {
-        const fechaParseada = new Date(row.fecha);
-        const fechaFormateada = !isNaN(fechaParseada.getTime()) 
-          ? fechaParseada.toLocaleDateString('es-ES', { timeZone: 'UTC' }) 
-          : row.fecha;
-
-        return {
-          fecha: fechaFormateada,
-          hora_entrada: row.hora_inicio,
-          hora_salida: row.hora_fin,
-          total_horas: parseFloat(row.horas_total),
-          actividad_realizada: row.actividades_realizadas
-        };
-      });
-
-    return {
-      cabecera: {
-        carrera: primerRegistro.carrera,
-        entidad_beneficiaria: primerRegistro.entidad_beneficiaria,
-        estudiante: `${primerRegistro.est_nombres} ${primerRegistro.est_apellidos}`,
-        nombre_proyecto: primerRegistro.nombre_proyecto,
-        docente_tutor: `${primerRegistro.doc_nombres} ${primerRegistro.doc_apellidos}`,
-        tutor_entidad_receptora: primerRegistro.tut_nombres 
-          ? `${primerRegistro.tut_nombres} ${primerRegistro.tut_apellidos}` 
-          : 'BARRIGA OLIVO SUSAN JACQUELINE',
-        periodo_academico: primerRegistro.periodo_academico
-      },
-      actividades: actividades,
-      totales: {
-        total_horas: parseFloat(primerRegistro.total_horas_estudiante || 0),
-        observaciones: "Ninguna"
-      }
-    };
-  }
-
-  async obtenerActaCompromiso(idVinculacion: number) {
-    const data = await this.vinculacionRepository.obtainActaCompromisoRaw(idVinculacion);
-
-    if (!data) {
-      throw new NotFoundException(`No se encontró información para el acta de compromiso con ID ${idVinculacion}`);
+    if (!vinculacionExistente) {
+      throw new NotFoundException(`Vinculación no encontrada.`);
     }
 
-    // Retornamos el objeto limpio y formateado para el Frontend
-    return {
-      titulo: "ACTA COMPROMISO DE PARTICIPACIÓN EN VINCULACIÓN CON LA COMUNIDAD",
-      instituto: 'Instituto Superior Tecnológico de Turismo y Patrimonio "YAVIRAC"',
-      estudiante: data.estudiante,
-      cedula: data.cedula_identidad,
-      carrera: data.carrera,
-      nivel: data.nivel || "Tercero", // Por si viene vacío, un valor por defecto
-      entidad_beneficiaria: data.entidad_beneficiaria,
-      docente_tutor: data.docente_tutor
-    };
+    Object.assign(vinculacionExistente, updateDto);
+    return await this.vinculacionRepo.save(vinculacionExistente);
   }
 
-  // ==========================================
-  // NUEVO MÉTODO POST PARA ASISTENCIA TUTOR
-  // ==========================================
-  async crearAsistenciaTutor(datos: CreateAsistenciaTutorDto) {
-    try {
-      const resultado = await this.vinculacionRepository.crearAsistenciaTutor(datos);
-      
-      return {
-        statusCode: 201,
-        message: 'Asistencia de tutor registrada exitosamente (Hexagonal)',
-        data: resultado
-      };
-    } catch (error) {
-      const mensaje = error instanceof Error ? error.message : String(error);
-      throw new InternalServerErrorException(`Error interno al registrar la asistencia del tutor: ${mensaje}`);
-    }
-  }
-
-async obtenerReporteAsistenciaTutor(idVinculacion: number) {
-    const resultados = await this.vinculacionRepository.obtainReporteAsistenciaTutorRaw(idVinculacion);
-
-    if (!resultados || resultados.length === 0) {
-      throw new NotFoundException(`No se encontró información del tutor para la vinculación con ID ${idVinculacion}`);
-    }
-
-    const primerRegistro = resultados[0];
+  /**
+   * ✅ Obtener vinculación activa de un estudiante
+   */
+  async obtenerVinculacionActivaPorEstudiante(idEstudiante: number): Promise<any> {
+    const query = `
+      SELECT 
+        vinc.id_vinculacion,
+        vinc.id_periodo,
+        vinc.id_matricula_detalle,
+        vinc.id_empresa,
+        vinc.id_docente,
+        vinc.id_entidad_receptora,
+        vinc.nombre_proyecto,
+        vinc.fecha_inicio,
+        vinc.fecha_fin,
+        vinc.total_horas_estudiante,
+        vinc.total_horas_docente,
+        vinc.estado
+      FROM vinculacion_estudiante vinc
+      INNER JOIN matricula_detalle md ON md.id_matricula_detalle = vinc.id_matricula_detalle
+      INNER JOIN matricula m ON m.id_matricula = md.id_matricula
+      WHERE m.id_estudiante = $1
+        AND vinc.estado = 'EN_CURSO'
+      ORDER BY vinc.id_vinculacion DESC
+      LIMIT 1
+    `;
     
-    // Mapeamos las horas del tutor
-    let totalHorasAcumuladas = 0;
-    const actividades = resultados
-      .filter((row: any) => row.fecha !== null)
-      .map((row: any) => {
-        const fechaParseada = new Date(row.fecha);
-        const fechaFormateada = !isNaN(fechaParseada.getTime()) 
-          ? fechaParseada.toLocaleDateString('es-ES', { timeZone: 'UTC' }) 
-          : row.fecha;
-
-        const horas = parseFloat(row.horas_total || 0);
-        totalHorasAcumuladas += horas;
-
-        return {
-          fecha: fechaFormateada,
-          hora_entrada: row.hora_inicio,
-          hora_salida: row.hora_fin,
-          total_horas: horas,
-          actividad_realizada: row.actividades_realizadas
-        };
-      });
-
-    return {
-      cabecera: {
-        carrera: primerRegistro.carrera,
-        institucion: primerRegistro.entidad_beneficiaria,
-        docente_tutor: primerRegistro.docente_tutor,
-        periodo_academico: primerRegistro.periodo_academico
-      },
-      actividades: actividades,
-      totales: {
-        suma_total_horas: totalHorasAcumuladas,
-        observaciones: "Ninguna",
-        // Aquí puedes poner al coordinador fijo o traerlo de la base si tienes una tabla de coordinadores
-        coordinador_carrera: "Ing. Raúl Páez" 
-      }
-    };
-  }
-
-  async obtenerCertificadoVinculacion(idVinculacion: number) {
-    const data = await this.vinculacionRepository.obtainCertificadoVinculacionRaw(idVinculacion);
-
-    if (!data) {
-      throw new NotFoundException(`No se encontró información para generar el certificado con ID ${idVinculacion}`);
-    }
-
-    // Función para formatear fechas a formato largo: "24 de noviembre de 2025"
-    const formatearFechaLarga = (fechaStr: string) => {
-      if (!fechaStr) return 'Fecha no registrada';
-      const fecha = new Date(fechaStr);
-      return fecha.toLocaleDateString('es-ES', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric',
-        timeZone: 'UTC' 
-      });
-    };
-
-    // La fecha de emisión suele ser el día en que se imprime el certificado
-    const fechaEmision = new Date().toLocaleDateString('es-ES', { 
-        day: 'numeric', month: 'long', year: 'numeric' 
-    });
-
-    return {
-      fecha_emision: `Quito, ${fechaEmision}`,
-      estudiante: data.estudiante,
-      cedula: data.cedula,
-      carrera: data.carrera,
-      proyecto: data.proyecto || data.nombre_proyecto, // Manejo por si viene con un nombre u otro
-      fecha_inicio: formatearFechaLarga(data.fecha_inicio),
-      fecha_fin: formatearFechaLarga(data.fecha_fin),
-      total_horas: data.total_horas_estudiante || 0,
-      institucion: data.institucion,
-      representante: data.representante || "BARRIGA OLIVO SUSAN JACQUELINE" // Fallback
-    };
-  }
-  async obtenerInformeActividades(idVinculacion: number) {
-    const resultados = await this.vinculacionRepository.obtainInformeActividadesRaw(idVinculacion);
-
-    if (!resultados || resultados.length === 0) {
-      throw new NotFoundException(`No se encontró información de actividades para la vinculación con ID ${idVinculacion}`);
-    }
-
-    const primerRegistro = resultados[0];
-    
-    // Separar las asignaturas si vienen concatenadas, si no, un arreglo vacío
-    const listaAsignaturas = primerRegistro.asignaturas 
-      ? primerRegistro.asignaturas.split(' | ') 
-      : []; 
-
-    // Mapeo exclusivo de datos dinámicos
-    const actividades = resultados
-      .filter((row: any) => row.fecha !== null)
-      .map((row: any) => {
-        const fechaParseada = new Date(row.fecha);
-        const fechaFormateada = !isNaN(fechaParseada.getTime()) 
-          ? fechaParseada.toLocaleDateString('es-ES', { timeZone: 'UTC' }) 
-          : row.fecha;
-
-        return {
-          fecha: fechaFormateada,
-          actividad: row.actividades_realizadas,
-          // 👇 Parche temporal hasta que exista en la BD
-          resultado_aprendizaje: "Aplica los conocimientos adquiridos para el desarrollo y optimización del entorno digital."
-        };
-      });
-
-    const formatFechaCabecera = (f: any) => f ? new Date(f).toLocaleDateString('es-ES', { timeZone: 'UTC' }) : 'N/A';
-
-    // Retornamos SOLO lo que cambia por estudiante
-    return {
-      cabecera: {
-        fundacion: primerRegistro.entidad_beneficiaria,
-        nivel: primerRegistro.nivel,
-        estudiante: primerRegistro.estudiante,
-        cedula: primerRegistro.cedula_identidad,
-        ciclo_academico: primerRegistro.ciclo_academico,
-        asignatura_1: listaAsignaturas[0] || 'N/A',
-        asignatura_2: listaAsignaturas[1] || 'N/A',
-        inicia: formatFechaCabecera(primerRegistro.inicia),
-        finaliza: formatFechaCabecera(primerRegistro.finaliza),
-        docente_tutor: primerRegistro.docente_tutor,
-        titulo_proyecto: primerRegistro.nombre_proyecto
-      },
-      informe_actividades: actividades
-    };
-  }
-  async crearVinculacion(datos: CreateVinculacionDto) {
-    try {
-      const resultado = await this.vinculacionRepository.crearVinculacion(datos);
-      
-      return {
-        statusCode: 201,
-        message: 'Proyecto de vinculación creado exitosamente',
-        data: resultado
-      };
-    } catch (error) {
-      const mensaje = error instanceof Error ? error.message : String(error);
-      
-      // Controlamos la violación de restricción única de Postgres
-      if (mensaje.includes('llave duplicada') || mensaje.includes('unique constraint')) {
-        throw new ConflictException(
-          `El estudiante con el detalle de matrícula ID ${datos.id_matricula_detalle} ya tiene un proyecto de vinculación registrado.`
-        );
-      }
-
-      throw new InternalServerErrorException(`Error interno al crear la vinculación: ${mensaje}`);
-    }
-  }
-
-
-  async crearInforme(datos: CreateInformeDto) {
-    try {
-      const resultado = await this.vinculacionRepository.crearInforme(datos);
-      
-      return {
-        statusCode: 201,
-        message: 'Informe de vinculación registrado exitosamente',
-        data: resultado
-      };
-    } catch (error) {
-      const mensaje = error instanceof Error ? error.message : String(error);
-      throw new InternalServerErrorException(`Error interno al registrar el informe: ${mensaje}`);
-    }
+    const results = await this.vinculacionRepo.query(query, [idEstudiante]);
+    return results.length > 0 ? results[0] : null;
   }
 }

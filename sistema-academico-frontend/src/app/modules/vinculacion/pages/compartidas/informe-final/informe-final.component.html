@@ -1,0 +1,392 @@
+<div class="container" *ngIf="!loading && !error && informe">
+
+  <!-- BOTÓN VOLVER A ARCHIVOS (SOLO DOCENTE) -->
+  <app-volver-archivos *ngIf="esDocente" />
+
+  <!-- BOTONES DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcelIndividual()" class="btn-export-excel" title="Exportar a Excel (solo esta hoja)">
+      📊 Exportar a Excel
+    </button>
+    <button (click)="exportarExcelCompleto()" class="btn-export-completo" title="Exportar todas las hojas en un solo archivo">
+      📦 Exportar Excel Completo
+    </button>
+  </div>
+
+  <div class="header">
+    <h1>Informe final de actividades de vinculación con la comunidad</h1>
+  </div>
+
+  <!-- 1. DATOS GENERALES -->
+  <section class="section">
+    <h2>1. DATOS GENERALES DEL PROYECTO</h2>
+    <div class="grid-2">
+      <p><strong>Carrera:</strong> {{ informe.datos_generales.carrera }}</p>
+      <p><strong>Fecha del informe:</strong> {{ informe.datos_generales.fecha_informe }}</p>
+      <p><strong>Estudiante:</strong> {{ informe.datos_generales.estudiante }}</p>
+      <p><strong>Cédula:</strong> {{ informe.datos_generales.cedula }}</p>
+      <p><strong>Email:</strong> {{ informe.datos_generales.email }}</p>
+      <p><strong>Teléfono:</strong> {{ informe.datos_generales.telefono }}</p>
+      <p><strong>Nombre del Proyecto:</strong> {{ informe.datos_generales.nombre_proyecto }}</p>
+      <p><strong>Fecha Inicio:</strong> {{ formatearFecha(informe.datos_generales.fecha_inicio) }}</p>
+      <p><strong>Fecha Final:</strong> {{ obtenerFechaFinal() }}</p>
+      <p><strong>Nombre de la Entidad beneficiaria:</strong> {{ informe.datos_generales.entidad_beneficiaria }}</p>
+      <p><strong>Dirección:</strong> {{ informe.datos_generales.direccion_entidad }}</p>
+      <p><strong>Teléfono entidad:</strong> {{ informe.datos_generales.telefono_entidad }}</p>
+      <p><strong>Email entidad:</strong> {{ informe.datos_generales.email_entidad }}</p>
+      <p><strong>Tutor entidad:</strong> {{ informe.datos_generales.tutor_entidad }}</p>
+      <p><strong>Docente Tutor:</strong> {{ informe.datos_generales.docente_tutor }}</p>
+    </div>
+  </section>
+
+  <!-- 2. RESUMEN DE ACTIVIDADES REALIZADAS (AGRUPADAS) -->
+  <section class="section">
+    <h2>2. RESUMEN DE ACTIVIDADES REALIZADAS</h2>
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Nro.</th>
+          <th>Fecha</th>
+          <th>Actividades</th>
+          <th>Horas</th>
+          <th>Observaciones</th>
+          <th *ngIf="esEstudiante">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let act of actividadesAgrupadas; let i = index">
+          <td>{{ act.nro }}</td>
+          <td>{{ act.fecha }}</td>
+          <td>{{ act.actividades }}</td>
+          <td>{{ act.horas | number:'1.2-2' }}</td>
+
+          <!-- OBSERVACIONES CON EDICIÓN SOLO ESTUDIANTE -->
+          <td>
+            <!-- MODO VISTA -->
+            <span *ngIf="editandoObservacionActividad !== i">
+              {{ act.observaciones }}
+            </span>
+            <!-- MODO EDICIÓN (SOLO ESTUDIANTE) -->
+            <input
+              *ngIf="editandoObservacionActividad === i && esEstudiante"
+              type="text"
+              [(ngModel)]="observacionActividadEdit"
+              placeholder="Escribe una observación..."
+              class="input-observacion-edit"
+            />
+          </td>
+
+          <!-- BOTONES DE ACCIÓN (SOLO ESTUDIANTE) - ESTILO IGUAL AL DE OBJETIVOS -->
+          <td *ngIf="esEstudiante">
+            <!-- Botón Editar Observación (estilo como ✏️ Editar Objetivos) -->
+            <ng-container *ngIf="editandoObservacionActividad !== i">
+              <button
+                (click)="editarObservacionActividad(i)"
+                class="btn-edit-obs-actividad"
+                title="Editar observación"
+              >
+                ✏️
+              </button>
+            </ng-container>
+
+            <!-- Botones Guardar / Cancelar -->
+            <ng-container *ngIf="editandoObservacionActividad === i">
+              <button
+                (click)="guardarObservacionActividad(i)"
+                class="btn-save-obs-actividad"
+                title="Guardar observación"
+              >
+                💾
+              </button>
+              <button
+                (click)="cancelarEdicionObservacionActividad()"
+                class="btn-cancel-obs-actividad"
+                title="Cancelar"
+              >
+                ❌
+              </button>
+            </ng-container>
+          </td>
+        </tr>
+        <tr *ngIf="actividadesAgrupadas.length === 0">
+          <td colspan="6" class="text-center">No hay actividades registradas</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3"><strong>Total Horas Cumplidas</strong></td>
+          <td><strong>{{ informe.total_horas_cumplidas || 0 | number:'1.2-2' }}</strong></td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <!-- 3. OBJETIVOS DEL PROYECTO (SOLO ESTUDIANTE PUEDE EDITAR) -->
+  <section class="section">
+    <h2>3. REGISTRO DE AVANCE Y SEGUIMIENTO DE LOS OBJETIVOS</h2>
+
+    <!-- MODO VISTA -->
+    <div *ngIf="!editandoObjetivos">
+      <table class="tabla">
+        <thead>
+          <tr><th>Objetivos</th><th>Actividades</th><th>Avance %</th><th>Resultados</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let obj of informe.objetivos_proyecto; let i = index">
+            <td>{{ obj.objetivo }}</td>
+            <td>{{ obj.actividades || 'Sin especificar' }}</td>
+            <td>{{ obj.avance || '0%' }}</td>
+            <td>{{ obj.resultados || 'Pendiente' }}</td>
+          </tr>
+          <tr *ngIf="!informe.objetivos_proyecto?.length">
+            <td colspan="4" class="text-center">No hay objetivos registrados</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- BOTÓN EDITAR (SOLO ESTUDIANTE) -->
+      <div *ngIf="esEstudiante" class="acciones-objetivos">
+        <button (click)="activarEdicionObjetivos()" class="btn-edit-objetivos">
+          ✏️ Editar Objetivos
+        </button>
+        <small class="ayuda">Los cambios se guardan automáticamente en tu navegador.</small>
+      </div>
+    </div>
+
+    <!-- MODO EDICIÓN (SOLO ESTUDIANTE) -->
+    <div *ngIf="editandoObjetivos && esEstudiante">
+      <table class="tabla tabla-editable">
+        <thead>
+          <tr><th>Objetivos</th><th>Actividades</th><th>Avance %</th><th>Resultados</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let obj of objetivosEditados; let i = index">
+            <td>
+              <input
+                type="text"
+                class="input-objetivo"
+                [value]="obj.objetivo"
+                (input)="actualizarObjetivo(i, 'objetivo', $event)"
+                placeholder="Ingrese el objetivo"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                class="input-objetivo"
+                [value]="obj.actividades || ''"
+                (input)="actualizarObjetivo(i, 'actividades', $event)"
+                placeholder="Actividades"
+              />
+            </td>
+            <td>
+              <div class="input-avance-wrapper">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="input-objetivo input-avance"
+                  [value]="obtenerNumeroAvance(obj.avance || '0%')"
+                  (input)="actualizarObjetivo(i, 'avance', $event)"
+                  placeholder="0"
+                />
+                <span class="porcentaje-label">%</span>
+              </div>
+            </td>
+            <td>
+              <input
+                type="text"
+                class="input-objetivo"
+                [value]="obj.resultados || 'Pendiente'"
+                (input)="actualizarObjetivo(i, 'resultados', $event)"
+                placeholder="Resultados"
+              />
+            </td>
+            <td>
+              <button (click)="eliminarObjetivo(i)" class="btn-eliminar-fila" title="Eliminar esta fila">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="form-actions">
+        <button (click)="agregarObjetivo()" class="btn-agregar">➕ Agregar Objetivo</button>
+        <button (click)="guardarEdicionObjetivos()" class="btn-save">💾 Guardar Objetivos</button>
+        <button (click)="cancelarEdicionObjetivos()" class="btn-cancel">❌ Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. REFLEXIÓN DEL ESTUDIANTE -->
+  <section class="section">
+    <h2>4. REFLEXIÓN DEL ESTUDIANTE</h2>
+    <div class="reflexion-box">
+      <p>{{ informe.reflexion_estudiante || 'Sin reflexión registrada.' }}</p>
+    </div>
+  </section>
+
+  <!-- 5. EVALUACIÓN FINAL DEL TUTOR ACADÉMICO (SOLO DOCENTE PUEDE EDITAR) -->
+  <section class="section evaluacion">
+    <h2>5. EVALUACIÓN FINAL DEL TUTOR ACADÉMICO</h2>
+
+    <!-- MODO VISTA -->
+    <div *ngIf="!editandoEvaluacion">
+
+      <table class="tabla-evaluacion">
+        <thead>
+          <tr>
+            <th>Parámetro de calificación</th>
+            <th>Calificación sobre 10</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of listaParametros">
+            <td>{{ p.label }}</td>
+            <td class="text-center">
+              {{ obtenerValorParametro(p.key) | number:'1.2-2' }}
+            </td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>TOTAL (Promedio)</strong></td>
+            <td><strong>{{ notaFinalCalculada | number:'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="evaluacion-resultados">
+        <div class="resultado-item">
+          <label><strong>Nota final:</strong></label>
+          <span>{{ notaFinalCalculada | number:'1.2-2' }}</span>
+        </div>
+        <div class="resultado-item">
+          <label><strong>Nota en letras:</strong></label>
+          <span>{{ notaEnLetras }}</span>
+        </div>
+        <div class="resultado-item">
+          <label><strong>Observaciones:</strong></label>
+          <span>{{ observaciones || 'Sin observaciones' }}</span>
+        </div>
+        <div class="resultado-item">
+          <label><strong>Coordinador:</strong></label>
+          <span>{{ informe.evaluacion_final?.coordinador || 'Sin Coordinador Asignado' }}</span>
+        </div>
+      </div>
+
+      <!-- BOTÓN EDITAR EVALUACIÓN (SOLO DOCENTE) -->
+      <div class="acciones" *ngIf="esDocente">
+        <button (click)="toggleEditEvaluacion()" class="btn-edit">✏️ Editar evaluación</button>
+      </div>
+    </div>
+
+    <!-- MODO EDICIÓN (SOLO DOCENTE) -->
+    <div *ngIf="editandoEvaluacion && esDocente">
+
+      <table class="tabla-evaluacion">
+        <thead>
+          <tr>
+            <th>Parámetro de calificación</th>
+            <th>Calificación sobre 10</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of listaParametros">
+            <td>{{ p.label }}</td>
+            <td>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="0.01"
+                class="input-nota"
+                [value]="obtenerValorParametro(p.key)"
+                (input)="validarParametro($event, p.key)"
+                placeholder="0.00"
+              />
+            </td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>TOTAL (Promedio)</strong></td>
+            <td><strong>{{ notaFinalCalculada | number:'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="evaluacion-resultados-edit">
+        <div class="resultado-item">
+          <label><strong>Nota final calculada:</strong></label>
+          <span class="nota-destacada">{{ notaFinalCalculada | number:'1.2-2' }}</span>
+        </div>
+        <div class="resultado-item">
+          <label><strong>Nota en letras:</strong></label>
+          <span>{{ notaEnLetras }}</span>
+        </div>
+        <div class="resultado-item">
+          <label><strong>Observaciones:</strong></label>
+          <textarea
+            [(ngModel)]="observaciones"
+            rows="3"
+            class="textarea-edit"
+            placeholder="Ingrese observaciones sobre la evaluación..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button (click)="guardarEvaluacion()" class="btn-save" [disabled]="guardando">
+          {{ guardando ? '⏳ Guardando...' : '💾 Guardar evaluación' }}
+        </button>
+        <button (click)="toggleEditEvaluacion()" class="btn-cancel">❌ Cancelar</button>
+      </div>
+
+      <div *ngIf="mensajeExito" class="feedback-success">
+        ✅ {{ mensajeExito }}
+      </div>
+      <div *ngIf="error" class="feedback-error">
+        ⚠️ {{ error }}
+      </div>
+    </div>
+  </section>
+
+  <!-- ANEXOS -->
+  <section class="section">
+    <h2>ANEXOS</h2>
+    <p>Evidencia del producto final: anexos, fotografía o escaneado de las evidencias del resultado final del curso. Incluya 6 imágenes y aplique las normas APA 7ma. Edición</p>
+    <div class="anexos-grid">
+      <div class="anexo-item" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="placeholder-imagen">Figura {{ i }}</div>
+        <p>Descripción de la figura {{ i }}</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- LOADING -->
+<div class="loading" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
+
+<!-- ERROR -->
+<div class="error" *ngIf="error">
+  <span class="error-icon">⚠️</span>
+  {{ error }}
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL - COMPONENTE COMPARTIDO                -->
+<!-- ============================================ -->
+<app-modal
+  *ngIf="modalVisible"
+  [title]="modalTitle"
+  [message]="modalMessage"
+  [type]="modalType"
+  [buttonText]="modalButtonText"
+  [showConfirmButtons]="showConfirmButtons"
+  (onClose)="cerrarModal()"
+  (onConfirm)="confirmarModal()"
+  (onCancel)="cancelarModal()">
+</app-modal>

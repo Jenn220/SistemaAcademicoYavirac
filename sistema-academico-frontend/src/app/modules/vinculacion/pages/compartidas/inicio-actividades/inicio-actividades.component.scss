@@ -1,0 +1,772 @@
+// ============================================
+// INICIO DE ACTIVIDADES - ESTILO PROFESIONAL
+// ============================================
+
+:host {
+  display: block;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+}
+
+.inicio-actividades-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.documento {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 3rem 3.5rem;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  font-family: 'Times New Roman', Times, serif;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 4px;
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+    border-radius: 0 0 4px 4px;
+  }
+}
+
+// ============================================
+// ENCABEZADO CON LOGO
+// ============================================
+.encabezado {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 2px solid #e8ecf2;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 50%, #163d8c 100%);
+  }
+
+  .logo {
+    width: 95px;
+    height: 95px;
+    flex: 0 0 95px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+    }
+  }
+
+  .titulo {
+    flex: 1;
+    text-align: center;
+
+    .instituto-top {
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6a7a8e;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #163d8c;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0.1rem 0;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ff7b22;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+  }
+}
+
+// ============================================
+// CONTENIDO
+// ============================================
+.contenido {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #1e2a3a;
+
+  .seccion {
+    margin-bottom: 1.2rem;
+    padding: 1rem 1.5rem;
+    background: #f7faff;
+    border-radius: 8px;
+    border-left: 5px solid #ff7b22;
+
+    p {
+      margin: 0.4rem 0;
+      text-align: justify;
+
+      strong {
+        color: #163d8c;
+      }
+    }
+  }
+
+  .acciones-top {
+    background: #f0f7ff;
+    border-left-color: #163d8c;
+
+    .accion-editar-top {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      .btn-editar {
+        background: #ff7b22;
+        color: #ffffff;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: 'Roboto', 'Segoe UI', sans-serif;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(255, 123, 34, 0.2);
+
+        &:hover {
+          background: #e06a1a;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(255, 123, 34, 0.3);
+        }
+      }
+
+      .ayuda {
+        color: #4a5a6e;
+        font-size: 12.5px;
+        font-style: italic;
+      }
+    }
+
+    .mensaje-editado-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 14px;
+      color: #28a745;
+      font-weight: 600;
+
+      .icono {
+        font-size: 1.2rem;
+      }
+    }
+  }
+
+  .datos-adicionales {
+    background: #f0f7ff;
+    border-left-color: #163d8c;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.2rem 2rem;
+
+    p {
+      margin: 0.2rem 0;
+      font-size: 13.5px;
+    }
+  }
+
+  .vista-edicion {
+    display: block;
+
+    .campo-editable {
+      margin: 0.8rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+
+      label {
+        font-family: 'Roboto', 'Segoe UI', sans-serif;
+        font-weight: 700;
+        font-size: 12px;
+        color: #163d8c;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+
+        .required {
+          color: #dc3545;
+          margin-left: 0.2rem;
+        }
+      }
+
+      .input-text,
+      .input-date {
+        padding: 0.6rem 1rem;
+        border: 2px solid #e8ecf2;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: 'Times New Roman', Times, serif;
+        max-width: 500px;
+        background: #fafcff;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #163d8c;
+          background: #ffffff;
+          box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.06);
+        }
+      }
+
+      .input-date {
+        max-width: 220px;
+      }
+
+      .ayuda {
+        color: #6a7a8e;
+        font-size: 12px;
+        font-style: italic;
+      }
+    }
+
+    .botones-accion {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.2rem;
+      flex-wrap: wrap;
+
+      .btn-guardar {
+        background: #28a745;
+        color: #ffffff;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: 'Roboto', 'Segoe UI', sans-serif;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+
+        &:hover:not(:disabled) {
+          background: #1e7e34;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .btn-cancelar {
+        background: #6c757d;
+        color: #ffffff;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: 'Roboto', 'Segoe UI', sans-serif;
+        transition: all 0.3s ease;
+
+        &:hover:not(:disabled) {
+          background: #5a6268;
+          transform: translateY(-2px);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  .anexos {
+    background: #ffffff;
+    border: 1px solid #e8ecf2;
+    border-left: 5px solid #ff7b22;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+    padding: 1.2rem 1.5rem;
+
+    h3 {
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #163d8c;
+      margin: 0 0 1rem 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .anexos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+
+      .anexo-item {
+        text-align: center;
+
+        .placeholder-imagen {
+          background: #f0f4fc;
+          border: 2px dashed #c8d4e4;
+          border-radius: 6px;
+          height: 140px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #8a9aaa;
+          font-size: 13px;
+          margin-bottom: 0.6rem;
+          font-family: 'Roboto', 'Segoe UI', sans-serif;
+        }
+
+        p {
+          font-size: 13px;
+          margin: 0;
+          color: #2c3e50;
+        }
+      }
+    }
+  }
+
+  .firma {
+    background: #ffffff;
+    border: none;
+    text-align: right;
+    margin-top: 2.5rem;
+    padding: 1.5rem 0 0 0;
+    border-top: 2px solid #e8ecf2;
+    position: relative;
+
+    &::before {
+      content: '✍️';
+      position: absolute;
+      top: -12px;
+      right: 0;
+      font-size: 18px;
+      opacity: 0.3;
+    }
+
+    p {
+      margin: 0.2rem 0;
+      font-size: 14px;
+
+      strong {
+        color: #163d8c;
+        font-size: 15px;
+      }
+    }
+  }
+}
+
+// ============================================
+// LOADING Y ERROR
+// ============================================
+.loading,
+.error {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 16px;
+  color: #6a7a8e;
+  font-family: 'Times New Roman', Times, serif;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: 600;
+  border-left: 4px solid #dc3545;
+}
+
+.sin-datos {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 16px;
+  color: #6a7a8e;
+  font-family: 'Times New Roman', Times, serif;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 1.2rem;
+  border: 4px solid #e8ecf2;
+  border-top: 4px solid #163d8c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// ============================================
+// BOTÓN DE EXPORTACIÓN A EXCEL
+// ============================================
+.acciones-export {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  gap: 0.8rem;
+
+  .btn-export-excel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.5rem;
+    background: linear-gradient(135deg, #1d6f42 0%, #28a745 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+      background: linear-gradient(135deg, #1a5c36 0%, #218838 100%);
+    }
+
+    &:active {
+      transform: translateY(0px);
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .documento {
+    padding: 2rem 2rem;
+  }
+
+  .encabezado {
+    gap: 1rem;
+
+    .logo {
+      width: 70px;
+      height: 70px;
+      flex: 0 0 70px;
+    }
+
+    .titulo {
+      h1 {
+        font-size: 0.9rem;
+      }
+
+      h2 {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  .contenido .datos-adicionales {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .contenido .anexos .anexos-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .documento {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .documento::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .encabezado {
+    flex-direction: column;
+    gap: 0.8rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      flex: 0 0 60px;
+    }
+
+    .titulo {
+      width: 100%;
+
+      .instituto-top {
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+      }
+
+      h1 {
+        font-size: 0.8rem;
+      }
+
+      h2 {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .contenido {
+    font-size: 12px;
+    line-height: 1.6;
+
+    .seccion {
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.8rem;
+
+      p {
+        font-size: 12px;
+        margin: 0.3rem 0;
+      }
+    }
+
+    .acciones-top {
+      .accion-editar-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+
+        .btn-editar {
+          width: 100%;
+          justify-content: center;
+          font-size: 13px;
+          padding: 0.4rem 1rem;
+        }
+
+        .ayuda {
+          font-size: 11px;
+          text-align: center;
+        }
+      }
+
+      .mensaje-editado-top {
+        font-size: 12px;
+        justify-content: center;
+      }
+    }
+
+    .datos-adicionales {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+      padding: 0.8rem 1rem;
+
+      p {
+        font-size: 12px;
+      }
+    }
+
+    .vista-edicion {
+      .campo-editable {
+        margin: 0.6rem 0;
+
+        label {
+          font-size: 10px;
+        }
+
+        .input-text,
+        .input-date {
+          font-size: 12px;
+          padding: 0.5rem 0.8rem;
+          max-width: 100%;
+        }
+
+        .input-date {
+          max-width: 100%;
+        }
+
+        .ayuda {
+          font-size: 10px;
+        }
+      }
+
+      .botones-accion {
+        flex-direction: column;
+        gap: 0.6rem;
+
+        .btn-guardar,
+        .btn-cancelar {
+          width: 100%;
+          justify-content: center;
+          font-size: 13px;
+          padding: 0.5rem 1rem;
+        }
+      }
+    }
+
+    .anexos {
+      padding: 1rem;
+
+      h3 {
+        font-size: 12px;
+      }
+
+      .anexos-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+
+        .anexo-item {
+          .placeholder-imagen {
+            height: 100px;
+            font-size: 11px;
+          }
+
+          p {
+            font-size: 11px;
+          }
+        }
+      }
+    }
+
+    .firma {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+
+      &::before {
+        font-size: 14px;
+        top: -10px;
+      }
+
+      p {
+        font-size: 12px;
+
+        strong {
+          font-size: 13px;
+        }
+      }
+    }
+  }
+
+  .acciones-export {
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn-export-excel {
+      padding: 0.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .loading,
+  .error,
+  .sin-datos {
+    padding: 2rem 1rem;
+    font-size: 14px;
+    margin: 1rem auto;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .documento {
+    padding: 1rem 0.7rem;
+  }
+
+  .encabezado {
+    .logo {
+      width: 50px;
+      height: 50px;
+      flex: 0 0 50px;
+    }
+
+    .titulo {
+      h1 {
+        font-size: 0.7rem;
+      }
+
+      h2 {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .contenido {
+    font-size: 11px;
+
+    .seccion p {
+      font-size: 11px;
+    }
+
+    .datos-adicionales p {
+      font-size: 11px;
+    }
+
+    .vista-edicion .campo-editable {
+      .input-text,
+      .input-date {
+        font-size: 11px;
+        padding: 0.4rem 0.6rem;
+      }
+    }
+  }
+}

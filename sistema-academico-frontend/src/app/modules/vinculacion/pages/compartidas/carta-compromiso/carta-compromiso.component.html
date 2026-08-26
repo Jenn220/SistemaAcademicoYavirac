@@ -1,0 +1,84 @@
+<div class="carta-container" *ngIf="!loading && !error && cartaCompromiso">
+  <app-volver-archivos *ngIf="isDocente" />
+  
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
+  <div class="document-header">
+    <h1>{{ cartaCompromiso.titulo }}</h1>
+    <p class="instituto">{{ cartaCompromiso.instituto }}</p>
+  </div>
+
+  <div class="carta-content">
+    <p>
+      Yo, <strong>{{ cartaCompromiso.estudiante }}</strong>, con C.I. <strong>{{ cartaCompromiso.cedula }}</strong>,
+      estudiante del Instituto Superior Tecnológico de Turismo y Patrimonio "YAVIRAC" de la Carrera de
+      <strong>{{ cartaCompromiso.carrera }}</strong>, quien va a realizar la vinculación con la sociedad en la
+      <strong>{{ cartaCompromiso.entidad_beneficiaria }}</strong>,
+      me comprometo a seguir las siguientes recomendaciones:
+    </p>
+
+    <div class="articulos">
+      <p><strong>Art. 22.- Obligaciones de los estudiantes de prácticas y vinculación con la sociedad.</strong></p>
+      <ul>
+        <li>a. Cumplir con las horas exigidas en el proyecto de vinculación.</li>
+        <li>b. Cumplir con el cronograma de actividades establecido.</li>
+        <li>c. Elaborar los informes de acuerdo con el formato establecido.</li>
+        <li>d. Participar en las actividades de capacitación programadas.</li>
+        <li>e. Demostrar responsabilidad, disciplina, ética y eficiencia durante el desarrollo.</li>
+        <li>f. Asistir puntualmente a las jornadas establecidas.</li>
+        <li>g. Informar en un máximo de 72 horas al tutor cuando se vea impedido de asistir.</li>
+        <li>h. Cumplir con las disposiciones del ISTY y la entidad receptora.</li>
+        <li>i. Informar de forma escrita las novedades que se produzcan.</li>
+        <li>j. Guardar las debidas consideraciones éticas y humanas.</li>
+        <li>k. Presentar la documentación necesaria para el registro de horas.</li>
+        <li>l. Permanecer en la entidad receptora el tiempo determinado.</li>
+        <li>m. Entregar un informe escrito del proyecto ejecutado.</li>
+      </ul>
+      <p><strong>Art 23.- Prohibiciones a los estudiantes.</strong></p>
+      <ul>
+        <li>a. Crear documentación o circunstancias diferentes a las realizadas.</li>
+        <li>b. Disponer de servicios, equipos y suministros para asuntos personales.</li>
+        <li>c. Asistir bajo influencia de bebidas alcohólicas o sustancias psicotrópicas.</li>
+        <li>d. Atender o aceptar visitas de tipo particular.</li>
+        <li>e. Cambiar de turno o encargar a otra persona sus actividades.</li>
+        <li>f. Abandonar sin autorización del tutor.</li>
+        <li>g. Promover actos de indisciplina.</li>
+        <li>h. Cometer actos que atenten contra la salud y seguridad.</li>
+        <li>i. Abandonar sin justificación.</li>
+        <li>j. Incumplir con las tareas asignadas.</li>
+        <li>k. Sustraer bienes, divulgar o copiar información.</li>
+      </ul>
+    </div>
+
+    <div class="firma">
+      <p>En constancia,</p>
+      
+      <!-- ✅ FIRMAS EN DOS COLUMNAS SEPARADAS -->
+      <div class="firma-grid">
+        <!-- Estudiante -->
+        <div class="firma-columna">
+          <div class="firma-linea"></div>
+          <p class="firma-nombre">{{ cartaCompromiso.estudiante }}</p>
+          <p class="firma-dato">C.I. {{ cartaCompromiso.cedula }}</p>
+          <p class="firma-label">ESTUDIANTE</p>
+        </div>
+        
+        <!-- Docente Tutor -->
+        <div class="firma-columna">
+          <div class="firma-linea"></div>
+          <p class="firma-nombre">{{ cartaCompromiso.docente_tutor }}</p>
+          <p class="firma-dato">DOCENTE TUTOR</p>
+          <p class="firma-label">TUTOR DEL PROYECTO</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading" *ngIf="loading">Cargando...</div>
+<div class="error" *ngIf="error">{{ error }}</div>

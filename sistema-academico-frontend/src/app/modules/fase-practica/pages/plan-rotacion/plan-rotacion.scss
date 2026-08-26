@@ -1,0 +1,310 @@
+@import '../../_shared-documento-styles';
+
+:host {
+
+    display: block;
+
+    background: #f0f2f5;
+
+    min-height: 100vh;
+
+    padding: 30px 0;
+
+}
+
+/*=========================
+Toolbar
+=========================*/
+
+.toolbar {
+
+    width: 100%;
+
+    max-width: 297mm;
+
+    margin: 0 auto 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+}
+
+/*=========================
+Hoja (horizontal)
+=========================*/
+
+.documento {
+
+    box-sizing: border-box;
+
+    width: 297mm;
+
+    min-height: 210mm;
+
+    margin: auto;
+
+    background: white;
+
+    padding: 15mm;
+
+    box-shadow: 0 0 15px rgba(0, 0, 0, .18);
+
+}
+
+.contenido {
+
+    font-family: "Times New Roman", serif;
+
+    font-size: 12px;
+
+    margin-top: 20px;
+
+    color: #000;
+
+}
+
+/*=========================
+Tabla de datos (encabezado)
+=========================*/
+
+.tabla-datos {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-bottom: 10px;
+
+}
+
+.tabla-datos td {
+
+    border: 1px solid #000;
+
+    padding: 5px 8px;
+
+    font-size: 12px;
+
+}
+
+.tabla-datos td.label {
+
+    font-weight: bold;
+
+    background: #f4f4f4;
+
+    white-space: nowrap;
+
+    width: 16%;
+
+}
+
+/*=========================
+Control de semanas
+=========================*/
+
+.controles-semanas {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 8px;
+
+    font-size: 12px;
+
+}
+
+/*=========================
+Grid de rotación
+=========================*/
+
+.tabla-rotacion {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-bottom: 8px;
+
+    font-size: 10px;
+
+}
+
+.tabla-rotacion th,
+.tabla-rotacion td {
+
+    border: 1px solid #000;
+
+    padding: 4px 5px;
+
+    vertical-align: middle;
+
+}
+
+.tabla-rotacion th {
+
+    background: #efefef;
+
+    text-align: center;
+
+}
+
+.col-semana {
+
+    width: 30px;
+
+}
+
+.celda-semana {
+
+    text-align: center;
+
+    cursor: pointer;
+
+    width: 30px;
+
+}
+
+.celda-semana:hover {
+
+    background: #fffbe6;
+
+}
+
+.celda-semana.activa {
+
+    background: #dcdcdc;
+
+    font-weight: bold;
+
+}
+
+.celda-semana.deshabilitada {
+
+    cursor: not-allowed;
+
+}
+
+.celda-semana.deshabilitada:hover {
+
+    background: transparent;
+
+}
+
+/*=========================
+Competencias necesarias
+=========================*/
+
+.tabla-competencias {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-bottom: 8px;
+
+    font-size: 10px;
+
+}
+
+.tabla-competencias th,
+.tabla-competencias td {
+
+    border: 1px solid #000;
+
+    padding: 5px 6px;
+
+    vertical-align: top;
+
+}
+
+.tabla-competencias th {
+
+    background: #efefef;
+
+    text-align: center;
+
+}
+
+/*=========================
+Campos editables
+=========================*/
+
+.campo {
+
+    width: 100%;
+
+    border: none;
+
+    background: transparent;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    padding: 2px;
+
+    color: #000;
+
+}
+
+.campo:focus {
+
+    outline: none;
+
+    background: #fffbe6;
+
+}
+
+.campo-textarea {
+
+    resize: vertical;
+
+    width: 100%;
+
+    border: 1px solid #ccc;
+
+}
+
+/*=========================
+PDF / impresión
+=========================*/
+
+@media print {
+
+    .toolbar {
+        display: none;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .documento {
+        margin: 0;
+        width: 100%;
+        min-height: auto;
+        box-shadow: none;
+        padding: 12mm;
+    }
+
+}
+
+/*=========================
+Responsive (celular / tablet)
+=========================*/
+
+@media (max-width:768px) {
+
+    :host {
+        padding: 15px 0;
+        overflow-x: auto;
+    }
+
+}

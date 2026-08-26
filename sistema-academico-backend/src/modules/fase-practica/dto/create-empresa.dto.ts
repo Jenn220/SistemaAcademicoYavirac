@@ -11,27 +11,12 @@ export class CreateEmpresaDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(200)
-  nombre?: string;
-
-  @IsOptional()
-  @IsString()
   @MaxLength(300)
   direccion?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  telefono?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(150)
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
+  @MaxLength(20)
   estado?: string;
 }
 

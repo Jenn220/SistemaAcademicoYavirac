@@ -5,7 +5,7 @@ import {
 } from '../ports/aceptacion-notas.repository';
 import { CreateReporteNotasDto } from '../dto/create-reporte-notas.dto';
 import { ReporteNotasResponseDto } from '../dto/reporte-notas-response.dto';
-import { PortafolioReporteNotas } from '../domain/reporte-notas.entity';
+import { UpdateNotasAceptacionDto } from '../dto/update-notas-aceptacion.dto';
 
 @Injectable()
 export class AceptacionNotasService {
@@ -14,7 +14,7 @@ export class AceptacionNotasService {
     private readonly aceptacionNotasRepo: IAceptacionNotasRepository,
   ) {}
 
-  async generarReporte(dto: CreateReporteNotasDto): Promise<PortafolioReporteNotas> {
+  async generarReporte(dto: CreateReporteNotasDto): Promise<ReporteNotasResponseDto> {
     const yaExiste = await this.aceptacionNotasRepo.existsByOfertaAndTipo(
       dto.id_oferta_asignatura,
       dto.tipo_reporte,
@@ -33,5 +33,9 @@ export class AceptacionNotasService {
       throw new NotFoundException('Reporte de notas no encontrado para esta materia y tipo');
     }
     return reporte;
+  }
+
+  async actualizarNotas(idReporteNotas: number, dto: UpdateNotasAceptacionDto): Promise<void> {
+    return this.aceptacionNotasRepo.actualizarNotas(idReporteNotas, dto.estudiantes);
   }
 }

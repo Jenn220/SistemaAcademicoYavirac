@@ -1,0 +1,207 @@
+<div class="inicio-actividades-container">
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    Cargando...
+  </div>
+
+  <div *ngIf="!isLoading && error" class="error">{{ error }}</div>
+
+  <div *ngIf="!isLoading && !error && data" class="documento">
+    <app-volver-archivos *ngIf="isDocente" />
+
+    <!-- BOTÓN DE EXPORTACIÓN A EXCEL -->
+    <div class="acciones-export">
+      <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+        📊 Exportar a Excel
+      </button>
+    </div>
+
+    <div class="encabezado">
+      <div class="logo">
+        <img src="assets/images/logo-yavirac.png" alt="Yavirac">
+      </div>
+      <div class="titulo">
+        <h1>INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"</h1>
+        <h2>INICIO DE ACTIVIDADES DEL TUTOR</h2>
+      </div>
+    </div>
+
+    <div class="contenido">
+
+      <!-- BOTÓN DE EDICIÓN ARRIBA (SOLO DOCENTE) -->
+      <div *ngIf="isDocente" class="seccion acciones-top">
+        <div *ngIf="!editMode">
+          <div *ngIf="isEditingEnabled" class="accion-editar-top">
+            <button (click)="activarEdicion()" class="btn-editar">✏️ Editar Proyecto</button>
+            <small class="ayuda">Puedes editar el nombre del proyecto, fecha de inicio y fecha de finalización. <strong>Solo una vez.</strong></small>
+          </div>
+          <div *ngIf="!isEditingEnabled" class="mensaje-editado-top">
+            <span class="icono">✅</span>
+            <span>Este proyecto ya fue editado anteriormente.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coordinador -->
+      <div class="seccion">
+        <p><strong>A:</strong> {{ data.coordinador || 'Sin Coordinador Asignado' }}</p>
+        <p>Coordinador de Carrera</p>
+      </div>
+
+      <!-- Tutor -->
+      <div class="seccion">
+        <p><strong>De:</strong> {{ data.tutor_nombre }}</p>
+        <p>Tutor del Proyecto</p>
+      </div>
+
+      <!-- Asunto -->
+      <div class="seccion">
+        <p><strong>Asunto:</strong> Informe de inicio de actividades del Proyecto:</p>
+        <p><strong>{{ data.proyecto_nombre }}</strong></p>
+      </div>
+
+      <!-- Fecha - AHORA USA FECHA ACTUAL -->
+      <div class="seccion">
+        <p><strong>Fecha:</strong> {{ fechaActual }}</p>
+      </div>
+
+      <!-- Cuerpo del documento -->
+      <div class="seccion">
+        <p>
+          Yo, <strong>{{ data.tutor_nombre }}</strong> con C.I. Nro.
+          <strong>{{ data.tutor_cedula }}</strong>
+          tengo a bien informar que siguiendo con el cronograma de actividades establecido en el proyecto de vinculación:
+        </p>
+        <p><strong>{{ data.proyecto_nombre }}</strong></p>
+        <p>
+          Informo que el día de hoy
+          <strong>{{ fechaActual }}</strong> del año en curso,
+          se procedió a dar inicio con el desarrollo del mismo.
+        </p>
+      </div>
+
+      <!-- Descripción de actividades -->
+      <div class="seccion">
+        <p>{{ data.descripcion_actividades || 'Sin descripción de actividades.' }}</p>
+      </div>
+
+      <!-- Datos adicionales (lectura) -->
+      <div *ngIf="!editMode" class="seccion datos-adicionales">
+        <p><strong>Carrera:</strong> {{ data.carrera }}</p>
+        <p><strong>Entidad Beneficiaria:</strong> {{ data.entidad_beneficiaria }}</p>
+        <p><strong>Tutor Entidad Receptora:</strong> {{ data.tutor_entidad || 'Sin asignar' }}</p>
+        <p><strong>Fecha de Inicio:</strong> {{ formatearFecha(data.fecha_inicio) }}</p>
+        <p><strong>Fecha de Finalización:</strong> {{ formatearFecha(data.fecha_fin) }}</p>
+      </div>
+
+      <!-- Edición (SOLO DOCENTE) -->
+      <div *ngIf="editMode && isDocente" class="seccion datos-adicionales vista-edicion">
+        <p><strong>Carrera:</strong> {{ data.carrera }}</p>
+        <p><strong>Entidad Beneficiaria:</strong> {{ data.entidad_beneficiaria }}</p>
+        <p><strong>Tutor Entidad Receptora:</strong> {{ data.tutor_entidad || 'Sin asignar' }}</p>
+
+        <div class="campo-editable">
+          <label for="nombre_proyecto">
+            <strong>Nombre del Proyecto</strong>
+            <span class="required">*</span>
+          </label>
+          <input
+            id="nombre_proyecto"
+            type="text"
+            [(ngModel)]="editedFields.nombre_proyecto"
+            placeholder="Ingrese el nombre del proyecto"
+            class="input-text"
+          />
+        </div>
+
+        <div class="campo-editable">
+          <label for="fecha_inicio">
+            <strong>Fecha de Inicio</strong>
+            <span class="required">*</span>
+          </label>
+          <input
+            id="fecha_inicio"
+            type="date"
+            [(ngModel)]="editedFields.fecha_inicio"
+            class="input-date"
+          />
+        </div>
+
+        <div class="campo-editable">
+          <label for="fecha_fin">
+            <strong>Fecha de Finalización</strong>
+            <span class="required">*</span>
+          </label>
+          <input
+            id="fecha_fin"
+            type="date"
+            [(ngModel)]="editedFields.fecha_fin"
+            class="input-date"
+          />
+          <small class="ayuda">
+            La fecha debe ser posterior a la fecha de inicio.
+          </small>
+        </div>
+
+        <div class="botones-accion">
+          <button
+            class="btn-guardar"
+            (click)="guardarCambios()"
+            [disabled]="isLoading">
+            <span *ngIf="!isLoading">💾 Guardar Cambios</span>
+            <span *ngIf="isLoading">⏳ Guardando...</span>
+          </button>
+          <button
+            class="btn-cancelar"
+            (click)="cancelarEdicion()"
+            [disabled]="isLoading">
+            ❌ Cancelar
+          </button>
+        </div>
+      </div>
+
+      <!-- Anexos -->
+      <div class="seccion anexos">
+        <h3>Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación</h3>
+        <div class="anexos-grid">
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 1: Primera reunión de inducción vinculación.</p>
+          </div>
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 2: Socialización de actividades.</p>
+          </div>
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 3: Explicación del alcance del proyecto.</p>
+          </div>
+          <div class="anexo-item">
+            <div class="placeholder-imagen"></div>
+            <p>Figura 4: Primer día de actividades en la Fundación.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firma -->
+      <div class="seccion firma">
+        <p>Atentamente,</p>
+        <br><br><br>
+        <p><strong>{{ data.tutor_nombre }}</strong></p>
+        <p>TUTOR DEL PROYECTO</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && !error && !data" class="sin-datos">No hay datos disponibles</div>
+</div>
+
+<!-- ✅ MODAL -->
+<app-modal
+  *ngIf="modalVisible"
+  [title]="modalTitle"
+  [message]="modalMessage"
+  [type]="modalType"
+  (onClose)="cerrarModal()">
+</app-modal>

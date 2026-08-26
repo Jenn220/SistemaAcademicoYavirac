@@ -1,0 +1,295 @@
+<div class="asistencia-container" *ngIf="!loading && !error && data">
+  <app-volver-archivos *ngIf="isDocente" />
+  
+  <!-- CABECERA -->
+  <div class="cabecera">
+    <h2>CONTROL DE ASISTENCIA Y SEGUIMIENTO DE VINCULACIÓN CON LA COMUNIDAD</h2>
+    
+    <div class="datos">
+      <p><strong>CARRERA:</strong> {{ data.cabecera.carrera }}</p>
+      <p><strong>ESTUDIANTE:</strong> {{ data.cabecera.estudiante }}</p>
+      <p><strong>ENTIDAD BENEFICIARIA:</strong> {{ data.cabecera.entidad_beneficiaria }}</p>
+      <p><strong>PROYECTO:</strong> {{ data.cabecera.nombre_proyecto }}</p>
+      <p><strong>DOCENTE TUTOR:</strong> {{ data.cabecera.docente_tutor }}</p>
+      <p><strong>TUTOR ENTIDAD:</strong> {{ data.cabecera.tutor_entidad_receptora }}</p>
+      <p><strong>PERIODO:</strong> {{ data.cabecera.periodo_academico }}</p>
+    </div>
+
+    <div class="rango-fechas" *ngIf="fechaInicioProyecto || fechaFinProyecto">
+      <p>
+        <strong>📅 RANGO DEL PROYECTO:</strong>
+        <span class="fecha-rango">
+          {{ formatearFecha(fechaInicioProyecto) }} 
+          <span class="separador">—</span> 
+          {{ formatearFecha(fechaFinProyecto) }}
+        </span>
+        <span class="indicador">
+          <span class="dot verde"></span> Las fechas deben estar dentro de este rango
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <!-- BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
+  <!-- FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) -->
+  <div class="nueva-actividad" *ngIf="mostrandoFormulario && isEstudiante">
+    <h3>📝 Nueva actividad</h3>
+    
+    <div *ngIf="errorHora" class="error-hora">
+      ⚠️ {{ errorHora }}
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" [(ngModel)]="nuevaActividad.fecha" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora entrada</label>
+        <input type="time" [(ngModel)]="nuevaActividad.hora_inicio" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora salida</label>
+        <input type="time" [(ngModel)]="nuevaActividad.hora_fin" (ngModelChange)="errorHora = null" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label>Actividad realizada</label>
+        <input type="text" [(ngModel)]="nuevaActividad.actividades_realizadas" placeholder="Describa la actividad realizada" />
+      </div>
+    </div>
+    
+    <div class="form-actions">
+      <button (click)="agregarActividad()" class="btn-save" [disabled]="loading">💾 Guardar</button>
+      <button (click)="cancelarNuevo()" class="btn-cancel">❌ Cancelar</button>
+    </div>
+  </div>
+
+  <!-- FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) -->
+  <div class="nueva-actividad" *ngIf="mostrandoModalDuplicar && isEstudiante">
+    <h3>➕ Añadir fecha para la misma actividad</h3>
+    <p class="info-duplicar"><strong>Actividad:</strong> {{ actividadParaDuplicar?.descripcion }}</p>
+    
+    <div *ngIf="errorHora" class="error-hora">
+      ⚠️ {{ errorHora }}
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nueva Fecha</label>
+        <input type="date" [(ngModel)]="nuevoDiaDuplicado.fecha" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora entrada</label>
+        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_inicio" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora salida</label>
+        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_fin" (ngModelChange)="errorHora = null" />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button (click)="guardarDiaDuplicado()" class="btn-save" [disabled]="loading">💾 Guardar Nuevo Día</button>
+      <button (click)="cancelarDuplicado()" class="btn-cancel">❌ Cancelar</button>
+    </div>
+  </div>
+
+  <!-- BOTÓN AGREGAR (SOLO ESTUDIANTE) -->
+  <div class="acciones" *ngIf="isEstudiante">
+    <button *ngIf="!mostrandoFormulario && !mostrandoModalDuplicar" (click)="mostrarFormulario()" class="btn-add">
+      + Agregar actividad
+    </button>
+  </div>
+
+  <!-- TABLA DE ACTIVIDADES (VISIBLE PARA TODOS) -->
+  <table class="tabla-actividades">
+    <thead>
+      <tr>
+        <th>FECHA</th>
+        <th>HORA ENTRADA</th>
+        <th>HORA SALIDA</th>
+        <th>TOTAL HORAS</th>
+        <th>ACTIVIDAD REALIZADA</th>
+        <th *ngIf="isEstudiante">ACCIONES</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Recorremos los GRUPOS -->
+      <ng-container *ngFor="let grupo of actividadesAgrupadas">
+        
+        <!-- Recorremos cada DÍA dentro del grupo -->
+        <ng-container *ngFor="let act of grupo.actividadesDetalle; let isFirst = first; let isLast = last">
+          
+          <tr 
+            [class.grupo-actividad]="true"
+            [class.grupo-actividad-primera]="isFirst"
+            [class.grupo-actividad-ultima]="isLast"
+          >
+            
+            <!-- Columnas individuales por día -->
+            <td>
+              <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.fecha }}</span>
+              <input *ngIf="isEstudiante && editandoId === act.id" type="date" [(ngModel)]="editandoActividad.fecha" />
+            </td>
+            <td>
+              <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_entrada }}</span>
+              <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_inicio" (ngModelChange)="errorHora = null" />
+            </td>
+            <td>
+              <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.hora_salida }}</span>
+              <input *ngIf="isEstudiante && editandoId === act.id" type="time" [(ngModel)]="editandoActividad.hora_fin" (ngModelChange)="errorHora = null" />
+            </td>
+            <td>{{ act.total_horas | number:'1.2-2' }}</td>
+
+            <!-- ACTIVIDAD REALIZADA -->
+            <td *ngIf="isFirst" [attr.rowspan]="grupo.actividadesDetalle.length" class="actividad-cell">
+              <div class="grupo-actividad-wrapper">
+                <!-- Modo Vista -->
+                <div class="texto-actividad-container" *ngIf="!isEstudiante || editandoGrupoId !== grupo.ids[0]">
+                  <span>{{ grupo.descripcion }}</span>
+                  <button *ngIf="isEstudiante" (click)="editarDescripcionGrupo(grupo)" class="btn-edit-desc" title="Editar descripción general">✏️</button>
+                </div>
+
+                <!-- Modo Edición de la Descripción -->
+                <div class="texto-actividad-container" *ngIf="isEstudiante && editandoGrupoId === grupo.ids[0]">
+                  <textarea [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" rows="3" placeholder="Descripción de la actividad..."></textarea>
+                </div>
+                
+                <!-- Botón para añadir otra fecha -->
+                <div class="btn-agregar-fecha-container" *ngIf="isEstudiante && !editandoId && !editandoGrupoId">
+                  <button (click)="prepararDuplicado(grupo.actividadesDetalle[0])" class="btn-add-copy">
+                    ➕ Añadir fecha
+                  </button>
+                </div>
+              </div>
+            </td>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <td class="acciones-cell" *ngIf="isEstudiante">
+              <div *ngIf="errorHora && editandoId === act.id" class="error-hora-small">{{ errorHora }}</div>
+              
+              <!-- Modo Normal -->
+              <div class="btn-group-acciones" *ngIf="editandoId !== act.id && editandoGrupoId !== grupo.ids[0]">
+                <button (click)="editarFilaIndividual(act)" class="btn-action btn-edit" title="Editar fecha u horas de este día">✏️</button>
+                <button (click)="eliminarActividad(act.id)" class="btn-action btn-delete" title="Eliminar este día">🗑️</button>
+              </div>
+              
+              <!-- Modo Guardar/Cancelar Fila Individual -->
+              <div class="btn-group-acciones" *ngIf="editandoId === act.id">
+                <button (click)="guardarEdicionFila(act.id)" class="btn-action btn-save" title="Guardar cambios de la fila">💾</button>
+                <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
+              </div>
+
+              <!-- Modo Guardar/Cancelar Grupo (Descripción) -->
+              <div class="btn-group-acciones" *ngIf="editandoGrupoId === grupo.ids[0] && isFirst">
+                <button (click)="guardarEdicionGrupo(grupo)" class="btn-action btn-save" title="Guardar cambios del grupo">💾</button>
+                <button (click)="cancelarEdicion()" class="btn-action btn-cancel" title="Cancelar">❌</button>
+              </div>
+            </td>
+
+          </tr>
+        </ng-container>
+      </ng-container>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3"><strong>TOTAL HORAS</strong></td>
+        <td><strong>{{ data.totales.total_horas | number:'1.2-2' }}</strong></td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- OBSERVACIONES -->
+  <div class="observaciones">
+    <div class="observaciones-header">
+      <label for="observaciones"><strong>OBSERVACIONES:</strong></label>
+      
+      <div *ngIf="puedeEditarObservaciones && !editandoObservacion" class="estado-guardado">
+        <span *ngIf="guardandoObservacion" class="estado guardando">⏳ Guardando...</span>
+        <span *ngIf="observacionGuardada && !guardandoObservacion" class="estado guardado">✅ Guardado</span>
+        <span *ngIf="!observacionGuardada && !guardandoObservacion" class="estado sin-guardar">⚠️ Sin guardar</span>
+      </div>
+    </div>
+    
+    <!-- ESTUDIANTE: solo lectura -->
+    <div *ngIf="!puedeEditarObservaciones" class="observaciones-input-wrapper">
+      <input 
+        type="text" 
+        [value]="observaciones"
+        disabled
+        class="input-observaciones input-readonly"
+        placeholder="Sin observaciones"
+      />
+    </div>
+    
+    <!-- DOCENTE / COORDINADOR: editable con auto-guardado -->
+    <div *ngIf="puedeEditarObservaciones" class="observaciones-input-wrapper">
+      
+      <!-- MODO VISTA -->
+      <div *ngIf="!editandoObservacion" class="observaciones-vista">
+        <p class="texto-observacion">{{ observaciones || 'Sin observaciones' }}</p>
+        <button (click)="toggleEditObservacion()" class="btn-edit-obs">✏️ Editar observación</button>
+      </div>
+      
+      <!-- MODO EDICIÓN -->
+      <div *ngIf="editandoObservacion" class="observaciones-edicion">
+        <input 
+          id="observaciones"
+          type="text" 
+          [(ngModel)]="observaciones"
+          (ngModelChange)="onObservacionChange()"
+          placeholder="Escriba una observación... (se guarda automáticamente)"
+          class="input-observaciones"
+        />
+        <button 
+          (click)="guardarObservacion()" 
+          class="btn-guardar-obs"
+          [disabled]="guardandoObservacion || observaciones === observacionesOriginales"
+          title="Guardar observación manualmente">
+          💾
+        </button>
+      </div>
+    </div>
+    
+    <div *ngIf="puedeEditarObservaciones && mensajeFeedback" class="feedback">
+      {{ mensajeFeedback }}
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
+
+<!-- ERROR -->
+<div class="error" *ngIf="error">
+  <span class="error-icon">⚠️</span>
+  {{ error }}
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL - COMPONENTE COMPARTIDO                -->
+<!-- ============================================ -->
+<app-modal
+  *ngIf="modalVisible"
+  [title]="modalTitle"
+  [message]="modalMessage"
+  [type]="modalType"
+  [buttonText]="modalButtonText"
+  [showConfirmButtons]="showConfirmButtons"
+  (onClose)="cerrarModal()"
+  (onConfirm)="confirmarModal()"
+  (onCancel)="cancelarModal()">
+</app-modal>

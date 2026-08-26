@@ -1,0 +1,35 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div [class]="headerClass">
+      <span class="modal-icon">{{ icon }}</span>
+      <h2 class="modal-title">{{ title }}</h2>
+      <button *ngIf="showCloseButton" class="modal-close-btn" (click)="close()">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <p class="modal-message">{{ message }}</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <!-- ✅ VERSIÓN CON DOS BOTONES (CONFIRMAR/CANCELAR) -->
+      <ng-container *ngIf="showConfirmButtons; else singleButton">
+        <button class="modal-btn btn-cancel" (click)="cancel()">
+          Cancelar
+        </button>
+        <button class="modal-btn" [class]="'btn-' + type" (click)="confirm()">
+          {{ buttonText }}
+        </button>
+      </ng-container>
+      
+      <!-- ✅ VERSIÓN CON UN SOLO BOTÓN -->
+      <ng-template #singleButton>
+        <button class="modal-btn" [class]="'btn-' + type" (click)="close()">
+          {{ buttonText }}
+        </button>
+      </ng-template>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,211 @@
+<div class="toolbar no-print">
+
+    <button class="btn btn-outline-secondary" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </button>
+
+    <button class="btn btn-primary" [disabled]="!!error" (click)="descargarWord()">
+        <i class="bi bi-file-earmark-word-fill"></i>
+        Descargar Word
+    </button>
+
+    @if (!soloLectura) {
+    <button class="btn btn-warning text-white" [disabled]="guardando || !!error" (click)="guardarEnBD()">
+        <i class="bi bi-save"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
+
+</div>
+
+<div id="documento-plan-rotacion" class="documento">
+
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                010204
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 04 PLAN DE APRENDIZAJE PRÁCTICO Y DE ROTACIÓN</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ encabezado.carrera }}</td>
+            <td><strong>NIVEL:</strong></td>
+            <td>{{ encabezado.nivel }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>EMPRESA FORMADORA:</strong></td>
+            <td>{{ encabezado.empresaFormadora }}</td>
+            <td><strong>HORAS DE FORMACIÓN PRÁCTICA:</strong></td>
+            <td>{{ encabezado.horasFormacion }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>NÚCLEO ESTRUCTURANTE:</strong></td>
+            <td>{{ encabezado.nucleoEstructurante }}</td>
+            <td><strong>PERÍODO LECTIVO:</strong></td>
+            <td>{{ encabezado.periodo }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>NOMBRE(S) DEL ESTUDIANTE(S):</strong></td>
+            <td colspan="3">{{ encabezado.estudianteNombre }}</td>
+
+        </tr>
+
+    </table>
+
+    <div class="contenido">
+
+        @if (!soloLectura) {
+        <div class="controles-semanas no-print">
+
+            <span>Semanas mostradas: {{ numeroSemanas }}</span>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="quitarSemana()">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="agregarSemana()">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+
+        </div>
+        }
+
+        <table class="tabla-rotacion">
+
+            <thead>
+                <tr>
+                    <th style="width:28px">No.</th>
+                    <th>Resultados de aprendizaje</th>
+                    <th style="width:130px">Puesto de aprendizaje</th>
+                    @for (semana of columnasSemanas; track semana) {
+                    <th class="col-semana">S{{ semana }}</th>
+                    }
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (fila of filas; track $index; let i = $index) {
+
+                <tr>
+                    <td class="text-center">{{ i + 1 }}</td>
+
+                    <td>{{ fila.item.resultado_aprendizaje }}</td>
+
+                    <td><input type="text" class="campo" [(ngModel)]="fila.planRotacion.puesto_aprendizaje" name="puesto-{{ i }}" [disabled]="soloLectura"></td>
+
+                    @for (semana of columnasSemanas; track semana) {
+                    <td
+                        class="celda-semana"
+                        [class.activa]="fila.semanasActivas.has(semana)"
+                        [class.deshabilitada]="soloLectura"
+                        (click)="toggleSemana(fila, semana)">
+                        @if (fila.semanasActivas.has(semana)) { X }
+                    </td>
+                    }
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <table class="tabla-competencias">
+
+            <thead>
+                <tr>
+                    <th colspan="3">Competencias Necesarias</th>
+                </tr>
+                <tr>
+                    <th>Conocimientos Teóricos</th>
+                    <th>Procedimentales</th>
+                    <th>Actitudinales</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.conocimientosTeoricos" name="conocimientosTeoricos" [disabled]="soloLectura"></textarea></td>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.procedimentales" name="procedimentales" [disabled]="soloLectura"></textarea></td>
+                    <td><textarea class="campo campo-textarea" rows="2" [(ngModel)]="competencias.actitudinales" name="actitudinales" [disabled]="soloLectura"></textarea></td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

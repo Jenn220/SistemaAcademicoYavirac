@@ -1,9 +1,6 @@
 import { IsInt, IsString, IsDateString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateVinculacionDto {
-  @IsInt()
-  @IsNotEmpty()
-  id_periodo: number;
 
   @IsInt()
   @IsNotEmpty()
@@ -40,4 +37,8 @@ export class CreateVinculacionDto {
   @IsString()
   @IsOptional()
   estado?: string;
+
+  @IsInt()
+  @IsOptional()
+  id_entidad_receptora?: number;
 }
