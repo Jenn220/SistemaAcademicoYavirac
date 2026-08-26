@@ -225,7 +225,7 @@
 
                     <td><input type="text" class="campo" [(ngModel)]="item.puesto_aprendizaje" name="puesto-{{ i }}" [disabled]="soloLectura"></td>
 
-                    <td class="text-center"><input type="number" class="campo campo-nota" [(ngModel)]="item.semanas" name="semanas-{{ i }}" [disabled]="soloLectura"></td>
+                    <td class="text-center"><input type="number" class="campo campo-nota" [(ngModel)]="item.semanas" name="semanas-{{ i }}" [disabled]="soloLectura" min="1" max="8"></td>
 
                     <td><input type="text" class="campo" [(ngModel)]="item.responsable_puesto" name="responsable-{{ i }}" [disabled]="soloLectura"></td>
 

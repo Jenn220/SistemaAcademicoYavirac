@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
 import { DetalleEvaluacionEntity } from '../domain/detalle-evaluacion.entity';
 import { ItemRubricaEntity } from '../domain/item-rubrica.entity';
-import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class EvaluacionCalculoService {
@@ -15,7 +14,6 @@ export class EvaluacionCalculoService {
     private readonly detalleRepository: Repository<DetalleEvaluacionEntity>,
     @InjectRepository(ItemRubricaEntity)
     private readonly itemRubricaRepository: Repository<ItemRubricaEntity>,
-    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   async calcularPromedioPorPractica(idPractica: number): Promise<number> {
@@ -36,9 +34,7 @@ export class EvaluacionCalculoService {
 
   async calcularEvaluacionEmpresarial(idEvaluacion: number) {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: idEvaluacion } });
-    if (!evaluacion) return null;
-
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
+    if (!evaluacion) throw new NotFoundException(`Evaluación con id ${idEvaluacion} no encontrada`);
 
     let items = [];
     if (evaluacion.id_rubrica) {
@@ -66,8 +62,17 @@ export class EvaluacionCalculoService {
       ? Number((desempenoDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0) / desempenoDetalles.length).toFixed(2))
       : 0;
 
+    // notaParcialDefensa es la SUMA (no el promedio) de los 5 criterios de
+    // defensa, cada uno calificado 1-4 (Deficiente..Excelente): máximo 20,
+    // que al dividir entre 2 da la "nota final de defensa" sobre 10. Usar
+    // un promedio aquí (como antes) topaba la nota máxima posible en 5/10
+    // en vez de 10/10, porque cada puntaje_asignado individual nunca pasa
+    // de 4 aunque el campo acepte hasta 10.
     const notaParcialDefensa = defensaDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0);
 
+    // notaPonderadaDesempeno pesa 7/10: usar promedioDesempeno sin ponderar
+    // (como antes) permitía notas finales por encima de 10/10 (verificado:
+    // 8 de desempeño + 2.7 ponderado de defensa = 10.7/10).
     const notaPonderadaDesempeno = Number((promedioDesempeno * 7 / 10).toFixed(2));
 
     const notaFinalDefensa = Number((notaParcialDefensa / 2).toFixed(2));
@@ -98,9 +103,7 @@ export class EvaluacionCalculoService {
 
   async calcularEvaluacionInstituto(idEvaluacion: number) {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: idEvaluacion } });
-    if (!evaluacion) return null;
-
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
+    if (!evaluacion) throw new NotFoundException(`Evaluación con id ${idEvaluacion} no encontrada`);
 
     let items = [];
     if (evaluacion.id_rubrica) {
@@ -124,6 +127,8 @@ export class EvaluacionCalculoService {
       return item && proyectoItems.find(pi => pi.id_item === item.id_item);
     });
 
+    // Ver comentario equivalente en calcularEvaluacionEmpresarial: suma,
+    // no promedio, de los 5 criterios de defensa (1-4 c/u, máximo 20).
     const notaParcialDefensa = defensaDetalles.reduce((a, b) => a + Number(b.puntaje_asignado ?? 0), 0);
 
     const notaFinalDefensa = Number((notaParcialDefensa / 2).toFixed(2));

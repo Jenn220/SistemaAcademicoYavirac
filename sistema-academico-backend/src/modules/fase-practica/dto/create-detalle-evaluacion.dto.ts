@@ -1,16 +1,13 @@
-import { IsNumber, IsOptional, IsString, MaxLength, Max } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength, Max, Min } from 'class-validator';
 
 export class CreateDetalleEvaluacionDto {
-  // El controller siempre toma id_evaluacion de la URL (POST
-  // evaluaciones/:idEvaluacion/detalles) y lo sobrescribe en el body antes
-  // de llamar al service; exigirlo aquí solo rompía las creaciones que no
-  // lo mandan en el body (p.ej. evaluacion-instituto.ts, cuyo servicio no
-  // siembra detalle_evaluacion al crear la evaluación) con un 400.
   @IsOptional()
   @IsNumber()
+  @Min(1)
   id_evaluacion?: number;
 
   @IsNumber()
+  @Min(1)
   id_item!: number;
 
   @IsNumber()

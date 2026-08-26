@@ -1,43 +1,78 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { INFORME_APRENDIZAJE_REPOSITORY, IInformeAprendizajeRepository } from '../ports/informe-aprendizaje.repository.port';
 import { CreateInformeAprendizajeDto } from '../dto/create-informe-aprendizaje.dto';
 import { UpdateInformeAprendizajeDto } from '../dto/update-informe-aprendizaje.dto';
 import { InformeAprendizajeEntity } from '../domain/informe-aprendizaje.entity';
-import { PeriodoContextService } from './periodo-context.service';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class InformeAprendizajeService {
   constructor(
     @Inject(INFORME_APRENDIZAJE_REPOSITORY)
     private readonly informeAprendizajeRepository: IInformeAprendizajeRepository,
-    private readonly periodoContextService: PeriodoContextService,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async create(dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(dto.id_practica);
+  private async verificarAccesoPractica(usuario: any, idPractica: number): Promise<void> {
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    if (roles.includes('DOCENTE') || roles.includes('TUTOR_EMPRESARIAL')) {
+      const practica = await this.dataSource.query(
+        `SELECT id_docente, id_empresa FROM practica_estudiante WHERE id_practica = $1 LIMIT 1`,
+        [idPractica],
+      );
+      if (practica.length === 0) {
+        throw new NotFoundException('No tiene permiso para acceder a este informe de aprendizaje');
+      }
+      if (roles.includes('DOCENTE') && Number(practica[0].id_docente) === Number(usuario.idDocente)) return;
+      if (roles.includes('TUTOR_EMPRESARIAL') && Number(practica[0].id_empresa) === Number(usuario.idEmpresa)) return;
+      throw new ForbiddenException('No tiene permiso para acceder a este informe de aprendizaje');
+    }
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         JOIN practica_estudiante pe ON pe.id_matricula_detalle = md.id_matricula_detalle
+         WHERE pe.id_practica = $1 AND m.id_estudiante = $2`,
+        [idPractica, usuario.idEstudiante],
+      );
+      if (!esDueno || esDueno.length === 0) {
+        throw new ForbiddenException('No tiene permiso para acceder a este informe de aprendizaje');
+      }
+    }
+  }
+
+  async create(usuario: any, dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
+    await this.verificarAccesoPractica(usuario, dto.id_practica);
     return this.informeAprendizajeRepository.create(dto);
   }
 
-  async findByPractica(idPractica: number, skip?: number, take?: number): Promise<InformeAprendizajeEntity[]> {
+  async findByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<InformeAprendizajeEntity[]> {
+    await this.verificarAccesoPractica(usuario, idPractica);
     return this.informeAprendizajeRepository.findByPractica(idPractica, skip, take);
   }
 
-  async findById(id: number): Promise<InformeAprendizajeEntity> {
+  async findById(usuario: any, id: number): Promise<InformeAprendizajeEntity> {
     const informe = await this.informeAprendizajeRepository.findById(id);
     if (!informe) throw new NotFoundException(`No se encontró el informe con id ${id}`);
+    await this.verificarAccesoPractica(usuario, informe.id_practica);
     return informe;
   }
 
-  async update(id: number, dto: UpdateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
-    const informe = await this.findById(id);
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
+  async update(usuario: any, id: number, dto: UpdateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
+    const informe = await this.informeAprendizajeRepository.findById(id);
+    if (!informe) throw new NotFoundException(`No se encontró el informe con id ${id}`);
+    await this.verificarAccesoPractica(usuario, informe.id_practica);
     return this.informeAprendizajeRepository.update(id, dto);
   }
 
-  async remove(id: number): Promise<void> {
-    const informe = await this.findById(id);
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(informe.id_practica);
+  async remove(usuario: any, id: number): Promise<void> {
+    const informe = await this.informeAprendizajeRepository.findById(id);
+    if (!informe) throw new NotFoundException(`No se encontró el informe con id ${id}`);
+    await this.verificarAccesoPractica(usuario, informe.id_practica);
     return this.informeAprendizajeRepository.remove(id);
   }
 }

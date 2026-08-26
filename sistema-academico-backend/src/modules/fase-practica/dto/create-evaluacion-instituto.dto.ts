@@ -1,10 +1,12 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
 
 export class CreateEvaluacionInstitutoDto {
   @IsNumber()
+  @Min(1)
   id_practica!: number;
 
   @IsNumber()
+  @Min(1)
   id_evaluacion_plan_marco!: number;
 
   @IsOptional()
@@ -13,6 +15,8 @@ export class CreateEvaluacionInstitutoDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(10)
   calificacion?: number;
 }
 
@@ -23,6 +27,8 @@ export class UpdateEvaluacionInstitutoDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(10)
   calificacion?: number;
 }
 

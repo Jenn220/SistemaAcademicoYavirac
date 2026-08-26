@@ -2,9 +2,11 @@ import { IsDateString, IsNumber, IsOptional, IsString, MaxLength, Min, Max } fro
 
 export class CreateEvaluacionPracticaDto {
   @IsNumber()
+  @Min(1)
   id_practica!: number;
 
   @IsNumber()
+  @Min(1)
   id_rubrica!: number;
 
   @IsString()

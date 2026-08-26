@@ -23,14 +23,14 @@ export class EvaluacionInstitutoController {
 
   @Get('evaluaciones-instituto/practica/:idPractica')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
-  findByPractica(@Param('idPractica') idPractica: string) {
-    return this.service.findByPractica(Number(idPractica));
+  findByPractica(@Req() req: any, @Param('idPractica') idPractica: string) {
+    return this.service.findByPractica(req.user, Number(idPractica));
   }
 
   @Get('evaluaciones-instituto/:id')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(Number(id));
+  findOne(@Req() req: any, @Param('id') id: string) {
+    return this.service.findOne(req.user, Number(id));
   }
 
   @Patch('evaluaciones-instituto/:id')

@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -8,7 +8,6 @@ import { CreateDetalleEvaluacionDto } from '../dto/create-detalle-evaluacion.dto
 import { UpdateDetalleEvaluacionDto } from '../dto/update-detalle-evaluacion.dto';
 import { DetalleEvaluacionEntity } from '../domain/detalle-evaluacion.entity';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
-import { PeriodoContextService } from './periodo-context.service';
 
 @Injectable()
 export class DetalleEvaluacionService {
@@ -18,7 +17,6 @@ export class DetalleEvaluacionService {
     @InjectRepository(EvaluacionPracticaEntity)
     private readonly evaluacionRepository: Repository<EvaluacionPracticaEntity>,
     private readonly dataSource: DataSource,
-    private readonly periodoContextService: PeriodoContextService,
   ) {}
 
   /**
@@ -96,43 +94,52 @@ export class DetalleEvaluacionService {
 
   async create(usuario: any, dto: CreateDetalleEvaluacionDto): Promise<DetalleEvaluacionEntity> {
     await this.verificarAcceso(usuario, dto.id_evaluacion!);
-    const evaluacion = await this.evaluacionRepo.findById(dto.id_evaluacion!);
-    if (!evaluacion) {
-      throw new NotFoundException(`No se encontró la evaluación con id ${dto.id_evaluacion}`);
+
+    if (dto.puntaje_asignado !== undefined && dto.puntaje_asignado !== null) {
+      const item = await this.dataSource.query(
+        `SELECT puntaje_maximo FROM item_rubrica WHERE id_item = $1 LIMIT 1`,
+        [dto.id_item],
+      );
+      if (item.length > 0 && Number(dto.puntaje_asignado) > Number(item[0].puntaje_maximo)) {
+        throw new BadRequestException(`El puntaje asignado (${dto.puntaje_asignado}) excede el puntaje máximo del criterio (${item[0].puntaje_maximo}).`);
+      }
     }
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
+
     return this.repo.create(dto);
   }
 
-  async findByEvaluacion(idEvaluacion: number): Promise<DetalleEvaluacionEntity[]> {
+  async findByEvaluacion(usuario: any, idEvaluacion: number): Promise<DetalleEvaluacionEntity[]> {
+    await this.verificarAcceso(usuario, idEvaluacion);
     return this.repo.findByEvaluacion(idEvaluacion);
   }
 
-  async findOne(id: number): Promise<DetalleEvaluacionEntity> {
+  async findOne(usuario: any, id: number): Promise<DetalleEvaluacionEntity> {
     const detalle = await this.repo.findOne(id);
     if (!detalle) throw new NotFoundException(`Detalle de evaluación con id ${id} no encontrado`);
+    await this.verificarAcceso(usuario, detalle.id_evaluacion);
     return detalle;
   }
 
   async update(usuario: any, id: number, dto: UpdateDetalleEvaluacionDto): Promise<DetalleEvaluacionEntity> {
-    const detalle = await this.findOne(id);
+    const detalle = await this.findOne(usuario, id);
     await this.verificarAcceso(usuario, detalle.id_evaluacion);
-    const evaluacion = await this.evaluacionRepo.findById(detalle.id_evaluacion);
-    if (!evaluacion) {
-      throw new NotFoundException(`No se encontró la evaluación con id ${detalle.id_evaluacion}`);
+
+    if (dto.puntaje_asignado !== undefined && dto.puntaje_asignado !== null) {
+      const item = await this.dataSource.query(
+        `SELECT puntaje_maximo FROM item_rubrica WHERE id_item = $1 LIMIT 1`,
+        [detalle.id_item],
+      );
+      if (item.length > 0 && Number(dto.puntaje_asignado) > Number(item[0].puntaje_maximo)) {
+        throw new BadRequestException(`El puntaje asignado (${dto.puntaje_asignado}) excede el puntaje máximo del criterio (${item[0].puntaje_maximo}).`);
+      }
     }
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
+
     return this.repo.update(id, dto);
   }
 
   async remove(usuario: any, id: number): Promise<void> {
-    const detalle = await this.findOne(id);
+    const detalle = await this.findOne(usuario, id);
     await this.verificarAcceso(usuario, detalle.id_evaluacion);
-    const evaluacion = await this.evaluacionRepo.findById(detalle.id_evaluacion);
-    if (!evaluacion) {
-      throw new NotFoundException(`No se encontró la evaluación con id ${detalle.id_evaluacion}`);
-    }
-    await this.periodoContextService.validarPeriodoActivoDesdePractica(evaluacion.id_practica);
     return this.repo.remove(id);
   }
 }
