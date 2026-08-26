@@ -7,7 +7,7 @@ import { VinculacionService } from '../../../services/vinculacion.service';
 import { CartaCompromiso } from '../../../models/carta-compromiso.model';
 import { finalize } from 'rxjs/operators';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
-import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
+import { ExcelExportService } from '../../../services/excel-export.service';
 
 @Component({
   selector: 'app-carta-compromiso',
@@ -22,7 +22,7 @@ export class CartaCompromisoComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
-  private excelService = inject(ExcelExportService); // ✅ NUEVO
+  private excelService = inject(ExcelExportService);
 
   cartaCompromiso: CartaCompromiso | null = null;
   loading = true;
@@ -36,8 +36,8 @@ export class CartaCompromisoComponent implements OnInit {
     this.isEstudiante = roles.includes('ESTUDIANTE');
     this.isDocente = roles.includes('DOCENTE');
 
-    if (!this.isEstudiante) {
-      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo estudiantes pueden acceder.';
+    if (!this.isEstudiante && !this.isDocente) {
+      this.error = '⚠️ No tienes permisos para ver esta pantalla.';
       this.loading = false;
       this.cdr.markForCheck();
       return;
@@ -106,7 +106,7 @@ export class CartaCompromisoComponent implements OnInit {
       });
   }
 
-  // ✅ NUEVO: Exportar a Excel
+  // ✅ Exportar a Excel
   async exportarExcel(): Promise<void> {
     if (!this.idVinculacion || !this.cartaCompromiso) {
       alert('No hay datos para exportar.');

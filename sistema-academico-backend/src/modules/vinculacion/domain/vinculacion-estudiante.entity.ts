@@ -4,19 +4,22 @@ import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
 @Unique(['id_matricula_detalle'])
 export class VinculacionEstudianteEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id_vinculacion: string;
+  id_vinculacion: number;
+
+  @Column({ type: 'bigint' })
+  id_periodo: number;
 
   @Column({ type: 'bigint', unique: true })
-  id_matricula_detalle: string;
+  id_matricula_detalle: number;
 
   @Column({ type: 'bigint' })
-  id_empresa: string;
+  id_empresa: number;
 
   @Column({ type: 'bigint' })
-  id_docente: string;
+  id_docente: number;
 
   @Column({ type: 'bigint', nullable: true })
-  id_entidad_receptora: string | null;
+  id_entidad_receptora: number | null;
 
   @Column({ type: 'varchar', length: 255 })
   nombre_proyecto: string;
@@ -35,4 +38,8 @@ export class VinculacionEstudianteEntity {
 
   @Column({ type: 'varchar', length: 30, default: 'EN_CURSO' })
   estado: string;
+
+  // 🔥 NUEVO CAMPO
+  @Column({ type: 'boolean', default: false })
+  editado: boolean;
 }

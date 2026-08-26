@@ -4,12 +4,15 @@ export interface IVinculacionInicioActividadesPort {
   obtenerIniciosActividadesPorDocenteRaw(idDocente: number): Promise<any>;
   obtainInicioActividadesTutorRaw(idVinculacion: number): Promise<any>;
   actualizarInicioActividadesRaw(
-    idVinculacion: number, 
-    datos: { 
-      nombre_proyecto?: string; 
-      fecha_inicio?: string;  // ✅ AGREGADO
-      fecha_fin?: string 
+    idVinculacion: number,
+    datos: {
+      nombre_proyecto?: string;
+      fecha_inicio?: string;
+      fecha_fin?: string;
     }
   ): Promise<any>;
   actualizarFechaFin(idVinculacion: number, fechaFin: string): Promise<void>;
+
+  // 🔥 NUEVO MÉTODO
+  marcarComoEditado(idVinculacion: number): Promise<void>;
 }

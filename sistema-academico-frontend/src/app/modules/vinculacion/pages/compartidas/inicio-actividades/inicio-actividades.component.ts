@@ -2,18 +2,28 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { finalize } from 'rxjs/operators';
+
 import { InicioActividadesService } from '../../../services/inicio-actividades.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
-import { InicioActividadesResponse } from '../../../models';
-import { finalize } from 'rxjs/operators';
+import { ExcelExportService } from '../../../services/excel-export.service';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
-import { ExcelExportService } from '../../../services/excel-export.service'; // ✅ NUEVO
+
+// ✅ IMPORTAR MODAL DESDE SHARED
+import { ModalComponent } from '../../../../../shared/components/modal/modal.component';
+
+import { InicioActividadesResponse } from '../../../models';
 
 @Component({
   selector: 'app-inicio-actividades',
   standalone: true,
-  imports: [CommonModule, FormsModule, VolverArchivosComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    VolverArchivosComponent,
+    ModalComponent  // ✅ AGREGADO
+  ],
   templateUrl: './inicio-actividades.component.html',
   styleUrls: ['./inicio-actividades.component.scss']
 })
@@ -23,48 +33,62 @@ export class InicioActividadesComponent implements OnInit {
   private authService = inject(AuthService);
   private vinculacionService = inject(VinculacionService);
   private cdr = inject(ChangeDetectorRef);
-  private excelService = inject(ExcelExportService); // ✅ NUEVO
+  private excelService = inject(ExcelExportService);
 
   // Datos principales
   data: InicioActividadesResponse | null = null;
   idVinculacion: number = 0;
-  
+
+  // Fecha actual
+  fechaActual: string = '';
+
   // Estados
   isLoading = true;
   error: string | null = null;
-  
+
   // Roles
   isEstudiante = false;
   isDocente = false;
-  
+
   // Edición
   editMode = false;
-  isEditingEnabled = true;
+
+  // 🔥 Getter que usa el campo editado del backend
+  get isEditingEnabled(): boolean {
+    return this.isDocente && this.data !== null && !this.data.editado;
+  }
+
   editedFields = {
     nombre_proyecto: '',
     fecha_inicio: '',
     fecha_fin: ''
   };
-  
-  // Fecha original para validaciones
-  fechaInicioOriginal: string = '';
+
+  // ============================================
+  // MODAL
+  // ============================================
+  modalVisible = false;
+  modalTitle = '';
+  modalMessage = '';
+  modalType: 'success' | 'error' | 'warning' | 'info' = 'info';
 
   ngOnInit(): void {
+    // Asignar fecha actual
+    this.fechaActual = this.obtenerFechaActual();
+
     const roles = this.authService.roles();
     this.isEstudiante = roles.includes('ESTUDIANTE');
     this.isDocente = roles.includes('DOCENTE');
 
-    // Validar permisos: solo ESTUDIANTE o DOCENTE
     const puedeVer = this.isEstudiante || this.isDocente;
     if (!puedeVer) {
-      this.error = '⚠️ No tienes permisos para ver esta pantalla.';
+      this.mostrarModal('Permisos insuficientes', 'No tienes permisos para ver esta pantalla.', 'warning');
       this.isLoading = false;
       this.cdr.markForCheck();
       return;
     }
 
     const idParam = this.route.snapshot.params['id'];
-    
     if (idParam && idParam > 0) {
       this.idVinculacion = Number(idParam);
       this.cargarDatos();
@@ -73,10 +97,41 @@ export class InicioActividadesComponent implements OnInit {
     }
   }
 
+  // ============================================
+  // OBTENER FECHA ACTUAL
+  // ============================================
+  obtenerFechaActual(): string {
+    const hoy = new Date();
+    return hoy.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  // ============================================
+  // MODAL
+  // ============================================
+  private mostrarModal(title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info'): void {
+    this.modalTitle = title;
+    this.modalMessage = message;
+    this.modalType = type;
+    this.modalVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModal(): void {
+    this.modalVisible = false;
+    this.cdr.markForCheck();
+  }
+
+  // ============================================
+  // OBTENER VINCULACIÓN ACTIVA
+  // ============================================
   obtenerVinculacionActiva(): void {
     this.isLoading = true;
     this.cdr.markForCheck();
-    
+
     this.vinculacionService.obtenerVinculacionActiva()
       .pipe(finalize(() => {
         this.isLoading = false;
@@ -88,25 +143,25 @@ export class InicioActividadesComponent implements OnInit {
             this.idVinculacion = Number(response.id_vinculacion);
             this.cargarDatos();
           } else {
-            this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.mostrarModal('Sin vinculación', 'No se encontró una vinculación activa para este estudiante.', 'warning');
             this.cdr.markForCheck();
           }
         },
         error: (err: any) => {
-          console.error('❌ Error al obtener vinculación activa:', err);
-          this.error = 'Error al obtener la vinculación activa.';
-          this.cdr.markForCheck();
+          console.error('Error al obtener vinculación activa:', err);
+          this.mostrarModal('Error', err.error?.message || err.message || 'Error al obtener la vinculación activa.', 'error');
         }
       });
   }
 
+  // ============================================
+  // CARGAR DATOS
+  // ============================================
   cargarDatos(): void {
     this.isLoading = true;
     this.error = null;
     this.cdr.markForCheck();
-    
-    console.log('🔵 Cargando Inicio Actividades para vinculación:', this.idVinculacion);
-    
+
     this.service.obtenerInicioActividades(this.idVinculacion)
       .pipe(finalize(() => {
         this.isLoading = false;
@@ -114,52 +169,29 @@ export class InicioActividadesComponent implements OnInit {
       }))
       .subscribe({
         next: (response) => {
-          console.log('📦 Datos de Inicio Actividades recibidos:', response);
           this.data = response;
-          
-          // Guardar fecha de inicio original para validaciones
-          this.fechaInicioOriginal = response.fecha_inicio || '';
-          
-          // Verificar si ya fue editado (localStorage)
-          this.verificarEstadoEdicion();
-          
           this.cdr.markForCheck();
         },
         error: (err: any) => {
-          console.error('❌ Error al cargar Inicio Actividades:', err);
-          this.error = 'No se pudieron cargar los datos.';
-          this.cdr.markForCheck();
+          console.error('Error al cargar Inicio Actividades:', err);
+          this.mostrarModal('Error', err.error?.message || err.message || 'No se pudieron cargar los datos.', 'error');
         }
       });
   }
 
-  /**
-   * Verifica si el proyecto ya fue editado anteriormente
-   * Usa localStorage para persistir el estado "una sola vez"
-   */
-  verificarEstadoEdicion(): void {
-    if (!this.data) return;
-    
-    const key = `inicio_actividades_editado_${this.idVinculacion}`;
-    const yaEditado = localStorage.getItem(key);
-    
-    if (yaEditado === 'true') {
-      this.isEditingEnabled = false;
-      console.log('🔒 Este proyecto ya fue editado anteriormente.');
-    } else {
-      this.isEditingEnabled = true;
-      console.log('🔓 Este proyecto puede ser editado.');
-    }
-  }
-
-  /**
-   * Activar modo edición (solo para DOCENTE)
-   */
+  // ============================================
+  // ACTIVAR EDICIÓN
+  // ============================================
   activarEdicion(): void {
-    if (!this.isDocente || !this.isEditingEnabled || !this.data) {
+    if (!this.isEditingEnabled) {
+      this.mostrarModal('No permitido', 'Este proyecto ya fue editado anteriormente. No se permiten más modificaciones.', 'warning');
       return;
     }
-    
+
+    if (!this.isDocente || !this.data) {
+      return;
+    }
+
     this.editMode = true;
     this.editedFields = {
       nombre_proyecto: this.data.proyecto_nombre || '',
@@ -169,74 +201,71 @@ export class InicioActividadesComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  /**
-   * Cancelar edición
-   */
+  // ============================================
+  // CANCELAR EDICIÓN
+  // ============================================
   cancelarEdicion(): void {
     this.editMode = false;
     this.cdr.markForCheck();
   }
 
-  /**
- * Validar campos antes de guardar
- */
-validarCambios(): boolean {
-  // Validar nombre del proyecto
-  if (!this.editedFields.nombre_proyecto?.trim()) {
-    alert('El nombre del proyecto es obligatorio.');
-    return false;
-  }
-  
-  // Validar fecha de inicio
-  if (!this.editedFields.fecha_inicio) {
-    alert('La fecha de inicio es obligatoria.');
-    return false;
-  }
-  
-  // Validar fecha de finalización
-  if (!this.editedFields.fecha_fin) {
-    alert('La fecha de finalización es obligatoria.');
-    return false;
-  }
-  
-  // Normalizar ambas fechas para comparación
-  const fechaInicio = new Date(this.editedFields.fecha_inicio + 'T00:00:00');
-  const fechaFin = new Date(this.editedFields.fecha_fin + 'T00:00:00');
-  
-  if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
-    alert('Las fechas no son válidas.');
-    return false;
-  }
-  
-  // ✅ ELIMINADO: Validación de fecha anterior a hoy
-  // Solo se valida que fecha de fin sea POSTERIOR a fecha de inicio
-  if (fechaFin.getTime() <= fechaInicio.getTime()) {
-    alert('La fecha de finalización debe ser posterior a la fecha de inicio.');
-    return false;
-  }
-  
-  return true;
-}
+  // ============================================
+  // VALIDAR CAMBIOS
+  // ============================================
+  validarCambios(): boolean {
+    if (!this.editedFields.nombre_proyecto?.trim()) {
+      this.mostrarModal('Campo requerido', 'El nombre del proyecto es obligatorio.', 'warning');
+      return false;
+    }
 
-  /**
-   * Guardar cambios en el backend
-   */
+    if (!this.editedFields.fecha_inicio) {
+      this.mostrarModal('Campo requerido', 'La fecha de inicio es obligatoria.', 'warning');
+      return false;
+    }
+
+    if (!this.editedFields.fecha_fin) {
+      this.mostrarModal('Campo requerido', 'La fecha de finalización es obligatoria.', 'warning');
+      return false;
+    }
+
+    const fechaInicio = new Date(this.editedFields.fecha_inicio + 'T00:00:00');
+    const fechaFin = new Date(this.editedFields.fecha_fin + 'T00:00:00');
+
+    if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
+      this.mostrarModal('Fecha inválida', 'Las fechas no son válidas.', 'warning');
+      return false;
+    }
+
+    if (fechaFin.getTime() <= fechaInicio.getTime()) {
+      this.mostrarModal('Fecha inválida', 'La fecha de finalización debe ser posterior a la fecha de inicio.', 'warning');
+      return false;
+    }
+
+    return true;
+  }
+
+  // ============================================
+  // GUARDAR CAMBIOS
+  // ============================================
   guardarCambios(): void {
     if (!this.validarCambios()) {
       return;
     }
-    
+
+    if (!this.isEditingEnabled) {
+      this.mostrarModal('No permitido', 'Este proyecto ya fue editado anteriormente. No se permiten más modificaciones.', 'warning');
+      return;
+    }
+
     this.isLoading = true;
     this.cdr.markForCheck();
-    
+
     const payload = {
       nombre_proyecto: this.editedFields.nombre_proyecto.trim(),
       fecha_inicio: this.editedFields.fecha_inicio,
       fecha_fin: this.editedFields.fecha_fin
     };
-    
-    console.log('📤 Enviando actualización:', payload);
-    
+
     this.service.actualizarInicioActividades(this.idVinculacion, payload)
       .pipe(finalize(() => {
         this.isLoading = false;
@@ -244,35 +273,25 @@ validarCambios(): boolean {
       }))
       .subscribe({
         next: (response: any) => {
-          console.log('✅ Cambios guardados exitosamente:', response);
-          
-          // Marcar como editado en localStorage
-          const key = `inicio_actividades_editado_${this.idVinculacion}`;
-          localStorage.setItem(key, 'true');
-          this.isEditingEnabled = false;
           this.editMode = false;
-          
-          // Recargar datos actualizados
+          const mensaje = response?.message || 'Los cambios se guardaron correctamente.';
+          this.mostrarModal('Guardado', mensaje, 'success');
           this.cargarDatos();
-          
-          alert('✅ Cambios guardados exitosamente.');
         },
         error: (err: any) => {
-          console.error('❌ Error al guardar cambios:', err);
-          this.error = 'Error al guardar los cambios. Por favor, intenta nuevamente.';
-          this.cdr.markForCheck();
+          console.error('Error al guardar cambios:', err);
+          const mensajeError = err.error?.message || err.message || 'Error al guardar los cambios. Por favor, intenta nuevamente.';
+          this.mostrarModal('Error', mensajeError, 'error');
         }
       });
   }
 
-  /**
-   * Formatear fecha para mostrar
-   * ✅ CORREGIDO: Maneja fechas ISO con T00:00:00.000Z
-   */
+  // ============================================
+  // FORMATEAR FECHA
+  // ============================================
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      // Si la fecha ya tiene formato ISO, extraer solo la parte de la fecha
       let fechaStr = fecha;
       if (fecha.includes('T')) {
         fechaStr = fecha.split('T')[0];
@@ -288,10 +307,12 @@ validarCambios(): boolean {
     }
   }
 
-  // ✅ NUEVO: Exportar a Excel
+  // ============================================
+  // EXPORTAR A EXCEL
+  // ============================================
   async exportarExcel(): Promise<void> {
     if (!this.idVinculacion || !this.data) {
-      alert('No hay datos para exportar.');
+      this.mostrarModal('Sin datos', 'No hay datos para exportar.', 'warning');
       return;
     }
     try {
@@ -300,9 +321,10 @@ validarCambios(): boolean {
         'Inicio Act.',
         this.data
       );
+      this.mostrarModal('Éxito', 'Archivo Excel exportado correctamente.', 'success');
     } catch (error) {
-      console.error('❌ Error al exportar Excel:', error);
-      alert('Error al exportar el archivo Excel.');
+      console.error('Error al exportar Excel:', error);
+      this.mostrarModal('Error', 'Error al exportar el archivo Excel.', 'error');
     }
   }
 }

@@ -57,15 +57,24 @@
 
     <div class="firma">
       <p>En constancia,</p>
-      <div class="firma-linea">
-        <span>_________________________</span>
-        <span>{{ cartaCompromiso.estudiante }}</span>
-        <span>C.I. {{ cartaCompromiso.cedula }}</span>
-      </div>
-      <div class="firma-linea">
-        <span>_________________________</span>
-        <span>{{ cartaCompromiso.docente_tutor }}</span>
-        <span>DOCENTE TUTOR</span>
+      
+      <!-- ✅ FIRMAS EN DOS COLUMNAS SEPARADAS -->
+      <div class="firma-grid">
+        <!-- Estudiante -->
+        <div class="firma-columna">
+          <div class="firma-linea"></div>
+          <p class="firma-nombre">{{ cartaCompromiso.estudiante }}</p>
+          <p class="firma-dato">C.I. {{ cartaCompromiso.cedula }}</p>
+          <p class="firma-label">ESTUDIANTE</p>
+        </div>
+        
+        <!-- Docente Tutor -->
+        <div class="firma-columna">
+          <div class="firma-linea"></div>
+          <p class="firma-nombre">{{ cartaCompromiso.docente_tutor }}</p>
+          <p class="firma-dato">DOCENTE TUTOR</p>
+          <p class="firma-label">TUTOR DEL PROYECTO</p>
+        </div>
       </div>
     </div>
   </div>

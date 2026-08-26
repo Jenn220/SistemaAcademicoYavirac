@@ -30,18 +30,17 @@
     </div>
   </div>
 
-  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <!-- BOTÓN DE EXPORTACIÓN A EXCEL -->
   <div class="acciones-export">
     <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
       📊 Exportar a Excel
     </button>
   </div>
 
-  <!-- ✅ FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) -->
+  <!-- FORMULARIO NUEVA ACTIVIDAD (SOLO ESTUDIANTE) -->
   <div class="nueva-actividad" *ngIf="mostrandoFormulario && isEstudiante">
     <h3>📝 Nueva actividad</h3>
     
-    <!-- ✅ ERROR MOSTRADO AQUÍ ARRIBA -->
     <div *ngIf="errorHora" class="error-hora">
       ⚠️ {{ errorHora }}
     </div>
@@ -74,12 +73,11 @@
     </div>
   </div>
 
-  <!-- ✅ FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) -->
+  <!-- FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) -->
   <div class="nueva-actividad" *ngIf="mostrandoModalDuplicar && isEstudiante">
     <h3>➕ Añadir fecha para la misma actividad</h3>
     <p class="info-duplicar"><strong>Actividad:</strong> {{ actividadParaDuplicar?.descripcion }}</p>
     
-    <!-- ✅ ERROR MOSTRADO AQUÍ ARRIBA -->
     <div *ngIf="errorHora" class="error-hora">
       ⚠️ {{ errorHora }}
     </div>
@@ -112,7 +110,7 @@
     </button>
   </div>
 
-  <!-- ✅ TABLA DE ACTIVIDADES (VISIBLE PARA TODOS) -->
+  <!-- TABLA DE ACTIVIDADES (VISIBLE PARA TODOS) -->
   <table class="tabla-actividades">
     <thead>
       <tr>
@@ -131,7 +129,6 @@
         <!-- Recorremos cada DÍA dentro del grupo -->
         <ng-container *ngFor="let act of grupo.actividadesDetalle; let isFirst = first; let isLast = last">
           
-          <!-- ✅ TR con clases para identificar el grupo -->
           <tr 
             [class.grupo-actividad]="true"
             [class.grupo-actividad-primera]="isFirst"
@@ -140,9 +137,7 @@
             
             <!-- Columnas individuales por día -->
             <td>
-              <!-- MODO LECTURA: Visible para todos -->
               <span *ngIf="!isEstudiante || editandoId !== act.id">{{ act.fecha }}</span>
-              <!-- MODO EDICIÓN: Solo estudiante -->
               <input *ngIf="isEstudiante && editandoId === act.id" type="date" [(ngModel)]="editandoActividad.fecha" />
             </td>
             <td>
@@ -155,22 +150,21 @@
             </td>
             <td>{{ act.total_horas | number:'1.2-2' }}</td>
 
-            <!-- ✅ ACTIVIDAD REALIZADA (visible para todos, editable solo estudiante) -->
+            <!-- ACTIVIDAD REALIZADA -->
             <td *ngIf="isFirst" [attr.rowspan]="grupo.actividadesDetalle.length" class="actividad-cell">
               <div class="grupo-actividad-wrapper">
-                <!-- Modo Vista (para todos) -->
+                <!-- Modo Vista -->
                 <div class="texto-actividad-container" *ngIf="!isEstudiante || editandoGrupoId !== grupo.ids[0]">
                   <span>{{ grupo.descripcion }}</span>
-                  <!-- Botón editar descripción: solo estudiante -->
                   <button *ngIf="isEstudiante" (click)="editarDescripcionGrupo(grupo)" class="btn-edit-desc" title="Editar descripción general">✏️</button>
                 </div>
 
-                <!-- Modo Edición de la Descripción: solo estudiante -->
+                <!-- Modo Edición de la Descripción -->
                 <div class="texto-actividad-container" *ngIf="isEstudiante && editandoGrupoId === grupo.ids[0]">
                   <textarea [(ngModel)]="editandoActividad.actividades_realizadas" class="input-actividad" rows="3" placeholder="Descripción de la actividad..."></textarea>
                 </div>
                 
-                <!-- Botón para añadir otra fecha: solo estudiante -->
+                <!-- Botón para añadir otra fecha -->
                 <div class="btn-agregar-fecha-container" *ngIf="isEstudiante && !editandoId && !editandoGrupoId">
                   <button (click)="prepararDuplicado(grupo.actividadesDetalle[0])" class="btn-add-copy">
                     ➕ Añadir fecha
@@ -179,7 +173,7 @@
               </div>
             </td>
 
-            <!-- ✅ BOTONES DE ACCIÓN: SOLO ESTUDIANTE -->
+            <!-- BOTONES DE ACCIÓN -->
             <td class="acciones-cell" *ngIf="isEstudiante">
               <div *ngIf="errorHora && editandoId === act.id" class="error-hora-small">{{ errorHora }}</div>
               
@@ -271,7 +265,6 @@
       {{ mensajeFeedback }}
     </div>
   </div>
-
 </div>
 
 <!-- LOADING -->
@@ -285,3 +278,18 @@
   <span class="error-icon">⚠️</span>
   {{ error }}
 </div>
+
+<!-- ============================================ -->
+<!-- MODAL - COMPONENTE COMPARTIDO                -->
+<!-- ============================================ -->
+<app-modal
+  *ngIf="modalVisible"
+  [title]="modalTitle"
+  [message]="modalMessage"
+  [type]="modalType"
+  [buttonText]="modalButtonText"
+  [showConfirmButtons]="showConfirmButtons"
+  (onClose)="cerrarModal()"
+  (onConfirm)="confirmarModal()"
+  (onCancel)="cancelarModal()">
+</app-modal>

@@ -2,18 +2,27 @@ import { Component, OnInit, inject, ChangeDetectorRef, Input } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
+
 import { InformeFinalService } from '../../../services/informe-final.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
 import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
-import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { ExcelExportService } from '../../../services/excel-export.service';
 import { InicioActividadesService } from '../../../services/inicio-actividades.service';
 
+// ✅ IMPORTAR MODAL DESDE SHARED
+import { ModalComponent } from '../../../../../shared/components/modal/modal.component';
+
 @Component({
   selector: 'app-informe-final',
   standalone: true,
-  imports: [CommonModule, FormsModule, VolverArchivosComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    VolverArchivosComponent,
+    ModalComponent  // ✅ AGREGADO
+  ],
   templateUrl: './informe-final.component.html',
   styleUrls: ['./informe-final.component.scss']
 })
@@ -48,6 +57,12 @@ export class InformeFinalComponent implements OnInit {
   editandoObjetivos: boolean = false;
   objetivosEditados: any[] = [];
 
+  // ============================================
+  // NUEVO: EDICIÓN DE OBSERVACIONES EN ACTIVIDADES
+  // ============================================
+  editandoObservacionActividad: number | null = null;
+  observacionActividadEdit: string = '';
+
   parametros = {
     puntualidad: 0,
     trabajoAutonomo: 0,
@@ -76,6 +91,22 @@ export class InformeFinalComponent implements OnInit {
     { key: 'habilidadPractica', label: 'Habilidad para poner en práctica ideas' }
   ];
 
+  // ============================================
+  // MODAL
+  // ============================================
+  modalVisible = false;
+  modalTitle = '';
+  modalMessage = '';
+  modalType: 'success' | 'error' | 'warning' | 'info' = 'info';
+  modalButtonText: string = 'Aceptar';
+  showConfirmButtons: boolean = false;
+  modalConfirmCallback: (() => void) | null = null;
+  modalCancelCallback: (() => void) | null = null;
+  private objetivoAEliminar: number | null = null;
+
+  // ============================================
+  // LIFECYCLE
+  // ============================================
   ngOnInit(): void {
     this.obtenerRoles();
 
@@ -86,88 +117,154 @@ export class InformeFinalComponent implements OnInit {
     this.route.params.subscribe(params => {
       console.log('🔍 Parámetros de la URL:', params);
       const idParam = params['id'];
-      
+
       if (idParam !== undefined && idParam !== null && idParam !== '0' && idParam !== '') {
         this.idVinculacion = +idParam;
         console.log('✅ ID desde URL (prioridad 1):', this.idVinculacion);
         this.cargarInforme();
         return;
       }
-      
+
       if (this.idVinculacion > 0) {
         console.log('✅ ID desde Input (prioridad 2):', this.idVinculacion);
         this.cargarInforme();
         return;
       }
-      
+
       console.log('❌ No hay ID en URL ni en Input');
-      
+
       if (this.esEstudiante) {
         console.log('✅ Es estudiante, obteniendo vinculación activa...');
         this.obtenerVinculacionActiva();
         return;
       }
-      
+
       if (this.esDocente) {
         console.log('✅ Es docente, pero no hay ID de vinculación');
-        this.error = '⚠️ No se encontró un ID de vinculación. Por favor, selecciona un estudiante.';
+        this.mostrarModal(
+          'Sin selección',
+          'No se encontró un ID de vinculación. Por favor, selecciona un estudiante.',
+          'warning'
+        );
         this.loading = false;
         this.cdr.markForCheck();
         return;
       }
-      
+
       console.warn('⚠️ No se pudo determinar el rol, intentando obtener vinculación activa como fallback...');
       this.obtenerVinculacionActiva();
     });
   }
 
+  // ============================================
+  // MODAL
+  // ============================================
+  private mostrarModal(
+    title: string,
+    message: string,
+    type: 'success' | 'error' | 'warning' | 'info' = 'info',
+    buttonText: string = 'Aceptar'
+  ): void {
+    this.modalTitle = title;
+    this.modalMessage = message;
+    this.modalType = type;
+    this.modalButtonText = buttonText;
+    this.showConfirmButtons = false;
+    this.modalConfirmCallback = null;
+    this.modalCancelCallback = null;
+    this.modalVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  private mostrarModalConfirmacion(
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    onCancel?: () => void
+  ): void {
+    this.modalTitle = title;
+    this.modalMessage = message;
+    this.modalType = 'warning';
+    this.modalButtonText = 'Confirmar';
+    this.showConfirmButtons = true;
+    this.modalConfirmCallback = onConfirm;
+    this.modalCancelCallback = onCancel || null;
+    this.modalVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModal(): void {
+    this.modalVisible = false;
+    this.showConfirmButtons = false;
+    this.modalConfirmCallback = null;
+    this.modalCancelCallback = null;
+    this.cdr.markForCheck();
+  }
+
+  confirmarModal(): void {
+    if (this.modalConfirmCallback) {
+      this.modalConfirmCallback();
+    }
+    this.cerrarModal();
+  }
+
+  cancelarModal(): void {
+    if (this.modalCancelCallback) {
+      this.modalCancelCallback();
+    }
+    this.cerrarModal();
+  }
+
+  // ============================================
+  // OBTENER ROLES
+  // ============================================
   obtenerRoles(): void {
     try {
       const roles = this.authService.roles();
       console.log('🔍 Roles desde AuthService:', roles);
-      
+
       if (roles && roles.length > 0) {
         const rolesArray = Array.isArray(roles) ? roles : [roles];
-        
+
         this.esEstudiante = rolesArray.some((r: string) => {
           const rol = r?.toUpperCase() || '';
           return rol === 'ESTUDIANTE' || rol === 'ROLE_ESTUDIANTE' || rol.includes('ESTUDIANTE');
         });
-        
+
         this.esDocente = rolesArray.some((r: string) => {
           const rol = r?.toUpperCase() || '';
           return rol === 'DOCENTE' || rol === 'ROLE_DOCENTE' || rol.includes('DOCENTE');
         });
-        
+
         console.log('✅ Roles asignados desde AuthService - Estudiante:', this.esEstudiante, 'Docente:', this.esDocente);
         return;
       }
-      
+
       console.warn('⚠️ AuthService no devolvió roles, buscando en localStorage...');
-      
+
       const posiblesClaves = ['user', 'authData', 'currentUser', 'usuario', 'auth_user', 'userData', 'data'];
-      
+
       for (const clave of posiblesClaves) {
         const data = localStorage.getItem(clave);
         if (data) {
           try {
             const parsed = JSON.parse(data);
             console.log(`🔍 Datos encontrados en "${clave}":`, parsed);
-            
+
             let rolesEncontrados = parsed?.roles || parsed?.role || parsed?.authorities || [];
             if (rolesEncontrados.length > 0) {
               const rolesArray = Array.isArray(rolesEncontrados) ? rolesEncontrados : [rolesEncontrados];
-              
+
               this.esEstudiante = rolesArray.some((r: string) => {
                 const rol = r?.toUpperCase() || '';
                 return rol === 'ESTUDIANTE' || rol === 'ROLE_ESTUDIANTE' || rol.includes('ESTUDIANTE');
               });
-              
+
               this.esDocente = rolesArray.some((r: string) => {
                 const rol = r?.toUpperCase() || '';
                 return rol === 'DOCENTE' || rol === 'ROLE_DOCENTE' || rol.includes('DOCENTE');
               });
-              
+
               console.log(`✅ Roles asignados desde "${clave}" - Estudiante:`, this.esEstudiante, 'Docente:', this.esDocente);
               return;
             }
@@ -176,7 +273,7 @@ export class InformeFinalComponent implements OnInit {
           }
         }
       }
-      
+
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         console.log('🔍 Token encontrado, intentando decodificar...');
@@ -185,21 +282,21 @@ export class InformeFinalComponent implements OnInit {
           if (payload) {
             const decoded = JSON.parse(atob(payload));
             console.log('🔍 Token decodificado:', decoded);
-            
+
             let rolesEncontrados = decoded?.roles || decoded?.role || decoded?.authorities || [];
             if (rolesEncontrados.length > 0) {
               const rolesArray = Array.isArray(rolesEncontrados) ? rolesEncontrados : [rolesEncontrados];
-              
+
               this.esEstudiante = rolesArray.some((r: string) => {
                 const rol = r?.toUpperCase() || '';
                 return rol === 'ESTUDIANTE' || rol === 'ROLE_ESTUDIANTE' || rol.includes('ESTUDIANTE');
               });
-              
+
               this.esDocente = rolesArray.some((r: string) => {
                 const rol = r?.toUpperCase() || '';
                 return rol === 'DOCENTE' || rol === 'ROLE_DOCENTE' || rol.includes('DOCENTE');
               });
-              
+
               console.log('✅ Roles asignados desde JWT - Estudiante:', this.esEstudiante, 'Docente:', this.esDocente);
               return;
             }
@@ -208,14 +305,17 @@ export class InformeFinalComponent implements OnInit {
           console.warn('⚠️ No se pudo decodificar el token');
         }
       }
-      
+
       console.warn('⚠️ No se pudieron obtener roles de ninguna fuente');
-      
+
     } catch (error) {
       console.error('❌ Error al obtener roles:', error);
     }
   }
 
+  // ============================================
+  // OBTENER VINCULACIÓN ACTIVA
+  // ============================================
   obtenerVinculacionActiva(): void {
     this.loading = true;
     this.error = null;
@@ -236,21 +336,24 @@ export class InformeFinalComponent implements OnInit {
             console.log('✅ ID de vinculación activa (prioridad 3):', this.idVinculacion);
             this.cargarInforme();
           } else {
-            this.error = '⚠️ No tienes una vinculación activa. Contacta al coordinador.';
+            this.mostrarModal('Sin vinculación', 'No tienes una vinculación activa. Contacta al coordinador.', 'warning');
             this.cdr.markForCheck();
           }
         },
         error: (err) => {
           console.error('❌ Error al obtener vinculación activa:', err);
-          this.error = '⚠️ No se pudo obtener tu vinculación activa. Verifica tu conexión.';
+          this.mostrarModal('Error', 'No se pudo obtener tu vinculación activa. Verifica tu conexión.', 'error');
           this.cdr.markForCheck();
         }
       });
   }
 
+  // ============================================
+  // CARGAR INFORME
+  // ============================================
   cargarInforme(): void {
     if (!this.idVinculacion || this.idVinculacion <= 0) {
-      this.error = '⚠️ ID de vinculación no válido (debe ser mayor que 0)';
+      this.mostrarModal('Error', 'ID de vinculación no válido (debe ser mayor que 0)', 'error');
       this.loading = false;
       this.cdr.markForCheck();
       console.error('❌ Error: ID de vinculación inválido:', this.idVinculacion);
@@ -263,7 +366,6 @@ export class InformeFinalComponent implements OnInit {
 
     console.log('📄 Cargando informe con ID:', this.idVinculacion);
 
-    // Cargar informe final e inicio-actividades en paralelo
     Promise.all([
       this.informeFinalService.obtenerInformeFinal(this.idVinculacion).toPromise(),
       this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion).toPromise()
@@ -272,25 +374,21 @@ export class InformeFinalComponent implements OnInit {
         this.loading = false;
         this.informe = informeData;
         this.datosInicioActividades = inicioActividadesData;
-        
+
         console.log('📄 Informe final cargado:', informeData);
         console.log('📄 Inicio Actividades cargado:', inicioActividadesData);
-        
+
         if (!this.informe) {
-          this.error = '⚠️ No se encontró información para esta vinculación.';
+          this.mostrarModal('Sin datos', 'No se encontró información para esta vinculación.', 'warning');
           this.cdr.markForCheck();
           return;
         }
 
-        // ✅ PROCESAR ACTIVIDADES AGRUPADAS
         this.actividadesAgrupadas = this.procesarActividadesAgrupadas();
-
-        // ✅ CORREGIR: Asegurar que ambas fechas estén presentes
         this.asegurarFechas();
-
         this.cargarObjetivosDesdeLocalStorage();
+        this.cargarObservacionesActividadDesdeLocalStorage();
 
-        // ✅ INICIALIZAR PARÁMETROS: Si no vienen del backend, se ponen en 0
         if (this.informe?.evaluacion_final?.parametros) {
           const p = this.informe.evaluacion_final.parametros;
           this.parametros.puntualidad = p.puntualidad ?? 0;
@@ -327,13 +425,13 @@ export class InformeFinalComponent implements OnInit {
       .catch((err) => {
         this.loading = false;
         console.error('❌ Error al cargar datos:', err);
-        this.error = 'Error al cargar los datos. Por favor, intenta nuevamente.';
+        this.mostrarModal('Error', 'Error al cargar los datos. Por favor, intenta nuevamente.', 'error');
         this.cdr.markForCheck();
       });
   }
 
   // ============================================
-  // ✅ MÉTODO DE AGRUPACIÓN DE ACTIVIDADES
+  // PROCESAR ACTIVIDADES AGRUPADAS
   // ============================================
   procesarActividadesAgrupadas(): any[] {
     if (!this.informe?.resumen_actividades || this.informe.resumen_actividades.length === 0) {
@@ -351,7 +449,8 @@ export class InformeFinalComponent implements OnInit {
           fechas: [act.fecha],
           horas: act.horas_cumplidas || 0,
           observaciones: act.observaciones || 'Sin observaciones',
-          count: 1
+          count: 1,
+          id: act.id || Date.now() + Math.random() * 1000
         });
       } else {
         const grupo = mapa.get(clave)!;
@@ -362,13 +461,13 @@ export class InformeFinalComponent implements OnInit {
     });
 
     return Array.from(mapa.values()).map((grupo, index) => {
-      const fechasOrdenadas = grupo.fechas.sort((a: string, b: string) => 
+      const fechasOrdenadas = grupo.fechas.sort((a: string, b: string) =>
         new Date(a).getTime() - new Date(b).getTime()
       );
-      
+
       const fechaInicio = this.formatearFecha(fechasOrdenadas[0]);
       const fechaFin = this.formatearFecha(fechasOrdenadas[fechasOrdenadas.length - 1]);
-      
+
       let fechaTexto = fechaInicio;
       if (fechasOrdenadas.length > 1) {
         fechaTexto = `${fechaInicio} al ${fechaFin} (${fechasOrdenadas.length} días)`;
@@ -376,6 +475,7 @@ export class InformeFinalComponent implements OnInit {
 
       return {
         nro: index + 1,
+        id: grupo.id,
         fecha: fechaTexto,
         actividades: grupo.actividades,
         horas: grupo.horas,
@@ -384,97 +484,155 @@ export class InformeFinalComponent implements OnInit {
     });
   }
 
-  /**
-   * ✅ CORREGIDO: Asegurar que ambas fechas (inicio y final) estén presentes
-   * Si el informe no tiene fecha_inicio o fecha_final, las obtiene de inicio-actividades
-   */
+  // ============================================
+  // GUARDAR OBSERVACIONES DE ACTIVIDAD EN LOCALSTORAGE
+  // ============================================
+  guardarObservacionesActividadEnLocalStorage(): void {
+    if (!this.actividadesAgrupadas || this.actividadesAgrupadas.length === 0) return;
+
+    const key = `actividades_observaciones_${this.idVinculacion}`;
+    const data = this.actividadesAgrupadas.map((act: any) => ({
+      id: act.id,
+      observaciones: act.observaciones
+    }));
+    localStorage.setItem(key, JSON.stringify(data));
+    console.log('✅ Observaciones de actividades guardadas en localStorage');
+  }
+
+  cargarObservacionesActividadDesdeLocalStorage(): void {
+    if (!this.actividadesAgrupadas || this.actividadesAgrupadas.length === 0) return;
+
+    const key = `actividades_observaciones_${this.idVinculacion}`;
+    const guardado = localStorage.getItem(key);
+
+    if (guardado) {
+      try {
+        const data = JSON.parse(guardado);
+        if (data && data.length > 0) {
+          data.forEach((item: any) => {
+            const actividad = this.actividadesAgrupadas.find((a: any) => a.id === item.id);
+            if (actividad) {
+              actividad.observaciones = item.observaciones || 'Sin observaciones';
+            }
+          });
+          console.log('✅ Observaciones de actividades cargadas desde localStorage');
+        }
+      } catch (e) {
+        console.error('❌ Error al parsear observaciones del localStorage:', e);
+      }
+    }
+  }
+
+  // ============================================
+  // NUEVO: EDITAR OBSERVACIÓN DE ACTIVIDAD
+  // ============================================
+  editarObservacionActividad(index: number): void {
+    if (!this.esEstudiante) {
+      this.mostrarModal('Permisos insuficientes', 'Solo los estudiantes pueden editar observaciones.', 'warning');
+      return;
+    }
+    const actividad = this.actividadesAgrupadas[index];
+    if (!actividad) return;
+
+    this.editandoObservacionActividad = index;
+    this.observacionActividadEdit = actividad.observaciones || '';
+    this.cdr.markForCheck();
+  }
+
+  guardarObservacionActividad(index: number): void {
+    const actividad = this.actividadesAgrupadas[index];
+    if (!actividad) return;
+
+    actividad.observaciones = this.observacionActividadEdit || 'Sin observaciones';
+    this.editandoObservacionActividad = null;
+    this.observacionActividadEdit = '';
+
+    this.guardarObservacionesActividadEnLocalStorage();
+
+    this.mostrarModal('Guardado', 'Observación actualizada correctamente.', 'success');
+    this.cdr.markForCheck();
+  }
+
+  cancelarEdicionObservacionActividad(): void {
+    this.editandoObservacionActividad = null;
+    this.observacionActividadEdit = '';
+    this.cdr.markForCheck();
+  }
+
+  // ============================================
+  // ASEGURAR FECHAS
+  // ============================================
   asegurarFechas(): void {
     if (!this.informe) return;
-    
-    // Obtener fechas desde inicio-actividades
+
     const fechaInicioAct = this.datosInicioActividades?.fecha_inicio;
     const fechaFinAct = this.datosInicioActividades?.fecha_fin;
-    
+
     console.log('📅 Fechas desde inicio-actividades:', {
       fecha_inicio: fechaInicioAct,
       fecha_fin: fechaFinAct
     });
-    
-    // Inicializar datos_generales si no existe
+
     if (!this.informe.datos_generales) {
       this.informe.datos_generales = {};
     }
-    
-    // --- ACTUALIZAR FECHA DE INICIO ---
+
     const fechaInicioActual = this.informe.datos_generales.fecha_inicio;
-    const fechaInicioInvalida = !fechaInicioActual || 
-                                 fechaInicioActual === 'Invalid Date' ||
-                                 fechaInicioActual === 'N/A' ||
-                                 fechaInicioActual === '';
-    
+    const fechaInicioInvalida = !fechaInicioActual ||
+      fechaInicioActual === 'Invalid Date' ||
+      fechaInicioActual === 'N/A' ||
+      fechaInicioActual === '';
+
     if (fechaInicioInvalida && fechaInicioAct) {
       console.log('📅 Asignando fecha_inicio desde inicio-actividades:', fechaInicioAct);
       this.informe.datos_generales.fecha_inicio = this.formatearFecha(fechaInicioAct);
     }
-    
-    // --- ACTUALIZAR FECHA FINAL ---
+
     const fechaFinalActual = this.informe.datos_generales.fecha_final;
-    const fechaFinalInvalida = !fechaFinalActual || 
-                                fechaFinalActual === 'Invalid Date' ||
-                                fechaFinalActual === 'N/A' ||
-                                fechaFinalActual === '';
-    
+    const fechaFinalInvalida = !fechaFinalActual ||
+      fechaFinalActual === 'Invalid Date' ||
+      fechaFinalActual === 'N/A' ||
+      fechaFinalActual === '';
+
     if (fechaFinalInvalida && fechaFinAct) {
       console.log('📅 Asignando fecha_final desde inicio-actividades:', fechaFinAct);
       this.informe.datos_generales.fecha_final = this.formatearFecha(fechaFinAct);
     }
-    
-    // --- SI AMBAS FECHAS SON VÁLIDAS, NO HACER NADA ---
+
     if (!fechaInicioInvalida && !fechaFinalInvalida) {
       console.log('✅ Ambas fechas ya son válidas en el informe:', {
         fecha_inicio: this.informe.datos_generales.fecha_inicio,
         fecha_final: this.informe.datos_generales.fecha_final
       });
     }
-    
-    // --- LOG FINAL PARA DEPURACIÓN ---
+
     console.log('📅 Fechas finales en el informe:', {
       fecha_inicio: this.informe.datos_generales?.fecha_inicio,
       fecha_final: this.informe.datos_generales?.fecha_final
     });
   }
 
-  /**
-   * ✅ Obtener la fecha final priorizando el informe, luego inicio-actividades
-   */
   obtenerFechaFinal(): string {
     if (!this.informe) return 'N/A';
-    
-    // Priorizar fecha del informe
+
     const fechaFinalInforme = this.informe.datos_generales?.fecha_final;
-    if (fechaFinalInforme && 
-        fechaFinalInforme !== 'Invalid Date' &&
-        fechaFinalInforme !== 'N/A' &&
-        fechaFinalInforme !== '') {
+    if (fechaFinalInforme &&
+      fechaFinalInforme !== 'Invalid Date' &&
+      fechaFinalInforme !== 'N/A' &&
+      fechaFinalInforme !== '') {
       return fechaFinalInforme;
     }
-    
-    // Si no hay fecha en el informe, usar la de inicio-actividades
+
     if (this.datosInicioActividades?.fecha_fin) {
       return this.formatearFecha(this.datosInicioActividades.fecha_fin);
     }
-    
+
     return 'N/A';
   }
 
-  /**
-   * ✅ Formatear fecha correctamente para mostrar en el HTML
-   * Maneja fechas ISO y formatos comunes
-   */
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      // Limpiar la fecha: remover 'Z' y 'T'
       let fechaStr = fecha;
       if (fechaStr.includes('T')) {
         fechaStr = fechaStr.split('T')[0];
@@ -482,14 +640,13 @@ export class InformeFinalComponent implements OnInit {
       if (fechaStr.endsWith('Z')) {
         fechaStr = fechaStr.slice(0, -1);
       }
-      
-      // Crear fecha y verificar que sea válida
+
       const date = new Date(fechaStr + 'T00:00:00');
       if (isNaN(date.getTime())) {
         console.warn('⚠️ Fecha inválida:', fecha);
-        return fecha; // Retornar la fecha original si no se puede formatear
+        return fecha;
       }
-      
+
       return date.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
@@ -515,12 +672,15 @@ export class InformeFinalComponent implements OnInit {
     this.parametros.habilidadPractica = 0;
   }
 
+  // ============================================
+  // OBJETIVOS
+  // ============================================
   cargarObjetivosDesdeLocalStorage(): void {
     if (!this.informe) return;
-    
+
     const key = `objetivos_editados_${this.idVinculacion}`;
     const guardado = localStorage.getItem(key);
-    
+
     if (guardado) {
       try {
         const objetivosGuardados = JSON.parse(guardado);
@@ -536,7 +696,7 @@ export class InformeFinalComponent implements OnInit {
 
   guardarObjetivosEnLocalStorage(): void {
     if (!this.informe || !this.informe.objetivos_proyecto) return;
-    
+
     const key = `objetivos_editados_${this.idVinculacion}`;
     localStorage.setItem(key, JSON.stringify(this.informe.objetivos_proyecto));
     console.log('✅ Objetivos guardados en localStorage');
@@ -544,14 +704,14 @@ export class InformeFinalComponent implements OnInit {
 
   activarEdicionObjetivos(): void {
     if (!this.esEstudiante) {
-      console.warn('⚠️ Solo estudiantes pueden editar objetivos');
+      this.mostrarModal('Permisos insuficientes', 'Solo estudiantes pueden editar objetivos.', 'warning');
       return;
     }
     if (!this.informe || !this.informe.objetivos_proyecto) {
-      console.warn('⚠️ No hay objetivos para editar');
+      this.mostrarModal('Sin objetivos', 'No hay objetivos para editar.', 'warning');
       return;
     }
-    
+
     this.editandoObjetivos = true;
     this.objetivosEditados = this.informe.objetivos_proyecto.map((obj: any) => ({ ...obj }));
     this.cdr.markForCheck();
@@ -559,17 +719,13 @@ export class InformeFinalComponent implements OnInit {
 
   guardarEdicionObjetivos(): void {
     if (!this.objetivosEditados) return;
-    
+
     this.informe.objetivos_proyecto = this.objetivosEditados.map((obj: any) => ({ ...obj }));
     this.guardarObjetivosEnLocalStorage();
     this.editandoObjetivos = false;
-    
-    this.mensajeExito = '✅ Objetivos actualizados correctamente';
-    setTimeout(() => {
-      this.mensajeExito = '';
-      this.cdr.markForCheck();
-    }, 3000);
-    
+
+    this.mostrarModal('Guardado', 'Objetivos actualizados correctamente.', 'success');
+
     this.cdr.markForCheck();
   }
 
@@ -582,7 +738,7 @@ export class InformeFinalComponent implements OnInit {
   actualizarObjetivo(index: number, campo: string, event: any): void {
     if (this.objetivosEditados && this.objetivosEditados[index]) {
       let valor = event.target.value;
-      
+
       if (campo === 'avance') {
         valor = valor.replace(/%/g, '').trim();
         if (valor === '') {
@@ -607,6 +763,41 @@ export class InformeFinalComponent implements OnInit {
     return avance.replace(/%/g, '').trim();
   }
 
+  agregarObjetivo(): void {
+    if (!this.objetivosEditados) return;
+
+    const nuevoObjetivo = {
+      objetivo: '',
+      actividades: '',
+      avance: '0%',
+      resultados: 'Pendiente'
+    };
+
+    this.objetivosEditados.push(nuevoObjetivo);
+    this.cdr.markForCheck();
+  }
+
+  eliminarObjetivo(index: number): void {
+    if (!this.objetivosEditados) return;
+
+    this.objetivoAEliminar = index;
+    this.mostrarModalConfirmacion(
+      'Confirmar eliminación',
+      '¿Estás seguro de eliminar este objetivo?',
+      () => this.confirmarEliminarObjetivo()
+    );
+  }
+
+  confirmarEliminarObjetivo(): void {
+    if (this.objetivoAEliminar === null) return;
+    this.objetivosEditados.splice(this.objetivoAEliminar, 1);
+    this.objetivoAEliminar = null;
+    this.cdr.markForCheck();
+  }
+
+  // ============================================
+  // EVALUACIÓN
+  // ============================================
   calcularPromedio(): void {
     const valores = [
       this.parametros.puntualidad,
@@ -623,13 +814,13 @@ export class InformeFinalComponent implements OnInit {
     ];
 
     const suma = valores.reduce((acc, val) => acc + (val || 0), 0);
-    
+
     if (suma === 0) {
       this.notaFinalCalculada = 0;
     } else {
       this.notaFinalCalculada = parseFloat((suma / valores.length).toFixed(2));
     }
-    
+
     this.notaEnLetras = this.convertirNotaALetras(this.notaFinalCalculada);
   }
 
@@ -660,14 +851,14 @@ export class InformeFinalComponent implements OnInit {
 
   guardarEvaluacion(): void {
     if (!this.idVinculacion || this.idVinculacion <= 0) {
-      this.error = '⚠️ ID de vinculación no válido para guardar.';
+      this.mostrarModal('Error', 'ID de vinculación no válido para guardar.', 'error');
       this.cdr.markForCheck();
       return;
     }
 
     const tieneValores = Object.values(this.parametros).some(val => val > 0);
     if (!tieneValores && !this.observaciones) {
-      this.error = '⚠️ Debes ingresar al menos un parámetro de evaluación o una observación.';
+      this.mostrarModal('Datos incompletos', 'Debes ingresar al menos un parámetro de evaluación o una observación.', 'warning');
       this.cdr.markForCheck();
       return;
     }
@@ -705,21 +896,16 @@ export class InformeFinalComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('✅ Evaluación guardada en el backend:', response);
-          this.mensajeExito = '✅ Evaluación guardada correctamente';
-          
+          this.mostrarModal('Guardado', 'Evaluación guardada correctamente.', 'success');
+
           this.cargarInforme();
           this.editandoEvaluacion = false;
-          
-          setTimeout(() => {
-            this.mensajeExito = '';
-            this.cdr.markForCheck();
-          }, 3000);
-          
+
           this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('❌ Error al guardar evaluación:', err);
-          this.error = 'Error al guardar la evaluación. Por favor, intenta nuevamente.';
+          this.mostrarModal('Error', 'Error al guardar la evaluación. Por favor, intenta nuevamente.', 'error');
           this.cdr.markForCheck();
         }
       });
@@ -760,8 +946,8 @@ export class InformeFinalComponent implements OnInit {
 
   volverALista(): void {
     this.router.navigate(['/vinculacion/docente/seleccionar'], {
-      queryParams: { 
-        estudianteId: localStorage.getItem('estudiante_seleccionado_id') 
+      queryParams: {
+        estudianteId: localStorage.getItem('estudiante_seleccionado_id')
       }
     });
   }
@@ -784,32 +970,12 @@ export class InformeFinalComponent implements OnInit {
     return textos[estado] || estado;
   }
 
-  agregarObjetivo(): void {
-    if (!this.objetivosEditados) return;
-    
-    const nuevoObjetivo = {
-      objetivo: '',
-      actividades: '',
-      avance: '0%',
-      resultados: 'Pendiente'
-    };
-    
-    this.objetivosEditados.push(nuevoObjetivo);
-    this.cdr.markForCheck();
-  }
-
-  eliminarObjetivo(index: number): void {
-    if (!this.objetivosEditados) return;
-    
-    if (confirm('¿Estás seguro de eliminar este objetivo?')) {
-      this.objetivosEditados.splice(index, 1);
-      this.cdr.markForCheck();
-    }
-  }
-
+  // ============================================
+  // EXPORTAR A EXCEL
+  // ============================================
   async exportarExcelIndividual(): Promise<void> {
     if (!this.idVinculacion || !this.informe) {
-      alert('No hay datos para exportar.');
+      this.mostrarModal('Sin datos', 'No hay datos para exportar.', 'warning');
       return;
     }
     try {
@@ -818,22 +984,24 @@ export class InformeFinalComponent implements OnInit {
         'Informe final',
         this.informe
       );
+      this.mostrarModal('Éxito', 'Archivo Excel exportado correctamente.', 'success');
     } catch (error) {
       console.error('❌ Error al exportar Excel:', error);
-      alert('Error al exportar el archivo Excel.');
+      this.mostrarModal('Error', 'Error al exportar el archivo Excel.', 'error');
     }
   }
 
   async exportarExcelCompleto(): Promise<void> {
     if (!this.idVinculacion) {
-      alert('No hay ID de vinculación para exportar.');
+      this.mostrarModal('Sin datos', 'No hay ID de vinculación para exportar.', 'warning');
       return;
     }
     try {
       await this.excelService.exportarExcelCompleto(this.idVinculacion);
+      this.mostrarModal('Éxito', 'Archivo Excel completo exportado correctamente.', 'success');
     } catch (error) {
       console.error('❌ Error al exportar Excel completo:', error);
-      alert('Error al exportar el archivo Excel completo.');
+      this.mostrarModal('Error', 'Error al exportar el archivo Excel completo.', 'error');
     }
   }
 }
