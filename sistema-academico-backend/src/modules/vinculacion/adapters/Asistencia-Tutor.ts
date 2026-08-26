@@ -1,3 +1,5 @@
+// 📁 src/modules/vinculacion/adapters/asistencia-tutor.adapter.ts
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -74,6 +76,8 @@ export class AsistenciaTutorAdapter implements IVinculacionAsistenciaTutorPort {
         COALESCE(er.nombre_entidad, emp.razon_social, 'Sin Institución Asignada') AS entidad_beneficiaria,
         CONCAT(doc.nombres, ' ', doc.apellidos) AS docente_tutor,
         per.nombre AS periodo_academico,
+        pc.id_periodo_carrera,
+        pc.estado AS estado_periodo_carrera,
         COALESCE(
           NULLIF(TRIM(CONCAT(coord.nombres, ' ', coord.apellidos)), ''), 
           'Sin Coordinador Asignado'
@@ -93,14 +97,15 @@ export class AsistenciaTutorAdapter implements IVinculacionAsistenciaTutorPort {
         ast.actividad_realizada AS actividades_realizadas
       FROM vinculacion_estudiante vinc
       LEFT JOIN vinculacion_asistencia_tutor ast ON vinc.id_vinculacion = ast.id_vinculacion
-      INNER JOIN periodo_academico per ON vinc.id_periodo = per.id_periodo
       INNER JOIN matricula_detalle mat ON vinc.id_matricula_detalle = mat.id_matricula_detalle
+      INNER JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = mat.id_oferta_asignatura
+      INNER JOIN periodo_carrera pc ON pc.id_periodo_carrera = oa.id_periodo_carrera
+      INNER JOIN periodo_academico per ON pc.id_periodo = per.id_periodo
       INNER JOIN matricula m ON mat.id_matricula = m.id_matricula
       INNER JOIN carrera car ON m.id_carrera = car.id_carrera
       INNER JOIN docente doc ON vinc.id_docente = doc.id_docente
       LEFT JOIN empresa emp ON vinc.id_empresa = emp.id_empresa
       LEFT JOIN vinculacion_entidad_receptora er ON vinc.id_entidad_receptora = er.id_entidad
-      LEFT JOIN periodo_carrera pc ON pc.id_periodo = vinc.id_periodo AND pc.id_carrera = m.id_carrera
       LEFT JOIN docente coord ON pc.id_coordinador = coord.id_docente
       WHERE vinc.id_vinculacion = $1
       ORDER BY ast.fecha ASC;
@@ -118,14 +123,18 @@ export class AsistenciaTutorAdapter implements IVinculacionAsistenciaTutorPort {
         vinc.nombre_proyecto,
         COALESCE(er.nombre_entidad, 'Sin Institución Asignada') AS entidad_beneficiaria,
         per.nombre AS periodo_academico,
+        pc.id_periodo_carrera,
+        pc.estado AS estado_periodo_carrera,
         COALESCE(SUM(ast.horas_total), 0) AS total_horas_tutor_registradas,
         COUNT(ast.id_asistencia_tutor) AS total_visitas_registradas
       FROM vinculacion_estudiante vinc
       INNER JOIN matricula_detalle mat ON vinc.id_matricula_detalle = mat.id_matricula_detalle
+      INNER JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = mat.id_oferta_asignatura
+      INNER JOIN periodo_carrera pc ON pc.id_periodo_carrera = oa.id_periodo_carrera
+      INNER JOIN periodo_academico per ON pc.id_periodo = per.id_periodo
       INNER JOIN matricula m ON mat.id_matricula = m.id_matricula
       INNER JOIN estudiante est ON m.id_estudiante = est.id_estudiante
       INNER JOIN carrera car ON m.id_carrera = car.id_carrera
-      INNER JOIN periodo_academico per ON vinc.id_periodo = per.id_periodo
       LEFT JOIN vinculacion_entidad_receptora er ON vinc.id_entidad_receptora = er.id_entidad
       LEFT JOIN vinculacion_asistencia_tutor ast ON vinc.id_vinculacion = ast.id_vinculacion
       WHERE vinc.id_docente = $1
@@ -137,7 +146,9 @@ export class AsistenciaTutorAdapter implements IVinculacionAsistenciaTutorPort {
         car.nombre, 
         vinc.nombre_proyecto, 
         er.nombre_entidad, 
-        per.nombre
+        per.nombre,
+        pc.id_periodo_carrera,
+        pc.estado
       ORDER BY est.apellidos ASC;
     `;
     return await this.repoEstudiante.query(query, [idDocente]);

@@ -6,9 +6,6 @@ export class VinculacionEstudianteEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id_vinculacion: string;
 
-  @Column({ type: 'bigint' })
-  id_periodo: string;
-
   @Column({ type: 'bigint', unique: true })
   id_matricula_detalle: string;
 
@@ -18,7 +15,6 @@ export class VinculacionEstudianteEntity {
   @Column({ type: 'bigint' })
   id_docente: string;
 
-  // 👇 AGREGAR ESTA COLUMNA
   @Column({ type: 'bigint', nullable: true })
   id_entidad_receptora: string | null;
 
