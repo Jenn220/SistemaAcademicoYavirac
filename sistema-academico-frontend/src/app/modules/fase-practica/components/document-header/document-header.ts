@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-document-header',
@@ -9,8 +9,28 @@ import { Component, input } from '@angular/core';
 })
 export class DocumentHeader {
 
-  titulo = input.required<string>();
+  @Input() titulo = '';
+  @Input() codigo = '';
 
-  codigo = input.required<string>();
+  @Input() estudianteNombre = '';
+  @Input() estudianteCedula = '';
+  @Input() carrera = '';
+  @Input() nivel = '';
+  @Input() periodo = '';
+  @Input() nucleo = '';
+  @Input() tutorAcademico = '';
+  @Input() coordinador = '';
+  @Input() empresa = '';
+  @Input() tutorEmpresarial = '';
+  @Input() proyecto = '';
+  @Input() cobertura = '';
+  @Input() plazo = '';
+  @Input() fechaInicio = '';
+  @Input() fechaFin = '';
+  @Input() emailInstitucional = '';
+  @Input() telefonoMovil = '';
+  @Input() tipoSangre = '';
+  @Input() telefonoEmergenciaNombre = '';
+  @Input() telefonoEmergenciaTelefono = '';
 
 }

@@ -20,6 +20,7 @@
 
     </button>
 
+    @if (!soloLectura) {
     <button
         class="btn btn-warning text-white"
         [disabled]="guardando"
@@ -27,70 +28,178 @@
 
         <i class="bi bi-save"></i>
 
-        {{ guardando ? 'Guardando...' : 'Guardar en BD' }}
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
 
     </button>
+    } @else {
+    <span class="badge-solo-lectura">Modo solo lectura</span>
+    }
+
+    @if(puedeEnviarRevision){
+    <button
+        class="btn btn-success"
+        (click)="enviarARevision()">
+
+        <i class="bi bi-send"></i>
+
+        Enviar a revisión
+
+    </button>
+    }
+
+    @if(puedeAprobar){
+    <button
+        class="btn btn-success"
+        (click)="aprobar()">
+
+        <i class="bi bi-check-circle"></i>
+
+        Aprobar
+
+    </button>
+    }
+
+    @if(puedeSolicitarCorrecciones){
+    <button
+        class="btn btn-danger"
+        (click)="solicitarCorrecciones()">
+
+        <i class="bi bi-exclamation-circle"></i>
+
+        Solicitar correcciones
+
+    </button>
+    }
+
+    <span class="badge-estado" [class.borrador]="estadoDocumento === 'borrador'" [class.pendiente]="estadoDocumento === 'pendiente_revision'" [class.aprobado]="estadoDocumento === 'aprobado'" [class.rechazado]="estadoDocumento === 'rechazado'">
+        {{ estadoDocumento === 'borrador' ? 'Borrador' : estadoDocumento === 'pendiente_revision' ? 'Pendiente de revisión' : estadoDocumento === 'aprobado' ? 'Aprobado' : 'Rechazado' }}
+    </span>
 
 </div>
+
+@if(mostrarComentarios){
+<div class="comentarios-correccion">
+    <strong>Comentarios de corrección:</strong>
+    <p>{{ comentariosDocumento }}</p>
+</div>
+}
 
 <div
     id="documento-f06"
     class="documento">
 
-    <app-document-header
-        [titulo]="'FORMATO 06 BITÁCORA DE APRENDIZAJE DE FASE PRÁCTICA'"
-        [codigo]="'010206'">
-    </app-document-header>
+    <table class="header-table">
+
+        <tr>
+
+            <td class="logo-cell" rowspan="4">
+
+                <img
+                    src="/assets/images/logo-yavirac.png"
+                    alt="Logo Yavirac">
+
+            </td>
+
+            <td class="title-cell">
+
+                <strong>
+
+                    INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC
+
+                </strong>
+
+            </td>
+
+            <td class="code-cell" rowspan="4">
+
+                DS-010206
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                MACROPROCESO 01 DOCENCIA
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                PROCESO 02 PROCESO DE FORMACIÓN PRÁCTICA EN EL ENTORNO LABORAL REAL - FORMACIÓN DUAL
+
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="document-cell">
+
+                <strong>FORMATO 06 BITÁCORA DE APRENDIZAJE DE FASE PRÁCTICA</strong>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <table class="header-table header-data">
+
+        <tr>
+
+            <td><strong>EMPRESA FORMADORA:</strong></td>
+            <td>{{ informe.encabezado.empresaFormadora }}</td>
+            <td><strong>NIVEL:</strong></td>
+            <td>{{ informe.encabezado.nivel }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>ESTUDIANTE:</strong></td>
+            <td>{{ informe.estudiante.nombre }}</td>
+            <td><strong>CICLO ACADÉMICO:</strong></td>
+            <td>{{ informe.encabezado.cicloAcademico }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>CÉDULA:</strong></td>
+            <td>{{ informe.estudiante.cedula }}</td>
+            <td><strong>F. INICIO FASE PRÁCTICA:</strong> {{ informe.encabezado.fechaInicioFasePractica }}</td>
+            <td><strong>F. FIN FASE PRÁCTICA:</strong> {{ informe.encabezado.fechaFinFasePractica }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) ACADÉMICO:</strong></td>
+            <td>{{ informe.encabezado.tutorAcademico }}</td>
+            <td><strong>N. ESTRUCTURANTE:</strong></td>
+            <td>{{ informe.encabezado.nucleoEstructurante }}</td>
+
+        </tr>
+
+        <tr>
+
+            <td><strong>TUTOR(A) EMPRESARIAL:</strong></td>
+            <td>{{ informe.encabezado.tutorEmpresarial }}</td>
+            <td><strong>CARRERA:</strong></td>
+            <td>{{ informe.encabezado.carrera }}</td>
+
+        </tr>
+
+    </table>
 
     <div class="contenido">
-
-        @if(cargando){
-
-        <p class="text-center text-muted my-4">Cargando datos base...</p>
-
-        } @else {
-
-        <table class="tabla-datos">
-
-            <tr>
-                <td class="label">EMPRESA FORMADORA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.empresaFormadora" name="empresaFormadora"></td>
-                <td class="label">NIVEL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.nivel" name="nivel"></td>
-            </tr>
-
-            <tr>
-                <td class="label">ESTUDIANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.estudiante.nombre" name="nombre"></td>
-                <td class="label">CICLO ACADÉMICO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.cicloAcademico" name="cicloAcademico"></td>
-            </tr>
-
-            <tr>
-                <td class="label">CÉDULA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.estudiante.cedula" name="cedula"></td>
-                <td class="label">F. INICIO / F. FIN FASE PRÁCTICA:</td>
-                <td>
-                    <input type="text" class="campo campo-mitad" [(ngModel)]="informe.encabezado.fechaInicioFasePractica" name="fechaInicio" placeholder="Inicio">
-                    <input type="text" class="campo campo-mitad" [(ngModel)]="informe.encabezado.fechaFinFasePractica" name="fechaFin" placeholder="Fin">
-                </td>
-            </tr>
-
-            <tr>
-                <td class="label">TUTOR(A) ACADÉMICO:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.tutorAcademico" name="tutorAcademico"></td>
-                <td class="label">NÚCLEO ESTRUCTURANTE:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.nucleoEstructurante" name="nucleoEstructurante"></td>
-            </tr>
-
-            <tr>
-                <td class="label">TUTOR(A) EMPRESARIAL:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.tutorEmpresarial" name="tutorEmpresarial"></td>
-                <td class="label">CARRERA:</td>
-                <td><input type="text" class="campo" [(ngModel)]="informe.encabezado.carrera" name="carrera"></td>
-            </tr>
-
-        </table>
 
         <div class="caja-objetivo">
 
@@ -120,14 +229,16 @@
                 <tr>
                     <td class="text-center">{{ fila.semana }}</td>
                     <td>
-                        <input type="text" class="campo campo-mitad" [(ngModel)]="fila.fechaInicio" name="fi-{{ i }}" placeholder="Inicio">
-                        <input type="text" class="campo campo-mitad" [(ngModel)]="fila.fechaFin" name="ff-{{ i }}" placeholder="Fin">
+                        <input type="text" class="campo campo-mitad" [(ngModel)]="fila.fechaInicio" name="fi-{{ i }}" placeholder="Inicio" [disabled]="!esEstudiante">
+                        <input type="text" class="campo campo-mitad" [(ngModel)]="fila.fechaFin" name="ff-{{ i }}" placeholder="Fin" [disabled]="!esEstudiante">
                     </td>
-                    <td><input type="text" class="campo" [(ngModel)]="fila.puestoAprendizaje" name="pa-{{ i }}"></td>
-                    <td><input type="text" class="campo" [(ngModel)]="fila.actividadesRealizadas" name="ar-{{ i }}"></td>
-                    <td><input type="text" class="campo" [(ngModel)]="fila.actividadesAutonomas" name="aa-{{ i }}"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.puestoAprendizaje" name="pa-{{ i }}" [disabled]="!esEstudiante"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.actividadesRealizadas" name="ar-{{ i }}" [disabled]="!esEstudiante"></td>
+                    <td><input type="text" class="campo" [(ngModel)]="fila.actividadesAutonomas" name="aa-{{ i }}" [disabled]="!esEstudiante"></td>
                     <td class="no-print text-center">
+                        @if (esEstudiante) {
                         <button type="button" class="btn-quitar" (click)="quitarSemana(i)"><i class="bi bi-trash"></i></button>
+                        }
                     </td>
                 </tr>
 
@@ -137,9 +248,11 @@
 
         </table>
 
+        @if (esEstudiante) {
         <button type="button" class="btn btn-sm btn-outline-primary no-print" (click)="agregarSemana()">
             <i class="bi bi-plus-circle"></i> Agregar semana
         </button>
+        }
 
         <div class="row-cajas">
 
@@ -147,7 +260,7 @@
 
                 <strong>Reflexión sobre el aprendizaje alcanzado de las actividades realizadas en la empresa formadora</strong>
 
-                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="informe.reflexionAprendizaje" name="reflexion"></textarea>
+                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="informe.reflexionAprendizaje" name="reflexion" [disabled]="!esEstudiante"></textarea>
 
             </div>
 
@@ -155,13 +268,11 @@
 
                 <strong>Observaciones de la empresa formadora sobre el desempeño del estudiante</strong>
 
-                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="informe.observacionesEmpresa" name="observaciones"></textarea>
+                <textarea class="campo campo-textarea" rows="4" [(ngModel)]="informe.observacionesEmpresa" name="observaciones" [disabled]="!esTutorEmpresarial"></textarea>
 
             </div>
 
         </div>
-
-        }
 
     </div>
 

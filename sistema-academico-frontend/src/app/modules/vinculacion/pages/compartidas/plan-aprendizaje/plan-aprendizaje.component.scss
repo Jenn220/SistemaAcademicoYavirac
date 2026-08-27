@@ -1,0 +1,788 @@
+// ============================================
+// PLAN DE APRENDIZAJE - ESTILO PROFESIONAL
+// ============================================
+
+:host {
+  display: block;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  font-family: 'Times New Roman', Times, serif;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 4px;
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+    border-radius: 0 0 4px 4px;
+  }
+
+  // ============================================
+  // CABECERA
+  // ============================================
+  .cabecera {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e8ecf2;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #163d8c 0%, #ff7b22 50%, #163d8c 100%);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 1rem;
+
+      .logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #f8faff;
+        padding: 4px;
+      }
+
+      .header-text {
+        flex: 1;
+
+        .instituto {
+          font-family: 'Roboto', 'Segoe UI', sans-serif;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #6a7a8e;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          margin: 0;
+        }
+
+        h2 {
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: #163d8c;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin: 0.1rem 0 0 0;
+        }
+      }
+    }
+
+    .datos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.2rem 2.5rem;
+      padding: 0.8rem 1.5rem;
+      background: #f7faff;
+      border-radius: 8px;
+
+      p {
+        margin: 0.15rem 0;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: #1e2a3a;
+
+        strong {
+          color: #163d8c;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  // ============================================
+  // TABLAS
+  // ============================================
+  .tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 1.5rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+
+    th,
+    td {
+      border: 1px solid #e8ecf2;
+      padding: 0.5rem 0.8rem;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f0f4fc;
+      font-weight: 700;
+      color: #163d8c;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    td {
+      background: #ffffff;
+      color: #1e2a3a;
+      text-align: center;
+
+      &:nth-child(1) {
+        font-weight: 600;
+        color: #163d8c;
+      }
+
+      &:nth-child(3) {
+        text-align: left;
+      }
+
+      &:nth-child(4) {
+        text-align: left;
+      }
+    }
+
+    .textarea-edit {
+      width: 100%;
+      padding: 0.4rem 0.6rem;
+      border: 2px solid #e8ecf2;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Times New Roman', Times, serif;
+      background: #fafcff;
+      resize: vertical;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #163d8c;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.06);
+      }
+    }
+  }
+
+  .tabla-avance {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 1rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+
+    th,
+    td {
+      border: 1px solid #e8ecf2;
+      padding: 0.4rem 0.6rem;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f0f4fc;
+      font-weight: 700;
+      color: #163d8c;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    td {
+      background: #ffffff;
+      color: #1e2a3a;
+      text-align: center;
+    }
+
+    tfoot td {
+      font-weight: 700;
+      background: #f0f4fc;
+      color: #163d8c;
+      font-size: 14px;
+    }
+
+    .input-avance {
+      width: 70px;
+      padding: 0.3rem 0.4rem;
+      border: 2px solid #e8ecf2;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Times New Roman', Times, serif;
+      text-align: center;
+      background: #fafcff;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #163d8c;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.06);
+      }
+    }
+  }
+
+  // ============================================
+  // REFLEXIÓN
+  // ============================================
+  .reflexion {
+    margin-top: 2rem;
+    padding: 1.5rem 1.8rem;
+    background: #f7faff;
+    border-radius: 8px;
+    border-left: 5px solid #ff7b22;
+
+    .reflexion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+
+      p {
+        margin: 0;
+        font-family: 'Roboto', 'Segoe UI', sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        color: #163d8c;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+    }
+
+    .estado-guardado {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .estado {
+        font-size: 12px;
+        padding: 0.15rem 0.6rem;
+        border-radius: 4px;
+
+        &.guardando {
+          color: #856404;
+          background: #fff3cd;
+        }
+
+        &.guardado {
+          color: #155724;
+          background: #d4edda;
+        }
+
+        &.sin-guardar {
+          color: #721c24;
+          background: #f8d7da;
+        }
+      }
+    }
+
+    .texto-reflexion {
+      margin: 0.5rem 0 1rem 0;
+      font-size: 14px;
+      line-height: 1.9;
+      color: #1e2a3a;
+      text-align: justify;
+      font-style: italic;
+      padding: 0.8rem 1.2rem;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e8ecf2;
+    }
+
+    .reflexion-input-wrapper {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+
+      .textarea-edit {
+        flex: 1;
+        padding: 0.6rem 1rem;
+        border: 2px solid #e8ecf2;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: 'Times New Roman', Times, serif;
+        background: #ffffff;
+        resize: vertical;
+        min-height: 100px;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #163d8c;
+          box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.06);
+        }
+      }
+    }
+
+    .btn-edit-obs {
+      background: none;
+      border: none;
+      color: #ff7b22;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+
+      &:hover {
+        color: #e06a1a;
+      }
+    }
+
+    .btn-guardar-obs {
+      background: #28a745;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      margin-top: 0.2rem;
+
+      &:hover:not(:disabled) {
+        background: #1e7e34;
+        transform: translateY(-2px);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .feedback {
+      margin-top: 0.5rem;
+      font-size: 13px;
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.8rem;
+      flex-wrap: wrap;
+    }
+  }
+
+  // ============================================
+  // AVANCE
+  // ============================================
+  .avance {
+    margin-top: 2rem;
+
+    h4 {
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      color: #163d8c;
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  // ============================================
+  // BOTONES
+  // ============================================
+  .btn-edit,
+  .btn-save,
+  .btn-cancel {
+    padding: 0.3rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  .btn-edit {
+    background: #ffc107;
+    color: #2c3e50;
+
+    &:hover {
+      background: #e6ae00;
+    }
+  }
+
+  .btn-save {
+    background: #28a745;
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background: #1e7e34;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-cancel {
+    background: #6c757d;
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background: #5a6268;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ============================================
+// LOADING Y ERROR
+// ============================================
+.loading,
+.error {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 16px;
+  color: #6a7a8e;
+  font-family: 'Times New Roman', Times, serif;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: 600;
+  border-left: 4px solid #dc3545;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 1.2rem;
+  border: 4px solid #e8ecf2;
+  border-top: 4px solid #163d8c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// ============================================
+// BOTÓN DE EXPORTACIÓN A EXCEL
+// ============================================
+.acciones-export {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  gap: 0.8rem;
+
+  .btn-export-excel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.5rem;
+    background: linear-gradient(135deg, #1d6f42 0%, #28a745 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+      background: linear-gradient(135deg, #1a5c36 0%, #218838 100%);
+    }
+
+    &:active {
+      transform: translateY(0px);
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .container {
+    padding: 2rem 1.5rem;
+  }
+
+  .container .cabecera .datos {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .container .tabla,
+  .container .tabla-avance {
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 0.4rem 0.6rem;
+    }
+
+    .input-avance {
+      width: 60px;
+    }
+  }
+
+  .container .reflexion {
+    padding: 1.2rem 1.5rem;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .container {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .container::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .container .cabecera {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+
+    .header-logo {
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .logo {
+        width: 50px;
+        height: 50px;
+      }
+
+      .header-text {
+        .instituto {
+          font-size: 0.6rem;
+        }
+
+        h2 {
+          font-size: 1rem;
+        }
+      }
+    }
+
+    .datos {
+      padding: 0.6rem 1rem;
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+
+      p {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .container .tabla,
+  .container .tabla-avance {
+    font-size: 11px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+
+    th,
+    td {
+      padding: 0.3rem 0.4rem;
+      font-size: 10px;
+    }
+
+    th {
+      font-size: 9px;
+    }
+
+    .textarea-edit {
+      font-size: 10px;
+      padding: 0.2rem 0.3rem;
+      min-width: 80px;
+    }
+
+    .input-avance {
+      width: 50px;
+      font-size: 10px;
+      padding: 0.2rem 0.3rem;
+    }
+  }
+
+  .container .reflexion {
+    padding: 1rem;
+    margin-top: 1.5rem;
+
+    .reflexion-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.3rem;
+
+      p {
+        font-size: 11px;
+      }
+    }
+
+    .estado-guardado {
+      justify-content: flex-start;
+    }
+
+    .texto-reflexion {
+      font-size: 12px;
+      padding: 0.6rem 1rem;
+    }
+
+    .reflexion-input-wrapper {
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .textarea-edit {
+        font-size: 12px;
+        padding: 0.5rem 0.8rem;
+        min-height: 80px;
+      }
+    }
+
+    .btn-edit-obs {
+      font-size: 11px;
+    }
+
+    .btn-guardar-obs {
+      font-size: 14px;
+      padding: 0.4rem 0.8rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+
+  .container .avance {
+    margin-top: 1.5rem;
+
+    h4 {
+      font-size: 0.85rem;
+    }
+  }
+
+  .container .btn-edit,
+  .container .btn-save,
+  .container .btn-cancel {
+    font-size: 11px;
+    padding: 0.3rem 0.6rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .acciones-export {
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn-export-excel {
+      padding: 0.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .loading,
+  .error {
+    padding: 2rem 1rem;
+    font-size: 14px;
+    margin: 1rem auto;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.7rem;
+  }
+
+  .container .cabecera .header-logo .header-text h2 {
+    font-size: 0.85rem;
+  }
+
+  .container .tabla th,
+  .container .tabla td,
+  .container .tabla-avance th,
+  .container .tabla-avance td {
+    font-size: 8px;
+    padding: 0.2rem 0.3rem;
+  }
+
+  .container .tabla .textarea-edit {
+    font-size: 8px;
+    padding: 0.15rem 0.2rem;
+    min-width: 60px;
+  }
+
+  .container .tabla-avance .input-avance {
+    width: 40px;
+    font-size: 8px;
+  }
+
+  .container .reflexion .texto-reflexion {
+    font-size: 11px;
+  }
+
+  .container .reflexion .reflexion-input-wrapper .textarea-edit {
+    font-size: 11px;
+    min-height: 60px;
+  }
+}

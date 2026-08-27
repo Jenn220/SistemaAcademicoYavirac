@@ -26,6 +26,7 @@ export class InformeFinalComponent implements OnInit {
   readonly guardandoManual = signal(false);
   readonly mensajeGuardado = signal<string | null>(null);
   readonly exportandoWord = signal(false);
+  readonly esSoloLectura = signal(false);
 
   readonly informe = signal<InformeFinalResponseDto | null>(null);
   readonly noExisteInforme = signal(false);
@@ -40,6 +41,9 @@ export class InformeFinalComponent implements OnInit {
   datosManuales!: InformeFinalManualData;
 
   readonly fechaHoy = new Date();
+
+  // 🔑 Flag para evitar bloqueo inmediato tras crear el informe
+  private informeRecienCreado = false;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -60,12 +64,14 @@ export class InformeFinalComponent implements OnInit {
     this.error.set(null);
     this.noExisteInforme.set(false);
     this.editandoHorario = false;
+    this.esSoloLectura.set(false);
 
     this.informeFinalService.getInformeFinal(this.idOfertaAsignatura).subscribe({
       next: (respuesta) => {
         this.informe.set(respuesta);
         this.cargarDatosManuales();
         this.cargando.set(false);
+        this.cargarOfertaRelacionada();
       },
       error: (err) => {
         this.cargando.set(false);
@@ -84,6 +90,20 @@ export class InformeFinalComponent implements OnInit {
       next: (ofertas) => {
         const oferta = ofertas.find((o) => o.id_oferta_asignatura === this.idOfertaAsignatura);
         this.ofertaRelacionada.set(oferta ?? null);
+
+        if (oferta && this.informe() !== null) {
+          if (this.informeRecienCreado) {
+            this.esSoloLectura.set(false);
+            this.informeRecienCreado = false;
+          } else {
+            this.esSoloLectura.set(!!oferta.tiene_informe_final);
+          }
+        } else {
+          this.esSoloLectura.set(false);
+        }
+      },
+      error: () => {
+        this.esSoloLectura.set(false);
       },
     });
   }
@@ -94,6 +114,7 @@ export class InformeFinalComponent implements OnInit {
   }
 
   modoEditarHorario(): void {
+    if (this.esSoloLectura()) return;
     const inf = this.informe();
     if (inf) {
       this.horario = inf.informe.horario;
@@ -111,82 +132,93 @@ export class InformeFinalComponent implements OnInit {
   }
 
   guardarHorario(): void {
-  if (!this.horario.trim()) {
-    this.errorCreacion = 'Ingresa el horario.';
-    return;
-  }
+    if (this.esSoloLectura()) return;
 
-  const inf = this.informe();
-  this.creando = true;
-  this.errorCreacion = null;
-
-  // Si ya existe el informe, extraemos el ID real del informe final
-  if (inf) {
-    const rawInf = inf as any;
-    const rawInner = (inf.informe as any) || {};
-
-    // Priorizamos las propiedades reales devueltas en la respuesta JSON
-    const idInformeFinal =
-      rawInner.id_informe_final ||
-      rawInner.id_informe ||
-      rawInner.id ||
-      rawInf.id_informe_final ||
-      rawInf.id_informe ||
-      rawInf.id;
-
-    if (!idInformeFinal) {
-      this.creando = false;
-      this.errorCreacion = 'No se encontró el ID numérico del informe final.';
-      console.warn('Estructura completa recibida de informe:', inf);
+    if (!this.horario.trim()) {
+      this.errorCreacion = 'Ingresa el horario.';
       return;
     }
 
-    this.informeFinalService.actualizarHorario(idInformeFinal, this.horario.trim()).subscribe({
-      next: () => {
+    const inf = this.informe();
+    this.creando = true;
+    this.errorCreacion = null;
+
+    // Si ya existe el informe, actualizamos horario
+    if (inf) {
+      const rawInf = inf as any;
+      const rawInner = (inf.informe as any) || {};
+
+      const idInformeFinal =
+        rawInner.id_informe_final ||
+        rawInner.id_informe ||
+        rawInner.id ||
+        rawInf.id_informe_final ||
+        rawInf.id_informe ||
+        rawInf.id;
+
+      if (!idInformeFinal) {
         this.creando = false;
-        this.editandoHorario = false;
-        this.cargarInforme();
-      },
-      error: (err) => {
-        console.error('Error al actualizar horario:', err);
-        this.creando = false;
-        this.errorCreacion = 'No se pudo actualizar el horario en la base de datos.';
-      },
-    });
-    return;
+        this.errorCreacion = 'No se encontró el ID numérico del informe final.';
+        console.warn('Estructura completa recibida de informe:', inf);
+        return;
+      }
+
+      this.informeFinalService.actualizarHorario(idInformeFinal, this.horario.trim()).subscribe({
+        next: () => {
+          this.creando = false;
+          this.editandoHorario = false;
+          // ✅ Actualizamos el horario en el objeto local sin recargar todo
+          const current = this.informe();
+          if (current) {
+            (current.informe as any).horario = this.horario.trim();
+            // Forzamos la señal a actualizarse (clonando el objeto)
+            this.informe.set({ ...current });
+          }
+          this.horario = '';
+          // No llamamos a cargarInforme() para no recargar y evitar bloqueo
+        },
+        error: (err) => {
+          console.error('Error al actualizar horario:', err);
+          this.creando = false;
+          this.errorCreacion = 'No se pudo actualizar el horario en la base de datos.';
+        },
+      });
+      return;
+    }
+
+    // Si no existe, se crea vía POST
+    const oferta = this.ofertaRelacionada();
+    const idDocente = this.authService.usuario()?.idDocente;
+
+    if (!oferta || !idDocente) {
+      this.errorCreacion = 'No se pudo determinar el docente o la oferta académica.';
+      this.creando = false;
+      return;
+    }
+
+    this.informeFinalService
+      .crearInformeFinal({
+        id_docente: idDocente,
+        id_periodo: oferta.id_periodo,
+        id_asignatura: oferta.id_asignatura,
+        id_paralelo: oferta.id_paralelo,
+        horario: this.horario.trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.creando = false;
+          this.informeRecienCreado = true;
+          this.cargarInforme(); // tras crear sí recargamos para obtener el ID
+        },
+        error: () => {
+          this.creando = false;
+          this.errorCreacion = 'No se pudo crear el informe. Verifica los datos.';
+        },
+      });
   }
-
-  // Si no existe, se crea vía POST
-  const oferta = this.ofertaRelacionada();
-  const idDocente = this.authService.usuario()?.idDocente;
-
-  if (!oferta || !idDocente) {
-    this.errorCreacion = 'No se pudo determinar el docente o la oferta académica.';
-    this.creando = false;
-    return;
-  }
-
-  this.informeFinalService
-    .crearInformeFinal({
-      id_docente: idDocente,
-      id_periodo: oferta.id_periodo,
-      id_asignatura: oferta.id_asignatura,
-      id_paralelo: oferta.id_paralelo,
-      horario: this.horario.trim(),
-    })
-    .subscribe({
-      next: () => {
-        this.creando = false;
-        this.cargarInforme();
-      },
-      error: () => {
-        this.creando = false;
-        this.errorCreacion = 'No se pudo crear el informe. Verifica los datos.';
-      },
-    });
-}
 
   guardarDatosManuales(): void {
+    if (this.esSoloLectura()) return;
     this.guardandoManual.set(true);
     this.datosManuales.fechaElaboracion = new Date().toISOString();
     this.informeFinalService.guardarDatosManuales(this.idOfertaAsignatura, this.datosManuales);

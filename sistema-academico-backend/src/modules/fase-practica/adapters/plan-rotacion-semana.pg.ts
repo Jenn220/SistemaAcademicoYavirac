@@ -37,4 +37,8 @@ export class PlanRotacionSemanaPg implements IPlanRotacionSemanaRepository {
     if (!entity) throw new NotFoundException(`Semana de plan de rotación con id ${id} no encontrada`);
     await this.repository.remove(entity);
   }
+
+  async deleteByPlanRotacion(idPlanRotacion: number): Promise<void> {
+    await this.repository.delete({ id_plan_rotacion: idPlanRotacion });
+  }
 }

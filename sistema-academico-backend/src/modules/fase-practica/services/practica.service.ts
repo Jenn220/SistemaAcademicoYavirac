@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { PRACTICA_REPOSITORY, IPracticaRepository } from '../ports/practica.repository.port';
 import { CreatePracticaDto } from '../dto/create-practica.dto';
 import { UpdatePracticaDto } from '../dto/update-practica.dto';
@@ -27,6 +28,7 @@ import { UpdateBitacoraSemanalDto } from '../dto/update-bitacora-semanal.dto';
 import { UpdateEvaluacionPracticaDto } from '../dto/update-evaluacion-practica.dto';
 import { UpdateInformeAprendizajeDto } from '../dto/update-informe-aprendizaje.dto';
 import { UpdatePlanRotacionDto } from '../dto/update-plan-rotacion.dto';
+import { UpdatePlanRotacionCompetenciasDto } from '../dto/update-plan-rotacion-competencias.dto';
 import { UpdateRegistroDiarioDto } from '../dto/update-registro-diario.dto';
 import { UpdateRubricaDto } from '../dto/update-rubrica.dto';
 import { BitacoraSemanalEntity } from '../domain/bitacora-semanal.entity';
@@ -56,11 +58,13 @@ export class PracticaService {
     private readonly rubricaRepository: IRubricaRepository,
     @Inject(ITEM_PLAN_MARCO_REPOSITORY)
     private readonly itemPlanMarcoRepository: IItemPlanMarcoRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async createPractica(dto: CreatePracticaDto): Promise<PracticaEntity> {
+  async createPractica(usuario: any, dto: CreatePracticaDto): Promise<PracticaEntity> {
     const data = {
       ...dto,
+      id_docente: usuario.idDocente,
       total_horas_requeridas: dto.total_horas_requeridas ?? 400,
       total_horas_cumplidas: dto.total_horas_cumplidas ?? 0,
       estado: dto.estado ?? 'EN_CURSO',
@@ -68,46 +72,170 @@ export class PracticaService {
     return this.practicaRepository.createPractica(data);
   }
 
-  async findAllPracticas(skip?: number, take?: number): Promise<PracticaEntity[]> {
-    return this.practicaRepository.findAllPracticas(skip, take);
+  /**
+   * El selector de práctica (fase-practica/plan-formacion) necesita saber
+   * DE QUÉ ESTUDIANTE es cada práctica para que DOCENTE/COORDINADOR/
+   * TUTOR_EMPRESARIAL puedan buscarlo por nombre o cédula — PracticaEntity
+   * no tiene relación directa a estudiante (solo a matricula_detalle), así
+   * que se resuelve aparte con un solo query batch.
+   *
+   * Además se filtra por rol: DOCENTE solo ve sus propios asignados
+   * (id_docente), TUTOR_EMPRESARIAL solo los de su empresa (id_empresa),
+   * ESTUDIANTE solo el suyo. COORDINADOR ve todos (es quien asigna).
+   */
+  async findAllPracticas(usuario: any, skip?: number, take?: number): Promise<any[]> {
+    const practicas = await this.practicaRepository.findAllPracticas(skip, take);
+    if (practicas.length === 0) return practicas;
+
+    const idsMatriculaDetalle = practicas.map((p) => p.id_matricula_detalle);
+
+    const filas = await this.dataSource.query(
+      `SELECT md.id_matricula_detalle, e.id_estudiante, e.nombres, e.apellidos, e.cedula,
+       j.nombre AS nombre_jornada,
+       pa.nombre AS nombre_paralelo,
+       per.nombre AS nombre_periodo
+        FROM matricula_detalle md
+        JOIN matricula m ON m.id_matricula = md.id_matricula
+        JOIN estudiante e ON e.id_estudiante = m.id_estudiante
+        LEFT JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+        LEFT JOIN jornada j ON j.id_jornada = oa.id_jornada
+        LEFT JOIN paralelo pa ON pa.id_paralelo = oa.id_paralelo
+        LEFT JOIN periodo_academico per ON per.id_periodo = m.id_periodo
+        WHERE md.id_matricula_detalle = ANY($1)`,
+      [idsMatriculaDetalle],
+    );
+
+    const porMatriculaDetalle = new Map<number, any>(filas.map((f: any) => [Number(f.id_matricula_detalle), f]));
+
+    const enriquecidas = practicas.map((p) => {
+      const fila = porMatriculaDetalle.get(Number(p.id_matricula_detalle));
+      return {
+        ...p,
+        estudiante: fila
+          ? { id_estudiante: Number(fila.id_estudiante), nombre: `${fila.nombres} ${fila.apellidos}`, cedula: fila.cedula }
+          : null,
+        semestre: fila?.nombre_periodo ?? p.nombre_periodo ?? '',
+        paralelo: fila?.nombre_paralelo ?? p.paralelo ?? '',
+        jornada: fila?.nombre_jornada ?? '',
+      };
+    });
+
+    const roles: string[] = usuario?.roles ?? [];
+
+    if (roles.includes('COORDINADOR')) {
+      return enriquecidas;
+    }
+
+    return enriquecidas.filter((p) => {
+      if (roles.includes('DOCENTE') && Number(p.id_docente) === Number(usuario.idDocente)) return true;
+      if (roles.includes('TUTOR_EMPRESARIAL') && Number(p.id_empresa) === Number(usuario.idEmpresa)) return true;
+      if (roles.includes('ESTUDIANTE') && Number(p.estudiante?.id_estudiante) === Number(usuario.idEstudiante)) return true;
+      return false;
+    });
   }
 
-  async findPracticaById(id: number): Promise<PracticaEntity> {
+  async findPracticaById(usuario: any, id: number): Promise<PracticaEntity> {
     const practica = await this.practicaRepository.findPracticaById(id);
     if (!practica) {
       throw new NotFoundException(`No se encontró la práctica con id ${id}`);
     }
+    await this.verificarAccesoPractica(usuario, practica);
     return practica;
   }
 
-  async updatePractica(id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
-    await this.findPracticaById(id);
+  async updatePractica(usuario: any, id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
+    await this.verificarAccesoPorIdPractica(usuario, id);
     return this.practicaRepository.updatePractica(id, dto);
   }
 
-  async removePractica(id: number): Promise<void> {
-    await this.findPracticaById(id);
+  /** Catálogo para el select de "docente académico" en la pantalla de Asignaciones. */
+  async findAllDocentes(): Promise<any[]> {
+    return this.dataSource.query(
+      `SELECT id_docente, nombres, apellidos, cedula
+       FROM docente
+       WHERE estado = 'ACTIVO'
+       ORDER BY nombres, apellidos`,
+    );
+  }
+
+  /** Catálogo para el select de "tutor empresarial" en la pantalla de Asignaciones. */
+  async findAllTutoresEmpresariales(): Promise<any[]> {
+    return this.dataSource.query(
+      `SELECT te.id_tutor_empresarial, te.nombres, te.apellidos, te.id_empresa, e.razon_social
+       FROM tutor_empresarial te
+       JOIN empresa e ON e.id_empresa = te.id_empresa
+       WHERE te.estado = 'ACTIVO'
+       ORDER BY te.nombres, te.apellidos`,
+    );
+  }
+
+  async removePractica(usuario: any, id: number): Promise<void> {
+    await this.verificarAccesoPorIdPractica(usuario, id);
     await this.practicaRepository.removePractica(id);
   }
 
-  async createRegistroDiario(dto: CreateRegistroDiarioDto): Promise<RegistroDiarioEntity> {
+  private async verificarAccesoPorIdPractica(usuario: any, idPractica: number): Promise<void> {
+    const practica = await this.practicaRepository.findPracticaById(idPractica);
+    if (!practica) {
+      throw new NotFoundException(`Práctica con id ${idPractica} no encontrada`);
+    }
+    await this.verificarAccesoPractica(usuario, practica);
+  }
+
+  private async verificarAccesoPractica(usuario: any, practica: PracticaEntity): Promise<void> {
+    if (!practica) {
+      throw new NotFoundException('Práctica no encontrada');
+    }
+
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    if (roles.includes('DOCENTE') && Number(practica.id_docente) === Number(usuario.idDocente)) return;
+    if (roles.includes('TUTOR_EMPRESARIAL') && Number(practica.id_empresa) === Number(usuario.idEmpresa)) return;
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
+        [practica.id_matricula_detalle, usuario.idEstudiante],
+      );
+      if (esDueno && esDueno.length > 0) return;
+    }
+
+    throw new ForbiddenException('No tiene permisos para acceder a esta práctica.');
+  }
+
+  async createRegistroDiario(usuario: any, dto: CreateRegistroDiarioDto): Promise<RegistroDiarioEntity> {
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     return this.registroDiarioRepository.create(dto);
   }
 
-  async findRegistrosByPractica(idPractica: number, skip?: number, take?: number): Promise<RegistroDiarioEntity[]> {
+  async findRegistrosByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<RegistroDiarioEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.registroDiarioRepository.findByPractica(idPractica, skip, take);
   }
 
-  async updateRegistroDiario(id: number, dto: UpdateRegistroDiarioDto): Promise<RegistroDiarioEntity> {
+  async updateRegistroDiario(usuario: any, id: number, dto: UpdateRegistroDiarioDto): Promise<RegistroDiarioEntity> {
+    const registro = await this.registroDiarioRepository.findById(id);
+    if (!registro) {
+      throw new NotFoundException(`No se encontró el registro diario con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, registro.id_practica);
     return this.registroDiarioRepository.update(id, dto);
   }
 
-  async removeRegistroDiario(id: number): Promise<void> {
+  async removeRegistroDiario(usuario: any, id: number): Promise<void> {
+    const registro = await this.registroDiarioRepository.findById(id);
+    if (!registro) {
+      throw new NotFoundException(`No se encontró el registro diario con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, registro.id_practica);
     return this.registroDiarioRepository.remove(id);
   }
 
-  async createPlanRotacion(dto: CreatePlanRotacionDto): Promise<PlanRotacionEntity> {
-    await this.findPracticaById(dto.id_practica);
+  async createPlanRotacion(usuario: any, dto: CreatePlanRotacionDto): Promise<PlanRotacionEntity> {
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     const itemPlanMarco = await this.itemPlanMarcoRepository.findById(dto.id_item_pm);
     if (!itemPlanMarco) {
       throw new NotFoundException(`Item plan marco con id ${dto.id_item_pm} no encontrado`);
@@ -121,53 +249,113 @@ export class PracticaService {
     return this.planRotacionRepository.create(data);
   }
 
-  async findPlanRotacionByPractica(idPractica: number, skip?: number, take?: number): Promise<PlanRotacionEntity[]> {
+  async findPlanRotacionByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<PlanRotacionEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.planRotacionRepository.findByPractica(idPractica, skip, take);
   }
 
-  async updatePlanRotacion(id: number, dto: UpdatePlanRotacionDto): Promise<PlanRotacionEntity> {
-    await this.planRotacionRepository.findById(id).then(plan => {
-      if (!plan) throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
-    });
+  async updatePlanRotacion(usuario: any, id: number, dto: UpdatePlanRotacionDto): Promise<PlanRotacionEntity> {
+    const plan = await this.planRotacionRepository.findById(id);
+    if (!plan) {
+      throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, plan.id_practica);
     return this.planRotacionRepository.update(id, dto);
   }
 
-  async removePlanRotacion(id: number): Promise<void> {
-    await this.planRotacionRepository.findById(id).then(plan => {
-      if (!plan) throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
-    });
+  async removePlanRotacion(usuario: any, id: number): Promise<void> {
+    const plan = await this.planRotacionRepository.findById(id);
+    if (!plan) {
+      throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, plan.id_practica);
     return this.planRotacionRepository.remove(id);
   }
 
-  async createInformeAprendizaje(dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
-    await this.findPracticaById(dto.id_practica);
+  /**
+   * "Competencias Necesarias" es un único bloque de texto por práctica
+   * (no por fila/id_item_pm como el resto del Plan de Rotación), así que
+   * vive en su propia tabla 1:1 con practica_estudiante en vez de en
+   * plan_rotacion. Antes este campo solo existía en memoria del
+   * navegador (viajaba al Word exportado pero nunca se guardaba).
+   */
+  async findCompetenciasRotacion(usuario: any, idPractica: number): Promise<{
+    conocimientos_teoricos: string;
+    procedimentales: string;
+    actitudinales: string;
+  }> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
+    const rows = await this.dataSource.query(
+      `SELECT conocimientos_teoricos, procedimentales, actitudinales
+       FROM plan_rotacion_competencias
+       WHERE id_practica = $1`,
+      [idPractica],
+    );
+
+    return {
+      conocimientos_teoricos: rows[0]?.conocimientos_teoricos ?? '',
+      procedimentales: rows[0]?.procedimentales ?? '',
+      actitudinales: rows[0]?.actitudinales ?? '',
+    };
+  }
+
+  async upsertCompetenciasRotacion(usuario: any, idPractica: number, dto: UpdatePlanRotacionCompetenciasDto): Promise<{
+    conocimientos_teoricos: string;
+    procedimentales: string;
+    actitudinales: string;
+  }> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
+
+    const rows = await this.dataSource.query(
+      `INSERT INTO plan_rotacion_competencias (id_practica, conocimientos_teoricos, procedimentales, actitudinales, updated_at)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+       ON CONFLICT (id_practica) DO UPDATE SET
+         conocimientos_teoricos = EXCLUDED.conocimientos_teoricos,
+         procedimentales = EXCLUDED.procedimentales,
+         actitudinales = EXCLUDED.actitudinales,
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING conocimientos_teoricos, procedimentales, actitudinales`,
+      [idPractica, dto.conocimientos_teoricos ?? '', dto.procedimentales ?? '', dto.actitudinales ?? ''],
+    );
+
+    return rows[0];
+  }
+
+  async createInformeAprendizaje(usuario: any, dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     return this.informeAprendizajeRepository.create(dto);
   }
 
-  async findInformesByPractica(idPractica: number, skip?: number, take?: number): Promise<InformeAprendizajeEntity[]> {
+  async findInformesByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<InformeAprendizajeEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.informeAprendizajeRepository.findByPractica(idPractica, skip, take);
   }
 
-  async updateInformeAprendizaje(id: number, dto: UpdateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
-    await this.informeAprendizajeRepository.findById(id).then(informe => {
-      if (!informe) throw new NotFoundException(`No se encontró el informe con id ${id}`);
-    });
+  async updateInformeAprendizaje(usuario: any, id: number, dto: UpdateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
+    const informe = await this.informeAprendizajeRepository.findById(id);
+    if (!informe) {
+      throw new NotFoundException(`No se encontró el informe con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.informeAprendizajeRepository.update(id, dto);
   }
 
-  async removeInformeAprendizaje(id: number): Promise<void> {
-    await this.informeAprendizajeRepository.findById(id).then(informe => {
-      if (!informe) throw new NotFoundException(`No se encontró el informe con id ${id}`);
-    });
+  async removeInformeAprendizaje(usuario: any, id: number): Promise<void> {
+    const informe = await this.informeAprendizajeRepository.findById(id);
+    if (!informe) {
+      throw new NotFoundException(`No se encontró el informe con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.informeAprendizajeRepository.remove(id);
   }
 
-  async createEvaluacionPractica(dto: CreateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
-    await this.findPracticaById(dto.id_practica);
+  async createEvaluacionPractica(usuario: any, dto: CreateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     return this.evaluacionPracticaRepository.create(dto);
   }
 
-  async findEvaluacionesByPractica(idPractica: number, skip?: number, take?: number): Promise<EvaluacionPracticaEntity[]> {
+  async findEvaluacionesByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<EvaluacionPracticaEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.evaluacionPracticaRepository.findByPractica(idPractica, skip, take);
   }
 
@@ -177,42 +365,65 @@ export class PracticaService {
     return evaluacion;
   }
 
-  async updateEvaluacionPractica(id: number, dto: UpdateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
-    await this.evaluacionPracticaRepository.findById(id).then(evaluacion => {
-      if (!evaluacion) throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
-    });
+  async updateEvaluacionPractica(usuario: any, id: number, dto: UpdateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
+    const evaluacion = await this.evaluacionPracticaRepository.findById(id);
+    if (!evaluacion) {
+      throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, evaluacion.id_practica);
     return this.evaluacionPracticaRepository.update(id, dto);
   }
 
-  async removeEvaluacionPractica(id: number): Promise<void> {
-    await this.evaluacionPracticaRepository.findById(id).then(evaluacion => {
-      if (!evaluacion) throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
-    });
+  async removeEvaluacionPractica(usuario: any, id: number): Promise<void> {
+    const evaluacion = await this.evaluacionPracticaRepository.findById(id);
+    if (!evaluacion) {
+      throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, evaluacion.id_practica);
     return this.evaluacionPracticaRepository.remove(id);
   }
 
-  async createBitacoraSemanal(dto: CreateBitacoraSemanalDto): Promise<BitacoraSemanalEntity> {
-    await this.informeAprendizajeRepository.findById(dto.id_informe).then(informe => {
-      if (!informe) throw new NotFoundException(`No existe el informe con id ${dto.id_informe} para la bitácora`);
-    });
+  async createBitacoraSemanal(usuario: any, dto: CreateBitacoraSemanalDto): Promise<BitacoraSemanalEntity> {
+    const informe = await this.informeAprendizajeRepository.findById(dto.id_informe);
+    if (!informe) {
+      throw new NotFoundException(`No existe el informe con id ${dto.id_informe} para la bitácora`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.create(dto);
   }
 
-  async findBitacorasByInforme(idInforme: number, skip?: number, take?: number): Promise<BitacoraSemanalEntity[]> {
+  async findBitacorasByInforme(usuario: any, idInforme: number, skip?: number, take?: number): Promise<BitacoraSemanalEntity[]> {
+    const informe = await this.informeAprendizajeRepository.findById(idInforme);
+    if (!informe) {
+      throw new NotFoundException(`No se encontró el informe con id ${idInforme}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.findByInforme(idInforme, skip, take);
   }
 
-  async updateBitacoraSemanal(id: number, dto: UpdateBitacoraSemanalDto): Promise<BitacoraSemanalEntity> {
-    await this.bitacoraSemanalRepository.findById(id).then(bitacora => {
-      if (!bitacora) throw new NotFoundException(`No se encontró la bitácora con id ${id}`);
-    });
+  async updateBitacoraSemanal(usuario: any, id: number, dto: UpdateBitacoraSemanalDto): Promise<BitacoraSemanalEntity> {
+    const bitacora = await this.bitacoraSemanalRepository.findById(id);
+    if (!bitacora) {
+      throw new NotFoundException(`No se encontró la bitácora con id ${id}`);
+    }
+    const informe = await this.informeAprendizajeRepository.findById(bitacora.id_informe);
+    if (!informe) {
+      throw new NotFoundException(`No se encontró el informe asociado a la bitácora con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.update(id, dto);
   }
 
-  async removeBitacoraSemanal(id: number): Promise<void> {
-    await this.bitacoraSemanalRepository.findById(id).then(bitacora => {
-      if (!bitacora) throw new NotFoundException(`No se encontró la bitácora con id ${id}`);
-    });
+  async removeBitacoraSemanal(usuario: any, id: number): Promise<void> {
+    const bitacora = await this.bitacoraSemanalRepository.findById(id);
+    if (!bitacora) {
+      throw new NotFoundException(`No se encontró la bitácora con id ${id}`);
+    }
+    const informe = await this.informeAprendizajeRepository.findById(bitacora.id_informe);
+    if (!informe) {
+      throw new NotFoundException(`No se encontró el informe asociado a la bitácora con id ${id}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.remove(id);
   }
 

@@ -143,3 +143,103 @@
     background-color: #f0f4f8;
   }
 }
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  .unauthorized-container {
+    padding: 1rem;
+  }
+
+  .unauthorized-card {
+    padding: 1.75rem 1.5rem;
+    border-radius: 16px;
+    max-width: 380px;
+  }
+
+  .card-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+
+    .system-title {
+      font-size: 1.2rem;
+    }
+
+    .system-subtitle {
+      font-size: 0.8rem;
+    }
+  }
+
+  .icon-circle {
+    width: 52px;
+    height: 52px;
+
+    .lock-icon {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  .unauthorized-title {
+    font-size: 1.1rem;
+  }
+
+  .unauthorized-desc {
+    font-size: 0.8rem;
+    margin: 0 0 1.25rem 0;
+  }
+
+  .btn {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+
+    .btn-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .unauthorized-card {
+    padding: 1.25rem 1rem;
+    border-radius: 14px;
+    max-width: 320px;
+  }
+
+  .card-header .system-title {
+    font-size: 1rem;
+  }
+
+  .card-header .system-subtitle {
+    font-size: 0.7rem;
+  }
+
+  .icon-circle {
+    width: 44px;
+    height: 44px;
+
+    .lock-icon {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .unauthorized-title {
+    font-size: 0.95rem;
+  }
+
+  .unauthorized-desc {
+    font-size: 0.72rem;
+  }
+
+  .btn {
+    padding: 0.6rem 0.6rem;
+    font-size: 0.78rem;
+  }
+}

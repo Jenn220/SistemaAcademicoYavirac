@@ -1,7 +1,8 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateInformeAprendizajeDto {
   @IsNumber()
+  @Min(1)
   id_practica!: number;
 
   @IsOptional()

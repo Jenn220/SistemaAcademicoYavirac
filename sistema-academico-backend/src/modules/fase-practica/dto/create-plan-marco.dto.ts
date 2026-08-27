@@ -1,8 +1,9 @@
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreatePlanMarcoDto {
-  @IsInt()
-  id_practica: number;
+  @IsNumber()
+  @Min(1)
+  id_practica!: number;
 
   @IsOptional()
   @IsInt()
@@ -14,5 +15,10 @@ export class CreatePlanMarcoDto {
 
   @IsOptional()
   @IsInt()
+  @Min(1)
   id_nucleo_estructurante?: number;
+
+  @IsOptional()
+  @IsString()
+  estado?: string;
 }

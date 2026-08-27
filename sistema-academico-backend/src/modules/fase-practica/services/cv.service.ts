@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { CV_DATO_ACADEMICO_REPOSITORY, ICvDatoAcademicoRepository } from '../ports/cv-dato-academico.repository.port';
 import { CV_EXPERIENCIA_LABORAL_REPOSITORY, ICvExperienciaLaboralRepository } from '../ports/cv-experiencia-laboral.repository.port';
@@ -26,12 +26,22 @@ export class CvService {
     return this.datoAcademicoRepo.findByEstudiante(idEstudiante);
   }
 
-  async updateDatoAcademico(id: number, dto: UpdateCvDatoAcademicoDto) {
+  async updateDatoAcademico(id: number, dto: UpdateCvDatoAcademicoDto, idEstudianteSolicitante: number) {
+    await this.verificarPropietarioDatoAcademico(id, idEstudianteSolicitante);
     return this.datoAcademicoRepo.update(id, dto);
   }
 
-  async removeDatoAcademico(id: number) {
+  async removeDatoAcademico(id: number, idEstudianteSolicitante: number) {
+    await this.verificarPropietarioDatoAcademico(id, idEstudianteSolicitante);
     await this.datoAcademicoRepo.remove(id);
+  }
+
+  private async verificarPropietarioDatoAcademico(id: number, idEstudianteSolicitante: number) {
+    const entidad = await this.datoAcademicoRepo.findOne(id);
+    if (!entidad) throw new NotFoundException(`Registro academico con id ${id} no encontrado`);
+    if (entidad.id_estudiante !== idEstudianteSolicitante) {
+      throw new ForbiddenException('No tiene permisos sobre este registro.');
+    }
   }
 
   async createExperienciaLaboral(idEstudiante: number, dto: CreateCvExperienciaLaboralDto) {
@@ -42,12 +52,22 @@ export class CvService {
     return this.experienciaRepo.findByEstudiante(idEstudiante);
   }
 
-  async updateExperienciaLaboral(id: number, dto: UpdateCvExperienciaLaboralDto) {
+  async updateExperienciaLaboral(id: number, dto: UpdateCvExperienciaLaboralDto, idEstudianteSolicitante: number) {
+    await this.verificarPropietarioExperienciaLaboral(id, idEstudianteSolicitante);
     return this.experienciaRepo.update(id, dto);
   }
 
-  async removeExperienciaLaboral(id: number) {
+  async removeExperienciaLaboral(id: number, idEstudianteSolicitante: number) {
+    await this.verificarPropietarioExperienciaLaboral(id, idEstudianteSolicitante);
     await this.experienciaRepo.remove(id);
+  }
+
+  private async verificarPropietarioExperienciaLaboral(id: number, idEstudianteSolicitante: number) {
+    const entidad = await this.experienciaRepo.findOne(id);
+    if (!entidad) throw new NotFoundException(`Registro laboral con id ${id} no encontrado`);
+    if (entidad.id_estudiante !== idEstudianteSolicitante) {
+      throw new ForbiddenException('No tiene permisos sobre este registro.');
+    }
   }
 
   async createPracticaDual(idEstudiante: number, dto: CreateCvPracticaDualDto) {
@@ -58,11 +78,21 @@ export class CvService {
     return this.practicaDualRepo.findByEstudiante(idEstudiante);
   }
 
-  async updatePracticaDual(id: number, dto: UpdateCvPracticaDualDto) {
+  async updatePracticaDual(id: number, dto: UpdateCvPracticaDualDto, idEstudianteSolicitante: number) {
+    await this.verificarPropietarioPracticaDual(id, idEstudianteSolicitante);
     return this.practicaDualRepo.update(id, dto);
   }
 
-  async removePracticaDual(id: number) {
+  async removePracticaDual(id: number, idEstudianteSolicitante: number) {
+    await this.verificarPropietarioPracticaDual(id, idEstudianteSolicitante);
     await this.practicaDualRepo.remove(id);
+  }
+
+  private async verificarPropietarioPracticaDual(id: number, idEstudianteSolicitante: number) {
+    const entidad = await this.practicaDualRepo.findOne(id);
+    if (!entidad) throw new NotFoundException(`Practica dual con id ${id} no encontrada`);
+    if (entidad.id_estudiante !== idEstudianteSolicitante) {
+      throw new ForbiddenException('No tiene permisos sobre este registro.');
+    }
   }
 }

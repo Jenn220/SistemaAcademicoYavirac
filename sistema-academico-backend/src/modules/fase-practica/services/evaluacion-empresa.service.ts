@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
 import { DetalleEvaluacionEntity } from '../domain/detalle-evaluacion.entity';
 import { ItemRubricaEntity } from '../domain/item-rubrica.entity';
@@ -17,9 +18,42 @@ export class EvaluacionEmpresaService {
     private readonly detalleRepository: Repository<DetalleEvaluacionEntity>,
     @InjectRepository(ItemRubricaEntity)
     private readonly itemRubricaRepository: Repository<ItemRubricaEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async create(dto: CreateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
+  private async verificarAccesoPractica(usuario: any, idPractica: number): Promise<void> {
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    if (roles.includes('DOCENTE') || roles.includes('TUTOR_EMPRESARIAL')) {
+      const practica = await this.dataSource.query(
+        `SELECT id_docente, id_empresa FROM practica_estudiante WHERE id_practica = $1 LIMIT 1`,
+        [idPractica],
+      );
+      if (practica.length === 0) {
+        throw new NotFoundException('No tiene permiso para acceder a esta evaluación empresarial');
+      }
+      if (roles.includes('DOCENTE') && Number(practica[0].id_docente) === Number(usuario.idDocente)) return;
+      if (roles.includes('TUTOR_EMPRESARIAL') && Number(practica[0].id_empresa) === Number(usuario.idEmpresa)) return;
+      throw new ForbiddenException('No tiene permiso para acceder a esta evaluación empresarial');
+    }
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         JOIN practica_estudiante pe ON pe.id_matricula_detalle = md.id_matricula_detalle
+         WHERE pe.id_practica = $1 AND m.id_estudiante = $2`,
+        [idPractica, usuario.idEstudiante],
+      );
+      if (!esDueno || esDueno.length === 0) {
+        throw new ForbiddenException('No tiene permiso para acceder a esta evaluación empresarial');
+      }
+    }
+  }
+
+  async create(usuario: any, dto: CreateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
+    await this.verificarAccesoPractica(usuario, dto.id_practica);
     const evaluacion = this.evaluacionRepository.create({
       id_practica: dto.id_practica,
       id_rubrica: dto.id_evaluacion_plan_marco,
@@ -53,7 +87,8 @@ export class EvaluacionEmpresaService {
     } as EvaluacionEmpresaResponseDto;
   }
 
-  async findByPractica(idPractica: number): Promise<EvaluacionEmpresaResponseDto[]> {
+  async findByPractica(usuario: any, idPractica: number): Promise<EvaluacionEmpresaResponseDto[]> {
+    await this.verificarAccesoPractica(usuario, idPractica);
     const evaluaciones = await this.evaluacionRepository.find({
       where: { id_practica: idPractica },
     });
@@ -66,9 +101,10 @@ export class EvaluacionEmpresaService {
     })) as EvaluacionEmpresaResponseDto[];
   }
 
-  async findOne(id: number): Promise<EvaluacionEmpresaResponseDto | null> {
+  async findOne(usuario: any, id: number): Promise<EvaluacionEmpresaResponseDto | null> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) return null;
+    await this.verificarAccesoPractica(usuario, evaluacion.id_practica);
 
     return {
       id_evaluacion_empresa: evaluacion.id_evaluacion,
@@ -78,13 +114,14 @@ export class EvaluacionEmpresaService {
     } as EvaluacionEmpresaResponseDto;
   }
 
-  async update(id: number, dto: UpdateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
+  async update(usuario: any, id: number, dto: UpdateEvaluacionEmpresaDto): Promise<EvaluacionEmpresaResponseDto> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
 
-    Object.assign(evaluacion, {
-      nota_final_calculada: dto.calificacion,
-    });
+    await this.verificarAccesoPractica(usuario, evaluacion.id_practica);
+
+    if (dto.calificacion !== undefined) evaluacion.nota_final_calculada = dto.calificacion;
+    if (dto.observaciones !== undefined) evaluacion.observaciones = dto.observaciones;
 
     const saved = await this.evaluacionRepository.save(evaluacion);
 
@@ -93,15 +130,17 @@ export class EvaluacionEmpresaService {
       id_practica: saved.id_practica,
       id_evaluacion_plan_marco: saved.id_rubrica,
       calificacion: saved.nota_final_calculada,
+      observaciones: saved.observaciones,
       fortalezas: dto.fortalezas,
       oportunidades_mejora: dto.oportunidades_mejora,
       recomendaciones: dto.recomendaciones,
     } as EvaluacionEmpresaResponseDto;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(usuario: any, id: number): Promise<void> {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: id } });
     if (!evaluacion) throw new NotFoundException(`Evaluacion con id ${id} no encontrada`);
+    await this.verificarAccesoPractica(usuario, evaluacion.id_practica);
     await this.evaluacionRepository.remove(evaluacion);
   }
 }

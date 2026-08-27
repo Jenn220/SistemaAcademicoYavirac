@@ -1,6 +1,7 @@
 node_modules
 dist
 coverage
+.angular
 
 .git
 .gitignore
@@ -20,6 +21,7 @@ pnpm-debug.log*
 
 .vscode
 .idea
+.angular
 
 test
 tests
@@ -27,6 +29,10 @@ tests
 
 README.md
 *.md
+
+# Test artifacts
+SistemaAcademicoYavirac-FasePractica.postman_collection.json
+postman-env-local.json
 
 .DS_Store
 Thumbs.db

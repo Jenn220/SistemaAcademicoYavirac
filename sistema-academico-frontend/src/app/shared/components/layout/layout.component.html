@@ -1,6 +1,9 @@
 <div class="layout">
 
-  <aside class="sidebar">
+  <!-- Overlay para cerrar el menú en móviles -->
+  <div class="sidebar-overlay" [class.active]="sidebarAbierto()" (click)="toggleSidebar()"></div>
+
+  <aside class="sidebar" [class.open]="sidebarAbierto()">
 
     <div class="logo">
       <img src="assets/images/logo-yavirac.png" alt="Yavirac" class="logo-image">
@@ -8,166 +11,372 @@
 
     <div class="menu">
 
-      <div class="menu-title">
-        Inicio
-      </div>
+      <div class="menu-title">Inicio</div>
 
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="toggleSidebar()">
         🏠 Bienvenida
       </a>
 
 
-      <div class="menu-title">
-        Portafolio Docente
-      </div>
+      <div class="menu-title">Portafolio Docente</div>
 
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'informe-final'}"
-         routerLinkActive="active">
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
         💼 Informe Final
       </a>
 
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'aceptacion-notas'}"
-         routerLinkActive="active">
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
         ✅ Aceptación de Notas
       </a>
 
       <a routerLink="/portafolio-docente"
          [queryParams]="{modo: 'seguimiento-pea'}"
-         routerLinkActive="active">
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
         🗂️ Seguimiento PEA
       </a>
 
-      <div class="menu-title">
-        Fase Práctica
-      </div>
 
-      <a routerLink="/fase-practica/carta-compromiso"
-         routerLinkActive="active">
-        ✍️ Carta Compromiso
+      <div class="menu-title">Fase Práctica</div>
+
+      <!-- ESTUDIANTE entra directamente a sus módulos -->
+      @if (authService.tieneAlgunRol(['ESTUDIANTE'])) {
+
+        <a routerLink="/fase-practica/datos-maestra"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          ✏️ Mis Datos
+        </a>
+
+        <a routerLink="/fase-practica/carta-compromiso"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          ✍️ Carta Compromiso
+        </a>
+
+        <a routerLink="/fase-practica/registro-asistencia"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          📅 Registro Asistencia
+        </a>
+
+        <a routerLink="/fase-practica/curriculum"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🧾 Currículo
+        </a>
+
+        <a routerLink="/fase-practica/informe-aprendizaje"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          📝 Informe Aprendizaje
+        </a>
+
+        <a routerLink="/fase-practica/evaluacion-empresarial"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🏢 Evaluación Empresarial
+        </a>
+
+        <a routerLink="/fase-practica/evaluacion-instituto"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🏫 Evaluación Instituto
+        </a>
+
+        <a routerLink="/fase-practica/acta-induccion-seguridad"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🛡️ Acta Inducción Seguridad
+        </a>
+
+        <a routerLink="/fase-practica/acta-entorno-laboral"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🏭 Acta Entorno Laboral
+        </a>
+
+      } @else {
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'carta-compromiso'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          ✍️ Carta Compromiso
+        </a>
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'registro-asistencia'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          📅 Registro Asistencia
+        </a>
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'curriculum'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🧾 Currículo
+        </a>
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'informe-aprendizaje'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          📝 Informe Aprendizaje
+        </a>
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'evaluacion-empresarial'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🏢 Evaluación Empresarial
+        </a>
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'evaluacion-instituto'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🏫 Evaluación Instituto
+        </a>
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'acta-induccion-seguridad'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🛡️ Acta Inducción Seguridad
+        </a>
+
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'acta-entorno-laboral'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🏭 Acta Entorno Laboral
+        </a>
+      }
+
+
+      <!-- Plan Marco -->
+      <a routerLink="/fase-practica/plan-formacion"
+         [queryParams]="{modo: 'marco'}"
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
+        📐 Plan Marco
       </a>
 
-      <a routerLink="/fase-practica/registro-asistencia"
-         routerLinkActive="active">
-        📅 Registro Asistencia
-      </a>
 
-      <a routerLink="/fase-practica/curriculum"
-         routerLinkActive="active">
-        🧾 Currículo
-      </a>
+      <!-- Plan de Rotación -->
+      @if (!authService.tieneAlgunRol(['TUTOR_EMPRESARIAL'])) {
 
-      <a routerLink="/fase-practica/informe-aprendizaje"
-         routerLinkActive="active">
-        📝 Informe Aprendizaje
-      </a>
+        <a routerLink="/fase-practica/plan-formacion"
+           [queryParams]="{modo: 'rotacion'}"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🔄 Plan de Rotación
+        </a>
 
-      <a routerLink="/fase-practica/evaluacion-empresarial"
-         routerLinkActive="active">
-        🏢 Evaluación Empresarial
-      </a>
+      }
 
-      <a routerLink="/fase-practica/evaluacion-instituto"
-         routerLinkActive="active">
-        🏫 Evaluación Instituto
-      </a>
 
-      <!-- Sección Vinculación con la sociedad -->
-      <div class="menu-title">Vinculación con la sociedad</div>
+      <!-- Asignaciones -->
+      @if (tieneRol('COORDINADOR')) {
 
-      <a routerLink="/vinculacion" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         🤝 Vinculación
-      </a>
+        <a routerLink="/fase-practica/asignaciones"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🧑‍🏫 Asignaciones
+        </a>
 
-      <a routerLink="/vinculacion/actividades" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         📋 Actividades
-      </a>
+      }
 
-      <a routerLink="/vinculacion/asistencia" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         👨‍🏫 Asistencia Tutor
-      </a>
 
-      <a routerLink="/vinculacion/informes" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         📊 Informes
-      </a>
+      <!-- ============================================================
+           VINCULACIÓN CON LA SOCIEDAD
+           ============================================================ -->
 
-      <a routerLink="/vinculacion/nuevo" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact:true}">
-         🚀 Nuevo Proyecto
-      </a>
+      @if (tieneRol('ESTUDIANTE')) {
 
-      <!-- Sección Coordinación -->
+        <div class="menu-title">Vinculación con la sociedad</div>
+
+        <a routerLink="/vinculacion/estudiante/inicio-actividades"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          📋 Inicio Act.
+        </a>
+
+        <a routerLink="/vinculacion/estudiante/carta-compromiso"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🤝 Carta Compromiso
+        </a>
+
+        <a routerLink="/vinculacion/estudiante/control-asistencia"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          ⏱️ Control Asistencia
+        </a>
+
+        <a routerLink="/vinculacion/estudiante/registro-asistencia-tutor"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🧑‍💼 Registro Asistencia Tutor
+        </a>
+
+        <a routerLink="/vinculacion/estudiante/plan-aprendizaje"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          📚 Plan Aprendizaje
+        </a>
+
+        <a routerLink="/vinculacion/estudiante/certificado"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🎓 Certificado
+        </a>
+
+        <a routerLink="/vinculacion/estudiante/informe-final"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          📑 Informe Final
+        </a>
+
+      }
+
+
+      @if (tieneRol('DOCENTE')) {
+
+        <div class="menu-title">Vinculación con la sociedad</div>
+
+        <a routerLink="/vinculacion/docente/seleccionar"
+           routerLinkActive="active"
+           (click)="toggleSidebar()">
+          🔎 Seleccionar Estudiante
+        </a>
+
+      }
+
+
+      <!-- ============================================================
+           COORDINACIÓN
+           ============================================================ -->
+
       <div class="menu-title">Coordinación</div>
 
       <a routerLink="/coordinacion/cierre-periodo"
          routerLinkActive="active"
-         [routerLinkActiveOptions]="{exact:true}">
-         🔒 Cierre de Período
+         (click)="toggleSidebar()">
+        🔒 Cierre de Período
       </a>
 
-      <!-- Nueva Sección: Gestión de Accesos -->
+
+      <!-- ============================================================
+           GESTIÓN DE ACCESOS
+           ============================================================ -->
+
       <div class="menu-title">Gestión de Accesos</div>
 
-      <a routerLink="/auth/coordinador/desbloquear" 
-         routerLinkActive="active">
-         🔄 Resetear Contraseña
+      <a routerLink="/auth/coordinador/desbloquear"
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
+        🔐 Resetear Contraseña
       </a>
 
-      <a routerLink="/auth/coordinador/generar-accesos" 
-         routerLinkActive="active">
-         👤 Ingresar
+      <a routerLink="/auth/coordinador/generar-accesos"
+         routerLinkActive="active"
+         (click)="toggleSidebar()">
+        👤 Ingresar
       </a>
 
     </div>
 
   </aside>
 
+
+  <!-- ================================================================
+       CONTENIDO PRINCIPAL
+       ================================================================ -->
+
   <main class="main-content">
 
     <div class="topbar">
+
       <div class="topbar-left">
+
+        <button class="hamburger-btn"
+                (click)="toggleSidebar()"
+                aria-label="Abrir menú">
+          ☰
+        </button>
+
         <span class="brand-icon">📚</span>
+
         <h1>Sistema Académico</h1>
+
       </div>
+
+
       <div class="topbar-right">
-        <!-- Menú de Usuario con Dropdown -->
+
         <div class="user-menu-wrapper">
+
           <div class="user" (click)="toggleMenuUsuario()">
+
             <div class="avatar">
               <img src="assets/icons/usuario.png" alt="Avatar">
             </div>
+
             <div class="user-info">
-              <span class="name">{{ nombreUsuario() }}</span>
-              <span class="role">{{ rolUsuario() }}</span>
+
+              <span class="name">
+                {{ nombreUsuario() }}
+              </span>
+
+              <span class="role">
+                {{ rolUsuario() }}
+              </span>
+
             </div>
-            <span class="arrow" [class.rotated]="menuUsuarioAbierto()">▼</span>
+
+            <span class="arrow"
+                  [class.rotated]="menuUsuarioAbierto()">
+              ▼
+            </span>
+
           </div>
 
+
           @if (menuUsuarioAbierto()) {
+
             <div class="user-dropdown">
-              <a routerLink="/auth/cambiar-password" (click)="cerrarMenuUsuario()" class="dropdown-item">
+
+              <a routerLink="/auth/cambiar-password"
+                 (click)="cerrarMenuUsuario()"
+                 class="dropdown-item">
                 🔑 Cambiar Contraseña
               </a>
+
               <hr class="dropdown-divider" />
-              <button (click)="cerrarSesion()" class="dropdown-item dropdown-item--danger">
+
+              <button (click)="cerrarSesion()"
+                      class="dropdown-item dropdown-item--danger">
                 🚪 Cerrar Sesión
               </button>
+
             </div>
+
           }
+
         </div>
 
       </div>
+
     </div>
+
 
     <router-outlet></router-outlet>
 

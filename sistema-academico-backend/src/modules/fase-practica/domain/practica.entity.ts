@@ -48,6 +48,30 @@ export class PracticaEntity {
   @Column({ name: 'plazo_ejecucion', type: 'varchar', length: 100, nullable: true })
   plazo_ejecucion?: string;
 
+  @Column({ name: 'nombre_carrera', type: 'varchar', length: 150, nullable: true })
+  nombre_carrera?: string;
+
+  @Column({ name: 'nombre_nivel', type: 'varchar', length: 100, nullable: true })
+  nombre_nivel?: string;
+
+  @Column({ name: 'nombre_periodo', type: 'varchar', length: 100, nullable: true })
+  nombre_periodo?: string;
+
+  @Column({ name: 'nombre_nucleo', type: 'varchar', length: 200, nullable: true })
+  nombre_nucleo?: string;
+
+  @Column({ name: 'nombre_tutor_academico', type: 'varchar', length: 200, nullable: true })
+  nombre_tutor_academico?: string;
+
+  @Column({ name: 'nombre_coordinador', type: 'varchar', length: 200, nullable: true })
+  nombre_coordinador?: string;
+
+  @Column({ name: 'nombre_empresa', type: 'varchar', length: 200, nullable: true })
+  nombre_empresa?: string;
+
+  @Column({ name: 'nombre_tutor_empresarial', type: 'varchar', length: 200, nullable: true })
+  nombre_tutor_empresarial?: string;
+
   @Column({ name: 'tipo_sangre', type: 'varchar', length: 5, nullable: true })
   tipo_sangre?: string;
 
@@ -56,6 +80,12 @@ export class PracticaEntity {
 
   @Column({ name: 'contacto_emergencia_telefono', type: 'varchar', length: 20, nullable: true })
   contacto_emergencia_telefono?: string;
+
+  @Column({ name: 'hornada', type: 'varchar', length: 20, nullable: true })
+  hornada?: string;
+
+  @Column({ name: 'paralelo', type: 'varchar', length: 5, nullable: true })
+  paralelo?: string;
 
   @ManyToOne(() => EmpresaEntity, { eager: true })
   @JoinColumn({ name: 'id_empresa' })

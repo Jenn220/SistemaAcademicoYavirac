@@ -25,6 +25,9 @@ export class ItemPlanMarcoEntity {
   @Column({ name: 'semanas', type: 'integer', nullable: true })
   semanas?: number;
 
+  @Column({ name: 'nivel_real_alcanzado', type: 'integer', nullable: true })
+  nivel_real_alcanzado?: number;
+
   @Column({ name: 'responsable_puesto', type: 'varchar', length: 150, nullable: true })
   responsable_puesto?: string;
 }

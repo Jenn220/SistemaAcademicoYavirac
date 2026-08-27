@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DOCUMENTO_REPOSITORY, IDocumentoRepository } from '../ports/documento.repository.port';
 import { DocumentoEntity } from '../domain/documento.entity';
 import { DocumentoPlantillaService } from './documento-plantilla.service';
+import { NotificacionService } from './notificacion.service';
+import { EstadoDocumento } from '../dto/actualizar-estado-documento.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DocumentoService {
@@ -10,53 +13,345 @@ export class DocumentoService {
     @Inject(DOCUMENTO_REPOSITORY)
     private readonly documentoRepository: IDocumentoRepository,
     private readonly plantillaService: DocumentoPlantillaService,
+    private readonly notificacionService: NotificacionService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async guardarDocumento(
     codigo: string,
     titulo: string,
     contenido: any,
+    idPractica?: number,
+    idEstudiante?: number,
+    idUsuario?: number,
+    estado?: string,
   ): Promise<DocumentoEntity> {
-    return this.documentoRepository.guardarDocumento(codigo, titulo, contenido);
+    return this.documentoRepository.guardarDocumento(codigo, titulo, contenido, idPractica, idEstudiante, idUsuario, estado);
   }
 
-  getDatosMaestra(usuario: any) {
-    return this.plantillaService.getDatosMaestra(usuario);
+  async buscarIdDocumento(usuario: any, idPractica: number, codigoFormato: string): Promise<{ id_documento: number } | null> {
+    const documento = await this.documentoRepository.buscarPorPracticaYCodigo(idPractica, codigoFormato);
+    if (!documento) return null;
+    await this.verificarAccesoDocumento(usuario, documento);
+    return { id_documento: documento.id_documento };
   }
 
-  getCartaCompromiso(usuario: any) {
-    return this.plantillaService.getCartaCompromiso(usuario);
+  async buscarPorId(usuario: any, idDocumento: number): Promise<DocumentoEntity | null> {
+    const documento = await this.documentoRepository.buscarPorId(idDocumento);
+    if (!documento) return null;
+    await this.verificarAccesoDocumento(usuario, documento);
+    return documento;
   }
 
-  getCurriculum(usuario: any) {
-    return this.plantillaService.getCurriculum(usuario);
+  private async verificarAccesoDocumento(usuario: any, documento: DocumentoEntity): Promise<void> {
+    if (!documento.id_practica) {
+      return;
+    }
+
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    const practica = await this.dataSource.query(
+      `SELECT id_docente, id_empresa, id_matricula_detalle
+       FROM practica_estudiante
+       WHERE id_practica = $1 LIMIT 1`,
+      [documento.id_practica],
+    );
+
+    if (practica.length === 0) {
+      throw new ForbiddenException('No tiene permisos para acceder a este documento.');
+    }
+
+    const p = practica[0];
+
+    if (roles.includes('DOCENTE') && Number(p.id_docente) === Number(usuario.idDocente)) return;
+    if (roles.includes('TUTOR_EMPRESARIAL') && Number(p.id_empresa) === Number(usuario.idEmpresa)) return;
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
+        [p.id_matricula_detalle, usuario.idEstudiante],
+      );
+      if (esDueno && esDueno.length > 0) return;
+    }
+
+    throw new ForbiddenException('No tiene permisos para acceder a este documento.');
   }
 
-  getRegistroAsistencia(usuario: any) {
-    return this.plantillaService.getRegistroAsistencia(usuario);
+  getDatosMaestra(usuario: any, idPractica?: number) {
+    return this.plantillaService.getDatosMaestra(usuario, idPractica);
   }
 
-  getInformeAprendizaje(usuario: any) {
-    return this.plantillaService.getInformeAprendizaje(usuario);
+  getCartaCompromiso(usuario: any, idPractica?: number) {
+    return this.plantillaService.getCartaCompromiso(usuario, idPractica);
   }
 
-  getEvaluacionEmpresarial(usuario: any) {
-    return this.plantillaService.getEvaluacionEmpresarial(usuario);
+  getCurriculum(usuario: any, idPractica?: number) {
+    return this.plantillaService.getCurriculum(usuario, idPractica);
   }
 
-  getEvaluacionInstituto(usuario: any) {
-    return this.plantillaService.getEvaluacionInstituto(usuario);
+  getRegistroAsistencia(usuario: any, idPractica?: number) {
+    return this.plantillaService.getRegistroAsistencia(usuario, idPractica);
   }
 
-  getActaInduccionSeguridad(usuario: any) {
-    return this.plantillaService.getActaInduccionSeguridad(usuario);
+  getInformeAprendizaje(usuario: any, idPractica?: number) {
+    return this.plantillaService.getInformeAprendizaje(usuario, idPractica);
   }
 
-  getActaEntornoLaboral(usuario: any) {
-    return this.plantillaService.getActaEntornoLaboral(usuario);
+  getEvaluacionEmpresarial(usuario: any, idPractica?: number) {
+    return this.plantillaService.getEvaluacionEmpresarial(usuario, idPractica);
   }
 
-  getTodosLosDocumentos(usuario: any) {
-    return this.plantillaService.getTodosLosDocumentos(usuario);
+  getEvaluacionInstituto(usuario: any, idPractica?: number) {
+    return this.plantillaService.getEvaluacionInstituto(usuario, idPractica);
+  }
+
+  getActaInduccionSeguridad(usuario: any, idPractica?: number) {
+    return this.plantillaService.getActaInduccionSeguridad(usuario, idPractica);
+  }
+
+  getActaEntornoLaboral(usuario: any, idPractica?: number) {
+    return this.plantillaService.getActaEntornoLaboral(usuario, idPractica);
+  }
+
+  buscarCandidatosActaEntornoLaboral(usuario: any, idPractica?: number) {
+    return this.plantillaService.buscarCandidatosActaEntornoLaboral(usuario, idPractica);
+  }
+
+  getTodosLosDocumentos(usuario: any, idPractica?: number) {
+    return this.plantillaService.getTodosLosDocumentos(usuario, idPractica);
+  }
+
+  async actualizarDocumentosPorPractica(usuario: any, idPractica: number): Promise<void> {
+    const documentos = await this.documentoRepository.listarPorPractica(idPractica);
+
+    await this.dataSource.manager.transaction(async (manager) => {
+      const generadores: Record<string, (usuario: any, idPractica?: number) => Promise<any>> = {
+        F01: (u, id) => this.plantillaService.getCartaCompromiso(u, id, true),
+        F02: (u, id) => this.plantillaService.getCurriculum(u, id, true),
+        F05: (u, id) => this.plantillaService.getRegistroAsistencia(u, id, true),
+        F06: (u, id) => this.plantillaService.getInformeAprendizaje(u, id, true),
+        F07: (u, id) => this.plantillaService.getEvaluacionEmpresarial(u, id, true),
+        F08: (u, id) => this.plantillaService.getEvaluacionInstituto(u, id, true),
+        F10: (u, id) => this.plantillaService.getActaInduccionSeguridad(u, id, true),
+        F11: (u, id) => this.plantillaService.getActaEntornoLaboral(u, id, true),
+      };
+
+      for (const documento of documentos) {
+        const generador = generadores[documento.codigo_formato];
+        if (!generador) continue;
+
+        try {
+          const contenidoActualizado = await generador(usuario, idPractica);
+          documento.contenido = contenidoActualizado;
+          documento.updated_at = new Date();
+          await manager.getRepository(DocumentoEntity).save(documento);
+        } catch (error) {
+          console.error(`Error actualizando documento ${documento.codigo_formato} para práctica ${idPractica}`, error);
+          throw error;
+        }
+      }
+    });
+  }
+
+  async cambiarEstado(idDocumento: number, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<DocumentoEntity | null> {
+    if (!usuarioOrigen?.roles) {
+      throw new Error('No autorizado');
+    }
+
+    const roles = usuarioOrigen.roles;
+    const esEstudiante = roles.includes('ESTUDIANTE');
+    const esDocente = roles.includes('DOCENTE');
+    const esTutorEmpresarial = roles.includes('TUTOR_EMPRESARIAL');
+    const esCoordinador = roles.includes('COORDINADOR');
+
+    if (!esEstudiante && !esDocente && !esTutorEmpresarial && !esCoordinador) {
+      throw new ForbiddenException('No autorizado para cambiar el estado del documento');
+    }
+
+    const documento = await this.documentoRepository.actualizarEstado(idDocumento, estado, comentarios);
+    if (!documento) {
+      return null;
+    }
+
+    const transicionesPermitidas: Record<string, string[]> = {
+      'borrador': ['pendiente_revision'],
+      'pendiente_revision': ['aprobado', 'rechazado'],
+      'rechazado': ['pendiente_revision'],
+    };
+
+    const estadoActual = documento.estado ?? 'borrador';
+    const permitidos = transicionesPermitidas[estadoActual] ?? [];
+
+    if (!permitidos.includes(estado)) {
+      throw new ForbiddenException(`No se puede cambiar el estado de "${estadoActual}" a "${estado}".`);
+    }
+
+    if ((esEstudiante || esTutorEmpresarial) && estado !== 'pendiente_revision') {
+      throw new ForbiddenException('El estudiante o tutor empresarial solo puede enviar documentos a revisión');
+    }
+
+    await this.notificarCambioEstado(documento, estado, comentarios, usuarioOrigen);
+
+    return documento;
+  }
+
+  private async notificarCambioEstado(documento: DocumentoEntity, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<void> {
+    if (!documento.id_practica) {
+      return;
+    }
+
+    const notificaEstudiante = !!documento.id_estudiante;
+    const esEvaluacionEmpresa = ['F07', 'F08'].includes(documento.codigo_formato);
+
+    const tipoMap: Record<string, string> = {
+      [EstadoDocumento.PENDIENTE_REVISION]: 'documento_enviado_revision',
+      [EstadoDocumento.APROBADO]: 'documento_aprobado',
+      [EstadoDocumento.RECHAZADO]: 'documento_rechazado',
+    };
+
+    const tipo = tipoMap[estado];
+    if (!tipo) {
+      return;
+    }
+
+    const mensaje = this.construirMensajeNotificacion(documento.codigo_formato, estado, comentarios);
+    const idUsuarioOrigen = usuarioOrigen?.sub ? Number(usuarioOrigen.sub) : undefined;
+
+    switch (estado) {
+      case EstadoDocumento.PENDIENTE_REVISION:
+        await this.notificarDocenteOTutor(documento, mensaje, idUsuarioOrigen);
+        break;
+      case EstadoDocumento.APROBADO:
+        if (notificaEstudiante) {
+          await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        }
+        if (esEvaluacionEmpresa) {
+          await this.notificarTutorEmpresarial(documento, mensaje, idUsuarioOrigen);
+        }
+        break;
+      case EstadoDocumento.RECHAZADO:
+        if (notificaEstudiante) {
+          await this.notificarEstudiante(documento, mensaje, idUsuarioOrigen);
+        }
+        if (esEvaluacionEmpresa) {
+          await this.notificarTutorEmpresarial(documento, mensaje, idUsuarioOrigen);
+        }
+        break;
+    }
+  }
+
+  private construirMensajeNotificacion(codigoFormato: string, estado: string, comentarios?: string): string {
+    const nombreDocumento = this.obtenerNombreDocumento(codigoFormato);
+    const estadoTexto = this.obtenerTextoEstado(estado);
+
+    let mensaje = `El documento ${nombreDocumento} cambió a estado: ${estadoTexto}.`;
+
+    if (comentarios && estado === EstadoDocumento.RECHAZADO) {
+      mensaje += ` Comentarios: ${comentarios}`;
+    }
+
+    return mensaje;
+  }
+
+  private obtenerNombreDocumento(codigo: string): string {
+    const nombres: Record<string, string> = {
+      F01: 'Carta Compromiso',
+      F02: 'Currículo',
+      F05: 'Registro de Asistencia',
+      F06: 'Informe de Aprendizaje',
+      F07: 'Evaluación Empresarial',
+      F08: 'Evaluación Instituto',
+      F10: 'Acta de Inducción de Seguridad',
+      F11: 'Acta del Entorno Laboral',
+    };
+    return nombres[codigo] || codigo;
+  }
+
+  private obtenerTextoEstado(estado: string): string {
+    const textos: Record<string, string> = {
+      [EstadoDocumento.PENDIENTE_REVISION]: 'Pendiente de revisión',
+      [EstadoDocumento.APROBADO]: 'Aprobado',
+      [EstadoDocumento.RECHAZADO]: 'Rechazado',
+    };
+    return textos[estado] || estado;
+  }
+
+  private async notificarDocenteOTutor(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_practica) return;
+
+    try {
+      const practicaRows = await this.dataSource.query(
+        `SELECT id_docente FROM practica_estudiante WHERE id_practica = $1 LIMIT 1`,
+        [documento.id_practica],
+      );
+
+      if (practicaRows.length === 0) return;
+
+      const idDocente = practicaRows[0].id_docente;
+
+      if (idDocente) {
+        const docenteUsuario = await this.dataSource.query(
+          `SELECT id_usuario FROM usuario WHERE id_docente = $1 AND estado = 'ACTIVO' LIMIT 1`,
+          [idDocente],
+        );
+
+        if (docenteUsuario.length > 0) {
+          await this.notificacionService.crearNotificacion(
+            Number(docenteUsuario[0].id_usuario),
+            'documento_enviado_revision',
+            mensaje,
+            idUsuarioOrigen,
+            documento.id_practica,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error notificando docente', error);
+    }
+  }
+
+  private async notificarEstudiante(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_estudiante) return;
+
+    await this.notificacionService.crearNotificacion(
+      documento.id_estudiante,
+      'documento_estado_cambiado',
+      mensaje,
+      idUsuarioOrigen,
+      documento.id_practica,
+    );
+  }
+
+  /** Notifica al TUTOR_EMPRESARIAL de la práctica (para F07/F08 aprobados/rechazados). */
+  private async notificarTutorEmpresarial(documento: DocumentoEntity, mensaje: string, idUsuarioOrigen?: number): Promise<void> {
+    if (!documento.id_practica) return;
+
+    try {
+      const rows = await this.dataSource.query(
+        `SELECT u.id_usuario
+         FROM usuario u
+         JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+         JOIN rol r ON r.id_rol = ur.id_rol
+         WHERE r.nombre = 'TUTOR_EMPRESARIAL' AND u.estado = 'ACTIVO'
+         AND u.id_empresa = (SELECT id_empresa FROM practica_estudiante WHERE id_practica = $1 LIMIT 1)
+         LIMIT 1`,
+        [documento.id_practica],
+      );
+
+      if (rows.length > 0) {
+        await this.notificacionService.crearNotificacion(
+          Number(rows[0].id_usuario),
+          'documento_estado_cambiado',
+          mensaje,
+          idUsuarioOrigen,
+          documento.id_practica,
+        );
+      }
+    } catch (error) {
+      console.error('Error notificando tutor empresarial', error);
+    }
   }
 }

@@ -1,8 +1,10 @@
+@import '../../_shared-documento-styles';
+
 :host{
 
     display:block;
 
-    background:#e9ecef;
+    background:#f0f2f5;
 
     min-height:100vh;
 
@@ -16,15 +18,17 @@ Toolbar
 
 .toolbar{
 
-    width:297mm;
+    width:100%;
+
+    max-width:297mm;
 
     margin:0 auto 20px;
 
     display:flex;
 
-    justify-content:space-between;
+    align-items:center;
 
-    gap:10px;
+    gap:12px;
 
 }
 
@@ -233,6 +237,20 @@ Tablas de evaluación (lado a lado)
 
 }
 
+.celda-nivel.deshabilitada{
+
+    cursor:not-allowed;
+
+    opacity:.6;
+
+}
+
+.celda-nivel.deshabilitada:hover{
+
+    background:transparent;
+
+}
+
 .solo-print{
 
     display:none;
@@ -372,6 +390,19 @@ PDF / impresión
         min-height:auto;
         box-shadow:none;
         padding:12mm;
+    }
+
+}
+
+/*=========================
+Responsive (celular / tablet)
+=========================*/
+
+@media (max-width:768px){
+
+    :host{
+        padding:15px 0;
+        overflow-x:auto;
     }
 
 }

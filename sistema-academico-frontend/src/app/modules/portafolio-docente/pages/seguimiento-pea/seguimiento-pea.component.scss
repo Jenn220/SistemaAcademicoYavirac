@@ -1,38 +1,72 @@
-.seguimiento-pea {
-  padding: 24px;
+/* ============================================
+   1. :host
+   ============================================ */
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
 }
 
-// ---------------------------------------------------------------------
-// Estados (cargando / error)
-// ---------------------------------------------------------------------
+/* ============================================
+   2. Contenedor principal
+   ============================================ */
+.seguimiento-pea {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+/* Línea decorativa superior */
+.seguimiento-pea::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 2rem;
+  right: 2rem;
+  height: 4px;
+  background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+  border-radius: 0 0 4px 4px;
+}
+
+/* ============================================
+   3. Estados (cargando / error)
+   ============================================ */
 .estado {
   padding: 16px 18px;
-  border-radius: 10px;
-  background: #f1f5f9;
-  color: #334155;
+  border-radius: 8px;
+  background: #f7faff;
+  color: #1e2a3a;
   margin-bottom: 16px;
 
   &--error {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #fff8f8;
+    color: #dc3545;
+    border-left: 5px solid #dc3545;
+    border-radius: 0 8px 8px 0;
   }
 }
 
-// ---------------------------------------------------------------------
-// Formulario de creación (representante estudiantil)
-// ---------------------------------------------------------------------
+/* ============================================
+   4. Formulario de creación
+   ============================================ */
 .crear-seguimiento {
   max-width: 480px;
   padding: 28px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  border: 1px solid #eef1f6;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 14px 40px rgba(20, 50, 90, 0.08), 0 2px 8px rgba(20, 50, 90, 0.05);
+  border: 1px solid #e8ecf2;
 
   h2 {
     margin-top: 0;
     font-size: 1.15rem;
-    color: #0f172a;
+    color: #163d8c;
+    font-weight: 700;
   }
 
   label {
@@ -40,65 +74,72 @@
     margin: 12px 0 4px;
     font-weight: 600;
     font-size: 0.9rem;
-    color: #334155;
+    color: #1e2a3a;
   }
 
   select {
     width: 100%;
-    padding: 9px 12px;
+    padding: 0.6rem 1rem;
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
+    border: 2px solid #e8ecf2;
     box-sizing: border-box;
     font-size: 0.9rem;
-    color: #1e293b;
-    background: #fff;
+    color: #1e2a3a;
+    background: #fafcff;
     cursor: pointer;
+    transition: all 0.3s ease;
 
     &:focus {
       outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      border-color: #163d8c;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
     }
   }
 
   .aviso-texto {
-    color: #92400e;
-    background: #fef3c7;
+    color: #163d8c;
+    background: #f7faff;
     padding: 8px 10px;
     border-radius: 6px;
     font-size: 0.82rem;
     margin-top: 10px;
+    border-left: 5px solid #ff7b22;
   }
 
   .error-texto {
-    color: #991b1b;
+    color: #dc3545;
     font-size: 0.85rem;
   }
 
   button {
     margin-top: 16px;
-    padding: 10px 16px;
+    padding: 0.7rem 2rem;
     border-radius: 8px;
     border: none;
-    background: #2563eb;
-    color: #fff;
+    background: #163d8c;
+    color: #ffffff;
     cursor: pointer;
     font-weight: 600;
+    transition: all 0.3s ease;
 
     &:hover {
-      background: #1d4ed8;
+      background: #0f2d66;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
     }
 
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
   }
 }
 
-// ---------------------------------------------------------------------
-// Toolbar
-// ---------------------------------------------------------------------
+/* ============================================
+   5. Toolbar
+   ============================================ */
 .seguimiento-pea__toolbar {
   display: flex;
   align-items: center;
@@ -107,7 +148,7 @@
   flex-wrap: wrap;
 
   .mensaje-guardado {
-    color: #166534;
+    color: #28a745;
     font-size: 0.85rem;
     font-weight: 600;
   }
@@ -117,15 +158,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 16px;
+  padding: 0.7rem 2rem;
   border-radius: 8px;
-  border: 1px solid #2563eb;
-  background: #2563eb;
-  color: #fff;
+  border: none;
+  background: #163d8c;
+  color: #ffffff;
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 600;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.3s ease;
 
   svg {
     width: 16px;
@@ -133,22 +174,26 @@
   }
 
   &:hover {
-    background: #1d4ed8;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    background: #0f2d66;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
   }
 
   &--outline {
-    background: #fff;
-    color: #2563eb;
+    background: transparent;
+    color: #163d8c;
+    border: 2px solid #163d8c;
 
     &:hover {
-      background: #eff6ff;
-      box-shadow: none;
+      background: #f7faff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(22, 61, 140, 0.15);
     }
   }
 }
@@ -156,39 +201,140 @@
 .btn-link {
   background: none;
   border: none;
-  color: #2563eb;
+  color: #163d8c;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
+  transition: all 0.3s ease;
 
   &:hover {
     text-decoration: underline;
+    color: #0f2d66;
   }
 }
 
 .btn-icono {
   background: none;
   border: none;
-  color: #991b1b;
+  color: #dc3545;
   cursor: pointer;
   font-size: 0.9rem;
   padding: 2px 6px;
+  transition: all 0.3s ease;
 
   &:hover {
-    background: #fee2e2;
+    background: #fff8f8;
     border-radius: 4px;
   }
 }
 
-// ---------------------------------------------------------------------
-// Documento (formato-02) — mismo tratamiento que formato-04 / formato-07
-// ---------------------------------------------------------------------
+/* ============================================
+   6. Membrete institucional
+   ============================================ */
+.membrete {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px;
+  border-bottom: 2px solid #e8ecf2;
+  position: relative;
+}
+
+.membrete::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #163d8c 0%, #ff7b22 50%, #163d8c 100%);
+}
+
+.membrete__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-right: 1px solid #e8ecf2;
+
+  img {
+    max-width: 100%;
+    max-height: 64px;
+    object-fit: contain;
+  }
+}
+
+.membrete__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.membrete__institucion {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e2a3a;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__macroproceso {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  background: #f7faff;
+  color: #163d8c;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__proceso {
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  background: #f7faff;
+  color: #163d8c;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__formato {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e2a3a;
+}
+
+.membrete__codigo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-left: 1px solid #e8ecf2;
+  padding: 8px;
+
+  span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #6a7a8e;
+    text-transform: uppercase;
+  }
+
+  strong {
+    font-size: 0.85rem;
+    color: #1e2a3a;
+  }
+}
+
+/* ============================================
+   7. Documento (formato-02)
+   ============================================ */
 .formato-02 {
-  background: #fff;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  border: 1px solid #dbe1ea;
+  box-shadow: 0 14px 40px rgba(20, 50, 90, 0.08), 0 2px 8px rgba(20, 50, 90, 0.05);
+  border: 1px solid #e8ecf2;
   padding: 0 0 28px;
   width: 100%;
   overflow: hidden;
@@ -201,28 +347,39 @@
 
   th,
   td {
-    border: 1px solid #cbd5e1;
+    border: 1px solid #e8ecf2;
     padding: 7px 10px;
     text-align: left;
   }
 
   .tabla-datos {
     th {
-      background: #eff6ff;
-      color: #1e3a8a;
+      background: #f0f4fc;
+      color: #163d8c;
       width: 15%;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     td {
-      color: #1e293b;
+      color: #1e2a3a;
 
       select {
         width: 100%;
         padding: 4px 6px;
-        border-radius: 6px;
-        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        border: 2px solid #e8ecf2;
         font-size: 0.85rem;
+        background: #fafcff;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #163d8c;
+          box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
+        }
       }
     }
   }
@@ -232,6 +389,7 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .tabla-semanas {
@@ -239,22 +397,22 @@
     width: calc(100% - 48px);
 
     th {
-      background: #eff6ff;
-      color: #1e3a8a;
+      background: #f0f4fc;
+      color: #163d8c;
       text-align: center;
       font-weight: 700;
-      font-size: 0.75rem;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.5px;
     }
 
     tbody tr:nth-child(even) {
-      background: #fafbfc;
+      background: #fafcff;
     }
 
     td {
       vertical-align: top;
-      color: #1e293b;
+      color: #1e2a3a;
     }
 
     .col-firma {
@@ -270,14 +428,14 @@
       background: transparent;
       font-family: inherit;
       font-size: 0.82rem;
-      color: #1e293b;
+      color: #1e2a3a;
       resize: vertical;
       padding: 4px 2px;
 
       &:focus {
         outline: none;
-        background: #eff6ff;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        background: #f7faff;
+        box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
         border-radius: 4px;
       }
     }
@@ -293,9 +451,9 @@
     h3 {
       font-size: 0.8rem;
       font-weight: 700;
-      color: #1e3a8a;
-      border-left: 4px solid #2563eb;
-      padding: 4px 0 4px 10px;
+      color: #163d8c;
+      border-left: 5px solid #ff7b22;
+      padding: 4px 0 4px 12px;
       margin: 0 0 8px;
       text-transform: uppercase;
     }
@@ -303,119 +461,297 @@
     textarea {
       width: 100%;
       box-sizing: border-box;
-      padding: 10px 12px;
+      padding: 0.6rem 1rem;
       border-radius: 8px;
-      border: 1px solid #dbe1ea;
-      background: #fafbfc;
+      border: 2px solid #e8ecf2;
+      background: #fafcff;
       font-family: inherit;
       font-size: 0.85rem;
       line-height: 1.5;
       resize: vertical;
-      color: #1e293b;
+      color: #1e2a3a;
+      transition: all 0.3s ease;
 
       &:focus {
         outline: none;
-        border-color: #2563eb;
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: #163d8c;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
       }
     }
 
     .col-firma--ancha {
       margin-top: 8px;
       height: 50px;
-      border-bottom: 1px solid #cbd5e1;
+      border-bottom: 1px solid #e8ecf2;
     }
   }
 }
 
-// ---------------------------------------------------------------------
-// Membrete institucional — idéntico a informe-final / aceptacion-notas
-// ---------------------------------------------------------------------
-.membrete {
-  display: grid;
-  grid-template-columns: 90px 1fr 110px;
-  border-bottom: 2px solid #0f172a;
+/* ============================================
+   8. Responsive
+   ============================================ */
+@media (max-width: 1024px) {
+  .seguimiento-pea {
+    padding: 2rem 1.5rem;
+  }
 
-  &__logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    border-right: 1px solid #cbd5e1;
+  .crear-seguimiento {
+    max-width: 100%;
+    padding: 20px;
+  }
 
-    img {
-      max-width: 100%;
-      max-height: 64px;
-      object-fit: contain;
+  .membrete {
+    grid-template-columns: 70px 1fr 90px;
+  }
+}
+
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .seguimiento-pea {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .seguimiento-pea::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .crear-seguimiento {
+    padding: 16px;
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    select {
+      font-size: 0.8rem;
+      padding: 0.5rem 0.8rem;
+    }
+
+    button {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .aviso-texto {
+      font-size: 0.75rem;
     }
   }
 
-  &__info {
-    display: flex;
+  .membrete {
+    grid-template-columns: 60px 1fr 70px;
+  }
+
+  .membrete__institucion {
+    font-size: 0.68rem;
+  }
+
+  .membrete__macroproceso,
+  .membrete__proceso,
+  .membrete__formato {
+    font-size: 0.62rem;
+  }
+
+  .membrete__codigo {
+    span {
+      font-size: 0.58rem;
+    }
+    strong {
+      font-size: 0.72rem;
+    }
+  }
+
+  .seguimiento-pea__toolbar {
     flex-direction: column;
+    align-items: stretch;
+
+    .btn-toolbar {
+      justify-content: center;
+      width: 100%;
+    }
+
+    .btn-link {
+      text-align: center;
+    }
+
+    .mensaje-guardado {
+      text-align: center;
+    }
   }
 
-  &__institucion {
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-align: center;
-    color: #0f172a;
-    border-bottom: 1px solid #cbd5e1;
+  .formato-02 {
+    padding: 0 0 20px;
+
+    .tabla-datos {
+      th {
+        width: 25%;
+        font-size: 10px;
+      }
+
+      td {
+        font-size: 0.78rem;
+
+        select {
+          font-size: 0.78rem;
+          padding: 3px 4px;
+        }
+      }
+    }
+
+    .acciones-representante {
+      padding: 10px 16px;
+      flex-direction: column;
+      align-items: stretch;
+
+      .btn-toolbar {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .tabla-semanas {
+      margin: 16px 16px 0;
+      width: calc(100% - 32px);
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+
+      th {
+        font-size: 10px;
+      }
+
+      td {
+        font-size: 0.75rem;
+        padding: 5px 7px;
+      }
+
+      input,
+      textarea {
+        font-size: 0.75rem;
+      }
+
+      .col-firma {
+        min-width: 50px;
+        height: 36px;
+      }
+    }
+
+    .observaciones-finales {
+      margin: 16px 16px 0;
+
+      h3 {
+        font-size: 0.7rem;
+      }
+
+      textarea {
+        font-size: 0.78rem;
+        padding: 0.5rem 0.8rem;
+      }
+    }
+
+    > .btn-toolbar {
+      margin: 14px 16px 0;
+      width: calc(100% - 32px);
+      justify-content: center;
+    }
   }
 
-  &__macroproceso {
-    padding: 5px 12px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-align: center;
-    background: #bfdbfe;
-    color: #1e3a8a;
-    border-bottom: 1px solid #cbd5e1;
+  .estado {
+    font-size: 0.85rem;
+    padding: 12px 14px;
   }
 
-  &__proceso {
-    padding: 5px 12px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-align: center;
-    background: #fecaca;
-    color: #7f1d1d;
-    border-bottom: 1px solid #cbd5e1;
+  .btn-toolbar {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .seguimiento-pea {
+    padding: 1rem 0.8rem;
   }
 
-  &__formato {
-    padding: 5px 12px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-align: center;
-    color: #0f172a;
+  .membrete {
+    grid-template-columns: 50px 1fr 60px;
   }
 
-  &__codigo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border-left: 1px solid #cbd5e1;
-    padding: 8px;
+  .membrete__logo {
+    img {
+      max-height: 40px;
+    }
+  }
+
+  .membrete__institucion {
+    font-size: 0.6rem;
+    padding: 4px 8px;
+  }
+
+  .membrete__macroproceso,
+  .membrete__proceso,
+  .membrete__formato {
+    font-size: 0.55rem;
+    padding: 3px 8px;
+  }
+
+  .membrete__codigo {
+    padding: 4px 6px;
 
     span {
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
+      font-size: 0.5rem;
+    }
+    strong {
+      font-size: 0.65rem;
+    }
+  }
+
+  .formato-02 {
+    .tabla-datos {
+      th,
+      td {
+        font-size: 0.7rem;
+        padding: 4px 5px;
+      }
+
+      th {
+        font-size: 8px;
+      }
     }
 
-    strong {
-      font-size: 0.85rem;
-      color: #0f172a;
+    .tabla-semanas {
+      th {
+        font-size: 8px;
+      }
+
+      td {
+        font-size: 0.68rem;
+        padding: 4px 5px;
+      }
     }
+
+    .observaciones-finales {
+      textarea {
+        font-size: 0.72rem;
+        padding: 0.4rem 0.6rem;
+      }
+    }
+  }
+
+  .btn-toolbar {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
   }
 }
 
+/* ============================================
+   9. Estilos de impresión
+   ============================================ */
 @media print {
   .no-print {
     display: none !important;
@@ -431,6 +767,28 @@
 
   .formato-02 {
     box-shadow: none;
-    border: 1px solid #000;
+    border: 1px solid #1e2a3a;
+  }
+
+  :host {
+    background: #ffffff;
+    padding: 0;
+  }
+
+  .seguimiento-pea {
+    padding: 2rem;
+    box-shadow: none;
+  }
+
+  .seguimiento-pea::before {
+    display: none;
+  }
+
+  .membrete {
+    border-bottom: 2px solid #1e2a3a;
+  }
+
+  .membrete::after {
+    display: none;
   }
 }

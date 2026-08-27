@@ -10,4 +10,5 @@ export interface IPlanRotacionSemanaRepository {
   findOne(id: number): Promise<PlanRotacionSemanaEntity | null>;
   update(id: number, dto: UpdatePlanRotacionSemanaDto): Promise<PlanRotacionSemanaEntity>;
   remove(id: number): Promise<void>;
+  deleteByPlanRotacion(idPlanRotacion: number): Promise<void>;
 }

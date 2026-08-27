@@ -1,11 +1,13 @@
-import { IsNumber, IsOptional, IsString, MaxLength, Max } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength, Max, Min } from 'class-validator';
 
 export class CreateDetalleEvaluacionDto {
   @IsOptional()
   @IsNumber()
+  @Min(1)
   id_evaluacion?: number;
 
   @IsNumber()
+  @Min(1)
   id_item!: number;
 
   @IsNumber()

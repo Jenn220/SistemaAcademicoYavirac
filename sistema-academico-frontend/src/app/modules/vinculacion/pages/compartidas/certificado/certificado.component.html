@@ -1,0 +1,60 @@
+<div class="certificado-container" *ngIf="!loading && !error && certificado">
+  
+  <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+  <div class="acciones-export">
+    <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
+      📊 Exportar a Excel
+    </button>
+  </div>
+
+  <div class="document-header">
+    <h2>CERTIFICADO DE VINCULACIÓN CON LA COMUNIDAD</h2>
+    <p class="instituto">{{ certificado.institucion }}</p>
+  </div>
+
+  <div class="certificado-content">
+    <p><strong>Quito,</strong> {{ certificado.fecha_emision }}</p>
+
+    <p>
+      Por medio de la presente dejo constancia que el/la señor(ita)
+      <strong>{{ certificado.estudiante }}</strong> con C.I. <strong>{{ certificado.cedula }}</strong>,
+      estudiante de la carrera de <strong>{{ certificado.carrera }}</strong>
+      del Instituto Superior Tecnológico de Turismo y Patrimonio "YAVIRAC"
+      desempeñó las actividades y tareas establecidas en la planificación del proyecto:
+    </p>
+
+    <div class="campo">
+      <p><strong>{{ proyectoNombre || certificado.proyecto }}</strong></p>
+    </div>
+
+    <p>
+      propuesto para esta comunidad, desde el
+      <strong>{{ formatearFecha(fechaInicio || certificado.fecha_inicio) }}</strong>
+      hasta el
+      <strong>{{ formatearFecha(fechaFin || certificado.fecha_fin) }}</strong>,
+      acumulando un total de <strong>{{ totalHoras || certificado.total_horas }}</strong> horas de vinculación social,
+      demostrando en todo momento responsabilidad, capacidad y entusiasmo en el desarrollo de las labores encomendadas.
+    </p>
+
+    <div class="firma">
+      <p>Atentamente,</p>
+      <div class="firma-linea">
+        <span>_________________________</span>
+        <span>{{ certificado.representante }}</span>
+        <span>{{ certificado.institucion }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
+
+<!-- ERROR -->
+<div class="error" *ngIf="error">
+  <span class="error-icon">⚠️</span>
+  {{ error }}
+</div>
