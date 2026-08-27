@@ -500,3 +500,21 @@ Para dudas sobre el módulo Fase Práctica, consultar este documento o revisar:
 - `src/modules/fase-practica/fase-practica.module.ts`
 - `src/database/migrations/1784092341224-CreateFasePractica.ts`
 - `src/modules/fase-practica/README-FASE-PRACTICA.md`
+
+
+
+
+
+accessToken                                                                                                                                                            
+-----------                                                                                                                                                            
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJjb3JyZW8iOiJjb29yZGluYWRvci5wcnVlYmFAeWF2aXJhYy5lZHUuZWMiLCJyb2xlcyI6WyJET0NFTlRFIiwiQ09PUkRJTkFET1IiXSwiaWREb2N...
+
+
+PS C:\Users\Admin\Downloads\SistemaAcademicoYavirac> $TOKEN
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJjb3JyZW8iOiJjb29yZGluYWRvci5wcnVlYmFAeWF2aXJhYy5lZHUuZWMiLCJyb2xlcyI6WyJET0NFTlRFIiwiQ09PUkRJTkFET1IiXSwiaWREb2NlbnRlIjo0LCJpZEVzdHVkaWFudGUiOm51bGwsImlkRW1wcmVzYSI6bnVsbCwiaWF0IjoxNzg1ODEyOTg4LCJleHAiOjE3ODU4MTY1ODh9.S_UN7oXswf12lnuKTH7GLhS-gSpZh4UW0Fnsb7W1-3k
+PS C:\Users\Admin\Downloads\SistemaAcademicoYavirac> 
+
+
+
+Correo: coordinador.prueba@yavirac.edu.ec
+Contraseña: Temporal2026*
