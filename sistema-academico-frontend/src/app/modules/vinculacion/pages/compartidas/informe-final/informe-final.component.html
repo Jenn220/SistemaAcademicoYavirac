@@ -76,9 +76,9 @@
             />
           </td>
 
-          <!-- BOTONES DE ACCIÓN (SOLO ESTUDIANTE) - ESTILO IGUAL AL DE OBJETIVOS -->
+          <!-- BOTONES DE ACCIÓN (SOLO ESTUDIANTE) -->
           <td *ngIf="esEstudiante">
-            <!-- Botón Editar Observación (estilo como ✏️ Editar Objetivos) -->
+            <!-- Botón Editar Observación -->
             <ng-container *ngIf="editandoObservacionActividad !== i">
               <button
                 (click)="editarObservacionActividad(i)"

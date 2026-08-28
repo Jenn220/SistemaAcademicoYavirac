@@ -58,7 +58,7 @@ export class InformeFinalComponent implements OnInit {
   objetivosEditados: any[] = [];
 
   // ============================================
-  // NUEVO: EDICIÓN DE OBSERVACIONES EN ACTIVIDADES
+  // EDICIÓN DE OBSERVACIONES EN ACTIVIDADES
   // ============================================
   editandoObservacionActividad: number | null = null;
   observacionActividadEdit: string = '';
@@ -387,6 +387,7 @@ export class InformeFinalComponent implements OnInit {
         this.actividadesAgrupadas = this.procesarActividadesAgrupadas();
         this.asegurarFechas();
         this.cargarObjetivosDesdeLocalStorage();
+        // Cargar observaciones después de procesar actividades
         this.cargarObservacionesActividadDesdeLocalStorage();
 
         if (this.informe?.evaluacion_final?.parametros) {
@@ -448,9 +449,8 @@ export class InformeFinalComponent implements OnInit {
           actividades: act.actividades,
           fechas: [act.fecha],
           horas: act.horas_cumplidas || 0,
-          observaciones: act.observaciones || 'Sin observaciones',
-          count: 1,
-          id: act.id || Date.now() + Math.random() * 1000
+          observaciones: 'Sin observaciones',
+          count: 1
         });
       } else {
         const grupo = mapa.get(clave)!;
@@ -475,7 +475,6 @@ export class InformeFinalComponent implements OnInit {
 
       return {
         nro: index + 1,
-        id: grupo.id,
         fecha: fechaTexto,
         actividades: grupo.actividades,
         horas: grupo.horas,
@@ -485,20 +484,8 @@ export class InformeFinalComponent implements OnInit {
   }
 
   // ============================================
-  // GUARDAR OBSERVACIONES DE ACTIVIDAD EN LOCALSTORAGE
+  // CARGAR OBSERVACIONES DE ACTIVIDAD DESDE LOCALSTORAGE
   // ============================================
-  guardarObservacionesActividadEnLocalStorage(): void {
-    if (!this.actividadesAgrupadas || this.actividadesAgrupadas.length === 0) return;
-
-    const key = `actividades_observaciones_${this.idVinculacion}`;
-    const data = this.actividadesAgrupadas.map((act: any) => ({
-      id: act.id,
-      observaciones: act.observaciones
-    }));
-    localStorage.setItem(key, JSON.stringify(data));
-    console.log('✅ Observaciones de actividades guardadas en localStorage');
-  }
-
   cargarObservacionesActividadDesdeLocalStorage(): void {
     if (!this.actividadesAgrupadas || this.actividadesAgrupadas.length === 0) return;
 
@@ -509,10 +496,10 @@ export class InformeFinalComponent implements OnInit {
       try {
         const data = JSON.parse(guardado);
         if (data && data.length > 0) {
-          data.forEach((item: any) => {
-            const actividad = this.actividadesAgrupadas.find((a: any) => a.id === item.id);
-            if (actividad) {
-              actividad.observaciones = item.observaciones || 'Sin observaciones';
+          // Usar el índice como identificador
+          data.forEach((item: any, index: number) => {
+            if (index < this.actividadesAgrupadas.length) {
+              this.actividadesAgrupadas[index].observaciones = item.observaciones || 'Sin observaciones';
             }
           });
           console.log('✅ Observaciones de actividades cargadas desde localStorage');
@@ -524,7 +511,22 @@ export class InformeFinalComponent implements OnInit {
   }
 
   // ============================================
-  // NUEVO: EDITAR OBSERVACIÓN DE ACTIVIDAD
+  // GUARDAR OBSERVACIONES DE ACTIVIDAD EN LOCALSTORAGE
+  // ============================================
+  guardarObservacionesActividadEnLocalStorage(): void {
+    if (!this.actividadesAgrupadas || this.actividadesAgrupadas.length === 0) return;
+
+    const key = `actividades_observaciones_${this.idVinculacion}`;
+    // Guardar solo las observaciones, usando el índice como identificador
+    const data = this.actividadesAgrupadas.map((act: any) => ({
+      observaciones: act.observaciones || 'Sin observaciones'
+    }));
+    localStorage.setItem(key, JSON.stringify(data));
+    console.log('✅ Observaciones de actividades guardadas en localStorage');
+  }
+
+  // ============================================
+  // EDITAR OBSERVACIÓN DE ACTIVIDAD
   // ============================================
   editarObservacionActividad(index: number): void {
     if (!this.esEstudiante) {
