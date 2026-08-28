@@ -3,10 +3,6 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 export class UpdateBitacoraSemanalDto {
   @IsOptional()
   @IsNumber()
-  id_informe?: number;
-
-  @IsOptional()
-  @IsNumber()
   semana?: number;
 
   @IsOptional()

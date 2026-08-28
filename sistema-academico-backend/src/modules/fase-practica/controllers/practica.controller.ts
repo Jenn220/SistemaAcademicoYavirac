@@ -38,8 +38,8 @@ export class PracticaController {
   constructor(private readonly practicaService: PracticaService) {}
 
   @Post('practicas')
-  createPractica(@Body() dto: CreatePracticaDto) {
-    return this.practicaService.createPractica(dto);
+  createPractica(@Req() req: any, @Body() dto: CreatePracticaDto) {
+    return this.practicaService.createPractica(req.user, dto);
   }
 
   /**
@@ -54,12 +54,12 @@ export class PracticaController {
   }
 
   @Get('practicas/:id')
-  findPracticaById(@Param('id') id: string) {
+  findPracticaById(@Req() req: any, @Param('id') id: string) {
     const idNum = Number(id);
     if (!Number.isInteger(idNum) || idNum <= 0) {
       throw new BadRequestException('Identificador de práctica inválido.');
     }
-    return this.practicaService.findPracticaById(idNum);
+    return this.practicaService.findPracticaById(req.user, idNum);
   }
 
   /**
@@ -68,8 +68,8 @@ export class PracticaController {
    */
   @Patch('practicas/:id')
   @Roles('COORDINADOR')
-  updatePractica(@Param('id') id: string, @Body() dto: UpdatePracticaDto) {
-    return this.practicaService.updatePractica(Number(id), dto);
+  updatePractica(@Req() req: any, @Param('id') id: string, @Body() dto: UpdatePracticaDto) {
+    return this.practicaService.updatePractica(req.user, Number(id), dto);
   }
 
   /** Catálogos de solo lectura para los selects de la pantalla de Asignaciones. */
@@ -86,8 +86,8 @@ export class PracticaController {
   }
 
   @Delete('practicas/:id')
-  removePractica(@Param('id') id: string) {
-    return this.practicaService.removePractica(Number(id)).then(() => ({
+  removePractica(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.removePractica(req.user, Number(id)).then(() => ({
       deleted: true,
       id_practica: Number(id),
     }));
@@ -100,8 +100,8 @@ export class PracticaController {
   }
 
   @Get('registro-diario/practica/:id')
-  findRegistrosByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.practicaService.findRegistrosByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findRegistrosByPractica(@Req() req: any, @Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findRegistrosByPractica(req.user, Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('registro-diario/:id')
@@ -131,8 +131,14 @@ export class PracticaController {
 
   @Get('plan-rotacion/practica/:id')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
-  findPlanRotacionByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.practicaService.findPlanRotacionByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findPlanRotacionByPractica(@Req() req: any, @Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findPlanRotacionByPractica(req.user, Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  }
+
+  @Get('plan-rotacion/:id')
+  @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
+  findPlanRotacionById(@Req() req: any, @Param('id') id: string) {
+    return this.practicaService.findPlanRotacionByPractica(req.user, Number(id));
   }
 
   @Patch('plan-rotacion/:id')
@@ -156,8 +162,8 @@ export class PracticaController {
   // dejan consultar).
   @Get('plan-rotacion/competencias/:idPractica')
   @Roles('ESTUDIANTE', 'DOCENTE', 'COORDINADOR')
-  findCompetenciasRotacion(@Param('idPractica') idPractica: string) {
-    return this.practicaService.findCompetenciasRotacion(Number(idPractica));
+  findCompetenciasRotacion(@Req() req: any, @Param('idPractica') idPractica: string) {
+    return this.practicaService.findCompetenciasRotacion(req.user, Number(idPractica));
   }
 
   @Patch('plan-rotacion/competencias/:idPractica')
@@ -177,8 +183,8 @@ export class PracticaController {
   }
 
   @Get('informe-aprendizaje/practica/:id')
-  findInformesByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.practicaService.findInformesByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findInformesByPractica(@Req() req: any, @Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findInformesByPractica(req.user, Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('informe-aprendizaje/:id')
@@ -203,8 +209,8 @@ export class PracticaController {
   }
 
   @Get('evaluacion/practica/:id')
-  findEvaluacionesByPractica(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.practicaService.findEvaluacionesByPractica(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findEvaluacionesByPractica(@Req() req: any, @Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findEvaluacionesByPractica(req.user, Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('evaluacion/:id')
@@ -229,8 +235,8 @@ export class PracticaController {
   }
 
   @Get('bitacora-semanal/informe/:id')
-  findBitacorasByInforme(@Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
-    return this.practicaService.findBitacorasByInforme(Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
+  findBitacorasByInforme(@Req() req: any, @Param('id') id: string, @Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.practicaService.findBitacorasByInforme(req.user, Number(id), skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
   @Patch('bitacora-semanal/:id')

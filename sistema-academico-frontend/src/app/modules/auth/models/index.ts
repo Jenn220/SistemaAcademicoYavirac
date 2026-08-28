@@ -17,6 +17,11 @@ export interface UsuarioSesion {
   idEmpresa: number | null;
 }
 
+// 🔥 NUEVO: Usuario extendido con nombre para mostrar
+export interface UsuarioConNombre extends UsuarioSesion {
+  nombreMostrar?: string;
+}
+
 export interface LoginResponse {
   accessToken: string;
   usuario: UsuarioSesion;

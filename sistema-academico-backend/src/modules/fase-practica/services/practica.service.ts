@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PRACTICA_REPOSITORY, IPracticaRepository } from '../ports/practica.repository.port';
@@ -61,9 +61,10 @@ export class PracticaService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async createPractica(dto: CreatePracticaDto): Promise<PracticaEntity> {
+  async createPractica(usuario: any, dto: CreatePracticaDto): Promise<PracticaEntity> {
     const data = {
       ...dto,
+      id_docente: usuario.idDocente,
       total_horas_requeridas: dto.total_horas_requeridas ?? 400,
       total_horas_cumplidas: dto.total_horas_cumplidas ?? 0,
       estado: dto.estado ?? 'EN_CURSO',
@@ -133,16 +134,17 @@ export class PracticaService {
     });
   }
 
-  async findPracticaById(id: number): Promise<PracticaEntity> {
+  async findPracticaById(usuario: any, id: number): Promise<PracticaEntity> {
     const practica = await this.practicaRepository.findPracticaById(id);
     if (!practica) {
       throw new NotFoundException(`No se encontró la práctica con id ${id}`);
     }
+    await this.verificarAccesoPractica(usuario, practica);
     return practica;
   }
 
-  async updatePractica(id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
-    await this.findPracticaById(id);
+  async updatePractica(usuario: any, id: number, dto: UpdatePracticaDto): Promise<PracticaEntity> {
+    await this.verificarAccesoPorIdPractica(usuario, id);
     return this.practicaRepository.updatePractica(id, dto);
   }
 
@@ -167,36 +169,50 @@ export class PracticaService {
     );
   }
 
-  async removePractica(id: number): Promise<void> {
-    await this.findPracticaById(id);
+  async removePractica(usuario: any, id: number): Promise<void> {
+    await this.verificarAccesoPorIdPractica(usuario, id);
     await this.practicaRepository.removePractica(id);
   }
 
-  private async esDuenoDePractica(usuario: any, idPractica: number): Promise<void> {
+  private async verificarAccesoPorIdPractica(usuario: any, idPractica: number): Promise<void> {
     const practica = await this.practicaRepository.findPracticaById(idPractica);
     if (!practica) {
       throw new NotFoundException(`Práctica con id ${idPractica} no encontrada`);
     }
-    if (!Array.isArray(usuario?.roles) || !usuario.roles.includes('ESTUDIANTE')) {
-      return;
+    await this.verificarAccesoPractica(usuario, practica);
+  }
+
+  private async verificarAccesoPractica(usuario: any, practica: PracticaEntity): Promise<void> {
+    if (!practica) {
+      throw new NotFoundException('Práctica no encontrada');
     }
-    const esDueno = await this.dataSource.query(
-      `SELECT 1 FROM matricula_detalle md
-       JOIN matricula m ON m.id_matricula = md.id_matricula
-       WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
-      [practica.id_matricula_detalle, usuario.idEstudiante],
-    );
-    if (!esDueno || esDueno.length === 0) {
-      throw new BadRequestException('No tienes permiso para modificar esta práctica');
+
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    if (roles.includes('DOCENTE') && Number(practica.id_docente) === Number(usuario.idDocente)) return;
+    if (roles.includes('TUTOR_EMPRESARIAL') && Number(practica.id_empresa) === Number(usuario.idEmpresa)) return;
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
+        [practica.id_matricula_detalle, usuario.idEstudiante],
+      );
+      if (esDueno && esDueno.length > 0) return;
     }
+
+    throw new ForbiddenException('No tiene permisos para acceder a esta práctica.');
   }
 
   async createRegistroDiario(usuario: any, dto: CreateRegistroDiarioDto): Promise<RegistroDiarioEntity> {
-    await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     return this.registroDiarioRepository.create(dto);
   }
 
-  async findRegistrosByPractica(idPractica: number, skip?: number, take?: number): Promise<RegistroDiarioEntity[]> {
+  async findRegistrosByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<RegistroDiarioEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.registroDiarioRepository.findByPractica(idPractica, skip, take);
   }
 
@@ -205,7 +221,7 @@ export class PracticaService {
     if (!registro) {
       throw new NotFoundException(`No se encontró el registro diario con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, registro.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, registro.id_practica);
     return this.registroDiarioRepository.update(id, dto);
   }
 
@@ -214,12 +230,12 @@ export class PracticaService {
     if (!registro) {
       throw new NotFoundException(`No se encontró el registro diario con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, registro.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, registro.id_practica);
     return this.registroDiarioRepository.remove(id);
   }
 
   async createPlanRotacion(usuario: any, dto: CreatePlanRotacionDto): Promise<PlanRotacionEntity> {
-    await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     const itemPlanMarco = await this.itemPlanMarcoRepository.findById(dto.id_item_pm);
     if (!itemPlanMarco) {
       throw new NotFoundException(`Item plan marco con id ${dto.id_item_pm} no encontrado`);
@@ -233,7 +249,8 @@ export class PracticaService {
     return this.planRotacionRepository.create(data);
   }
 
-  async findPlanRotacionByPractica(idPractica: number, skip?: number, take?: number): Promise<PlanRotacionEntity[]> {
+  async findPlanRotacionByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<PlanRotacionEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.planRotacionRepository.findByPractica(idPractica, skip, take);
   }
 
@@ -242,7 +259,7 @@ export class PracticaService {
     if (!plan) {
       throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, plan.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, plan.id_practica);
     return this.planRotacionRepository.update(id, dto);
   }
 
@@ -251,7 +268,7 @@ export class PracticaService {
     if (!plan) {
       throw new NotFoundException(`No se encontró el plan de rotación con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, plan.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, plan.id_practica);
     return this.planRotacionRepository.remove(id);
   }
 
@@ -262,11 +279,12 @@ export class PracticaService {
    * plan_rotacion. Antes este campo solo existía en memoria del
    * navegador (viajaba al Word exportado pero nunca se guardaba).
    */
-  async findCompetenciasRotacion(idPractica: number): Promise<{
+  async findCompetenciasRotacion(usuario: any, idPractica: number): Promise<{
     conocimientos_teoricos: string;
     procedimentales: string;
     actitudinales: string;
   }> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     const rows = await this.dataSource.query(
       `SELECT conocimientos_teoricos, procedimentales, actitudinales
        FROM plan_rotacion_competencias
@@ -286,7 +304,7 @@ export class PracticaService {
     procedimentales: string;
     actitudinales: string;
   }> {
-    await this.esDuenoDePractica(usuario, idPractica);
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
 
     const rows = await this.dataSource.query(
       `INSERT INTO plan_rotacion_competencias (id_practica, conocimientos_teoricos, procedimentales, actitudinales, updated_at)
@@ -304,11 +322,12 @@ export class PracticaService {
   }
 
   async createInformeAprendizaje(usuario: any, dto: CreateInformeAprendizajeDto): Promise<InformeAprendizajeEntity> {
-    await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     return this.informeAprendizajeRepository.create(dto);
   }
 
-  async findInformesByPractica(idPractica: number, skip?: number, take?: number): Promise<InformeAprendizajeEntity[]> {
+  async findInformesByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<InformeAprendizajeEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.informeAprendizajeRepository.findByPractica(idPractica, skip, take);
   }
 
@@ -317,7 +336,7 @@ export class PracticaService {
     if (!informe) {
       throw new NotFoundException(`No se encontró el informe con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.informeAprendizajeRepository.update(id, dto);
   }
 
@@ -326,16 +345,17 @@ export class PracticaService {
     if (!informe) {
       throw new NotFoundException(`No se encontró el informe con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.informeAprendizajeRepository.remove(id);
   }
 
   async createEvaluacionPractica(usuario: any, dto: CreateEvaluacionPracticaDto): Promise<EvaluacionPracticaEntity> {
-    await this.esDuenoDePractica(usuario, dto.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, dto.id_practica);
     return this.evaluacionPracticaRepository.create(dto);
   }
 
-  async findEvaluacionesByPractica(idPractica: number, skip?: number, take?: number): Promise<EvaluacionPracticaEntity[]> {
+  async findEvaluacionesByPractica(usuario: any, idPractica: number, skip?: number, take?: number): Promise<EvaluacionPracticaEntity[]> {
+    await this.verificarAccesoPorIdPractica(usuario, idPractica);
     return this.evaluacionPracticaRepository.findByPractica(idPractica, skip, take);
   }
 
@@ -350,7 +370,7 @@ export class PracticaService {
     if (!evaluacion) {
       throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, evaluacion.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, evaluacion.id_practica);
     return this.evaluacionPracticaRepository.update(id, dto);
   }
 
@@ -359,7 +379,7 @@ export class PracticaService {
     if (!evaluacion) {
       throw new NotFoundException(`No se encontró la evaluación con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, evaluacion.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, evaluacion.id_practica);
     return this.evaluacionPracticaRepository.remove(id);
   }
 
@@ -368,11 +388,16 @@ export class PracticaService {
     if (!informe) {
       throw new NotFoundException(`No existe el informe con id ${dto.id_informe} para la bitácora`);
     }
-    await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.create(dto);
   }
 
-  async findBitacorasByInforme(idInforme: number, skip?: number, take?: number): Promise<BitacoraSemanalEntity[]> {
+  async findBitacorasByInforme(usuario: any, idInforme: number, skip?: number, take?: number): Promise<BitacoraSemanalEntity[]> {
+    const informe = await this.informeAprendizajeRepository.findById(idInforme);
+    if (!informe) {
+      throw new NotFoundException(`No se encontró el informe con id ${idInforme}`);
+    }
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.findByInforme(idInforme, skip, take);
   }
 
@@ -385,7 +410,7 @@ export class PracticaService {
     if (!informe) {
       throw new NotFoundException(`No se encontró el informe asociado a la bitácora con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.update(id, dto);
   }
 
@@ -398,7 +423,7 @@ export class PracticaService {
     if (!informe) {
       throw new NotFoundException(`No se encontró el informe asociado a la bitácora con id ${id}`);
     }
-    await this.esDuenoDePractica(usuario, informe.id_practica);
+    await this.verificarAccesoPorIdPractica(usuario, informe.id_practica);
     return this.bitacoraSemanalRepository.remove(id);
   }
 

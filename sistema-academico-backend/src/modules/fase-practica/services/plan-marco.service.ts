@@ -122,6 +122,7 @@ export class PlanMarcoService {
     const planesRotacion = await this.planRotacionRepo.findByPractica(planMarco.id_practica);
 
     let planRotacion = planesRotacion[0] || null;
+
     if (!planRotacion) {
       planRotacion = await this.planRotacionRepo.create({
         id_practica: planMarco.id_practica,

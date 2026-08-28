@@ -281,7 +281,16 @@ export class Curriculum implements OnInit {
         next: ({ curriculum }) => {
 
           this.curriculum = this.mapearBase(curriculum, datos);
-          this.cargarCvReal();
+
+          const idEstudiante = Number((datos as any)?.['estudiante']?.idEstudiante) || this.idEstudiante || 0;
+
+          if (idEstudiante > 0) {
+            this.cargarCvReal(idEstudiante);
+          } else {
+            this.cargando = false;
+            this.cdr.detectChanges();
+          }
+
           this.cargarIdDocumento('F02');
 
         },
@@ -308,12 +317,12 @@ export class Curriculum implements OnInit {
    * que arma mapearBase(). Se sobrescriben aquí con la fuente real para que
    * "agregar/quitar" trabajen contra ids persistidos de verdad.
    */
-  private cargarCvReal(): void {
+  private cargarCvReal(idEstudiante: number): void {
 
     forkJoin({
-      datosAcademicos: this.cv.listarDatosAcademicos(this.idEstudiante).pipe(catchError(() => of([] as CvDatoAcademico[]))),
-      experienciaLaboral: this.cv.listarExperienciaLaboral(this.idEstudiante).pipe(catchError(() => of([] as CvExperienciaLaboral[]))),
-      practicasDuales: this.cv.listarPracticasDuales(this.idEstudiante).pipe(catchError(() => of([] as CvPracticaDual[])))
+      datosAcademicos: this.cv.listarDatosAcademicos(idEstudiante).pipe(catchError(() => of([] as CvDatoAcademico[]))),
+      experienciaLaboral: this.cv.listarExperienciaLaboral(idEstudiante).pipe(catchError(() => of([] as CvExperienciaLaboral[]))),
+      practicasDuales: this.cv.listarPracticasDuales(idEstudiante).pipe(catchError(() => of([] as CvPracticaDual[])))
     }).subscribe({
 
       next: ({ datosAcademicos, experienciaLaboral, practicasDuales }) => {

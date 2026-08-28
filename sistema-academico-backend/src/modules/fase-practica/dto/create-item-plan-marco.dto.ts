@@ -1,8 +1,9 @@
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreateItemPlanMarcoDto {
   @IsOptional()
   @IsInt()
+  @Min(1)
   id_plan_marco?: number;
 
   @IsString()
@@ -11,6 +12,7 @@ export class CreateItemPlanMarcoDto {
   @IsOptional()
   @IsInt()
   @Min(1)
+  @Max(4)
   nivel_logro_esperado?: number;
 
   @IsOptional()
@@ -23,6 +25,7 @@ export class CreateItemPlanMarcoDto {
 
   @IsOptional()
   @IsInt()
+  @Min(1)
   semanas?: number;
 
   @IsOptional()

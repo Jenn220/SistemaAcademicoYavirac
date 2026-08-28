@@ -19,6 +19,7 @@ for (const variable of requiredEnvironmentVariables) {
   if (!process.env[variable]) {
     throw new Error(
       `Falta la variable de entorno obligatoria: ${variable}`,
+      
     );
   }
 }

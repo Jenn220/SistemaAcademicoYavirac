@@ -1,10 +1,12 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateBitacoraSemanalDto {
   @IsNumber()
+  @Min(1)
   id_informe!: number;
 
   @IsNumber()
+  @Min(1)
   semana!: number;
 
   @IsOptional()

@@ -1,8 +1,6 @@
 import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-
 import { CreateEntidadReceptoraDto } from '../dto/create-entidad-receptora.dto';
 import { ENTIDAD_RECEPTORA_PORT, IEntidadReceptoraPort } from '../ports/entidad-receptora.port';
-
 
 @Injectable()
 export class EntidadReceptoraService {
@@ -14,18 +12,15 @@ export class EntidadReceptoraService {
   async crear(createDto: CreateEntidadReceptoraDto) {
     try {
       const nuevaEntidad = await this.entidadPort.crearEntidad(createDto);
-      
       return {
         success: true,
         message: 'Entidad receptora creada con éxito',
         data: nuevaEntidad,
       };
     } catch (error) {
-      // 👇 Verificamos el tipo de error
       if (error instanceof Error) {
         throw new InternalServerErrorException('Error al crear la entidad receptora: ' + error.message);
       }
-      // Fallback por si se lanzó algo que no era un Error estándar
       throw new InternalServerErrorException('Error desconocido al crear la entidad receptora');
     }
   }
@@ -50,5 +45,4 @@ export class EntidadReceptoraService {
       throw new InternalServerErrorException('Error al buscar la entidad receptora: ' + error.message);
     }
   }
-
 }

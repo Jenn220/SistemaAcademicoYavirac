@@ -26,19 +26,58 @@ export class DocumentoService {
     idUsuario?: number,
     estado?: string,
   ): Promise<DocumentoEntity> {
-    try {
-      const documento = await this.documentoRepository.guardarDocumento(codigo, titulo, contenido, idPractica, idEstudiante, idUsuario, estado);
-      console.log('Documento guardado', { codigo, idPractica, idDocumento: documento.id_documento });
-      return documento;
-    } catch (error: any) {
-      console.error('Error guardando documento', { codigo, idPractica, error: error?.message || error });
-      throw error;
-    }
+    return this.documentoRepository.guardarDocumento(codigo, titulo, contenido, idPractica, idEstudiante, idUsuario, estado);
   }
 
-  async buscarIdDocumento(idPractica: number, codigoFormato: string): Promise<{ id_documento: number } | null> {
+  async buscarIdDocumento(usuario: any, idPractica: number, codigoFormato: string): Promise<{ id_documento: number } | null> {
     const documento = await this.documentoRepository.buscarPorPracticaYCodigo(idPractica, codigoFormato);
-    return documento ? { id_documento: documento.id_documento } : null;
+    if (!documento) return null;
+    await this.verificarAccesoDocumento(usuario, documento);
+    return { id_documento: documento.id_documento };
+  }
+
+  async buscarPorId(usuario: any, idDocumento: number): Promise<DocumentoEntity | null> {
+    const documento = await this.documentoRepository.buscarPorId(idDocumento);
+    if (!documento) return null;
+    await this.verificarAccesoDocumento(usuario, documento);
+    return documento;
+  }
+
+  private async verificarAccesoDocumento(usuario: any, documento: DocumentoEntity): Promise<void> {
+    if (!documento.id_practica) {
+      return;
+    }
+
+    const roles: string[] = usuario?.roles ?? [];
+    if (roles.includes('COORDINADOR')) return;
+
+    const practica = await this.dataSource.query(
+      `SELECT id_docente, id_empresa, id_matricula_detalle
+       FROM practica_estudiante
+       WHERE id_practica = $1 LIMIT 1`,
+      [documento.id_practica],
+    );
+
+    if (practica.length === 0) {
+      throw new ForbiddenException('No tiene permisos para acceder a este documento.');
+    }
+
+    const p = practica[0];
+
+    if (roles.includes('DOCENTE') && Number(p.id_docente) === Number(usuario.idDocente)) return;
+    if (roles.includes('TUTOR_EMPRESARIAL') && Number(p.id_empresa) === Number(usuario.idEmpresa)) return;
+
+    if (roles.includes('ESTUDIANTE')) {
+      const esDueno = await this.dataSource.query(
+        `SELECT 1 FROM matricula_detalle md
+         JOIN matricula m ON m.id_matricula = md.id_matricula
+         WHERE md.id_matricula_detalle = $1 AND m.id_estudiante = $2`,
+        [p.id_matricula_detalle, usuario.idEstudiante],
+      );
+      if (esDueno && esDueno.length > 0) return;
+    }
+
+    throw new ForbiddenException('No tiene permisos para acceder a este documento.');
   }
 
   getDatosMaestra(usuario: any, idPractica?: number) {
@@ -88,38 +127,33 @@ export class DocumentoService {
   async actualizarDocumentosPorPractica(usuario: any, idPractica: number): Promise<void> {
     const documentos = await this.documentoRepository.listarPorPractica(idPractica);
 
-    const generadores: Record<string, (usuario: any, idPractica?: number) => Promise<any>> = {
-      F01: (u, id) => this.plantillaService.getCartaCompromiso(u, id, true),
-      F02: (u, id) => this.plantillaService.getCurriculum(u, id, true),
-      F05: (u, id) => this.plantillaService.getRegistroAsistencia(u, id, true),
-      F06: (u, id) => this.plantillaService.getInformeAprendizaje(u, id, true),
-      F07: (u, id) => this.plantillaService.getEvaluacionEmpresarial(u, id, true),
-      F08: (u, id) => this.plantillaService.getEvaluacionInstituto(u, id, true),
-      F10: (u, id) => this.plantillaService.getActaInduccionSeguridad(u, id, true),
-      F11: (u, id) => this.plantillaService.getActaEntornoLaboral(u, id, true),
-    };
+    await this.dataSource.manager.transaction(async (manager) => {
+      const generadores: Record<string, (usuario: any, idPractica?: number) => Promise<any>> = {
+        F01: (u, id) => this.plantillaService.getCartaCompromiso(u, id, true),
+        F02: (u, id) => this.plantillaService.getCurriculum(u, id, true),
+        F05: (u, id) => this.plantillaService.getRegistroAsistencia(u, id, true),
+        F06: (u, id) => this.plantillaService.getInformeAprendizaje(u, id, true),
+        F07: (u, id) => this.plantillaService.getEvaluacionEmpresarial(u, id, true),
+        F08: (u, id) => this.plantillaService.getEvaluacionInstituto(u, id, true),
+        F10: (u, id) => this.plantillaService.getActaInduccionSeguridad(u, id, true),
+        F11: (u, id) => this.plantillaService.getActaEntornoLaboral(u, id, true),
+      };
 
-    for (const documento of documentos) {
-      const generador = generadores[documento.codigo_formato];
-      if (!generador) continue;
+      for (const documento of documentos) {
+        const generador = generadores[documento.codigo_formato];
+        if (!generador) continue;
 
-      try {
-        const contenidoActualizado = await generador(usuario, idPractica);
-        documento.contenido = contenidoActualizado;
-        documento.updated_at = new Date();
-        await this.documentoRepository.guardarDocumento(
-          documento.codigo_formato,
-          documento.titulo ?? '',
-          contenidoActualizado,
-          idPractica,
-          documento.id_estudiante,
-          documento.id_usuario,
-          documento.estado,
-        );
-      } catch (error) {
-        console.error(`Error actualizando documento ${documento.codigo_formato} para práctica ${idPractica}`, error);
+        try {
+          const contenidoActualizado = await generador(usuario, idPractica);
+          documento.contenido = contenidoActualizado;
+          documento.updated_at = new Date();
+          await manager.getRepository(DocumentoEntity).save(documento);
+        } catch (error) {
+          console.error(`Error actualizando documento ${documento.codigo_formato} para práctica ${idPractica}`, error);
+          throw error;
+        }
       }
-    }
+    });
   }
 
   async cambiarEstado(idDocumento: number, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<DocumentoEntity | null> {
@@ -137,25 +171,31 @@ export class DocumentoService {
       throw new ForbiddenException('No autorizado para cambiar el estado del documento');
     }
 
-    // ESTUDIANTE y TUTOR_EMPRESARIAL solo pueden enviar a revisión;
-    // el resto (DOCENTE, COORDINADOR) pueden aprobar/rechazar.
-    if ((esEstudiante || esTutorEmpresarial) && estado !== EstadoDocumento.PENDIENTE_REVISION) {
-      throw new ForbiddenException('El estudiante o tutor empresarial solo puede enviar documentos a revisión');
-    }
-
     const documento = await this.documentoRepository.actualizarEstado(idDocumento, estado, comentarios);
-
     if (!documento) {
       return null;
+    }
+
+    const transicionesPermitidas: Record<string, string[]> = {
+      'borrador': ['pendiente_revision'],
+      'pendiente_revision': ['aprobado', 'rechazado'],
+      'rechazado': ['pendiente_revision'],
+    };
+
+    const estadoActual = documento.estado ?? 'borrador';
+    const permitidos = transicionesPermitidas[estadoActual] ?? [];
+
+    if (!permitidos.includes(estado)) {
+      throw new ForbiddenException(`No se puede cambiar el estado de "${estadoActual}" a "${estado}".`);
+    }
+
+    if ((esEstudiante || esTutorEmpresarial) && estado !== 'pendiente_revision') {
+      throw new ForbiddenException('El estudiante o tutor empresarial solo puede enviar documentos a revisión');
     }
 
     await this.notificarCambioEstado(documento, estado, comentarios, usuarioOrigen);
 
     return documento;
-  }
-
-  async buscarPorId(idDocumento: number): Promise<DocumentoEntity | null> {
-    return this.documentoRepository.buscarPorId(idDocumento);
   }
 
   private async notificarCambioEstado(documento: DocumentoEntity, estado: string, comentarios?: string, usuarioOrigen?: any): Promise<void> {

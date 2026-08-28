@@ -1,101 +1,133 @@
-.aceptacion-notas {
-  padding: 24px;
+/* ============================================
+   1. :host
+   ============================================ */
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
 }
 
-// ---------------------------------------------------------------------
-// Membrete institucional — mismo tratamiento que Informe Final
-// ---------------------------------------------------------------------
+/* ============================================
+   2. Contenedor principal
+   ============================================ */
+.aceptacion-notas {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+/* Línea decorativa superior */
+.aceptacion-notas::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 2rem;
+  right: 2rem;
+  height: 4px;
+  background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+  border-radius: 0 0 4px 4px;
+}
+
+/* ============================================
+   3. Membrete institucional
+   ============================================ */
 .membrete {
   display: grid;
   grid-template-columns: 90px 1fr 110px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #e8ecf2;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
-  background: #fff;
+  background: #ffffff;
   margin-bottom: 0;
+  position: relative;
+}
 
-  &__logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    border-right: 1px solid #cbd5e1;
+.membrete__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-right: 1px solid #e8ecf2;
 
-    img {
-      max-width: 100%;
-      max-height: 64px;
-      object-fit: contain;
-    }
-  }
-
-  &__info {
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__institucion {
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-align: center;
-    color: #0f172a;
-    border-bottom: 1px solid #cbd5e1;
-  }
-
-  &__macroproceso {
-    padding: 5px 12px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-align: center;
-    background: #bfdbfe;
-    color: #1e3a8a;
-    border-bottom: 1px solid #cbd5e1;
-  }
-
-  &__proceso {
-    padding: 5px 12px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-align: center;
-    background: #fecaca;
-    color: #7f1d1d;
-    border-bottom: 1px solid #cbd5e1;
-  }
-
-  &__formato {
-    padding: 5px 12px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-align: center;
-    color: #0f172a;
-  }
-
-  &__codigo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border-left: 1px solid #cbd5e1;
-    padding: 8px;
-
-    span {
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-    }
-
-    strong {
-      font-size: 0.85rem;
-      color: #0f172a;
-    }
+  img {
+    max-width: 100%;
+    max-height: 64px;
+    object-fit: contain;
   }
 }
 
-// ---------------------------------------------------------------------
-// Toolbar
-// ---------------------------------------------------------------------
+.membrete__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.membrete__institucion {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e2a3a;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__macroproceso {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  background: #f7faff;
+  color: #163d8c;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__proceso {
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  background: #f7faff;
+  color: #163d8c;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.membrete__formato {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e2a3a;
+}
+
+.membrete__codigo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-left: 1px solid #e8ecf2;
+  padding: 8px;
+
+  span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #6a7a8e;
+    text-transform: uppercase;
+  }
+
+  strong {
+    font-size: 0.85rem;
+    color: #1e2a3a;
+  }
+}
+
+/* ============================================
+   4. Toolbar
+   ============================================ */
 .aceptacion-notas__toolbar {
   display: flex;
   justify-content: space-between;
@@ -104,20 +136,23 @@
   gap: 12px;
   padding: 16px 20px;
   margin-bottom: 20px;
-  background: #fff;
-  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border: 1px solid #e8ecf2;
   border-top: none;
   border-radius: 0 0 12px 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 14px 40px rgba(20, 50, 90, 0.08), 0 2px 8px rgba(20, 50, 90, 0.05);
 
   h1 {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #163d8c;
     margin: 0;
   }
 }
 
+/* ============================================
+   5. Selector
+   ============================================ */
 .aceptacion-notas__selector {
   display: flex;
   align-items: center;
@@ -126,45 +161,51 @@
   label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #475569;
+    color: #1e2a3a;
   }
 
   select {
-    padding: 8px 12px;
+    padding: 0.6rem 1rem;
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
+    border: 2px solid #e8ecf2;
     font-size: 0.88rem;
-    color: #1e293b;
-    background: #fff;
+    color: #1e2a3a;
+    background: #fafcff;
     cursor: pointer;
+    transition: all 0.3s ease;
 
     &:focus {
       outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      border-color: #163d8c;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
     }
   }
 }
 
+/* ============================================
+   6. Acciones
+   ============================================ */
 .aceptacion-notas__acciones {
   margin-top: 20px;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .btn-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 16px;
+  padding: 0.7rem 2rem;
   border-radius: 8px;
-  border: 1px solid #2563eb;
-  background: #2563eb;
-  color: #fff;
+  border: none;
+  background: #163d8c;
+  color: #ffffff;
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 600;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.3s ease;
 
   svg {
     width: 16px;
@@ -172,70 +213,79 @@
   }
 
   &:hover {
-    background: #1d4ed8;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    background: #0f2d66;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
   }
 
   &--outline {
-    background: #fff;
-    color: #2563eb;
+    background: transparent;
+    color: #163d8c;
+    border: 2px solid #163d8c;
 
     &:hover {
-      background: #eff6ff;
-      box-shadow: none;
+      background: #f7faff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(22, 61, 140, 0.15);
     }
   }
 }
 
-// ---------------------------------------------------------------------
-// Estados (cargando / error / éxito)
-// ---------------------------------------------------------------------
+/* ============================================
+   7. Estados (cargando / error / éxito)
+   ============================================ */
 .estado {
   padding: 16px 18px;
-  border-radius: 10px;
-  background: #f1f5f9;
-  color: #334155;
+  border-radius: 8px;
+  background: #f7faff;
+  color: #1e2a3a;
   margin-bottom: 16px;
 
   &--error {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #fff8f8;
+    color: #dc3545;
+    border-left: 5px solid #dc3545;
+    border-radius: 0 8px 8px 0;
   }
 
   &--exito {
-    background: #dcfce7;
-    color: #166534;
+    background: #f0faf4;
+    color: #28a745;
+    border-left: 5px solid #28a745;
+    border-radius: 0 8px 8px 0;
   }
 
   button {
     margin-top: 8px;
-    padding: 8px 14px;
+    padding: 0.6rem 1.5rem;
     border-radius: 8px;
     border: none;
-    background: #2563eb;
-    color: #fff;
+    background: #163d8c;
+    color: #ffffff;
     cursor: pointer;
     font-weight: 600;
+    transition: all 0.3s ease;
 
     &:hover {
-      background: #1d4ed8;
+      background: #0f2d66;
     }
   }
 }
 
-// ---------------------------------------------------------------------
-// Documento (formato-07) — fiel al PDF: cabecera de datos + tabla
-// ---------------------------------------------------------------------
+/* ============================================
+   8. Documento (formato-07)
+   ============================================ */
 .formato-07 {
-  background: #fff;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  border: 1px solid #dbe1ea;
+  box-shadow: 0 14px 40px rgba(20, 50, 90, 0.08), 0 2px 8px rgba(20, 50, 90, 0.05);
+  border: 1px solid #e8ecf2;
   padding: 24px;
   font-size: 0.85rem;
 
@@ -246,46 +296,51 @@
 
   th,
   td {
-    border: 1px solid #cbd5e1;
+    border: 1px solid #e8ecf2;
     padding: 7px 10px;
     text-align: left;
   }
 
+  /* Cabecera del documento */
   &__cabecera {
     margin-bottom: 20px;
     border-radius: 8px;
     overflow: hidden;
 
     th {
-      background: #eff6ff;
-      color: #1e3a8a;
+      background: #f0f4fc;
+      color: #163d8c;
       width: 15%;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     td {
-      color: #1e293b;
+      color: #1e2a3a;
     }
   }
 
+  /* Tabla de estudiantes */
   &__estudiantes {
     th {
-      background: #eff6ff;
-      color: #1e3a8a;
+      background: #f0f4fc;
+      color: #163d8c;
       text-align: center;
       font-weight: 700;
-      font-size: 0.78rem;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.5px;
     }
 
     tbody tr:nth-child(even) {
-      background: #fafbfc;
+      background: #fafcff;
     }
 
     td {
       text-align: center;
-      color: #1e293b;
+      color: #1e2a3a;
     }
 
     .col-nombre {
@@ -304,25 +359,29 @@
       background: transparent;
       text-align: center;
       font-size: 0.85rem;
-      color: #1e293b;
+      color: #1e2a3a;
       border-radius: 4px;
       padding: 4px 2px;
 
       &:focus {
         outline: none;
-        background: #eff6ff;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+        background: #f7faff;
+        box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.08);
       }
     }
   }
 
+  /* Tabla de firmas */
   &__firmas {
     margin-top: 24px;
 
     th {
-      background: #f8fafc;
-      color: #1e293b;
-      font-weight: 600;
+      background: #f0f4fc;
+      color: #163d8c;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .col-firma-final {
@@ -331,6 +390,199 @@
   }
 }
 
+/* ============================================
+   9. Responsive
+   ============================================ */
+/* Tablets */
+@media (max-width: 1024px) {
+  .aceptacion-notas {
+    padding: 2rem 1.5rem;
+  }
+
+  .membrete {
+    grid-template-columns: 70px 1fr 90px;
+  }
+
+  .formato-07 {
+    padding: 18px;
+  }
+}
+
+/* Móviles */
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .aceptacion-notas {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .aceptacion-notas::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .membrete {
+    grid-template-columns: 60px 1fr 70px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .membrete__institucion {
+    font-size: 0.68rem;
+  }
+
+  .membrete__macroproceso,
+  .membrete__proceso,
+  .membrete__formato {
+    font-size: 0.62rem;
+  }
+
+  .membrete__codigo {
+    span {
+      font-size: 0.58rem;
+    }
+    strong {
+      font-size: 0.72rem;
+    }
+  }
+
+  .aceptacion-notas__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 16px;
+    border-radius: 0 0 8px 8px;
+
+    h1 {
+      font-size: 1rem;
+      text-align: center;
+    }
+  }
+
+  .aceptacion-notas__selector {
+    flex-direction: column;
+    align-items: stretch;
+
+    select {
+      width: 100%;
+    }
+  }
+
+  .aceptacion-notas__acciones {
+    flex-direction: column;
+
+    .btn-toolbar {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+
+  .formato-07 {
+    padding: 14px;
+    font-size: 0.78rem;
+    overflow-x: auto;
+
+    th,
+    td {
+      padding: 5px 7px;
+      font-size: 0.75rem;
+    }
+
+    &__cabecera {
+      th {
+        width: 25%;
+        font-size: 10px;
+      }
+    }
+
+    &__estudiantes {
+      th {
+        font-size: 10px;
+      }
+
+      .col-firma {
+        min-width: 60px;
+        height: 28px;
+      }
+
+      input {
+        font-size: 0.75rem;
+      }
+    }
+
+    &__firmas {
+      th {
+        font-size: 10px;
+      }
+    }
+  }
+
+  .estado {
+    font-size: 0.85rem;
+    padding: 12px 14px;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .aceptacion-notas {
+    padding: 1rem 0.8rem;
+  }
+
+  .membrete {
+    grid-template-columns: 50px 1fr 60px;
+  }
+
+  .membrete__logo {
+    img {
+      max-height: 40px;
+    }
+  }
+
+  .membrete__institucion {
+    font-size: 0.6rem;
+    padding: 4px 8px;
+  }
+
+  .membrete__macroproceso,
+  .membrete__proceso,
+  .membrete__formato {
+    font-size: 0.55rem;
+    padding: 3px 8px;
+  }
+
+  .membrete__codigo {
+    padding: 4px 6px;
+
+    span {
+      font-size: 0.5rem;
+    }
+    strong {
+      font-size: 0.65rem;
+    }
+  }
+
+  .formato-07 {
+    padding: 10px;
+    font-size: 0.7rem;
+
+    th,
+    td {
+      padding: 4px 5px;
+      font-size: 0.65rem;
+    }
+  }
+
+  .btn-toolbar {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ============================================
+   10. Estilos de impresión
+   ============================================ */
 @media print {
   .no-print {
     display: none !important;
@@ -338,12 +590,39 @@
 
   .formato-07 {
     box-shadow: none;
-    border: 1px solid #000;
+    border: 1px solid #1e2a3a;
   }
 
   input.no-print-border {
     border: none !important;
     outline: none !important;
     background: transparent !important;
+  }
+
+  :host {
+    background: #ffffff;
+    padding: 0;
+  }
+
+  .aceptacion-notas {
+    padding: 2rem;
+    box-shadow: none;
+  }
+
+  .aceptacion-notas::before {
+    display: none;
+  }
+
+  .membrete {
+    border: 1px solid #1e2a3a;
+  }
+
+  .formato-07 {
+    &__estudiantes {
+      input {
+        border: none !important;
+        background: transparent !important;
+      }
+    }
   }
 }

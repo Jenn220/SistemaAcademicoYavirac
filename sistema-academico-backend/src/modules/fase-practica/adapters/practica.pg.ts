@@ -49,7 +49,8 @@ export class PracticaPg implements IPracticaRepository {
   }
 
   async findAllPracticas(skip?: number, take?: number): Promise<PracticaEntity[]> {
-    return this.practicaRepository.find({ skip, take });
+    const takeFinal = take ?? 200;
+    return this.practicaRepository.find({ skip, take: takeFinal });
   }
 
   async findPracticaById(id: number): Promise<PracticaEntity | null> {

@@ -1,0 +1,18 @@
+export const ESTADOS_MATRICULA_DETALLE = {
+  CURSANDO: 'CURSANDO',
+  APROBADO: 'APROBADO',
+  REPROBADO: 'REPROBADO',
+  SUPLETORIO: 'SUPLETORIO',
+  RETIRADO: 'RETIRADO',
+} as const;
+
+export type EstadoMatriculaDetalle =
+  (typeof ESTADOS_MATRICULA_DETALLE)[keyof typeof ESTADOS_MATRICULA_DETALLE];
+
+export const ESTADOS_PERIODO_CARRERA = {
+  ACTIVO: 'ACTIVO',
+  FINALIZADO: 'FINALIZADO',
+} as const;
+
+export type EstadoPeriodoCarrera =
+  (typeof ESTADOS_PERIODO_CARRERA)[keyof typeof ESTADOS_PERIODO_CARRERA];

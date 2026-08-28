@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EvaluacionPracticaEntity } from '../domain/evaluacion-practica.entity';
@@ -34,7 +34,7 @@ export class EvaluacionCalculoService {
 
   async calcularEvaluacionEmpresarial(idEvaluacion: number) {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: idEvaluacion } });
-    if (!evaluacion) return null;
+    if (!evaluacion) throw new NotFoundException(`Evaluación con id ${idEvaluacion} no encontrada`);
 
     let items = [];
     if (evaluacion.id_rubrica) {
@@ -103,7 +103,7 @@ export class EvaluacionCalculoService {
 
   async calcularEvaluacionInstituto(idEvaluacion: number) {
     const evaluacion = await this.evaluacionRepository.findOne({ where: { id_evaluacion: idEvaluacion } });
-    if (!evaluacion) return null;
+    if (!evaluacion) throw new NotFoundException(`Evaluación con id ${idEvaluacion} no encontrada`);
 
     let items = [];
     if (evaluacion.id_rubrica) {

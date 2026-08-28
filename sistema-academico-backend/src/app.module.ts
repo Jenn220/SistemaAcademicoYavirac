@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ControlPeriodosModule } from './modules/control-periodos/control-periodos.module';
 
 @Module({
   controllers: [AppController],
@@ -21,11 +22,11 @@ import { AuthModule } from './modules/auth/auth.module';
         host: config.get<string>('DB_HOST') || 'localhost',
         port: config.get<number>('DB_PORT') || 5432,
         username: config.get<string>('DB_USER') || 'postgres',
-        password: String(config.get('DB_PASSWORD') || 'postgres'),
-        database: config.get<string>('DB_NAME') || 'postgres',
+        password: config.get<string>('DB_PASSWORD'),
+       database: config.get<string>('DB_NAME'),
         entities: [join(__dirname, '**', '*.entity.{ts,js}')],
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: false, 
       }),
     }),
     PortafolioModule,
@@ -33,6 +34,7 @@ import { AuthModule } from './modules/auth/auth.module';
     FasePracticaModule,
     HealthModule,
     AuthModule,
+    ControlPeriodosModule,
   ],
 })
 export class AppModule {}

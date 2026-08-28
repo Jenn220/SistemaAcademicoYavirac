@@ -81,7 +81,7 @@ export class ListaPortafolioComponent implements OnInit {
     return this.ofertas().filter((o) => !!o.tiene_seguimiento_pea);
   });
 
-    // ============================================
+  // ============================================
   // 6. FILTROS PARA ACEPTACIÓN DE NOTAS (CORREGIDOS - EXCLUYENTES)
   // ============================================
   readonly ofertasAporte1 = computed(() => {
@@ -133,11 +133,11 @@ export class ListaPortafolioComponent implements OnInit {
     });
   }
 
-  seleccionarOferta(oferta: OfertaDocenteDto): void {
+  seleccionarOferta(oferta: OfertaDocenteDto, tipoReporte?: string): void {
     if (this.modo() === 'informe-final') {
       this.irAInformeFinal(oferta);
     } else if (this.modo() === 'aceptacion-notas') {
-      this.irAAceptacionNotas(oferta);
+      this.irAAceptacionNotas(oferta, tipoReporte);
     } else if (this.modo() === 'seguimiento-pea') {
       this.irASeguimientoPea(oferta);
     }
@@ -151,11 +151,18 @@ export class ListaPortafolioComponent implements OnInit {
     this.router.navigate(['/portafolio-docente/informe-final', oferta.id_oferta_asignatura]);
   }
 
-  irAAceptacionNotas(oferta: OfertaDocenteDto): void {
-    this.router.navigate([
-      '/portafolio-docente/aceptacion-notas',
-      oferta.id_oferta_asignatura,
-      oferta.id_periodo,
-    ]);
+  irAAceptacionNotas(oferta: OfertaDocenteDto, tipoReporte?: string): void {
+    // Construir query params incluyendo el flag tiene_aporte_2
+    const queryParams: any = {
+      tieneAporte2: oferta.tiene_aporte_2 ? 'true' : 'false'
+    };
+    if (tipoReporte) {
+      queryParams.tipo = tipoReporte;
+    }
+
+    this.router.navigate(
+      ['/portafolio-docente/aceptacion-notas', oferta.id_oferta_asignatura, oferta.id_periodo],
+      { queryParams }
+    );
   }
 }

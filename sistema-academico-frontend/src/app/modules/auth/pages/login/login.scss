@@ -1,5 +1,3 @@
-
-
 // Variables de la paleta institucional
 $primary-blue: #003366;
 $primary-hover: #002244;
@@ -47,7 +45,7 @@ $border-color: #cbd5e1;
     background: #ffffff;
     border-radius: 16px;
     padding: 2.5rem 2rem;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); // Sombra más fuerte para contrastar
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(0, 0, 0, 0.08);
     animation: fadeInUp 0.4s ease-out;
 
@@ -241,5 +239,168 @@ $border-color: #cbd5e1;
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// ============================================
+// RESPONSIVE - TABLETS (768px - 1024px)
+// ============================================
+@media (max-width: 1024px) {
+  .auth-shell .auth-card {
+    max-width: 400px;
+    padding: 2rem 1.75rem;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL (320px - 767px)
+// ============================================
+@media (max-width: 767px) {
+  .auth-shell {
+    padding: 1rem;
+  }
+
+  .auth-shell .auth-card {
+    max-width: 100%;
+    padding: 1.75rem 1.25rem;
+    border-radius: 14px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+
+    .auth-brand {
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+
+      &__logo {
+        width: 40px;
+      }
+
+      &__badge {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        border-radius: 8px;
+      }
+
+      &__title {
+        font-size: 1rem;
+      }
+
+      &__subtitle {
+        font-size: 0.7rem;
+      }
+    }
+
+    .auth-heading {
+      font-size: 1.2rem;
+    }
+
+    .auth-subheading {
+      font-size: 0.8rem;
+      margin: 0 0 1.2rem 0;
+    }
+
+    form {
+      gap: 1rem;
+
+      .auth-field {
+        label {
+          font-size: 0.78rem;
+        }
+
+        input {
+          padding: 0.65rem 0.8rem;
+          font-size: 0.85rem;
+          border-radius: 6px;
+        }
+
+        &__password-wrapper input {
+          padding-right: 2.2rem;
+        }
+
+        &__toggle {
+          font-size: 0.85rem;
+          right: 8px;
+        }
+
+        &__error {
+          font-size: 0.7rem;
+        }
+      }
+
+      .auth-button {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+      }
+    }
+  }
+
+  .auth-shell .auth-card .auth-alert {
+    font-size: 0.78rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - MÓVIL PEQUEÑO (320px - 480px)
+// ============================================
+@media (max-width: 480px) {
+  .auth-shell {
+    padding: 0.5rem;
+  }
+
+  .auth-shell .auth-card {
+    padding: 1.25rem 0.9rem;
+    border-radius: 12px;
+
+    .auth-brand {
+      &__logo {
+        width: 34px;
+      }
+
+      &__badge {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+      }
+
+      &__title {
+        font-size: 0.85rem;
+      }
+
+      &__subtitle {
+        font-size: 0.6rem;
+      }
+    }
+
+    .auth-heading {
+      font-size: 1rem;
+    }
+
+    .auth-subheading {
+      font-size: 0.7rem;
+      margin: 0 0 0.8rem 0;
+    }
+
+    form {
+      gap: 0.8rem;
+
+      .auth-field {
+        input {
+          padding: 0.55rem 0.6rem;
+          font-size: 0.78rem;
+        }
+
+        &__password-wrapper input {
+          padding-right: 1.8rem;
+        }
+      }
+
+      .auth-button {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+      }
+    }
   }
 }

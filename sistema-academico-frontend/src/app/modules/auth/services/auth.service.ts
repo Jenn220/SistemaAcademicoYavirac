@@ -1,6 +1,6 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, switchMap, of } from 'rxjs';
 import {
   CambiarPasswordRequest,
   DesbloquearRequest,
@@ -12,23 +12,19 @@ import {
   LoginResponse,
   MeResponse,
   UsuarioSesion,
+  UsuarioConNombre,
 } from '../models';
 
 const STORAGE_KEY = 'academico_token';
+const USER_STORAGE_KEY = 'academico_usuario_display';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  // Ajusta esta base si tu environment define otra convención
-  // (por ejemplo environment.apiUrl + '/auth')
+  private readonly apiUrl = '/api/auth';
 
-private readonly apiUrl = 'http://localhost:3000/api/auth';
-
-  // ------------------------------------------------------------------
-  // Estado de sesión reactivo (signals)
-  // ------------------------------------------------------------------
   private readonly tokenSignal = signal<string | null>(this.leerTokenGuardado());
-  private readonly usuarioSignal = signal<UsuarioSesion | null>(
-    this.decodificarUsuarioDelToken(this.leerTokenGuardado()),
+  private readonly usuarioSignal = signal<UsuarioConNombre | null>(
+    this.cargarUsuarioConNombre()
   );
 
   readonly token = this.tokenSignal.asReadonly();
@@ -36,23 +32,121 @@ private readonly apiUrl = 'http://localhost:3000/api/auth';
   readonly estaAutenticado = computed(() => this.tokenSignal() !== null);
   readonly roles = computed(() => this.usuarioSignal()?.roles ?? []);
 
-  constructor(private readonly http: HttpClient) {}
+  readonly nombreUsuario = computed(() => {
+    const usuario = this.usuarioSignal();
+    if (!usuario) return 'Usuario';
+    
+    if (usuario.nombreMostrar) return usuario.nombreMostrar;
+    
+    if (usuario.correo) {
+      const nombreFromEmail = usuario.correo.split('@')[0];
+      return nombreFromEmail
+        .replace(/[._-]/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    }
+    
+    return 'Usuario';
+  });
 
-  // ------------------------------------------------------------------
-  // Endpoints
-  // ------------------------------------------------------------------
+  constructor(private readonly http: HttpClient) {
+    this.cargarUsuarioSiEsNecesario();
+  }
 
   login(dto: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, dto).pipe(
       tap((respuesta) => this.guardarSesion(respuesta)),
+      switchMap((respuesta) => {
+        return this.cargarInformacionUsuario(respuesta.accessToken).pipe(
+          tap(() => {
+            const usuarioActualizado: UsuarioConNombre = {
+              ...respuesta.usuario,
+              nombreMostrar: this.extraerNombreDelCorreo(respuesta.usuario.correo)
+            };
+            this.usuarioSignal.set(usuarioActualizado);
+            this.guardarUsuarioConNombre(usuarioActualizado);
+          }),
+          switchMap(() => of(respuesta))
+        );
+      })
     );
   }
 
+  private cargarInformacionUsuario(token: string): Observable<MeResponse> {
+    return this.http.get<MeResponse>(`${this.apiUrl}/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+
+  private cargarUsuarioSiEsNecesario(): void {
+    const token = this.tokenSignal();
+    if (token) {
+      const usuarioGuardado = this.cargarUsuarioConNombre();
+      if (!usuarioGuardado) {
+        this.cargarInformacionUsuario(token).subscribe({
+          next: () => {
+            const usuarioBasico = this.decodificarUsuarioDelToken(token);
+            if (usuarioBasico) {
+              const usuarioActualizado: UsuarioConNombre = {
+                ...usuarioBasico,
+                nombreMostrar: this.extraerNombreDelCorreo(usuarioBasico.correo)
+              };
+              this.usuarioSignal.set(usuarioActualizado);
+              this.guardarUsuarioConNombre(usuarioActualizado);
+            }
+          },
+          error: () => {
+            const usuarioBasico = this.decodificarUsuarioDelToken(token);
+            if (usuarioBasico) {
+              const usuarioActualizado: UsuarioConNombre = {
+                ...usuarioBasico,
+                nombreMostrar: this.extraerNombreDelCorreo(usuarioBasico.correo)
+              };
+              this.usuarioSignal.set(usuarioActualizado);
+              this.guardarUsuarioConNombre(usuarioActualizado);
+            }
+          }
+        });
+      }
+    }
+  }
+
+  private extraerNombreDelCorreo(correo: string): string {
+    if (!correo) return 'Usuario';
+    const nombre = correo.split('@')[0];
+    return nombre
+      .replace(/[._-]/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  private guardarUsuarioConNombre(usuario: UsuarioConNombre): void {
+    try {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(usuario));
+    } catch (e) {
+      console.warn('No se pudo guardar el usuario:', e);
+    }
+  }
+
+  private cargarUsuarioConNombre(): UsuarioConNombre | null {
+    try {
+      const stored = localStorage.getItem(USER_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('No se pudo cargar el usuario guardado:', e);
+    }
+    return null;
+  }
+
   obtenerPeriodosActivos(): Observable<{ id_periodo: number; nombre: string; codigo: string }[]> {
-  return this.http.get<{ id_periodo: number; nombre: string; codigo: string }[]>(
-    `${this.apiUrl}/periodos-activos`
-  );
-}
+    return this.http.get<{ id_periodo: number; nombre: string; codigo: string }[]>(
+      `${this.apiUrl}/periodos-activos`
+    );
+  }
 
   me(): Observable<MeResponse> {
     return this.http.get<MeResponse>(`${this.apiUrl}/me`);
@@ -62,9 +156,6 @@ private readonly apiUrl = 'http://localhost:3000/api/auth';
     return this.http.post<void>(`${this.apiUrl}/cambiar-password`, dto);
   }
 
-  // Exclusivos de COORDINADOR — el backend ya los protege con
-  // @Roles('COORDINADOR'); aquí solo evitamos mostrarlos en la UI
-  // a quien no debería verlos (ver esModuloCoordinador()).
   generarAccesos(dto: GenerarAccesosRequest): Observable<GenerarAccesosResponse> {
     return this.http.post<GenerarAccesosResponse>(`${this.apiUrl}/generar-accesos`, dto);
   }
@@ -73,12 +164,9 @@ private readonly apiUrl = 'http://localhost:3000/api/auth';
     return this.http.post<DesbloquearResponse>(`${this.apiUrl}/desbloquear`, dto);
   }
 
-  // ------------------------------------------------------------------
-  // Sesión local
-  // ------------------------------------------------------------------
-
   logout(): void {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
     this.tokenSignal.set(null);
     this.usuarioSignal.set(null);
   }
@@ -102,13 +190,8 @@ private readonly apiUrl = 'http://localhost:3000/api/auth';
     return localStorage.getItem(STORAGE_KEY);
   }
 
-  // Decodifica el payload del JWT SOLO para hidratar el estado de la UI
-  // al recargar la página (no reemplaza la validación real, que
-  // siempre hace el backend en cada request vía JwtStrategy).
   private decodificarUsuarioDelToken(token: string | null): UsuarioSesion | null {
-    if (!token) {
-      return null;
-    }
+    if (!token) return null;
     try {
       const payloadBase64 = token.split('.')[1];
       const payload: JwtPayload = JSON.parse(atob(payloadBase64));
@@ -121,7 +204,6 @@ private readonly apiUrl = 'http://localhost:3000/api/auth';
         idEmpresa: payload.idEmpresa,
       };
     } catch {
-      // Token corrupto o ilegible: se descarta silenciosamente
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }

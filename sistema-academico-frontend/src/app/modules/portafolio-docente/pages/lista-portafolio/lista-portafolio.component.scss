@@ -1,60 +1,106 @@
+/* ============================================
+   1. :host
+   ============================================ */
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 2rem 1rem;
+}
+
+/* ============================================
+   2. Contenedor principal
+   ============================================ */
 .lista-portafolio {
-  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(22, 61, 140, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
 
-  &__header {
-    margin-bottom: 28px;
+/* Línea decorativa superior */
+.lista-portafolio::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 2rem;
+  right: 2rem;
+  height: 4px;
+  background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
+  border-radius: 0 0 4px 4px;
+}
 
-    h1 {
-      margin: 0 0 4px;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #0f172a;
-    }
+/* ============================================
+   3. Encabezados y títulos
+   ============================================ */
+.lista-portafolio__header {
+  margin-bottom: 28px;
 
-    p {
-      margin: 0;
-      color: #64748b;
-      font-size: 0.95rem;
-    }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #163d8c;
   }
 
-  &__estado {
-    padding: 18px 20px;
-    border-radius: 10px;
-    background: #f1f5f9;
-    color: #334155;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    &--error {
-      background: #fee2e2;
-      color: #991b1b;
-
-      button {
-        border: 1px solid #991b1b;
-        background: transparent;
-        color: #991b1b;
-        padding: 4px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-
-        &:hover {
-          background: #991b1b;
-          color: #fff;
-        }
-      }
-    }
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+  p {
+    margin: 0;
+    color: #6a7a8e;
+    font-size: 0.95rem;
   }
 }
 
+/* ============================================
+   4. Estados
+   ============================================ */
+.lista-portafolio__estado {
+  padding: 18px 20px;
+  border-radius: 8px;
+  background: #f7faff;
+  color: #1e2a3a;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &--error {
+    background: #fff8f8;
+    color: #dc3545;
+    border-left: 5px solid #dc3545;
+    border-radius: 0 8px 8px 0;
+
+    button {
+      border: 2px solid #dc3545;
+      background: transparent;
+      color: #dc3545;
+      padding: 0.4rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #dc3545;
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+/* ============================================
+   5. Grid de portafolio
+   ============================================ */
+.lista-portafolio__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* ============================================
+   6. Sección de portafolio
+   ============================================ */
 .seccion-portafolio {
   margin-bottom: 36px;
 
@@ -63,74 +109,96 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 16px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 2px solid #e8ecf2;
     padding-bottom: 8px;
+    position: relative;
 
     h2 {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #163d8c;
       margin: 0;
     }
   }
 
+  &__header::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 50%, #163d8c 100%);
+  }
+
   &__contador {
-    background: #f1f5f9;
-    color: #475569;
+    background: #f0f4fc;
+    color: #163d8c;
     font-size: 0.8rem;
     font-weight: 700;
     padding: 2px 10px;
     border-radius: 999px;
 
     &--completado {
-      background: #dcfce7;
-      color: #15803d;
+      background: #f0faf4;
+      color: #28a745;
     }
   }
 
   &__vacio {
-    color: #64748b;
+    color: #6a7a8e;
     font-size: 0.9rem;
     font-style: italic;
     margin: 0;
   }
 }
 
+/* ============================================
+   7. Spinner
+   ============================================ */
 .spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #cbd5e1;
-  border-top-color: #2563eb;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 1.2rem;
+  border: 4px solid #e8ecf2;
+  border-top: 4px solid #163d8c;
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
   }
 }
 
+/* ============================================
+   8. Tarjeta de oferta (card)
+   ============================================ */
 .oferta-card {
   position: relative;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  border: 1px solid #eef1f6;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 40px rgba(20, 50, 90, 0.08), 0 2px 8px rgba(20, 50, 90, 0.05);
+  border: 1px solid #e9eef7;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: 0.35s ease;
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06);
+    transform: translateY(-8px);
+    box-shadow: 0 24px 50px rgba(20, 50, 90, 0.14);
   }
 
   &__accent {
-    height: 4px;
+    height: 5px;
     width: 100%;
-    background: linear-gradient(90deg, #1d4ed8, #2563eb 45%, #38bdf8);
+    background: linear-gradient(90deg, #163d8c 0%, #ff7b22 60%, #163d8c 100%);
   }
 
   &__body {
@@ -149,8 +217,8 @@
     width: 42px;
     height: 42px;
     border-radius: 10px;
-    background: #eff6ff;
-    color: #2563eb;
+    background: #f7faff;
+    color: #163d8c;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -164,8 +232,8 @@
   &__badge {
     padding: 3px 12px;
     border-radius: 999px;
-    background: #f1f5f9;
-    color: #64748b;
+    background: #f7faff;
+    color: #6a7a8e;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -173,8 +241,8 @@
     white-space: nowrap;
 
     &--activo {
-      background: #dcfce7;
-      color: #15803d;
+      background: #f0faf4;
+      color: #28a745;
     }
   }
 
@@ -182,7 +250,7 @@
     margin: 0 0 12px;
     font-size: 1.15rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #163d8c;
     line-height: 1.3;
   }
 
@@ -197,13 +265,13 @@
     align-items: center;
     gap: 8px;
     font-size: 0.85rem;
-    color: #475569;
+    color: #1e2a3a;
 
     svg {
       width: 16px;
       height: 16px;
       flex-shrink: 0;
-      color: #94a3b8;
+      color: #6a7a8e;
     }
   }
 
@@ -215,20 +283,23 @@
   }
 }
 
+/* ============================================
+   9. Botones de acción
+   ============================================ */
 .btn-accion {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 0.7rem 2rem;
   border-radius: 8px;
-  border: 1px solid #2563eb;
-  background: #2563eb;
-  color: #fff;
+  border: none;
+  background: #163d8c;
+  color: #ffffff;
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 600;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.3s ease;
 
   svg {
     width: 16px;
@@ -236,17 +307,254 @@
   }
 
   &:hover {
-    background: #1d4ed8;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.28);
+    background: #0f2d66;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(22, 61, 140, 0.35);
   }
 
   &--outline {
-    background: #fff;
-    color: #2563eb;
+    background: transparent;
+    color: #163d8c;
+    border: 2px solid #163d8c;
 
     &:hover {
-      background: #eff6ff;
+      background: #f7faff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(22, 61, 140, 0.15);
+    }
+  }
+}
+
+/* ============================================
+   10. Responsive
+   ============================================ */
+@media (max-width: 1024px) {
+  .lista-portafolio {
+    padding: 2rem 1.5rem;
+  }
+
+  .lista-portafolio__grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .lista-portafolio {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .lista-portafolio::before {
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+  }
+
+  .lista-portafolio__header {
+    h1 {
+      font-size: 1.3rem;
+    }
+
+    p {
+      font-size: 0.85rem;
+    }
+  }
+
+  .lista-portafolio__grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .lista-portafolio__estado {
+    flex-direction: column;
+    text-align: center;
+    padding: 14px 16px;
+
+    &--error {
+      border-left: none;
+      border-top: 5px solid #dc3545;
+      border-radius: 8px 8px 0 0;
+    }
+  }
+
+  .seccion-portafolio {
+    &__header {
+      h2 {
+        font-size: 1.1rem;
+      }
+    }
+
+    &__contador {
+      font-size: 0.7rem;
+    }
+  }
+
+  .oferta-card {
+    border-radius: 18px;
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    &__body {
+      padding: 16px 16px 12px;
+    }
+
+    &__acciones {
+      padding: 0 16px 16px;
+    }
+
+    &__meta-item {
+      font-size: 0.8rem;
+    }
+
+    &__top {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    &__badge {
+      font-size: 0.65rem;
+    }
+  }
+
+  .btn-accion {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.82rem;
+    width: 100%;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .lista-portafolio {
+    padding: 1rem 0.8rem;
+  }
+
+  .lista-portafolio__header {
+    h1 {
+      font-size: 1.1rem;
+    }
+
+    p {
+      font-size: 0.78rem;
+    }
+  }
+
+  .oferta-card {
+    border-radius: 14px;
+
+    h2 {
+      font-size: 0.9rem;
+    }
+
+    &__body {
+      padding: 12px 12px 10px;
+    }
+
+    &__acciones {
+      padding: 0 12px 12px;
+      gap: 6px;
+    }
+
+    &__icon {
+      width: 34px;
+      height: 34px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    &__meta-item {
+      font-size: 0.75rem;
+      gap: 6px;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    &__badge {
+      font-size: 0.6rem;
+      padding: 2px 8px;
+    }
+  }
+
+  .btn-accion {
+    padding: 0.5rem 1rem;
+    font-size: 0.78rem;
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border-width: 3px;
+  }
+}
+
+/* ============================================
+   11. Estilos de impresión
+   ============================================ */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  :host {
+    background: #ffffff;
+    padding: 0;
+  }
+
+  .lista-portafolio {
+    padding: 2rem;
+    box-shadow: none;
+  }
+
+  .lista-portafolio::before {
+    display: none;
+  }
+
+  .oferta-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #1e2a3a;
+    transform: none !important;
+
+    &:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .btn-accion {
+    border: 1px solid #1e2a3a;
+    background: transparent;
+    color: #1e2a3a;
+
+    &:hover {
+      background: transparent;
+      transform: none;
       box-shadow: none;
     }
+
+    &--outline {
+      border: 1px solid #1e2a3a;
+    }
+  }
+
+  .seccion-portafolio__header::after {
+    display: none;
   }
 }
