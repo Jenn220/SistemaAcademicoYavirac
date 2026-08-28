@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { FasePracticaModule } from './modules/fase-practica/fase-practica.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ControlPeriodosModule } from './modules/control-periodos/control-periodos.module';
 
 @Module({
   controllers: [AppController],
@@ -33,6 +34,7 @@ import { AuthModule } from './modules/auth/auth.module';
     FasePracticaModule,
     HealthModule,
     AuthModule,
+    ControlPeriodosModule,
   ],
 })
 export class AppModule {}

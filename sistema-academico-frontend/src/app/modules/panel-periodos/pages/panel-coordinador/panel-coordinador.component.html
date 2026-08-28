@@ -1,94 +1,986 @@
 <div class="panel-coordinador">
-  <h1 class="titulo">Cierre de Periodo Academico</h1>
-  <p class="subtitulo">Gestiona el cierre del periodo para las carreras donde eres coordinador.</p>
+  <div class="encabezado-panel">
+    <div>
+      <h1 class="titulo">
+        Cierre de Período Académico
+      </h1>
 
-  <div class="tabla-periodos">
+      <p class="subtitulo">
+        Gestiona la creación, cierre, historial y coordinador de los
+        períodos asignados.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-crear-periodo"
+      (click)="abrirCreacionPeriodo()"
+    >
+      + Crear período
+    </button>
+  </div>
+
+  <!-- Estos mensajes SOLO se muestran fuera del modal -->
+  <p
+    class="aviso"
+    *ngIf="cargandoPeriodos"
+  >
+    Cargando períodos...
+  </p>
+
+  <p
+    class="mensaje-error"
+    *ngIf="error && !mostrarCreacionPeriodo"
+  >
+    {{ error }}
+  </p>
+
+  <p
+    class="mensaje-exito"
+    *ngIf="mensaje && !mostrarCreacionPeriodo"
+  >
+    {{ mensaje }}
+  </p>
+
+  <div
+    class="tabla-periodos"
+    *ngIf="!cargandoPeriodos"
+  >
     <table>
       <thead>
         <tr>
-          <th>Periodo</th>
+          <th>Período</th>
           <th>Carrera</th>
           <th>Fecha fin</th>
           <th>Estado</th>
-          <th></th>
+          <th>Acciones</th>
         </tr>
       </thead>
+
       <tbody>
         <tr
-          *ngFor="let p of periodos"
-          [class.seleccionado]="periodoSeleccionado?.idPeriodoCarrera === p.idPeriodoCarrera"
+          *ngFor="let periodo of periodos"
+          [class.seleccionado]="
+            periodoSeleccionado?.idPeriodoCarrera ===
+            periodo.idPeriodoCarrera
+          "
         >
-          <td>{{ p.codigoPeriodo }}</td>
-          <td>{{ p.nombreCarrera }}</td>
-          <td>{{ p.fechaFin | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            {{ periodo.codigoPeriodo }}
+          </td>
+
+          <td>
+            {{ periodo.nombreCarrera }}
+          </td>
+
+          <td>
+            {{
+              periodo.fechaFin
+                | date: 'dd/MM/yyyy'
+            }}
+          </td>
+
           <td>
             <span
               class="badge"
-              [class.activo]="p.estado === ESTADOS.ACTIVO"
-              [class.finalizado]="p.estado === ESTADOS.FINALIZADO"
+              [class.activo]="
+                periodo.estado === ESTADOS.ACTIVO
+              "
+              [class.finalizado]="
+                periodo.estado === ESTADOS.FINALIZADO
+              "
             >
-              {{ p.estado }}
+              {{ periodo.estado }}
             </span>
           </td>
-          <td><button class="btn-detalle" (click)="verResumen(p)">Ver detalle</button></td>
+
+          <td>
+            <div class="acciones-tabla">
+              <button
+                type="button"
+                class="btn-detalle"
+                (click)="verResumen(periodo)"
+              >
+                Resumen
+              </button>
+
+              <button
+                type="button"
+                class="btn-detalle"
+                (click)="verHistorial(periodo)"
+              >
+                Historial
+              </button>
+
+              <button
+                type="button"
+                class="btn-detalle"
+                *ngIf="
+                  periodo.estado === ESTADOS.ACTIVO
+                "
+                (click)="abrirReasignacion(periodo)"
+              >
+                Cambiar coordinador
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="periodos.length === 0">
+          <td colspan="5">
+            No tienes períodos-carrera asignados como
+            coordinador.
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <div class="detalle-cierre" *ngIf="periodoSeleccionado">
-    <h2>{{ periodoSeleccionado.codigoPeriodo }} - {{ periodoSeleccionado.nombreCarrera }}</h2>
+  <div
+    class="detalle-cierre"
+    *ngIf="periodoSeleccionado"
+  >
+    <h2>
+      {{ periodoSeleccionado.codigoPeriodo }}
+      -
+      {{ periodoSeleccionado.nombreCarrera }}
+    </h2>
 
-    <div class="resumen" *ngIf="resumen">
+    <p
+      class="aviso"
+      *ngIf="cargandoResumen"
+    >
+      Cargando resumen...
+    </p>
+
+    <div
+      class="resumen"
+      *ngIf="resumen && !cargandoResumen"
+    >
       <div class="tarjeta">
-        <span class="numero">{{ resumen.totalOfertas }}</span>
-        <span class="etiqueta">Ofertas de materia</span>
+        <span class="numero">
+          {{ resumen.totalOfertas }}
+        </span>
+
+        <span class="etiqueta">
+          Ofertas de materia
+        </span>
       </div>
+
       <div class="tarjeta">
-        <span class="numero">{{ resumen.totalMatriculasDetalle }}</span>
-        <span class="etiqueta">Matriculas activas</span>
+        <span class="numero">
+          {{ resumen.totalMatriculasDetalle }}
+        </span>
+
+        <span class="etiqueta">
+          Matrículas registradas
+        </span>
       </div>
+
       <div class="tarjeta">
-        <span class="numero">{{ resumen.totalVinculaciones }}</span>
-        <span class="etiqueta">Vinculaciones en curso</span>
+        <span class="numero">
+          {{ resumen.totalVinculaciones }}
+        </span>
+
+        <span class="etiqueta">
+          Vinculaciones
+        </span>
       </div>
+
       <div class="tarjeta">
-        <span class="numero">{{ resumen.totalPracticas }}</span>
-        <span class="etiqueta">Practicas en curso</span>
+        <span class="numero">
+          {{ resumen.totalPracticas }}
+        </span>
+
+        <span class="etiqueta">
+          Prácticas
+        </span>
       </div>
     </div>
 
-    <p class="aviso" *ngIf="periodoSeleccionado.estado === ESTADOS.FINALIZADO">
-      Este periodo ya fue cerrado.
-    </p>
+    <div
+      class="bloqueos"
+      *ngIf="resumen && !resumen.puedeCerrar"
+    >
+      <h3>
+        No se puede cerrar todavía
+      </h3>
 
-    <button class="btn-cerrar" *ngIf="puedeCerrar(periodoSeleccionado)" (click)="pedirConfirmacion()">
-      Cerrar Periodo
-    </button>
+      <ul>
+        <li
+          *ngFor="let bloqueo of resumen.bloqueos"
+        >
+          {{ bloqueo }}
+        </li>
+      </ul>
+    </div>
+
     <p
       class="aviso"
-      *ngIf="!puedeCerrar(periodoSeleccionado) && periodoSeleccionado.estado === ESTADOS.ACTIVO"
+      *ngIf="
+        periodoSeleccionado.estado ===
+        ESTADOS.FINALIZADO
+      "
     >
-      Solo el coordinador asignado a esta carrera y periodo puede cerrarlo.
+      Este período ya fue cerrado.
     </p>
+
+    <button
+      type="button"
+      class="btn-cerrar"
+      *ngIf="puedeCerrar(periodoSeleccionado)"
+      (click)="pedirConfirmacion()"
+    >
+      Cerrar período
+    </button>
   </div>
 
-  <div class="modal-confirmacion" *ngIf="mostrarConfirmacion">
-    <div class="modal-contenido">
-      <h3>Confirmar cierre de periodo?</h3>
-      <p>
-        Todos los registros en curso (matriculas, vinculaciones, practicas) de
-        <strong>{{ periodoSeleccionado?.nombreCarrera }} - {{ periodoSeleccionado?.codigoPeriodo }}</strong>
-        pasaran a un estado terminal. Esta accion no se puede deshacer.
+  <!-- ========================================================= -->
+  <!-- MODAL CREAR PERÍODO - LOS ERRORES APARECEN AQUÍ DENTRO    -->
+  <!-- ========================================================= -->
+
+  <div
+    class="modal-confirmacion"
+    *ngIf="mostrarCreacionPeriodo"
+  >
+    <div class="modal-contenido modal-periodo">
+      <div class="cabecera-modal">
+        <div>
+          <h3>
+            Crear período académico
+          </h3>
+
+          <p>
+            Registra un nuevo período-carrera respetando la
+            estructura académica existente.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="btn-cerrar-modal"
+          (click)="cerrarModalCreacionPeriodo()"
+          [disabled]="creandoPeriodo"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- Mensaje de carga de catálogos -->
+      <p
+        class="aviso"
+        *ngIf="cargandoCatalogos"
+      >
+        Cargando catálogos...
       </p>
+
+      <!-- ERRORES DENTRO DEL MODAL - Usa errorCreacionPeriodo -->
+      <div
+        class="mensaje-error-modal"
+        *ngIf="errorCreacionPeriodo || error"
+      >
+        <strong>
+          No se pudo completar la operación
+        </strong>
+
+        <span>
+          {{ errorCreacionPeriodo || error }}
+        </span>
+      </div>
+
+      <!-- MENSAJE DE ÉXITO DENTRO DEL MODAL -->
+      <div
+        class="mensaje-exito-modal"
+        *ngIf="mensaje && mostrarCreacionPeriodo"
+      >
+        <strong>
+          ¡Completado!
+        </strong>
+
+        <span>
+          {{ mensaje }}
+        </span>
+      </div>
+
+      <form
+        *ngIf="!cargandoCatalogos"
+        (ngSubmit)="crearPeriodo()"
+      >
+        <div class="bloque-formulario">
+          <h4>
+            Identificación del período
+          </h4>
+
+          <div class="grid-formulario">
+            <div class="campo-formulario">
+              <label for="anioPeriodo">
+                Año
+              </label>
+
+              <input
+                id="anioPeriodo"
+                name="anioPeriodo"
+                type="number"
+                min="2000"
+                max="2100"
+                [(ngModel)]="formularioCrearPeriodo.anio"
+              />
+            </div>
+
+            <div class="campo-formulario">
+              <label for="numeroPeriodo">
+                Período
+              </label>
+
+              <select
+                id="numeroPeriodo"
+                name="numeroPeriodo"
+                [(ngModel)]="
+                  formularioCrearPeriodo.numeroPeriodo
+                "
+              >
+                <option
+                  *ngFor="
+                    let periodo of periodosPermitidos
+                  "
+                  [ngValue]="periodo.valor"
+                >
+                  {{ periodo.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div class="campo-formulario campo-codigo">
+              <label>
+                Código generado
+              </label>
+
+              <div class="codigo-generado">
+                {{
+                  codigoPeriodoGenerado ||
+                  'AAAA-1P'
+                }}
+              </div>
+            </div>
+
+            <div class="campo-formulario">
+              <label for="nombrePeriodo">
+                Nombre opcional
+              </label>
+
+              <input
+                id="nombrePeriodo"
+                name="nombrePeriodo"
+                type="text"
+                maxlength="150"
+                placeholder="Ej. Segundo período académico 2026"
+                [(ngModel)]="
+                  formularioCrearPeriodo.nombrePeriodo
+                "
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="bloque-formulario">
+          <h4>
+            Asignación académica
+          </h4>
+
+          <div class="grid-formulario">
+            <div class="campo-formulario">
+              <label for="carreraPeriodo">
+                Carrera
+              </label>
+
+              <select
+                id="carreraPeriodo"
+                name="carreraPeriodo"
+                [(ngModel)]="
+                  formularioCrearPeriodo.idCarrera
+                "
+              >
+                <option [ngValue]="null">
+                  Selecciona una carrera
+                </option>
+
+                <option
+                  *ngFor="
+                    let carrera of carrerasCatalogo
+                  "
+                  [ngValue]="carrera.idCarrera"
+                >
+                  {{ carrera.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div class="campo-formulario">
+              <label for="coordinadorPeriodo">
+                Coordinador inicial
+              </label>
+
+              <select
+                id="coordinadorPeriodo"
+                name="coordinadorPeriodo"
+                [(ngModel)]="
+                  formularioCrearPeriodo.idCoordinador
+                "
+              >
+                <option [ngValue]="null">
+                  Selecciona un coordinador
+                </option>
+
+                <option
+                  *ngFor="
+                    let coordinador of coordinadoresCatalogo
+                  "
+                  [ngValue]="coordinador.idDocente"
+                >
+                  {{ coordinador.nombre }}
+                  {{
+                    coordinador.correo
+                      ? ' - ' + coordinador.correo
+                      : ''
+                  }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="bloque-formulario">
+          <h4>
+            Fechas generales
+          </h4>
+
+          <div class="grid-formulario">
+            <div class="campo-formulario">
+              <label for="fechaInicioPeriodo">
+                Fecha de inicio
+              </label>
+
+              <input
+                id="fechaInicioPeriodo"
+                name="fechaInicioPeriodo"
+                type="date"
+                [(ngModel)]="
+                  formularioCrearPeriodo.fechaInicio
+                "
+              />
+            </div>
+
+            <div class="campo-formulario">
+              <label for="fechaFinPeriodo">
+                Fecha de fin
+              </label>
+
+              <input
+                id="fechaFinPeriodo"
+                name="fechaFinPeriodo"
+                type="date"
+                [(ngModel)]="
+                  formularioCrearPeriodo.fechaFin
+                "
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="bloque-formulario">
+          <h4>
+            Fechas académicas
+          </h4>
+
+          <p class="texto-ayuda">
+            Estos bloques son opcionales. Si completas uno,
+            debes ingresar tanto la fecha de inicio como la fecha
+            final.
+          </p>
+
+          <div class="subbloque-fechas">
+            <h5>
+              Aporte 1
+            </h5>
+
+            <div class="grid-formulario">
+              <div class="campo-formulario">
+                <label for="fechaInicioAporte1">
+                  Inicio
+                </label>
+
+                <input
+                  id="fechaInicioAporte1"
+                  name="fechaInicioAporte1"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaInicioAporte1
+                  "
+                />
+              </div>
+
+              <div class="campo-formulario">
+                <label for="fechaFinAporte1">
+                  Fin
+                </label>
+
+                <input
+                  id="fechaFinAporte1"
+                  name="fechaFinAporte1"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaFinAporte1
+                  "
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="subbloque-fechas">
+            <h5>
+              Aporte 2
+            </h5>
+
+            <div class="grid-formulario">
+              <div class="campo-formulario">
+                <label for="fechaInicioAporte2">
+                  Inicio
+                </label>
+
+                <input
+                  id="fechaInicioAporte2"
+                  name="fechaInicioAporte2"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaInicioAporte2
+                  "
+                />
+              </div>
+
+              <div class="campo-formulario">
+                <label for="fechaFinAporte2">
+                  Fin
+                </label>
+
+                <input
+                  id="fechaFinAporte2"
+                  name="fechaFinAporte2"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaFinAporte2
+                  "
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="subbloque-fechas">
+            <h5>
+              Supletorio
+            </h5>
+
+            <div class="grid-formulario">
+              <div class="campo-formulario">
+                <label for="fechaInicioSupletorio">
+                  Inicio
+                </label>
+
+                <input
+                  id="fechaInicioSupletorio"
+                  name="fechaInicioSupletorio"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaInicioSupletorio
+                  "
+                />
+              </div>
+
+              <div class="campo-formulario">
+                <label for="fechaFinSupletorio">
+                  Fin
+                </label>
+
+                <input
+                  id="fechaFinSupletorio"
+                  name="fechaFinSupletorio"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaFinSupletorio
+                  "
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="subbloque-fechas">
+            <h5>
+              Fase teórica
+            </h5>
+
+            <div class="grid-formulario">
+              <div class="campo-formulario">
+                <label for="fechaInicioFaseTeorica">
+                  Inicio
+                </label>
+
+                <input
+                  id="fechaInicioFaseTeorica"
+                  name="fechaInicioFaseTeorica"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaInicioFaseTeorica
+                  "
+                />
+              </div>
+
+              <div class="campo-formulario">
+                <label for="fechaFinFaseTeorica">
+                  Fin
+                </label>
+
+                <input
+                  id="fechaFinFaseTeorica"
+                  name="fechaFinFaseTeorica"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaFinFaseTeorica
+                  "
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="subbloque-fechas">
+            <h5>
+              Fase práctica
+            </h5>
+
+            <div class="grid-formulario">
+              <div class="campo-formulario">
+                <label for="fechaInicioFasePractica">
+                  Inicio
+                </label>
+
+                <input
+                  id="fechaInicioFasePractica"
+                  name="fechaInicioFasePractica"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaInicioFasePractica
+                  "
+                />
+              </div>
+
+              <div class="campo-formulario">
+                <label for="fechaFinFasePractica">
+                  Fin
+                </label>
+
+                <input
+                  id="fechaFinFasePractica"
+                  name="fechaFinFasePractica"
+                  type="date"
+                  [(ngModel)]="
+                    formularioCrearPeriodo.fechaFinFasePractica
+                  "
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="resumen-creacion">
+          <span>
+            Período
+          </span>
+
+          <strong>
+            {{ codigoPeriodoGenerado }}
+          </strong>
+
+          <small>
+            El sistema validará duplicados, fechas,
+            carrera y coordinador antes de guardar.
+          </small>
+        </div>
+
+        <div class="acciones">
+          <button
+            type="button"
+            class="btn-secundario"
+            (click)="cerrarModalCreacionPeriodo()"
+            [disabled]="creandoPeriodo"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primario"
+            [disabled]="
+              creandoPeriodo ||
+              !formularioCreacionValido()
+            "
+          >
+            {{
+              creandoPeriodo
+                ? 'Creando período...'
+                : 'Crear período'
+            }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de cierre -->
+
+  <div
+    class="modal-confirmacion"
+    *ngIf="mostrarConfirmacion"
+  >
+    <div class="modal-contenido">
+      <h3>
+        ¿Confirmar cierre de período?
+      </h3>
+
+      <p>
+        Se finalizará el período
+        <strong>
+          {{ periodoSeleccionado?.nombreCarrera }}
+          -
+          {{ periodoSeleccionado?.codigoPeriodo }}
+        </strong>.
+      </p>
+
+      <p>
+        Esta acción quedará registrada en el historial.
+      </p>
+
       <div class="acciones">
-        <button class="btn-secundario" (click)="cancelarCierre()" [disabled]="cerrando">Cancelar</button>
-        <button class="btn-primario" (click)="confirmarCierre()" [disabled]="cerrando">
-          {{ cerrando ? 'Cerrando...' : 'Si, cerrar periodo' }}
+        <button
+          type="button"
+          class="btn-secundario"
+          (click)="cancelarCierre()"
+          [disabled]="cerrando"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="btn-primario"
+          (click)="confirmarCierre()"
+          [disabled]="cerrando"
+        >
+          {{
+            cerrando
+              ? 'Cerrando...'
+              : 'Sí, cerrar período'
+          }}
         </button>
       </div>
     </div>
   </div>
 
-  <p class="mensaje-exito" *ngIf="mensaje">{{ mensaje }}</p>
+  <!-- Modal de historial -->
+
+  <div
+    class="modal-confirmacion"
+    *ngIf="mostrarHistorial"
+  >
+    <div class="modal-contenido modal-grande">
+      <h3>
+        Historial del período
+      </h3>
+
+      <p *ngIf="cargandoHistorial">
+        Cargando historial...
+      </p>
+
+      <div
+        class="contenedor-historial"
+        *ngIf="!cargandoHistorial"
+      >
+        <table class="tabla-historial">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Acción</th>
+              <th>Ejecutor</th>
+              <th>Detalle</th>
+              <th>Motivo</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              *ngFor="let item of historial"
+            >
+              <td>
+                {{
+                  item.fechaAccion
+                    | date: 'dd/MM/yyyy HH:mm'
+                }}
+              </td>
+
+              <td>
+                {{ item.tipoAccion }}
+              </td>
+
+              <td>
+                {{ item.correoEjecutor }}
+              </td>
+
+              <td>
+                <ng-container
+                  *ngIf="
+                    item.tipoAccion === 'CIERRE'
+                  "
+                >
+                  {{ item.estadoAnterior }}
+                  →
+                  {{ item.estadoNuevo }}
+                </ng-container>
+
+                <ng-container
+                  *ngIf="
+                    item.tipoAccion ===
+                    'REASIGNACION_COORDINADOR'
+                  "
+                >
+                  {{
+                    item.nombreCoordinadorAnterior ||
+                    'Sin coordinador'
+                  }}
+                  →
+                  {{
+                    item.nombreCoordinadorNuevo ||
+                    'Sin coordinador'
+                  }}
+                </ng-container>
+              </td>
+
+              <td>
+                {{ item.motivo || '—' }}
+              </td>
+            </tr>
+
+            <tr *ngIf="historial.length === 0">
+              <td colspan="5">
+                Todavía no existen movimientos.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="acciones">
+        <button
+          type="button"
+          class="btn-secundario"
+          (click)="cerrarModalHistorial()"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para cambiar coordinador -->
+
+  <div
+    class="modal-confirmacion"
+    *ngIf="mostrarReasignacion"
+  >
+    <div class="modal-contenido">
+      <h3>
+        Cambiar coordinador
+      </h3>
+
+      <p>
+        Al confirmar, el período dejará de aparecer en tu
+        panel y pasará al nuevo coordinador.
+      </p>
+
+      <p *ngIf="cargandoCoordinadores">
+        Cargando coordinadores...
+      </p>
+
+      <div *ngIf="!cargandoCoordinadores">
+        <label for="nuevoCoordinador">
+          Nuevo coordinador
+        </label>
+
+        <select
+          id="nuevoCoordinador"
+          name="nuevoCoordinador"
+          [(ngModel)]="idNuevoCoordinador"
+        >
+          <option [ngValue]="null">
+            Selecciona un coordinador
+          </option>
+
+          <option
+            *ngFor="let coordinador of coordinadores"
+            [ngValue]="coordinador.idDocente"
+          >
+            {{ coordinador.nombre }}
+            {{
+              coordinador.correo
+                ? ' - ' + coordinador.correo
+                : ''
+            }}
+          </option>
+        </select>
+
+        <label for="motivoReasignacion">
+          Motivo de la reasignación
+        </label>
+
+        <textarea
+          id="motivoReasignacion"
+          name="motivoReasignacion"
+          maxlength="500"
+          [(ngModel)]="motivoReasignacion"
+        ></textarea>
+
+        <p
+          class="aviso"
+          *ngIf="coordinadores.length === 0"
+        >
+          No existen otros coordinadores disponibles para
+          esta carrera.
+        </p>
+      </div>
+
+      <div class="acciones">
+        <button
+          type="button"
+          class="btn-secundario"
+          (click)="cerrarModalReasignacion()"
+          [disabled]="reasignando"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="btn-primario"
+          (click)="confirmarReasignacion()"
+          [disabled]="
+            reasignando ||
+            !idNuevoCoordinador
+          "
+        >
+          {{
+            reasignando
+              ? 'Cambiando...'
+              : 'Confirmar cambio'
+          }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

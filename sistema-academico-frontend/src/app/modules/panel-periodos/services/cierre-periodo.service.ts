@@ -1,55 +1,215 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of, delay } from 'rxjs';
-import { PeriodoCarrera, ResumenCierrePeriodo } from '../models/periodo-carrera.model';
-import { ESTADOS_PERIODO_CARRERA } from '../models/estados.constants';
+import {
+  Injectable,
+} from '@angular/core';
 
-// PROTOTIPO — el backend (Mateo, RF1/RF4 del informe) todavia no expone estos
-// endpoints. Los 3 metodos de abajo devuelven datos simulados con delay() para que
-// el front se comporte como si fuera una llamada HTTP real.
-// Cuando el endpoint exista, reemplazar el cuerpo por this.http.get/post(...) y
-// borrar los mocks - la firma (Observable<T>) no deberia cambiar.
+import {
+  HttpClient,
+  HttpParams,
+} from '@angular/common/http';
 
-@Injectable({ providedIn: 'root' })
+import {
+  Observable,
+} from 'rxjs';
+
+import {
+  CatalogosCreacionPeriodo,
+  CerrarPeriodoRequest,
+  CerrarPeriodoResponse,
+  CoordinadorDisponible,
+  CrearPeriodoCarreraRequest,
+  CrearPeriodoCarreraResponse,
+  HistorialPeriodoCarrera,
+  PeriodoCarrera,
+  ReasignarCoordinadorRequest,
+  ReasignarCoordinadorResponse,
+  ResumenCierrePeriodo,
+} from '../models/periodo-carrera.model';
+
+@Injectable({
+  providedIn: 'root',
+})
 export class CierrePeriodoService {
-  private readonly baseUrl = '/api/periodo-carrera';
+  private readonly baseUrl =
+    '/api/periodo-carrera';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private readonly http:
+      HttpClient,
+  ) {}
 
-  // TODO backend: GET /api/periodo-carrera?idCoordinador=...
-  obtenerPeriodosDelCoordinador(idCoordinador: number): Observable<PeriodoCarrera[]> {
-    const mock: PeriodoCarrera[] = [
+  /*
+   * ============================================================
+   * LISTADO
+   * ============================================================
+   */
+
+  obtenerPeriodosDelCoordinador(
+    filtros?: {
+      idPeriodo?: number;
+      idCarrera?: number;
+      estado?: string;
+    },
+  ): Observable<PeriodoCarrera[]> {
+    let params =
+      new HttpParams();
+
+    if (
+      filtros?.idPeriodo
+    ) {
+      params = params.set(
+        'idPeriodo',
+        String(
+          filtros.idPeriodo,
+        ),
+      );
+    }
+
+    if (
+      filtros?.idCarrera
+    ) {
+      params = params.set(
+        'idCarrera',
+        String(
+          filtros.idCarrera,
+        ),
+      );
+    }
+
+    if (
+      filtros?.estado
+    ) {
+      params = params.set(
+        'estado',
+        filtros.estado,
+      );
+    }
+
+    return this.http.get<
+      PeriodoCarrera[]
+    >(
+      this.baseUrl,
       {
-        idPeriodoCarrera: 1,
-        idPeriodo: 3,
-        idCarrera: 5,
-        nombreCarrera: 'Desarrollo de Software',
-        codigoPeriodo: '2026-1P',
-        fechaInicio: '2026-03-01',
-        fechaFin: '2026-07-31',
-        fechaFinSupletorio: '2026-08-10',
-        estado: ESTADOS_PERIODO_CARRERA.ACTIVO,
-        idCoordinador,
-        nombreCoordinador: 'Maria Jose Villa',
+        params,
       },
-    ];
-    return of(mock).pipe(delay(300));
+    );
   }
 
-  // TODO backend: GET /api/periodo-carrera/:id/resumen-cierre
-  obtenerResumenCierre(idPeriodoCarrera: number): Observable<ResumenCierrePeriodo> {
-    const mock: ResumenCierrePeriodo = {
-      idPeriodoCarrera,
-      totalOfertas: 12,
-      totalMatriculasDetalle: 248,
-      totalVinculaciones: 34,
-      totalPracticas: 41,
-    };
-    return of(mock).pipe(delay(300));
+  /*
+   * ============================================================
+   * CREACIÓN
+   * ============================================================
+   */
+
+  obtenerCatalogosCreacion():
+    Observable<CatalogosCreacionPeriodo> {
+    return this.http.get<
+      CatalogosCreacionPeriodo
+    >(
+      `${this.baseUrl}/catalogos`,
+    );
   }
 
-  // TODO backend: POST /api/periodo-carrera/:id/cerrar  (RF1)
-  cerrarPeriodo(idPeriodoCarrera: number): Observable<{ ok: boolean; mensaje: string }> {
-    return of({ ok: true, mensaje: 'Periodo cerrado correctamente (simulado).' }).pipe(delay(500));
+  crearPeriodoCarrera(
+    dto:
+      CrearPeriodoCarreraRequest,
+  ): Observable<CrearPeriodoCarreraResponse> {
+    return this.http.post<
+      CrearPeriodoCarreraResponse
+    >(
+      this.baseUrl,
+      dto,
+    );
+  }
+
+  /*
+   * ============================================================
+   * RESUMEN
+   * ============================================================
+   */
+
+  obtenerResumenCierre(
+    idPeriodoCarrera: number,
+  ): Observable<ResumenCierrePeriodo> {
+    return this.http.get<
+      ResumenCierrePeriodo
+    >(
+      `${this.baseUrl}/${idPeriodoCarrera}/resumen-cierre`,
+    );
+  }
+
+  /*
+   * ============================================================
+   * HISTORIAL
+   * ============================================================
+   */
+
+  obtenerHistorial(
+    idPeriodoCarrera: number,
+  ): Observable<
+    HistorialPeriodoCarrera[]
+  > {
+    return this.http.get<
+      HistorialPeriodoCarrera[]
+    >(
+      `${this.baseUrl}/${idPeriodoCarrera}/historial`,
+    );
+  }
+
+  /*
+   * ============================================================
+   * COORDINADORES
+   * ============================================================
+   */
+
+  obtenerCoordinadoresDisponibles(
+    idPeriodoCarrera: number,
+  ): Observable<
+    CoordinadorDisponible[]
+  > {
+    return this.http.get<
+      CoordinadorDisponible[]
+    >(
+      `${this.baseUrl}/${idPeriodoCarrera}/coordinadores-disponibles`,
+    );
+  }
+
+  /*
+   * ============================================================
+   * CIERRE
+   * ============================================================
+   */
+
+  cerrarPeriodo(
+    idPeriodoCarrera: number,
+    dto:
+      CerrarPeriodoRequest,
+  ): Observable<CerrarPeriodoResponse> {
+    return this.http.post<
+      CerrarPeriodoResponse
+    >(
+      `${this.baseUrl}/${idPeriodoCarrera}/cerrar`,
+      dto,
+    );
+  }
+
+  /*
+   * ============================================================
+   * REASIGNACIÓN
+   * ============================================================
+   */
+
+  reasignarCoordinador(
+    idPeriodoCarrera: number,
+    dto:
+      ReasignarCoordinadorRequest,
+  ): Observable<
+    ReasignarCoordinadorResponse
+  > {
+    return this.http.patch<
+      ReasignarCoordinadorResponse
+    >(
+      `${this.baseUrl}/${idPeriodoCarrera}/coordinador`,
+      dto,
+    );
   }
 }
