@@ -17,7 +17,7 @@ import { NotificacionesService } from '../../../modules/fase-practica/services/n
   styleUrls: ['./layout.component.scss']
 })
 export class LayoutShellComponent implements OnInit {
-  private router = inject(Router);
+  protected router = inject(Router);
   protected authService = inject(AuthService);
   protected notificacionesService = inject(NotificacionesService);
 
@@ -86,6 +86,39 @@ export class LayoutShellComponent implements OnInit {
 
   cerrarMenuUsuario(): void {
     this.menuUsuarioAbierto.set(false);
+  }
+
+  /**
+   * Debe reflejar exactamente los mismos pares clave/destino que DESTINOS en
+   * plan-formacion-lista.ts.
+   */
+  private readonly DESTINOS_PLAN_FORMACION: Record<string, string> = {
+    marco: '/fase-practica/plan-marco',
+    rotacion: '/fase-practica/plan-rotacion',
+    'carta-compromiso': '/fase-practica/carta-compromiso',
+    curriculum: '/fase-practica/curriculum',
+    'registro-asistencia': '/fase-practica/registro-asistencia',
+    'informe-aprendizaje': '/fase-practica/informe-aprendizaje',
+    'evaluacion-empresarial': '/fase-practica/evaluacion-empresarial',
+    'evaluacion-instituto': '/fase-practica/evaluacion-instituto',
+    'acta-induccion-seguridad': '/fase-practica/acta-induccion-seguridad',
+    'acta-entorno-laboral': '/fase-practica/acta-entorno-laboral',
+  };
+
+  /**
+   * Todos los documentos de fase-práctica pasan por el selector
+   * /fase-practica/plan-formacion?modo=X — para ESTUDIANTE ese selector
+   * redirige de inmediato a la práctica propia (/fase-practica/X/:id); para
+   * DOCENTE/COORDINADOR/TUTOR_EMPRESARIAL, elegir un estudiante de la lista
+   * navega a esa misma URL final. routerLinkActive nunca marca esos links
+   * porque la URL final ya no coincide con el routerLink+queryParams del
+   * menú (que se quedó en /plan-formacion).
+   */
+  protected esModoActivo(modo: string): boolean {
+    const url = this.router.url;
+    const base = this.DESTINOS_PLAN_FORMACION[modo];
+    if (base && url.startsWith(base)) return true;
+    return url.startsWith('/fase-practica/plan-formacion') && url.includes(`modo=${modo}`);
   }
 
   cerrarSesion(): void {

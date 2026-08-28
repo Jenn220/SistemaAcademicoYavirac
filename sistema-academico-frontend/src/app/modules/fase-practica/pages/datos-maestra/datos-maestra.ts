@@ -71,14 +71,8 @@ export class DatosMaestraPage implements OnInit {
     domicilio: 'Domicilio',
     contacto_emergencia_nombre: 'Contacto emergencia (nombre)',
     contacto_emergencia_telefono: 'Contacto emergencia (teléfono)',
-    carrera: 'Carrera',
     nivel: 'Nivel / Curso',
-    periodo: 'Periodo académico',
     nucleo: 'Núcleo estructurante',
-    tutor_academico: 'Tutor académico',
-    coordinador: 'Coordinador',
-    empresa: 'Empresa formadora',
-    tutor_empresarial: 'Tutor empresarial',
     proyecto: 'Proyecto empresarial',
     cobertura: 'Cobertura / Localización',
     plazo: 'Plazo de ejecución',
@@ -213,14 +207,8 @@ export class DatosMaestraPage implements OnInit {
       domicilio: this.datos.domicilio,
       contacto_emergencia_nombre: this.datos.contacto_emergencia_nombre,
       contacto_emergencia_telefono: this.datos.contacto_emergencia_telefono,
-      carrera: this.datos.carrera,
       nivel: this.datos.nivel,
-      periodo: this.datos.periodo,
       nucleo: this.datos.nucleo,
-      tutor_academico: this.datos.tutor_academico,
-      coordinador: this.datos.coordinador,
-      empresa: this.datos.empresa,
-      tutor_empresarial: this.datos.tutor_empresarial,
       proyecto: this.datos.proyecto,
       cobertura: this.datos.cobertura,
       plazo: this.datos.plazo,
@@ -233,6 +221,7 @@ export class DatosMaestraPage implements OnInit {
     this.documentos.actualizarDatosEstudiante(datosParaGuardar).subscribe({
       next: () => {
         this.guardando = false;
+        this.cdr.detectChanges();
         Swal.fire({
           icon: 'success',
           title: 'Datos actualizados',
@@ -243,6 +232,7 @@ export class DatosMaestraPage implements OnInit {
       },
       error: () => {
         this.guardando = false;
+        this.cdr.detectChanges();
         Swal.fire('Error', 'No fue posible actualizar los datos.', 'error');
       }
     });

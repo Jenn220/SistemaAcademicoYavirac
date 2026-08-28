@@ -122,6 +122,23 @@ Tabla
 
 }
 
+/* La columna se achicaba tanto (por las de fecha/hora, mas anchas por su
+   propio widget nativo) que el numero escrito quedaba tapado por las
+   flechitas del spinner. */
+.celda-horas-dia{
+
+    width:70px;
+
+}
+
+.campo-horas-dia{
+
+    min-width:55px;
+
+    text-align:center;
+
+}
+
 .fila-autonomas{
 
     font-weight:bold;

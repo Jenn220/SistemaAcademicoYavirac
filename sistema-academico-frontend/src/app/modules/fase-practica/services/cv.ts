@@ -9,7 +9,8 @@ export interface CvDatoAcademico {
   anio: string;
   institucion: string;
   titulo_mencion: string;
-  nota_final?: number;
+  /** El back exige number al crear (POST) y string al actualizar (PATCH). */
+  nota_final?: number | string;
 }
 
 export interface CvExperienciaLaboral {

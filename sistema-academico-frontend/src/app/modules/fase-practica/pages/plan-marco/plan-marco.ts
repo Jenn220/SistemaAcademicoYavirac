@@ -281,6 +281,13 @@ export class PlanMarco implements OnInit {
     item.nivel_real_alcanzado = nivel;
   }
 
+  /** El input number con min/max no bloquea valores fuera de rango si se escriben a mano; se recorta aquí a [1, 20]. */
+  limitarSemanas(item: ItemPlanMarco): void {
+    if (item.semanas === undefined || item.semanas === null) return;
+    if (item.semanas > 20) item.semanas = 20;
+    if (item.semanas < 1) item.semanas = 1;
+  }
+
   get promedioNivelEsperado(): string {
 
     if (this.items.length === 0) return '—';

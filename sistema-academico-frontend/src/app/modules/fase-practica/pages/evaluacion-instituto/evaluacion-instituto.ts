@@ -16,7 +16,8 @@ import { Evaluacion, DetalleEvaluacion } from '../../services/evaluacion';
 import { AuthService } from '../../../auth/services/auth.service';
 import {
   EvaluacionInstituto as EvaluacionInstitutoModel,
-  CriterioDefensaProyecto
+  CriterioDefensaProyecto,
+  CriterioNota10
 } from '../../interfaces';
 import { CRITERIOS_DEFENSA_PROYECTO, CRITERIOS_PARAMETROS_PROYECTO } from '../../services/rubricas-fase-practica';
 import { exportarDocumentoWord } from '../../utils/exportar-word';
@@ -258,6 +259,66 @@ export class EvaluacionInstituto implements OnInit {
     if (this.soloLectura) return;
 
     criterio.nota = nota;
+
+  }
+
+  /**
+   * El input number con min/max no bloquea valores fuera de rango si se
+   * escriben a mano. Recortar solo el modelo no basta: si el campo visible
+   * se queda con el texto de más (ej. "88"), la siguiente tecla se sigue
+   * agregando encima ("888", "8888"...) porque Angular no siempre reescribe
+   * el DOM cuando el valor "parece" no cambiar entre eventos. Por eso acá se
+   * fuerza también el texto del input, no solo el modelo.
+   */
+  limitarNota(criterio: CriterioNota10, event: Event): void {
+
+    const input = event.target as HTMLInputElement;
+    let valor = input.valueAsNumber;
+
+    if (Number.isNaN(valor)) return;
+
+    if (valor > 10) valor = 10;
+    if (valor < 0) valor = 0;
+
+    criterio.nota = valor;
+    input.value = String(valor);
+
+  }
+
+  /**
+   * Bloquea al vuelo teclas que un input number igual deja escribir aunque no
+   * formen un número válido (ej. "-" repetido produce "1-1-1" visible en el
+   * campo, aunque el modelo nunca lo reciba). Solo se permiten dígitos, un
+   * único punto decimal y las teclas de edición/navegación.
+   */
+  bloquearTeclaNotaInvalida(event: KeyboardEvent): void {
+
+    const teclasPermitidas = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+    if (teclasPermitidas.includes(event.key) || event.ctrlKey || event.metaKey) return;
+
+    if (event.key === '.') {
+      const input = event.target as HTMLInputElement;
+      if (input.value.includes('.')) event.preventDefault();
+      return;
+    }
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+
+  }
+
+  /** Igual que bloquearTeclaNotaInvalida pero para texto pegado (ctrl+V), que no dispara keydown por caracter. */
+  limpiarNotaPegada(criterio: CriterioNota10, event: ClipboardEvent): void {
+
+    event.preventDefault();
+
+    const texto = event.clipboardData?.getData('text') ?? '';
+    const valor = Number(texto.replace(',', '.').trim());
+
+    if (!Number.isFinite(valor)) return;
+
+    criterio.nota = Math.min(10, Math.max(0, valor));
 
   }
 

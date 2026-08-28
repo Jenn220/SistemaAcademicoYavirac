@@ -256,6 +256,8 @@ export class Curriculum implements OnInit {
       const periodo = datos?.['periodoAcademico'] ?? {};
       const estudiante = datos?.['estudiante'] ?? {};
 
+      this.idEstudianteVisto = estudiante.idEstudiante ?? null;
+
       this.encabezado = {
         carrera: carrera.nombre ?? estudiante.carrera ?? '',
         nivel: estudiante.nivel ?? estudiante.curso ?? '',
@@ -513,15 +515,24 @@ export class Curriculum implements OnInit {
     const operacionesDatosAcademicos = this.curriculum.datosAcademicos
       .filter((d) => d.id || (d.anio && d.institucion && d.tituloMencion))
       .map((d) => {
-        const dto: Partial<CvDatoAcademico> = {
+        if (d.id) {
+          // El PATCH de actualizar-dato-academico exige nota_final como string (a diferencia del POST, que exige number).
+          const dtoActualizar: Partial<CvDatoAcademico> = {
+            anio: d.anio,
+            institucion: d.institucion,
+            titulo_mencion: d.tituloMencion,
+            nota_final: d.notaFinal ? String(d.notaFinal) : undefined
+          };
+          return this.cv.actualizarDatoAcademico(d.id, dtoActualizar);
+        }
+
+        const dtoCrear: Partial<CvDatoAcademico> = {
           anio: d.anio,
           institucion: d.institucion,
           titulo_mencion: d.tituloMencion,
           nota_final: d.notaFinal ? Number(d.notaFinal) : undefined
         };
-        return d.id
-          ? this.cv.actualizarDatoAcademico(d.id, dto)
-          : this.cv.crearDatoAcademico(this.idEstudiante, dto);
+        return this.cv.crearDatoAcademico(this.idEstudiante, dtoCrear);
       });
 
     const operacionesExperiencia = this.curriculum.experienciaLaboral
@@ -602,6 +613,16 @@ export class Curriculum implements OnInit {
       next: (doc) => {
         this.estadoDocumento = doc?.estado ?? 'borrador';
         this.comentariosDocumento = doc?.comentarios ?? '';
+
+        // "Información adicional" no vive en una tabla real como datos académicos/
+        // experiencia/prácticas duales (cargarCvReal la reconstruye desde ahí); solo
+        // existe dentro del snapshot JSON guardado, así que hay que restaurarla de aquí
+        // o se pierde en cada recarga (mapearBase() la reinicia con la plantilla de ejemplo).
+        const informacionAdicionalGuardada = doc?.contenido?.informacionAdicional;
+        if (Array.isArray(informacionAdicionalGuardada)) {
+          this.curriculum.informacionAdicional = informacionAdicionalGuardada;
+        }
+
         this.cdr.detectChanges();
       },
       error: () => {
