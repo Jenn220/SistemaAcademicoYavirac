@@ -60,7 +60,7 @@ const ESTILOS_EXPORTACION = `
   .col-flex:last-child{ padding-right:0; }
 `;
 
-const SELECTORES_FLEX = ['.fila-evaluacion', '.row-cajas', '.fila-consolidado', '.fila-info'];
+const SELECTORES_FLEX = ['.fila-evaluacion', '.row-cajas', '.fila-consolidado', '.fila-info', '.caja-firmas'];
 
 /**
  * Exporta el elemento indicado a un .docx real (no HTML disfrazado), usando

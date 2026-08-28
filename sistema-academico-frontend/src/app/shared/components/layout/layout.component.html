@@ -98,49 +98,49 @@
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'carta-compromiso'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('carta-compromiso')">
         ✍️ Carta Compromiso
       </a>
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'registro-asistencia'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('registro-asistencia')">
         📅 Registro Asistencia
       </a>
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'curriculum'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('curriculum')">
         🧾 Currículo
       </a>
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'informe-aprendizaje'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('informe-aprendizaje')">
         📝 Informe Aprendizaje
       </a>
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'evaluacion-empresarial'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('evaluacion-empresarial')">
         🏢 Evaluación Empresarial
       </a>
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'evaluacion-instituto'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('evaluacion-instituto')">
         🏫 Evaluación Instituto
       </a>
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'acta-induccion-seguridad'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('acta-induccion-seguridad')">
         🛡️ Acta Inducción Seguridad
       </a>
 
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'acta-entorno-laboral'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('acta-entorno-laboral')">
         🏭 Acta Entorno Laboral
       </a>
 
@@ -150,7 +150,7 @@
            resto lo consulta en modo solo lectura) -->
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'marco'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('marco')">
         📐 Plan Marco
       </a>
 
@@ -159,17 +159,20 @@
       @if (!authService.tieneAlgunRol(['TUTOR_EMPRESARIAL'])) {
       <a routerLink="/fase-practica/plan-formacion"
          [queryParams]="{modo: 'rotacion'}"
-         routerLinkActive="active">
+         [class.active]="esModoActivo('rotacion')">
         🔄 Plan de Rotación
       </a>
       }
 
+      <!-- Asignaciones: oculto temporalmente, por confirmar si pertenece a
+           fase-práctica o a otro módulo. Descomentar cuando se confirme.
       @if (authService.tieneAlgunRol(['COORDINADOR'])) {
       <a routerLink="/fase-practica/asignaciones"
          routerLinkActive="active">
         🧑‍🏫 Asignaciones
       </a>
       }
+      -->
 
       <!-- Sección Vinculación con la sociedad -->
       <div class="menu-title">Vinculación con la sociedad</div>
