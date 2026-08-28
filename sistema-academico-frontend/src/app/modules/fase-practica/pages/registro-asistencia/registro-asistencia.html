@@ -293,9 +293,9 @@
                         {{item.horaSalida}}
                       }
                     </td>
-                    <td>
+                    <td class="celda-horas-dia">
                       @if(esEstudiante && editando){
-                        <input type="number" class="form-control form-control-sm" [(ngModel)]="item.horasDia" min="0" max="10" />
+                        <input type="number" class="form-control form-control-sm campo-horas-dia" [(ngModel)]="item.horasDia" min="0" max="10" />
                       } @else {
                         {{item.horasDia}}
                       }
