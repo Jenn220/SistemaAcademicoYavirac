@@ -73,36 +73,6 @@
     </div>
   </div>
 
-  <!-- FORMULARIO / MODAL PARA DUPLICAR ACTIVIDAD (SOLO ESTUDIANTE) -->
-  <div class="nueva-actividad" *ngIf="mostrandoModalDuplicar && isEstudiante">
-    <h3>➕ Añadir fecha para la misma actividad</h3>
-    <p class="info-duplicar"><strong>Actividad:</strong> {{ actividadParaDuplicar?.descripcion }}</p>
-    
-    <div *ngIf="errorHora" class="error-hora">
-      ⚠️ {{ errorHora }}
-    </div>
-    
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nueva Fecha</label>
-        <input type="date" [(ngModel)]="nuevoDiaDuplicado.fecha" (ngModelChange)="errorHora = null" />
-      </div>
-      <div class="form-group">
-        <label>Hora entrada</label>
-        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_inicio" (ngModelChange)="errorHora = null" />
-      </div>
-      <div class="form-group">
-        <label>Hora salida</label>
-        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_fin" (ngModelChange)="errorHora = null" />
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button (click)="guardarDiaDuplicado()" class="btn-save" [disabled]="loading">💾 Guardar Nuevo Día</button>
-      <button (click)="cancelarDuplicado()" class="btn-cancel">❌ Cancelar</button>
-    </div>
-  </div>
-
   <!-- BOTÓN AGREGAR (SOLO ESTUDIANTE) -->
   <div class="acciones" *ngIf="isEstudiante">
     <button *ngIf="!mostrandoFormulario && !mostrandoModalDuplicar" (click)="mostrarFormulario()" class="btn-add">
@@ -208,6 +178,38 @@
       </tr>
     </tfoot>
   </table>
+
+  <!-- ============================================ -->
+  <!-- FORMULARIO / MODAL PARA DUPLICAR (ABAJO)     -->
+  <!-- ============================================ -->
+  <div class="nueva-actividad" *ngIf="mostrandoModalDuplicar && isEstudiante">
+    <h3>➕ Añadir fecha para la misma actividad</h3>
+    <p class="info-duplicar"><strong>Actividad:</strong> {{ actividadParaDuplicar?.descripcion }}</p>
+    
+    <div *ngIf="errorHora" class="error-hora">
+      ⚠️ {{ errorHora }}
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nueva Fecha</label>
+        <input type="date" [(ngModel)]="nuevoDiaDuplicado.fecha" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora entrada</label>
+        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_inicio" (ngModelChange)="errorHora = null" />
+      </div>
+      <div class="form-group">
+        <label>Hora salida</label>
+        <input type="time" [(ngModel)]="nuevoDiaDuplicado.hora_fin" (ngModelChange)="errorHora = null" />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button (click)="guardarDiaDuplicado()" class="btn-save" [disabled]="loading">💾 Guardar Nuevo Día</button>
+      <button (click)="cancelarDuplicado()" class="btn-cancel">❌ Cancelar</button>
+    </div>
+  </div>
 
   <!-- OBSERVACIONES -->
   <div class="observaciones">
