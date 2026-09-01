@@ -27,9 +27,6 @@ test
 tests
 **/*.spec.ts
 
-README.md
-*.md
-
 # Test artifacts
 SistemaAcademicoYavirac-FasePractica.postman_collection.json
 postman-env-local.json
