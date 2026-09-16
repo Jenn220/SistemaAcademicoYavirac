@@ -5,7 +5,6 @@ coverage
 
 .git
 .gitignore
-.github
 
 .env
 .env.*
@@ -33,3 +32,4 @@ postman-env-local.json
 
 .DS_Store
 Thumbs.db
+.github/workflows/deploy.yml
