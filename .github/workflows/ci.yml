@@ -155,8 +155,13 @@ jobs:
         env:
           DEPLOY_SHA: ${{ github.sha }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
+          ssh \
+            -i ~/.ssh/id_ed25519 \
             -p 1001 \
+            -o ServerAliveInterval=20 \
+            -o ServerAliveCountMax=60 \
+            -o TCPKeepAlive=yes \
+            -o ConnectTimeout=30 \
             1803980844@161.97.140.245 \
             "DEPLOY_SHA=$DEPLOY_SHA bash -s" <<'REMOTE'
 
