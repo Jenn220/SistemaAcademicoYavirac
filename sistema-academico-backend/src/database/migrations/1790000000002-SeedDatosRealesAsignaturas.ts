@@ -579,9 +579,9 @@ export class SeedDatosRealesAsignaturas1790000000002 implements MigrationInterfa
          WHERE c.codigo = $3 AND n.nombre = $4
            AND NOT EXISTS (
              SELECT 1 FROM public.asignatura a2
-             WHERE a2.id_nivel = n.id_nivel AND a2.codigo = $1
+             WHERE a2.id_nivel = n.id_nivel AND a2.codigo = $5
            );`,
-        [codigoAsignatura, nombreAsignatura, codigoCarrera, nivelNombre],
+        [codigoAsignatura, nombreAsignatura, codigoCarrera, nivelNombre, codigoAsignatura],
       );
     }
   }
