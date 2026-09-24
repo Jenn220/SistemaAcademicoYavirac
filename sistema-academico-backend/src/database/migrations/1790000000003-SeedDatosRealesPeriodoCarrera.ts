@@ -1,18 +1,16 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * periodo_carrera real para las 12 carreras confirmadas, periodo 2026-1P.
+ * Crea el periodo_academico 2026-1P (2026-04-01 a 2026-08-30) y su
+ * periodo_carrera para las 12 carreras reales.
  *
- * Reutiliza el periodo_academico 2026-1P ya existente (creado por
- * CreateFasePractica-DatosPrueba.ts, fechas 2026-04-01/2026-08-30) - no se
- * inventan fechas nuevas, se sigue la misma convencion ya usada en el repo
- * para este mismo periodo.
+ * ANTES esta migracion asumia que 2026-1P ya existia (lo creaba
+ * CreateFasePractica-DatosPrueba.ts, migracion sintetica eliminada). Ahora
+ * es autosuficiente: crea primero el periodo_academico y luego los
+ * periodo_carrera, asi no depende de ninguna migracion eliminada.
  *
- * Necesario como FK de oferta_asignatura (que requiere id_periodo_carrera,
- * no id_periodo + id_carrera sueltos).
- *
- * Idempotente via ON CONFLICT (id_periodo, id_carrera) - la tabla SI tiene
- * ese UNIQUE (uk_pc), confirmado contra migrations.zip.
+ * Idempotente: ON CONFLICT DO NOTHING tanto en periodo_academico (codigo)
+ * como en periodo_carrera (id_periodo, id_carrera).
  */
 const CODIGOS_CARRERA_REALES = [
   '551013C02-D-1701', // ARTE CULINARIO ECUATORIANO
@@ -33,6 +31,12 @@ export class SeedDatosRealesPeriodoCarrera1790000000003 implements MigrationInte
   name = 'SeedDatosRealesPeriodoCarrera1790000000003';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // 1. Crear (si no existe) el periodo_academico 2026-1P
+    await queryRunner.query(`INSERT INTO public.periodo_academico (codigo, nombre, fecha_inicio, fecha_fin, estado)
+      VALUES ('2026-1P', 'Periodo 2026-1P', '2026-04-01', '2026-08-30', 'ACTIVO')
+      ON CONFLICT (codigo) DO NOTHING;`);
+
+    // 2. Crear periodo_carrera para cada carrera real
     for (const codigo of CODIGOS_CARRERA_REALES) {
       await queryRunner.query(
         `INSERT INTO public.periodo_carrera (id_periodo, id_carrera, fecha_inicio, fecha_fin, estado)
@@ -55,5 +59,6 @@ export class SeedDatosRealesPeriodoCarrera1790000000003 implements MigrationInte
         [codigo],
       );
     }
+    await queryRunner.query(`DELETE FROM public.periodo_academico WHERE codigo = '2026-1P';`);
   }
 }
