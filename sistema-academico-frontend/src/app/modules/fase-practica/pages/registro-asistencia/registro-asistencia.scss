@@ -139,6 +139,32 @@ Tabla
 
 }
 
+/* Rango "desde - hasta" de la fila de Horas Autónomas: dos date pickers uno
+   debajo del otro, no uno junto al otro (se veían amontonados/cortados). */
+.rango-fechas{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:stretch;
+
+    gap:4px;
+
+}
+
+.rango-fechas input{
+
+    width:100%;
+
+}
+
+.rango-fechas span{
+
+    display:none;
+
+}
+
 .fila-autonomas{
 
     font-weight:bold;

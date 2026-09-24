@@ -566,7 +566,7 @@ export class Curriculum implements OnInit {
     const finalizar = () => {
 
       this.idDocumento = resultadoSnapshot.id_documento;
-      this.cargarEstadoDocumento();
+      this.cargarEstadoDocumento(true);
 
       this.guardando = false;
       this.cdr.detectChanges();
@@ -604,15 +604,21 @@ export class Curriculum implements OnInit {
 
   }
 
-  private cargarEstadoDocumento(): void {
+  /**
+   * @param reabrirSiAprobado si el documento ya está aprobado y se acaba de
+   * guardar contenido nuevo, lo reabre a "borrador" en vez de dejarlo
+   * "aprobado" con cambios que el docente nunca llegó a revisar. No se pasa
+   * en true en la carga inicial de la página, solo justo después de guardar.
+   */
+  private cargarEstadoDocumento(reabrirSiAprobado = false): void {
     if (!this.idDocumento) {
       return;
     }
 
     this.documentos.obtenerDocumentoPorId(this.idDocumento).subscribe({
       next: (doc) => {
-        this.estadoDocumento = doc?.estado ?? 'borrador';
-        this.comentariosDocumento = doc?.comentarios ?? '';
+
+        const estado = doc?.estado ?? 'borrador';
 
         // "Información adicional" no vive en una tabla real como datos académicos/
         // experiencia/prácticas duales (cargarCvReal la reconstruye desde ahí); solo
@@ -623,11 +629,60 @@ export class Curriculum implements OnInit {
           this.curriculum.informacionAdicional = informacionAdicionalGuardada;
         }
 
+        if (reabrirSiAprobado && estado === 'aprobado') {
+          this.reabrirComoBorrador();
+          return;
+        }
+
+        this.estadoDocumento = estado;
+        this.comentariosDocumento = doc?.comentarios ?? '';
         this.cdr.detectChanges();
+
       },
       error: () => {
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  /**
+   * Reabre a "borrador" un documento que ya estaba aprobado, para que el
+   * estudiante tenga que volver a enviarlo a revisión tras guardar cambios
+   * nuevos. Usa el mismo endpoint de "cambiar estado" que enviarARevision/
+   * aprobar, así que también puede toparse con el mismo bug del backend
+   * (aplica el cambio pero responde error) — por eso se relee el estado real
+   * ante un error en vez de asumir que falló.
+   */
+  private reabrirComoBorrador(): void {
+    this.documentos.actualizarEstadoDocumento(this.idDocumento!, 'borrador').subscribe({
+      next: () => this.aplicarReaperturaComoBorrador(),
+      error: () => {
+        this.documentos.obtenerDocumentoPorId(this.idDocumento!).subscribe({
+          next: (doc) => {
+            if (doc?.estado === 'borrador') {
+              this.aplicarReaperturaComoBorrador();
+            } else {
+              this.estadoDocumento = doc?.estado ?? this.estadoDocumento;
+              this.comentariosDocumento = doc?.comentarios ?? '';
+              this.cdr.detectChanges();
+            }
+          },
+          error: () => this.cdr.detectChanges(),
+        });
+      },
+    });
+  }
+
+  private aplicarReaperturaComoBorrador(): void {
+    this.estadoDocumento = 'borrador';
+    this.comentariosDocumento = '';
+    this.cdr.detectChanges();
+    Swal.fire({
+      icon: 'info',
+      title: 'Documento reabierto',
+      text: 'Este currículo ya estaba aprobado; al guardar cambios nuevos vuelve a borrador y debes enviarlo a revisión otra vez.',
+      timer: 4500,
+      showConfirmButton: false,
     });
   }
 
@@ -643,6 +698,32 @@ export class Curriculum implements OnInit {
       },
       error: () => {
         this.cdr.detectChanges();
+      },
+    });
+  }
+
+  /**
+   * El backend a veces sí aplica el cambio de estado pero igual responde con
+   * error (bug fuera de este módulo, en la validación de transición de
+   * estado). En vez de confiar ciegamente en el código HTTP, ante un error
+   * se vuelve a leer el documento real: si el estado ya quedó como se pidió,
+   * se trata como éxito en vez de mostrarle al usuario un error falso que
+   * antes solo se corregía refrescando la página a mano.
+   */
+  private verificarEstadoTrasError(estadoEsperado: string, mensajeExito: string, mensajeError: string): void {
+    this.documentos.obtenerDocumentoPorId(this.idDocumento!).subscribe({
+      next: (doc) => {
+        if (doc?.estado === estadoEsperado) {
+          this.estadoDocumento = estadoEsperado;
+          this.comentariosDocumento = doc?.comentarios ?? '';
+          this.cdr.detectChanges();
+          Swal.fire('Listo', mensajeExito, 'success');
+        } else {
+          Swal.fire('Error', mensajeError, 'error');
+        }
+      },
+      error: () => {
+        Swal.fire('Error', mensajeError, 'error');
       },
     });
   }
@@ -670,7 +751,11 @@ export class Curriculum implements OnInit {
             Swal.fire('Enviado', 'El currículo se envió a revisión correctamente.', 'success');
           },
           error: () => {
-            Swal.fire('Error', 'No fue posible enviar el currículo a revisión.', 'error');
+            this.verificarEstadoTrasError(
+              'pendiente_revision',
+              'El currículo se envió a revisión correctamente.',
+              'No fue posible enviar el currículo a revisión.'
+            );
           },
         });
       }
@@ -696,7 +781,11 @@ export class Curriculum implements OnInit {
             Swal.fire('Aprobado', 'El currículo fue aprobado correctamente.', 'success');
           },
           error: () => {
-            Swal.fire('Error', 'No fue posible aprobar el currículo.', 'error');
+            this.verificarEstadoTrasError(
+              'aprobado',
+              'El currículo fue aprobado correctamente.',
+              'No fue posible aprobar el currículo.'
+            );
           },
         });
       }
@@ -730,7 +819,11 @@ export class Curriculum implements OnInit {
             Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
           },
           error: () => {
-            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+            this.verificarEstadoTrasError(
+              'rechazado',
+              'El estudiante deberá realizar las correcciones indicadas.',
+              'No fue posible solicitar correcciones.'
+            );
           },
         });
       }

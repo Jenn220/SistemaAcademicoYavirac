@@ -242,6 +242,11 @@ export class ActaEntornoLaboralPage implements OnInit {
           text: 'El acta de entorno laboral se guardó correctamente.'
         });
 
+        // A diferencia de los demás documentos, aquí quien edita (docente/
+        // coordinador) no es quien puede reenviar a revisión (solo puede el
+        // estudiante, ver puedeEnviarRevision) — reabrir a "borrador" en
+        // automático dejaría el acta sin nadie que la pueda reenviar desde
+        // esta misma pantalla. Se deja el estado tal cual quedó guardado.
         this.cargarEstadoDocumento();
 
       },
@@ -261,6 +266,13 @@ export class ActaEntornoLaboralPage implements OnInit {
 
   }
 
+  /**
+   * A diferencia de los demás documentos, aquí quien edita (docente/
+   * coordinador) no es quien puede reenviar a revisión (solo el estudiante,
+   * ver puedeEnviarRevision), así que esta pantalla no reabre a "borrador"
+   * en automático al guardar — dejaría el acta sin nadie que la pueda
+   * reenviar desde aquí mismo. Solo refleja el estado real guardado.
+   */
   private cargarEstadoDocumento(): void {
     if (!this.idDocumento) {
       return;
@@ -294,6 +306,32 @@ export class ActaEntornoLaboralPage implements OnInit {
     });
   }
 
+  /**
+   * El backend a veces sí aplica el cambio de estado pero igual responde con
+   * error (bug fuera de este módulo, en la validación de transición de
+   * estado). En vez de confiar ciegamente en el código HTTP, ante un error
+   * se vuelve a leer el documento real: si el estado ya quedó como se pidió,
+   * se trata como éxito en vez de mostrarle al usuario un error falso que
+   * antes solo se corregía refrescando la página a mano.
+   */
+  private verificarEstadoTrasError(estadoEsperado: string, mensajeExito: string, mensajeError: string): void {
+    this.documentos.obtenerDocumentoPorId(this.idDocumento!).subscribe({
+      next: (doc) => {
+        if (doc?.estado === estadoEsperado) {
+          this.estadoDocumento = estadoEsperado;
+          this.comentariosDocumento = doc?.comentarios ?? '';
+          this.cdr.detectChanges();
+          Swal.fire('Listo', mensajeExito, 'success');
+        } else {
+          Swal.fire('Error', mensajeError, 'error');
+        }
+      },
+      error: () => {
+        Swal.fire('Error', mensajeError, 'error');
+      },
+    });
+  }
+
   enviarARevision(): void {
     if (!this.idDocumento) {
       Swal.fire('Error', 'Primero debe guardar el acta.', 'warning');
@@ -317,7 +355,11 @@ export class ActaEntornoLaboralPage implements OnInit {
             Swal.fire('Enviado', 'La acta se envió a revisión correctamente.', 'success');
           },
           error: () => {
-            Swal.fire('Error', 'No fue posible enviar la acta a revisión.', 'error');
+            this.verificarEstadoTrasError(
+              'pendiente_revision',
+              'La acta se envió a revisión correctamente.',
+              'No fue posible enviar la acta a revisión.'
+            );
           },
         });
       }
@@ -343,7 +385,11 @@ export class ActaEntornoLaboralPage implements OnInit {
             Swal.fire('Aprobado', 'La acta fue aprobada correctamente.', 'success');
           },
           error: () => {
-            Swal.fire('Error', 'No fue posible aprobar la acta.', 'error');
+            this.verificarEstadoTrasError(
+              'aprobado',
+              'La acta fue aprobada correctamente.',
+              'No fue posible aprobar la acta.'
+            );
           },
         });
       }
@@ -377,7 +423,11 @@ export class ActaEntornoLaboralPage implements OnInit {
             Swal.fire('Correcciones solicitadas', 'El estudiante deberá realizar las correcciones indicadas.', 'info');
           },
           error: () => {
-            Swal.fire('Error', 'No fue posible solicitar correcciones.', 'error');
+            this.verificarEstadoTrasError(
+              'rechazado',
+              'El estudiante deberá realizar las correcciones indicadas.',
+              'No fue posible solicitar correcciones.'
+            );
           },
         });
       }

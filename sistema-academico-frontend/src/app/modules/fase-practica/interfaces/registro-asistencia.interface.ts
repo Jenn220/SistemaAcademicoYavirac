@@ -54,6 +54,10 @@ export interface RegistroAsistencia{
 
     horasAutonomas:number;
 
+    fechaHorasAutonomasDesde?:string;
+
+    fechaHorasAutonomasHasta?:string;
+
     subtotalHorasPractica:number;
 
 }
