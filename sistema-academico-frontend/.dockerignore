@@ -20,3 +20,11 @@ docker-compose*.yml
 
 .DS_Store
 Thumbs.db
+node_modules
+dist
+.angular
+.git
+.env
+.env.*
+npm-debug.log
+coverage

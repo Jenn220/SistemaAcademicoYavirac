@@ -667,7 +667,7 @@ export class ExcelExportService {
     this.filasAltura(ws, filaInicio + 1, filaInicio + 3, 20);
   }
 
-  // ============================================
+// ============================================
   // 1. HOJA: INICIO DE ACTIVIDADES DEL TUTOR (Formato 05)
   //    Fuente real: InicioActividadesResponse
   //    { coordinador, tutor_nombre, tutor_cedula, proyecto_nombre,
@@ -676,11 +676,22 @@ export class ExcelExportService {
   // ============================================
   private construirHojaInicioActividades(data: any, idVinculacion?: number): XLSX.WorkSheet {
     const ws = this.nuevaHoja();
-    this.anchoColumnas(ws, [17.86, 15.86, 13.86, 13, 13, 13, 13, 13, 13, 13]);
+    
+    // Anchos de columna exactos extraídos del archivo Excel original
+    this.anchoColumnas(ws, [11.57, 13.00, 14.00, 11.57, 13.00, 13.00, 19.29, 11.57, 13.00, 13.00]);
 
     const d = data || {};
 
-    // Columna A reservada para el logo institucional.
+    // Estilos limpios idénticos al formato oficial tipo oficio
+    const estiloLabel = { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'left', vertical: 'center' } };
+    const estiloValor = { font: { sz: 10, name: 'Calibri' }, alignment: { horizontal: 'left', vertical: 'center' } };
+    const estiloValorNegrita = { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+    const estiloTextoCarta = { font: { sz: 10, name: 'Calibri' }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+    const estiloLineaDivisoria = {
+      border: { bottom: { style: 'medium', color: { rgb: '000000' } } }
+    };
+
+    // Columna A reservada para el logo institucional
     this.celda(ws, 'A1', '', ESTILO_HEADER_BLANCO);
     this.merge(ws, 'A1:A4', ESTILO_HEADER_BLANCO);
 
@@ -695,102 +706,139 @@ export class ExcelExportService {
     this.celda(ws, 'A7', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"', ESTILO_TITULO_DOCUMENTO);
     this.merge(ws, 'A7:I7', ESTILO_TITULO_DOCUMENTO);
 
-    // "A:" -> Coordinador de Carrera
-    this.celda(ws, 'A10', 'A:', ESTILO_FIELD_LABEL);
-    this.merge(ws, 'A10:B10', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'C10', d.coordinador || '', ESTILO_FIELD_VALUE);
-    this.merge(ws, 'C10:E10', ESTILO_FIELD_VALUE);
-    this.celda(ws, 'C11', 'Coordinador de Carrera', { font: { sz: 10, italic: true, name: 'Calibri' } });
+   // "A:" -> Coordinador de Carrera
+    this.celda(ws, 'B10', 'A:', estiloLabel);
+    this.celda(ws, 'C10', d.coordinador || '', estiloValor);
+    this.merge(ws, 'C10:I10', estiloValor);
+    this.celda(ws, 'C11', 'Coordinador de Carrera', { font: { sz: 9, bold: true, name: 'Calibri' } });
 
-    // "De:" -> Tutor del Proyecto (docente)
-    this.celda(ws, 'A13', 'De:', ESTILO_FIELD_LABEL);
-    this.merge(ws, 'A13:B13', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'C13', d.tutor_nombre || '', ESTILO_FIELD_VALUE);
-    this.merge(ws, 'C13:E13', ESTILO_FIELD_VALUE);
-    this.celda(ws, 'C14', 'Tutor del Proyecto', { font: { sz: 10, italic: true, name: 'Calibri' } });
+    // "De:" -> Tutor del Proyecto
+    this.celda(ws, 'B13', 'De:', estiloLabel);
+    this.celda(ws, 'C13', d.tutor_nombre || '', estiloValor);
+    this.merge(ws, 'C13:I13', estiloValor);
+    this.celda(ws, 'C14', 'Tutor del Proyecto', { font: { sz: 9, bold: true, name: 'Calibri' } });
 
-    this.celda(ws, 'A16', 'Asunto:', ESTILO_FIELD_LABEL);
-    this.merge(ws, 'A16:B16', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'C16', 'Informe de inicio de actividades del Proyecto:', ESTILO_FIELD_VALUE);
-    this.merge(ws, 'C16:E16', ESTILO_FIELD_VALUE);
-    this.celda(ws, 'B17', d.proyecto_nombre || '', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
-    this.merge(ws, 'B17:I18', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
+    // "Asunto:"
+    this.celda(ws, 'B16', 'Asunto:', estiloLabel);
+    this.celda(ws, 'C16', 'Informe de inicio de actividades del Proyecto:', estiloValor);
+    this.merge(ws, 'C16:I16', estiloValor);
+    
+    this.celda(ws, 'B17', d.proyecto_nombre || '', estiloValorNegrita);
+    this.merge(ws, 'B17:I18', estiloValorNegrita);
+    this.filaAltura(ws, 17, 14.25);
+    this.filaAltura(ws, 18, 14.25);
 
-    // "Fecha:" = fecha de inicio del proyecto (única fecha disponible en la respuesta)
-    this.celda(ws, 'A20', 'Fecha:', ESTILO_FIELD_LABEL);
-    this.merge(ws, 'A20:B20', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'C20', this.fmtFecha(d.fecha_inicio), ESTILO_FIELD_VALUE);
+    // "Fecha:"
+    this.celda(ws, 'B20', 'Fecha:', estiloLabel);
+    this.celda(ws, 'C20', this.fmtFecha(d.fecha_inicio), estiloValor);
 
-    this.celda(ws, 'A24', 'Yo,', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'A24:B24', ESTILO_CELDA_TABLA);
-    this.celda(ws, 'C24', d.tutor_nombre || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'C24:E24', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.celda(ws, 'F24', 'con C.I. Nro.', ESTILO_CELDA_TABLA);
-    this.celda(ws, 'G24', d.tutor_cedula || '', ESTILO_CELDA_TABLA);
-    this.celda(ws, 'H24', 'tengo a bien', ESTILO_CELDA_TABLA);
+    // Línea divisoria formal antes del cuerpo de la carta
+    this.celda(ws, 'A22', '', estiloLineaDivisoria);
+    this.merge(ws, 'A22:I22', estiloLineaDivisoria);
+    this.filaAltura(ws, 22, 15.75);
 
-    this.celda(ws, 'A25', 'informar que siguiendo con el cronograma de actividades establecido en el proyecto de vinculación:', ESTILO_TEXTO_NORMAL);
-    this.merge(ws, 'A25:H25', ESTILO_TEXTO_NORMAL);
-    this.filaAltura(ws, 25, 24);
-    this.celda(ws, 'A26', d.proyecto_nombre || '', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
-    this.merge(ws, 'A26:I27', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
+    // Cuerpo de la carta
+    this.celda(ws, 'B24', 'Yo,', estiloTextoCarta);
+    this.celda(ws, 'C24', d.tutor_nombre || '', estiloValorNegrita);
+    this.merge(ws, 'C24:E24', estiloValorNegrita);
+    this.celda(ws, 'F24', 'con C.I. Nro.', estiloTextoCarta);
+    this.celda(ws, 'G24', d.tutor_cedula || '', estiloValorNegrita);
+    this.celda(ws, 'H24', 'tengo a bien', estiloTextoCarta);
+    this.filaAltura(ws, 24, 15.75);
 
-    this.celda(ws, 'A28', 'Informo que el día de hoy', ESTILO_TEXTO_NORMAL);
-    this.merge(ws, 'A28:C28', ESTILO_TEXTO_NORMAL);
-    this.celda(ws, 'D28', this.fmtFecha(d.fecha_inicio), { font: { bold: true, sz: 10, name: 'Calibri' } });
-    this.celda(ws, 'E28', 'del año en curso, se procedió a dar inicio con el desarrollo del mismo.', ESTILO_TEXTO_NORMAL);
-    this.merge(ws, 'E28:I28', ESTILO_TEXTO_NORMAL);
-    this.filaAltura(ws, 28, 24);
+    this.celda(ws, 'B25', 'informar que siguiendo con el cronograma de actividades establecido en el proyecto de vinculación:', estiloTextoCarta);
+    this.merge(ws, 'B25:I25', estiloTextoCarta);
+    this.filaAltura(ws, 25, 15.75);
 
+    this.celda(ws, 'B26', d.proyecto_nombre || '', estiloValorNegrita);
+    this.merge(ws, 'B26:I27', estiloValorNegrita);
+    this.filaAltura(ws, 26, 14.25);
+    this.filaAltura(ws, 27, 14.25);
+
+    this.celda(ws, 'B28', 'Informo que el día de hoy', estiloTextoCarta);
+    this.merge(ws, 'B28:C28', estiloTextoCarta);
+    this.celda(ws, 'D28', this.fmtFecha(d.fecha_inicio), estiloValorNegrita);
+    this.celda(ws, 'E28', 'del año en curso, se procedió a dar inicio con el desarrollo del mismo.', estiloTextoCarta);
+    this.merge(ws, 'E28:I28', estiloTextoCarta);
+    this.filaAltura(ws, 28, 15.75);
+
+    // Descripción de actividades
     this.celda(ws, 'B30', 'Explicar cómo se dio el inicio de las actividades y anexar fotografías.', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.merge(ws, 'B30:I30', { font: { italic: true, sz: 9, name: 'Calibri' } });
 
-    this.celda(ws, 'A31', d.descripcion_actividades || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'A31:I38', ESTILO_CELDA_TABLA);
-    this.filasAltura(ws, 31, 38, 30);
+    // Cuadro de texto para descripción
+    this.celda(ws, 'B31', d.descripcion_actividades || '', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'B31:I38', ESTILO_CELDA_TABLA);
+    this.filasAltura(ws, 31, 38, 15.00);
 
-    this.celda(ws, 'A39', 'Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación con los grupos estudiantiles.', ESTILO_SECCION);
-    this.merge(ws, 'A39:H39', ESTILO_SECCION);
+    // Sección de Anexos y Fotografías
+    this.celda(ws, 'B39', 'Anexo 1: Capturas de pantalla referentes a las actividades de Vinculación con los grupos estudiantiles.', ESTILO_SECCION);
+    this.merge(ws, 'B39:H39', ESTILO_SECCION);
 
-    this.celda(ws, 'A41', 'Figura 1: Primera reunión de inducción vinculación.', { font: { italic: true, sz: 9, name: 'Calibri' } });
-    this.merge(ws, 'A41:D41', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.celda(ws, 'B41', 'Figura 1: Primera reunión de inducción vinculación.', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.merge(ws, 'B41:D41', { font: { italic: true, sz: 9, name: 'Calibri' } });
     this.celda(ws, 'F41', 'Figura 2: Socialización de actividades.', { font: { italic: true, sz: 9, name: 'Calibri' } });
     this.merge(ws, 'F41:H41', { font: { italic: true, sz: 9, name: 'Calibri' } });
 
-    // Espacios reservados para las imágenes (celdas combinadas grandes, sin imagen embebida)
-    this.merge(ws, 'A42:I50', ESTILO_CELDA_TABLA);
-    this.filasAltura(ws, 42, 50, 24);
+    // Espacios reservados para las 2 primeras imágenes
+    this.merge(ws, 'B42:E49', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'F42:I49', ESTILO_CELDA_TABLA);
+    this.filasAltura(ws, 42, 49, 15.75);
 
-    this.celda(ws, 'A51', 'Figura 3: Explicación del alcance del proyecto.', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.celda(ws, 'B51', 'Figura 3: Explicación del alcance del proyecto.', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.merge(ws, 'B51:D51', { font: { italic: true, sz: 9, name: 'Calibri' } });
     this.celda(ws, 'F51', 'Figura 4: Primer día de actividades en la Fundación', { font: { italic: true, sz: 9, name: 'Calibri' } });
+    this.merge(ws, 'F51:H51', { font: { italic: true, sz: 9, name: 'Calibri' } });
 
-    this.celda(ws, 'B62', 'Atentamente,', ESTILO_TEXTO_NORMAL);
+    // Espacios reservados para las 2 siguientes imágenes
+    this.merge(ws, 'B52:E59', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'F52:I59', ESTILO_CELDA_TABLA);
+    this.filasAltura(ws, 52, 59, 15.75);
+
+    // Firma del tutor
+    this.celda(ws, 'B62', 'Atentamente,', estiloTextoCarta);
+    this.filaAltura(ws, 62, 15.75);
+    
     this.celda(ws, 'B68', d.tutor_nombre || '', ESTILO_FIRMA);
     this.merge(ws, 'B68:D68', ESTILO_FIRMA);
+    this.filaAltura(ws, 68, 15.75);
+    
     this.celda(ws, 'B69', 'TUTOR DEL PROYECTO', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
     this.merge(ws, 'B69:D69', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
 
-    this.actualizarRefHoja(ws, 70, 'J');
+    this.actualizarRefHoja(ws, 75, 'J');
     return ws;
   }
 
-  // ============================================
+// ============================================
   // 2. HOJA: CARTA DE COMPROMISO DEL ESTUDIANTE (Formato 04)
   //    Fuente real: CartaCompromiso
-  //    { titulo, instituto, estudiante, cedula, carrera, nivel,
-  //      entidad_beneficiaria, docente_tutor }
-  //    (no trae fecha propia -> se usa la fecha del día de exportación)
   // ============================================
   private construirHojaCartaCompromiso(data: any): XLSX.WorkSheet {
     const ws = this.nuevaHoja();
-    this.anchoColumnas(ws, [7.86, 12.86, 17.86, 22.86, 18.86, 12.86, 15.86, 5.86, 13.86]);
+    
+    // Anchos de columna milimétricos
+    this.anchoColumnas(ws, [7.29, 11.57, 16.57, 22.43, 18.00, 11.57, 15.00, 5.43, 12.57, 13.00]);
 
     const d = data || {};
 
-    // Columna A:B reservada para el logo institucional — se incrusta
-    // aparte, en incrustarLogos(), después de generar el .xlsx.
-    this.celda(ws, 'A1', '', ESTILO_HEADER_BLANCO);
-    this.merge(ws, 'A1:B4', ESTILO_HEADER_BLANCO);
+    // --- NUEVOS ESTILOS PARA ESTA HOJA ---
+    const ESTILO_TEXTO_IZQUIERDA = { font: { sz: 10, name: 'Calibri' }, alignment: { horizontal: 'left', vertical: 'center' } };
+    const ESTILO_TEXTO_CENTRADO = { font: { sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center' } };
+    const ESTILO_VALOR_DESTACADO = { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center' } };
+    
+    const bordeFino = { style: 'thin', color: { rgb: '000000' } };
+    const ESTILO_TEXTO_LEGAL_BORDE = { 
+      font: { sz: 10, name: 'Calibri' }, 
+      alignment: { horizontal: 'justify', vertical: 'top', wrapText: true },
+      border: { top: bordeFino, bottom: bordeFino, left: bordeFino, right: bordeFino }
+    };
+    
+    // Columna A reservada para el margen o logo
+    this.celda(ws, 'B1', '', ESTILO_HEADER_BLANCO);
+    this.merge(ws, 'B1:B4', ESTILO_HEADER_BLANCO);
 
+    // Cabecera Institucional
     this.bloqueCabeceraInstitucional(ws, {
       colTituloInicio: 'C', colTituloFin: 'F',
       colCodigoLabel: 'G', colCodigoValor: 'H', colCodigoValorFin: 'I',
@@ -799,94 +847,98 @@ export class ExcelExportService {
       codigo: 'DS-040104'
     });
 
-    this.celda(ws, 'B6', d.instituto || 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"', ESTILO_TITULO_DOCUMENTO);
-    this.merge(ws, 'B6:I6', ESTILO_TITULO_DOCUMENTO);
+    // Títulos de la hoja
+    this.celda(ws, 'B6', d.instituto || 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.merge(ws, 'B6:I6', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.filaAltura(ws, 6, 20.25);
 
     this.celda(ws, 'B8', d.titulo || 'ACTA COMPROMISO DE PARTICIPACIÓN EN VINCULACIÓN CON LA COMUNIDAD', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center' } });
     this.merge(ws, 'B8:I8', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center' } });
 
-    // Bloque "Yo, ... me comprometo": cada línea de texto corrido se combina
-    // sobre un rango ancho (en vez de desbordar sobre celdas vacías) para que
-    // se lea de corrido y no se monte sobre las filas siguientes.
-    const ESTILO_TEXTO_CENTRADO = { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' }, border: allBorders() };
-
-    this.celda(ws, 'A10', 'Yo,', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A10:B10', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'C10', d.estudiante || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'C10:D10', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.celda(ws, 'E10', 'con C.I.', { ...ESTILO_TEXTO_NORMAL, border: allBorders() });
-    this.celda(ws, 'F10', d.cedula || '', ESTILO_CELDA_TABLA);
+    // ============================================
+    // BLOQUE: "Yo, ... me comprometo" (SIN BORDES)
+    // ============================================
+    this.celda(ws, 'B10', 'Yo,', ESTILO_TEXTO_IZQUIERDA);
+    this.celda(ws, 'C10', d.estudiante || '', ESTILO_VALOR_DESTACADO);
+    this.merge(ws, 'C10:D10', ESTILO_VALOR_DESTACADO);
+    this.celda(ws, 'E10', 'con C.I.', ESTILO_TEXTO_CENTRADO);
+    this.celda(ws, 'F10', d.cedula || '', ESTILO_VALOR_DESTACADO);
     this.celda(ws, 'G10', 'estudiante del Instituto Superior', ESTILO_TEXTO_CENTRADO);
     this.merge(ws, 'G10:I10', ESTILO_TEXTO_CENTRADO);
 
-    this.celda(ws, 'A11', 'Tecnológico de Turismo y Patrimonio "YAVIRAC" de la Carrera de', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A11:D11', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'E11', d.carrera || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'E11:G11', ESTILO_CELDA_TABLA);
-    this.celda(ws, 'H11', d.nivel || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'H11:I11', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'B11', 'Tecnológico de Turismo y Patrimonio "YAVIRAC" de la Carrera de', ESTILO_TEXTO_IZQUIERDA);
+    this.merge(ws, 'B11:D11', ESTILO_TEXTO_IZQUIERDA);
+    this.celda(ws, 'E11', d.carrera || '', ESTILO_VALOR_DESTACADO);
+    this.merge(ws, 'E11:G11', ESTILO_VALOR_DESTACADO);
+    this.celda(ws, 'H11', d.nivel || '', ESTILO_VALOR_DESTACADO);
+    this.merge(ws, 'H11:I11', ESTILO_VALOR_DESTACADO);
 
-    this.celda(ws, 'A12', 'quien va a realizar la vinculación con la sociedad en la', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A12:D12', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'E12', d.entidad_beneficiaria || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'E12:I12', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'B12', 'quien va a realizar la vinculación con la sociedad en la', ESTILO_TEXTO_IZQUIERDA);
+    this.merge(ws, 'B12:D12', ESTILO_TEXTO_IZQUIERDA);
+    this.celda(ws, 'E12', d.entidad_beneficiaria || '', ESTILO_VALOR_DESTACADO);
+    this.merge(ws, 'E12:I12', ESTILO_VALOR_DESTACADO);
 
-    this.celda(ws, 'A13', 'me comprometo a seguir las siguientes recomendaciones:', { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' } });
-    this.merge(ws, 'A13:I13', { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' } });
-    this.merge(ws, 'A14:I14', { border: allBorders() });
+    this.celda(ws, 'B13', 'me comprometo a seguir las siguientes recomendaciones:', ESTILO_TEXTO_IZQUIERDA);
+    this.merge(ws, 'B13:I13', ESTILO_TEXTO_IZQUIERDA);
+    this.filaAltura(ws, 14, 9.0);
 
-    this.celda(ws, 'A15', TEXTO_ART_22, ESTILO_TEXTO_LEGAL);
-    this.merge(ws, 'A15:I22', ESTILO_TEXTO_LEGAL);
-    this.filasAltura(ws, 15, 22, 42);
+    // ============================================
+    // TEXTO LEGAL (CON BORDES EXTERNOS Y JUSTIFICADO)
+    // ============================================
+    this.celda(ws, 'B15', TEXTO_ART_22, ESTILO_TEXTO_LEGAL_BORDE);
+    this.merge(ws, 'B15:I22', ESTILO_TEXTO_LEGAL_BORDE);
+    this.filaAltura(ws, 18, 42.0);
+    this.filaAltura(ws, 21, 27.0);
+    this.filaAltura(ws, 22, 165.75); 
 
-    this.celda(ws, 'A23', TEXTO_ART_23, ESTILO_TEXTO_LEGAL);
-    this.merge(ws, 'A23:I32', ESTILO_TEXTO_LEGAL);
-    this.filasAltura(ws, 23, 32, 32);
+    this.celda(ws, 'B23', TEXTO_ART_23, ESTILO_TEXTO_LEGAL_BORDE);
+    this.merge(ws, 'B23:I32', ESTILO_TEXTO_LEGAL_BORDE);
+    this.filaAltura(ws, 32, 57.0);
 
-    this.celda(ws, 'A33', TEXTO_CIERRE_ACTA, ESTILO_TEXTO_LEGAL);
-    this.merge(ws, 'A33:I37', ESTILO_TEXTO_LEGAL);
-    this.filasAltura(ws, 33, 37, 46);
+    this.celda(ws, 'B33', TEXTO_CIERRE_ACTA, ESTILO_TEXTO_LEGAL_BORDE);
+    this.merge(ws, 'B33:I37', ESTILO_TEXTO_LEGAL_BORDE);
 
-    this.celda(ws, 'B38', this.fmtFecha(new Date()), { ...ESTILO_CENTRADO, font: { bold: true, sz: 10, name: 'Calibri' } });
-    this.merge(ws, 'B38:D38', { ...ESTILO_CENTRADO, font: { bold: true, sz: 10, name: 'Calibri' } });
+    // Fecha Centrada
+    this.celda(ws, 'B38', this.fmtFecha(new Date()), { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.merge(ws, 'B38:C38', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.filaAltura(ws, 38, 11.25);
 
-    this.celda(ws, 'B39', 'Estudiante', ESTILO_HEADER_TABLA);
-    this.merge(ws, 'B39:C40', ESTILO_HEADER_TABLA);
-    this.celda(ws, 'D39', 'Cédula de Identidad', ESTILO_HEADER_TABLA);
-    this.merge(ws, 'D39:E40', ESTILO_HEADER_TABLA);
-    this.celda(ws, 'F39', 'Nivel', ESTILO_HEADER_TABLA);
-    this.merge(ws, 'F39:G40', ESTILO_HEADER_TABLA);
-    this.celda(ws, 'H39', 'Firma', ESTILO_HEADER_TABLA);
-    this.merge(ws, 'H39:I40', ESTILO_HEADER_TABLA);
+    // ============================================
+    // TABLA DE FIRMAS (ESTA SÍ LLEVA BORDES INTERNOS)
+    // ============================================
+    this.celda(ws, 'B42', 'Estudiante', ESTILO_HEADER_TABLA);
+    this.merge(ws, 'B42:C42', ESTILO_HEADER_TABLA);
+    this.celda(ws, 'D42', 'Cédula de Identidad', ESTILO_HEADER_TABLA); 
+    this.celda(ws, 'E42', 'Nivel', ESTILO_HEADER_TABLA);
+    this.celda(ws, 'F42', 'Firma', ESTILO_HEADER_TABLA);
+    this.merge(ws, 'F42:I42', ESTILO_HEADER_TABLA);
+    this.filaAltura(ws, 42, 25.5);
 
-    this.celda(ws, 'B41', d.estudiante || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'B41:C42', ESTILO_CELDA_TABLA);
-    this.celda(ws, 'D41', d.cedula || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'D41:E42', ESTILO_CELDA_TABLA);
-    this.celda(ws, 'F41', d.nivel || '', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'F41:G42', ESTILO_CELDA_TABLA);
-    this.merge(ws, 'H41:I42', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'B43', d.estudiante || '', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'B43:C45', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'D43', d.cedula || '', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'D43:D45', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'E43', d.nivel || '', ESTILO_CELDA_TABLA);
+    this.merge(ws, 'E43:E45', ESTILO_CELDA_TABLA);
+    this.celda(ws, 'F43', '', ESTILO_CELDA_TABLA); // Espacio Firma
+    this.merge(ws, 'F43:I45', ESTILO_CELDA_TABLA); 
+    this.filaAltura(ws, 45, 32.25);
 
-    this.celda(ws, 'B44', 'En constancia:', ESTILO_TEXTO_CENTRADO);
+    // Sección En Constancia y Firma del Docente
+    this.celda(ws, 'B47', 'En constancia:', ESTILO_TEXTO_CENTRADO);
 
-    this.celda(ws, 'B48', d.docente_tutor || '', ESTILO_FIRMA);
-    this.merge(ws, 'B48:C48', ESTILO_FIRMA);
-    this.celda(ws, 'B49', 'DOCENTE TUTOR', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'B49:C49', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.celda(ws, 'B52', d.docente_tutor || '', ESTILO_FIRMA);
+    this.merge(ws, 'B52:C52', ESTILO_FIRMA);
+    this.celda(ws, 'B53', 'DOCENTE TUTOR', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.merge(ws, 'B53:C53', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.filaAltura(ws, 53, 15.0);
 
-    this.actualizarRefHoja(ws, 51, 'I');
+    this.actualizarRefHoja(ws, 60, 'J');
     return ws;
   }
-
-  // ============================================
+ // ============================================
   // 3. HOJA: CONTROL DE ASISTENCIA DEL ESTUDIANTE (Formato 06)
   //    Fuente real: AsistenciaEstudianteResponse
-  //    { cabecera: { carrera, entidad_beneficiaria, estudiante,
-  //        nombre_proyecto, docente_tutor, tutor_entidad_receptora,
-  //        periodo_academico },
-  //      actividades: [{ id, fecha, hora_entrada, hora_salida,
-  //        total_horas, descripcion }],
-  //      totales: { total_horas, observaciones } }
   // ============================================
   private construirHojaControlAsistencia(data: any): XLSX.WorkSheet {
     const ws = this.nuevaHoja();
@@ -918,6 +970,7 @@ export class ExcelExportService {
     this.celda(ws, 'A10', 'CONTROL DE ASISTENCIA Y SEGUIMIENTO DE VINCULACIÓN CON LA COMUNIDAD', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center' } });
     this.merge(ws, 'A10:J10', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center' } });
 
+    // Campos de cabecera (Carrera y Entidad Beneficiaria)
     this.celda(ws, 'A12', 'CARRERA:', ESTILO_FIELD_LABEL);
     this.celda(ws, 'B12', cab.carrera || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'B12:D12', ESTILO_FIELD_VALUE);
@@ -926,6 +979,7 @@ export class ExcelExportService {
     this.celda(ws, 'G12', cab.entidad_beneficiaria || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'G12:J12', ESTILO_FIELD_VALUE);
 
+    // Estudiante y Nombre del Proyecto
     this.celda(ws, 'A13', 'ESTUDIANTE:', ESTILO_FIELD_LABEL);
     this.merge(ws, 'A13:A15', ESTILO_FIELD_LABEL);
     this.celda(ws, 'B13', cab.estudiante || '', ESTILO_FIELD_VALUE);
@@ -937,11 +991,14 @@ export class ExcelExportService {
     this.celda(ws, 'E14', cab.nombre_proyecto || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'E14:J15', ESTILO_FIELD_VALUE);
 
+    // Docente tutor, Tutor entidad y Periodo académico
     this.celda(ws, 'A16', 'DOCENTE TUTOR:', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'A16:D16', ESTILO_FIELD_LABEL);
     this.celda(ws, 'E16', 'TUTOR ENTIDAD RECEPTORA:', ESTILO_FIELD_LABEL);
     this.merge(ws, 'E16:G16', ESTILO_FIELD_LABEL);
     this.celda(ws, 'H16', 'PERIODO ACADÉMICO:', ESTILO_FIELD_LABEL);
-    this.merge(ws, 'H16:I16', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'H16:J16', ESTILO_FIELD_LABEL);
+
     this.celda(ws, 'A17', cab.docente_tutor || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'A17:D18', ESTILO_FIELD_VALUE);
     this.celda(ws, 'E17', cab.tutor_entidad_receptora || '', ESTILO_FIELD_VALUE);
@@ -949,6 +1006,7 @@ export class ExcelExportService {
     this.celda(ws, 'H17', cab.periodo_academico || '', ESTILO_FIELD_VALUE);
     this.merge(ws, 'H17:J18', ESTILO_FIELD_VALUE);
 
+    // Cabecera de la Tabla de Actividades
     const filaHeader = 19;
     this.celda(ws, `A${filaHeader}`, 'FECHA', ESTILO_HEADER_TABLA);
     this.celda(ws, `B${filaHeader}`, 'HORA DE ENTRADA', ESTILO_HEADER_TABLA);
@@ -971,33 +1029,35 @@ export class ExcelExportService {
         this.filaAltura(ws, fila, 26);
         fila++;
       });
-      // Igual que en el sistema: cuando varias fechas comparten la misma
-      // actividad realizada, esa celda se combina en un solo bloque que
-      // abarca todas esas filas (rowspan), en vez de repetir el texto.
       const filaFinGrupo = fila - 1;
       this.celda(ws, `E${filaInicioGrupo}`, grupo.descripcion || '', estCelda);
       this.merge(ws, `E${filaInicioGrupo}:J${filaFinGrupo}`, estCelda);
     });
 
-    // Total de horas acumulado (dato ya calculado por el backend), justo debajo de la tabla
-    this.celda(ws, `D${fila}`, 'TOTAL HORAS:', ESTILO_FIELD_LABEL);
-    this.celda(ws, `E${fila}`, totales.total_horas ?? 0, { font: { bold: true }, border: allBorders(), alignment: { horizontal: 'center' } });
+    // Total de horas acumulado
+    this.celda(ws, `C${fila}`, 'TOTAL HORAS:', ESTILO_FIELD_LABEL);
+    this.celda(ws, `D${fila}`, totales.total_horas ?? 0, { font: { bold: true }, border: allBorders(), alignment: { horizontal: 'center' } });
+    this.filaAltura(ws, fila, 20);
 
+    // Observaciones
     this.celda(ws, `A${fila + 2}`, 'OBSERVACIONES:', ESTILO_FIELD_LABEL);
     this.merge(ws, `A${fila + 2}:B${fila + 2}`, ESTILO_FIELD_LABEL);
     this.celda(ws, `C${fila + 2}`, totales.observaciones || 'Ninguna', ESTILO_FIELD_VALUE);
     this.merge(ws, `C${fila + 2}:J${fila + 2}`, ESTILO_FIELD_VALUE);
 
-    const filaFirmas = fila + 4;
+    // Bloque de Firmas
+    const filaFirmas = fila + 5;
     this.celda(ws, `D${filaFirmas}`, 'ESTUDIANTE', ESTILO_HEADER_TABLA);
     this.merge(ws, `D${filaFirmas}:G${filaFirmas}`, ESTILO_HEADER_TABLA);
     this.celda(ws, `H${filaFirmas}`, 'DOCENTE TUTOR', ESTILO_HEADER_TABLA);
     this.merge(ws, `H${filaFirmas}:J${filaFirmas}`, ESTILO_HEADER_TABLA);
+    this.filaAltura(ws, filaFirmas, 20);
 
-    this.celda(ws, `D${filaFirmas + 6}`, cab.estudiante || '', ESTILO_FIRMA);
-    this.merge(ws, `D${filaFirmas + 6}:G${filaFirmas + 6}`, ESTILO_FIRMA);
-    this.celda(ws, `H${filaFirmas + 6}`, cab.docente_tutor || '', ESTILO_FIRMA);
-    this.merge(ws, `H${filaFirmas + 6}:J${filaFirmas + 6}`, ESTILO_FIRMA);
+    this.celda(ws, `D${filaFirmas + 5}`, cab.estudiante || '', ESTILO_FIRMA);
+    this.merge(ws, `D${filaFirmas + 5}:G${filaFirmas + 5}`, ESTILO_FIRMA);
+    this.celda(ws, `H${filaFirmas + 5}`, cab.docente_tutor || '', ESTILO_FIRMA);
+    this.merge(ws, `H${filaFirmas + 5}:J${filaFirmas + 5}`, ESTILO_FIRMA);
+    this.filaAltura(ws, filaFirmas + 5, 25);
 
     this.actualizarRefHoja(ws, filaFirmas + 7, 'J');
     return ws;
@@ -1005,104 +1065,114 @@ export class ExcelExportService {
 
   // ============================================
   // 4. HOJA: REGISTRO DE ASISTENCIA DEL TUTOR (Formato 07)
-  //    Fuente real: AsistenciaTutorResponse
-  //    { cabecera: { carrera, institucion, docente_tutor, periodo_academico },
-  //      actividades: [{ id, fecha, hora_entrada, hora_salida,
-  //        total_horas, actividad_realizada }],
-  //      totales: { suma_total_horas, observaciones, coordinador_carrera } }
   // ============================================
   private construirHojaRegistroTutor(data: any): XLSX.WorkSheet {
     const ws = this.nuevaHoja();
-    this.anchoColumnas(ws, [14.86, 13.86, 9, 11.86, 30.86, 8.86, 12.86, 9]);
+    
+    // Anchos de columna extraídos exactamente de Libro4.xlsx (A a G)
+    this.anchoColumnas(ws, [14.28, 9.42, 13.00, 8.57, 11.57, 13.00, 24.85]);
 
     const cab = data?.cabecera || {};
     const visitas: any[] = data?.actividades || [];
     const totales = data?.totales || {};
 
-    // Columna A reservada para el logo institucional.
-    this.celda(ws, 'A1', '', ESTILO_HEADER_BLANCO);
-    this.merge(ws, 'A1:A4', ESTILO_HEADER_BLANCO);
+    // Fila 1 y 2 en blanco/márgenes superiores
+    this.filaAltura(ws, 1, 5.25);
+    this.filaAltura(ws, 2, 6.75);
 
-    this.celda(ws, 'B1', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC', ESTILO_HEADER_AZUL);
-    this.merge(ws, 'B1:F1', ESTILO_HEADER_AZUL);
-    this.celda(ws, 'B2', 'MACROPROCESO 04 VINCULACIÓN', ESTILO_HEADER_BLANCO);
-    this.merge(ws, 'B2:F2', ESTILO_HEADER_BLANCO);
-    this.celda(ws, 'B3', 'PROCESO 01 VINCULACIÓN', ESTILO_HEADER_NARANJA);
-    this.merge(ws, 'B3:F3', ESTILO_HEADER_NARANJA);
-    this.celda(ws, 'B4', 'FORMATO 07 REGISTRO DE ASISTENCIA DEL TUTOR', ESTILO_HEADER_BLANCO);
+    // Encabezado Principal (Filas 3 a 6)
+    this.celda(ws, 'B3', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO YAVIRAC', ESTILO_HEADER_AZUL);
+    this.merge(ws, 'B3:F3', ESTILO_HEADER_AZUL);
+    this.celda(ws, 'B4', 'MACROPROCESO 04 VINCULACIÓN', ESTILO_HEADER_BLANCO);
     this.merge(ws, 'B4:F4', ESTILO_HEADER_BLANCO);
-    this.celda(ws, 'G1', 'CÓDIGO: DS-040107', ESTILO_CODIGO_LABEL);
-    this.merge(ws, 'G1:H4', ESTILO_CODIGO_LABEL);
-    this.filaAltura(ws, 1, 24);
-    this.filasAltura(ws, 2, 4, 20);
+    this.celda(ws, 'B5', 'PROCESO 01 VINCULACIÓN ', ESTILO_HEADER_NARANJA);
+    this.merge(ws, 'B5:F5', ESTILO_HEADER_NARANJA);
+    this.celda(ws, 'B6', 'FORMATO 07 REGISTRO DE ASISTENCIA DEL TUTOR ', ESTILO_HEADER_BLANCO);
+    this.merge(ws, 'B6:F6', ESTILO_HEADER_BLANCO);
+    
+    this.celda(ws, 'G3', 'CÓDIGO: DS-040107', ESTILO_CODIGO_LABEL);
+    this.merge(ws, 'G3:G6', ESTILO_CODIGO_LABEL);
+    
+    this.filasAltura(ws, 3, 8, 15.75);
 
-    // Columna A reservada como margen (el logo, si se pega a mano, iría aquí arriba)
-    this.celda(ws, 'A5', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"', ESTILO_TITULO_DOCUMENTO);
-    this.merge(ws, 'A5:H5', ESTILO_TITULO_DOCUMENTO);
-    this.celda(ws, 'A6', 'Dirección: García Moreno S-435 y Ambato', { font: { sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'A6:H6');
-    this.celda(ws, 'A7', 'Quito - Ecuador', { font: { sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'A7:H7');
+    // Subtítulos de Institución (Filas 8 a 10)
+    this.celda(ws, 'A8', 'INSTITUTO SUPERIOR TECNOLÓGICO DE TURISMO Y PATRIMONIO "YAVIRAC"', ESTILO_TITULO_DOCUMENTO);
+    this.merge(ws, 'A8:G8', ESTILO_TITULO_DOCUMENTO);
+    this.celda(ws, 'A9', 'Dirección: García Moreno S-435 y Ambato', { font: { sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.merge(ws, 'A9:G9');
+    this.celda(ws, 'A10', 'Quito - Ecuador', { font: { sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.merge(ws, 'A10:G10');
 
-    this.celda(ws, 'A9', 'Carrera:', ESTILO_FIELD_LABEL);
-    this.merge(ws, 'A9:D9', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'E9', 'Institución:', ESTILO_FIELD_LABEL);
-    this.merge(ws, 'E9:G9', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'A10', cab.carrera || '', ESTILO_FIELD_VALUE);
-    this.merge(ws, 'A10:D11', ESTILO_FIELD_VALUE);
-    this.celda(ws, 'E10', cab.institucion || '', ESTILO_FIELD_VALUE);
-    this.merge(ws, 'E10:G11', ESTILO_FIELD_VALUE);
-
-    this.celda(ws, 'A12', 'Docente Tutor:', ESTILO_FIELD_LABEL);
+    // Datos de Cabecera (Filas 12 a 16)
+    this.celda(ws, 'A12', 'Carrera:', ESTILO_FIELD_LABEL);
     this.merge(ws, 'A12:D12', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'E12', 'Periodo Académico:', ESTILO_FIELD_LABEL);
+    this.celda(ws, 'E12', 'Institución:', ESTILO_FIELD_LABEL);
     this.merge(ws, 'E12:G12', ESTILO_FIELD_LABEL);
-    this.celda(ws, 'A13', cab.docente_tutor || '', ESTILO_FIELD_VALUE);
-    this.merge(ws, 'A13:D13', ESTILO_FIELD_VALUE);
-    this.celda(ws, 'E13', cab.periodo_academico || '', ESTILO_FIELD_VALUE);
-    this.merge(ws, 'E13:G13', ESTILO_FIELD_VALUE);
+    
+    this.celda(ws, 'A13', cab.carrera || '', ESTILO_FIELD_VALUE);
+    this.merge(ws, 'A13:D14', ESTILO_FIELD_VALUE); // Combinado doble fila según Excel
+    this.celda(ws, 'E13', cab.institucion || '', ESTILO_FIELD_VALUE);
+    this.merge(ws, 'E13:G14', ESTILO_FIELD_VALUE); // Combinado doble fila según Excel
 
-    const filaHeader = 14;
+    this.celda(ws, 'A15', 'Docente Tutor:', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'A15:D15', ESTILO_FIELD_LABEL);
+    this.celda(ws, 'E15', 'Periodo Académico:', ESTILO_FIELD_LABEL);
+    this.merge(ws, 'E15:G15', ESTILO_FIELD_LABEL);
+    
+    this.celda(ws, 'A16', cab.docente_tutor || '', ESTILO_FIELD_VALUE);
+    this.merge(ws, 'A16:D16', ESTILO_FIELD_VALUE);
+    this.celda(ws, 'E16', cab.periodo_academico || '', ESTILO_FIELD_VALUE);
+    this.merge(ws, 'E16:G16', ESTILO_FIELD_VALUE);
+
+    // Cabecera de la Tabla (Fila 17)
+    const filaHeader = 17;
     this.celda(ws, `A${filaHeader}`, 'FECHA', ESTILO_HEADER_TABLA);
     this.celda(ws, `B${filaHeader}`, 'HORA DE ENTRADA', ESTILO_HEADER_TABLA);
     this.celda(ws, `C${filaHeader}`, 'HORA DE SALIDA', ESTILO_HEADER_TABLA);
     this.celda(ws, `D${filaHeader}`, 'TOTAL HORAS', ESTILO_HEADER_TABLA);
     this.celda(ws, `E${filaHeader}`, 'ACTIVIDAD REALIZADA', ESTILO_HEADER_TABLA);
     this.merge(ws, `E${filaHeader}:G${filaHeader}`, ESTILO_HEADER_TABLA);
+    this.filaAltura(ws, filaHeader, 24);
 
+    // Renderizado dinámico de la tabla
     let fila = filaHeader + 1;
     visitas.forEach((v, i) => {
       const estCentrado = this.filaCebra(ESTILO_CENTRADO, i);
       const estCelda = this.filaCebra(ESTILO_CELDA_TABLA, i);
+      
       this.celda(ws, `A${fila}`, this.fmtFecha(v.fecha), estCentrado);
       this.celda(ws, `B${fila}`, this.fmtHora(v.hora_entrada), estCentrado);
       this.celda(ws, `C${fila}`, this.fmtHora(v.hora_salida), estCentrado);
       this.celda(ws, `D${fila}`, v.total_horas ?? '', estCentrado);
       this.celda(ws, `E${fila}`, v.actividad_realizada || '', estCelda);
       this.merge(ws, `E${fila}:G${fila}`, estCelda);
-      this.filaAltura(ws, fila, 26);
+      this.filaAltura(ws, fila, 24.75); // Promedio de altura de filas de datos en el Excel
       fila++;
     });
 
+    // Totales
     this.celda(ws, `C${fila}`, 'TOTAL HORAS', ESTILO_FIELD_LABEL);
     this.celda(ws, `D${fila}`, totales.suma_total_horas ?? 0, { font: { bold: true }, border: allBorders(), alignment: { horizontal: 'center' } });
+    this.filaAltura(ws, fila, 15.75);
 
-    this.celda(ws, `A${fila + 2}`, `Observaciones: ${totales.observaciones || 'Ninguna'}`, { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' } });
-    this.merge(ws, `A${fila + 2}:G${fila + 2}`, { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' } });
-    this.filaAltura(ws, fila + 2, 48);
+    // Observaciones (Dejamos una fila de espacio antes, igual al Excel que pone la obs en la 26 si termina en 23)
+    const filaObs = fila + 2;
+    this.celda(ws, `A${filaObs}`, `Observaciones: ${totales.observaciones || 'Ninguna'}`, { ...ESTILO_TEXTO_NORMAL });
+    this.merge(ws, `A${filaObs}:G${filaObs}`, { ...ESTILO_TEXTO_NORMAL });
+    
+    // El Excel envuelve las filas del final en un gran borde exterior. 
+    // Si tu librería maneja bordes exteriores, aplícalo en el rango A${filaObs}:G${filaObs + 9}
 
-    // Espacio en blanco reservado antes de la firma (igual que en la plantilla)
-    this.merge(ws, `A${fila + 3}:C${fila + 8}`, { border: allBorders() });
+    // Firmas (Espacio inferido del archivo, filas 34 y 35 en el caso base)
+    const filaFirma = filaObs + 8;
+    this.celda(ws, `A${filaFirma}`, totales.coordinador_carrera || '', ESTILO_FIRMA);
+    this.merge(ws, `A${filaFirma}:C${filaFirma}`, ESTILO_FIRMA);
+    this.celda(ws, `A${filaFirma + 1}`, 'COORDINADOR DE CARRERA', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.merge(ws, `A${filaFirma + 1}:C${filaFirma + 1}`, { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
 
-    this.celda(ws, `A${fila + 9}`, totales.coordinador_carrera || '', ESTILO_FIRMA);
-    this.merge(ws, `A${fila + 9}:C${fila + 9}`, ESTILO_FIRMA);
-    this.celda(ws, `A${fila + 10}`, 'COORDINADOR DE CARRERA', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.merge(ws, `A${fila + 10}:C${fila + 10}`, { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-
-    this.actualizarRefHoja(ws, fila + 11, 'H');
+    this.actualizarRefHoja(ws, filaFirma + 2, 'G');
     return ws;
   }
-
   // ============================================
   // 5. HOJA: PLAN DE APRENDIZAJE Y SEGUIMIENTO (Formato 08)
   //    Fuente real: PlanAprendizaje
@@ -1265,95 +1335,115 @@ export class ExcelExportService {
     return ws;
   }
 
-  // ============================================
+ // ============================================
   // 6. HOJA: CERTIFICADO DE VINCULACIÓN CON LA COMUNIDAD (Formato 10)
-  //    Fuente real: Certificado
-  //    { fecha_emision, estudiante, cedula, carrera, proyecto,
-  //      fecha_inicio, fecha_fin, total_horas, institucion, representante }
-  //
-  //    IMPORTANTE: el backend ya arma "fecha_emision" como
-  //    "Quito, 13 de agosto de 2025" (string listo) — no se debe re-formatear.
   // ============================================
   private construirHojaCertificado(data: any): XLSX.WorkSheet {
     const ws = this.nuevaHoja();
+    // Anchos de columna optimizados para el texto
     this.anchoColumnas(ws, [16.86, 14.86, 18.86, 16.86, 20.86, 16.86, 9, 9]);
 
     const d = data || {};
-    const ESTILO_TEXTO_CENTRADO = { ...ESTILO_TEXTO_NORMAL, alignment: { ...ESTILO_TEXTO_NORMAL.alignment, horizontal: 'center' }, border: allBorders() };
 
-    this.merge(ws, 'A1:H1', { border: allBorders() });
-
+    // Definición de estilos limpios (sin bordes)
+    const estiloTextoIzq = { font: { sz: 11, name: 'Calibri' }, alignment: { horizontal: 'left', vertical: 'center' } };
+    const estiloTextoCentrado = { font: { sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center' } };
+    const estiloDatoCentrado = { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center' } };
+    
+    // Título principal
     this.celda(ws, 'A2', 'CERTIFICADO DE VINCULACIÓN CON LA COMUNIDAD', { font: { bold: true, sz: 14, name: 'Calibri' }, alignment: { horizontal: 'center' } });
     this.merge(ws, 'A2:H2');
+    this.filaAltura(ws, 2, 30);
 
-    this.merge(ws, 'A3:H3', { border: allBorders() });
+    // Fecha de emisión
+    this.celda(ws, 'F5', d.fecha_emision || '', estiloTextoCentrado);
+    this.merge(ws, 'F5:H5');
+    this.filaAltura(ws, 5, 20);
 
-    // fecha_emision ya viene formateada como "Quito, ..." desde el backend
-    this.merge(ws, 'A4:F4', { border: allBorders() });
-    this.celda(ws, 'G4', d.fecha_emision || '', { font: { sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: allBorders() });
-    this.merge(ws, 'G4:H4', { font: { sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: allBorders() });
-    this.filaAltura(ws, 4, 36);
+    // Párrafo 1 - Fila 1
+    this.celda(ws, 'A8', 'Por medio de la presente dejo constancia que el/la señor(ita)', estiloTextoIzq);
+    this.merge(ws, 'A8:D8');
+    this.celda(ws, 'E8', d.estudiante || '', estiloTextoCentrado);
+    this.merge(ws, 'E8:H8');
+    this.filaAltura(ws, 8, 20);
 
-    this.merge(ws, 'A5:H6', { border: allBorders() });
+    // Párrafo 1 - Fila 2
+    this.celda(ws, 'A9', 'con C.I.:', estiloTextoIzq);
+    this.celda(ws, 'B9', d.cedula || '', estiloDatoCentrado);
+    this.merge(ws, 'B9:C9');
+    this.celda(ws, 'D9', 'estudiante de la carrera de', estiloTextoIzq);
+    this.merge(ws, 'D9:E9');
+    this.celda(ws, 'F9', d.carrera || '', estiloTextoCentrado);
+    this.merge(ws, 'F9:H9');
+    this.filaAltura(ws, 9, 20);
 
-    this.celda(ws, 'A7', 'Por medio de la presente dejo constancia que el/la señor(ita)', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A7:D7', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'E7', d.estudiante || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'E7:H7', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.filaAltura(ws, 7, 26);
+    // Párrafo 1 - Fila 3
+    this.celda(ws, 'A10', 'del Instituto Superior Tecnológico de Turismo y Patrimonio "YAVIRAC"', estiloTextoIzq);
+    this.merge(ws, 'A10:E10');
+    this.celda(ws, 'F10', 'desempeñó las actividades', estiloTextoCentrado);
+    this.merge(ws, 'F10:H10');
+    this.filaAltura(ws, 10, 20);
 
-    this.celda(ws, 'A8', 'con C.I.:', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A8:B8', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'C8', d.cedula || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'C8:D8', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.celda(ws, 'E8', 'estudiante de la carrera de', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'E8:F8', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'G8', d.carrera || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'G8:H8', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.filaAltura(ws, 8, 26);
+    // Párrafo 1 - Fila 4
+    this.celda(ws, 'A11', 'y tareas establecidas en la planificación del proyecto:', estiloTextoIzq);
+    this.merge(ws, 'A11:E11');
+    this.filaAltura(ws, 11, 20);
 
-    this.celda(ws, 'A9', 'del Instituto Superior Tecnológico de Turismo y Patrimonio "YAVIRAC"', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A9:H9', ESTILO_TEXTO_CENTRADO);
-    this.filaAltura(ws, 9, 28);
+    // Nombre del Proyecto (Centrado, negrita, con salto de línea)
+    this.celda(ws, 'A13', d.proyecto || '', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true } });
+    this.merge(ws, 'A13:H14');
+    this.filasAltura(ws, 13, 14, 24);
 
-    this.celda(ws, 'A10', 'desempeñó las actividades y tareas establecidas en la planificación del proyecto:', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A10:H10', ESTILO_TEXTO_CENTRADO);
-    this.filaAltura(ws, 10, 40);
+    // Párrafo 2 - Fila 1
+    this.celda(ws, 'A16', 'propuesto para esta comunidad, desde el', estiloTextoIzq);
+    this.merge(ws, 'A16:C16');
+    this.celda(ws, 'D16', d.fecha_inicio || '', estiloDatoCentrado);
+    this.merge(ws, 'D16:F16');
+    this.celda(ws, 'G16', 'hasta el', estiloTextoCentrado);
+    this.merge(ws, 'G16:H16');
+    this.filaAltura(ws, 16, 20);
 
-    this.merge(ws, 'A11:H11', { border: allBorders() });
+    // Párrafo 2 - Fila 2
+    this.celda(ws, 'A17', d.fecha_fin || '', estiloDatoCentrado);
+    this.merge(ws, 'A17:B17');
+    this.celda(ws, 'C17', `acumulando un total de ${d.total_horas ?? 0} horas de vinculación social, demostrando en`, estiloTextoIzq);
+    this.merge(ws, 'C17:H17');
+    this.filaAltura(ws, 17, 20);
 
-    this.celda(ws, 'A12', d.proyecto || '', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true } });
-    this.merge(ws, 'A12:H13', { font: { bold: true, sz: 11, name: 'Calibri' }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true } });
-    this.filasAltura(ws, 12, 13, 24);
+    // Párrafo 2 - Fila 3
+    this.celda(ws, 'A18', 'todo momento responsabilidad, capacidad y entusiasmo en el desarrollo de las labores encomendadas.', estiloTextoIzq);
+    this.merge(ws, 'A18:H18');
+    this.filaAltura(ws, 18, 20);
 
-    this.merge(ws, 'A14:H14', { border: allBorders() });
+    // Despedida
+    this.celda(ws, 'A22', 'Atentamente,', estiloTextoIzq);
+    this.merge(ws, 'A22:B22');
 
-    this.celda(ws, 'A15', 'propuesto para esta comunidad, desde el', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A15:D15', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'E15', d.fecha_inicio || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
-    this.celda(ws, 'F15', 'hasta el', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'F15:G15', ESTILO_TEXTO_CENTRADO);
-    this.celda(ws, 'H15', d.fecha_fin || '', { ...ESTILO_CELDA_TABLA, alignment: { horizontal: 'center' } });
+    // ==========================================
+    // FIRMA DEL REPRESENTANTE
+    // ==========================================
+    const filaFirma = 30; // Ajustado para que cuadre con el espacio de la imagen
+    const bordeSuperior = { top: { style: 'thin', color: { rgb: '000000' } } };
 
-    this.celda(ws, 'A16', `acumulando un total de ${d.total_horas ?? 0} horas de vinculación social en ${d.institucion || 'la entidad receptora'}, demostrando en`, ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A16:H16', ESTILO_TEXTO_CENTRADO);
+    // Línea y Nombre
+    this.celda(ws, `A${filaFirma}`, d.representante || '', { 
+      font: { name: 'Calibri', sz: 11 }, 
+      alignment: { horizontal: 'center' }, 
+      border: bordeSuperior 
+    });
+    this.celda(ws, `B${filaFirma}`, '', { border: bordeSuperior });
+    this.celda(ws, `C${filaFirma}`, '', { border: bordeSuperior });
+    this.merge(ws, `A${filaFirma}:C${filaFirma}`);
 
-    this.celda(ws, 'A17', 'todo momento responsabilidad, capacidad y entusiasmo en el desarrollo de las labores encomendadas.', ESTILO_TEXTO_CENTRADO);
-    this.merge(ws, 'A17:H17', ESTILO_TEXTO_CENTRADO);
-    this.filasAltura(ws, 15, 17, 28);
+    // Institución
+    this.celda(ws, `A${filaFirma + 1}`, d.institucion || 'FUNDACION NACIONAL DE PARALISIS', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center', wrapText: true } });
+    this.merge(ws, `A${filaFirma + 1}:C${filaFirma + 1}`);
 
-    this.celda(ws, 'B19', 'Atentamente,', ESTILO_TEXTO_NORMAL);
+    // Cargo
+    this.celda(ws, `A${filaFirma + 2}`, 'REPRESENTANTE', { font: { bold: true, sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center' } });
+    this.merge(ws, `A${filaFirma + 2}:C${filaFirma + 2}`);
 
-    this.merge(ws, 'B20:D23', { border: allBorders() });
-
-    this.celda(ws, 'B24', d.representante || '', { font: { sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'B24:D24', { font: { sz: 10, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.celda(ws, 'B25', 'Coordinador de Vinculación', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'B25:D25', { font: { bold: true, sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.celda(ws, 'B26', 'ISTY "YAVIRAC"', { font: { sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-    this.merge(ws, 'B26:D26', { font: { sz: 9, name: 'Calibri' }, alignment: { horizontal: 'center' } });
-
-    this.actualizarRefHoja(ws, 28, 'H');
+    this.actualizarRefHoja(ws, filaFirma + 4, 'H');
     return ws;
   }
 

@@ -2,19 +2,34 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { finalize } from 'rxjs/operators';
+
 import { RegistroAsistenciaTutorService } from '../../../services/registro-asistencia-tutor.service';
 import { InicioActividadesService } from '../../../services/inicio-actividades.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { VinculacionService } from '../../../services/vinculacion.service';
-import { AsistenciaTutorResponse, AsistenciaTutor, CreateAsistenciaTutorDto, UpdateAsistenciaTutorDto } from '../../../models/registro-asistencia-tutor.model';
-import { finalize } from 'rxjs/operators';
-import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
 import { ExcelExportService } from '../../../services/excel-export.service';
+import { VolverArchivosComponent } from '../../../components/volver-archivos/volver-archivos.component';
+
+// ✅ IMPORTAR MODAL DESDE SHARED
+import { ModalComponent } from '../../../../../shared/components/modal/modal.component';
+
+import {
+  AsistenciaTutorResponse,
+  AsistenciaTutor,
+  CreateAsistenciaTutorDto,
+  UpdateAsistenciaTutorDto
+} from '../../../models/registro-asistencia-tutor.model';
 
 @Component({
   selector: 'app-registro-asistencia-tutor',
   standalone: true,
-  imports: [CommonModule, FormsModule, VolverArchivosComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    VolverArchivosComponent,
+    ModalComponent  // ✅ AGREGADO
+  ],
   templateUrl: './registro-asistencia-tutor.component.html',
   styleUrls: ['./registro-asistencia-tutor.component.scss']
 })
@@ -27,6 +42,9 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private excelService = inject(ExcelExportService);
 
+  // ============================================
+  // ESTADO DEL COMPONENTE
+  // ============================================
   data: AsistenciaTutorResponse | null = null;
   loading = true;
   error: string | null = null;
@@ -43,11 +61,28 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   fechaInicioProyecto: string = '';
   fechaFinProyecto: string = '';
 
-  // Edición de actividades (SOLO DOCENTE)
+  // ============================================
+  // MODAL
+  // ============================================
+  modalVisible = false;
+  modalTitle = '';
+  modalMessage = '';
+  modalType: 'success' | 'error' | 'warning' | 'info' = 'info';
+  modalButtonText: string = 'Aceptar';
+  showConfirmButtons: boolean = false;
+  modalConfirmCallback: (() => void) | null = null;
+  modalCancelCallback: (() => void) | null = null;
+  private actividadAEliminar: number | null = null;
+
+  // ============================================
+  // EDICIÓN DE ACTIVIDADES (SOLO DOCENTE)
+  // ============================================
   editandoId: number | null = null;
   editandoActividad: UpdateAsistenciaTutorDto = {};
 
-  // Observaciones - auto-guardado (SOLO DOCENTE y TUTOR_EMPRESARIAL)
+  // ============================================
+  // OBSERVACIONES - AUTO-GUARDADO
+  // ============================================
   observacionEdit: string = '';
   observacionOriginal: string = '';
   guardandoObservacion: boolean = false;
@@ -56,7 +91,9 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   mensajeFeedback: string = '';
   editandoObservacion = false;
 
-  // Nueva actividad (SOLO DOCENTE)
+  // ============================================
+  // NUEVA ACTIVIDAD (SOLO DOCENTE)
+  // ============================================
   nuevaActividad: CreateAsistenciaTutorDto = {
     id_vinculacion: 0,
     fecha: '',
@@ -67,22 +104,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   };
   mostrandoFormulario = false;
 
-  // ✅ GETTERS CORREGIDOS
-  // SOLO DOCENTE puede editar actividades (EL ESTUDIANTE NO)
+  // ============================================
+  // GETTERS
+  // ============================================
   get puedeEditarActividades(): boolean {
     return this.isDocente;
   }
 
-  // DOCENTE y TUTOR_EMPRESARIAL pueden editar observaciones
   get puedeEditarObservaciones(): boolean {
     return this.isDocente || this.isTutorEmpresarial;
   }
 
-  // ✅ ESTUDIANTE solo puede ver (modo lectura)
   get esSoloLectura(): boolean {
     return this.isEstudiante;
   }
 
+  // ============================================
+  // LIFECYCLE
+  // ============================================
   ngOnInit(): void {
     const roles = this.authService.roles();
     this.isEstudiante = roles.includes('ESTUDIANTE');
@@ -91,7 +130,11 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     this.isTutorEmpresarial = roles.includes('TUTOR_EMPRESARIAL');
 
     if (this.isCoordinador && !this.isDocente) {
-      this.error = '⚠️ No tienes permisos para ver esta pantalla. Solo Coordinadores con rol de Docente pueden acceder.';
+      this.mostrarModal(
+        'Permisos insuficientes',
+        'No tienes permisos para ver esta pantalla. Solo Coordinadores con rol de Docente pueden acceder.',
+        'warning'
+      );
       this.loading = false;
       this.cdr.markForCheck();
       return;
@@ -99,23 +142,86 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
     this.route.params.subscribe(params => {
       const idParam = params['id'] ? +params['id'] : 0;
-      
+
       if (idParam > 0) {
         this.idVinculacion = idParam;
         this.cargarDatos();
       } else if (this.isEstudiante) {
         this.obtenerVinculacionActiva();
       } else if ((this.isDocente || this.isTutorEmpresarial) && idParam === 0) {
-        this.error = 'Debe seleccionar un estudiante primero.';
+        this.mostrarModal('Sin selección', 'Debe seleccionar un estudiante primero.', 'warning');
         this.loading = false;
         this.cdr.markForCheck();
       }
     });
   }
 
+  // ============================================
+  // MODAL - MÉTODOS
+  // ============================================
+  private mostrarModal(
+    title: string,
+    message: string,
+    type: 'success' | 'error' | 'warning' | 'info' = 'info',
+    buttonText: string = 'Aceptar'
+  ): void {
+    this.modalTitle = title;
+    this.modalMessage = message;
+    this.modalType = type;
+    this.modalButtonText = buttonText;
+    this.showConfirmButtons = false;
+    this.modalConfirmCallback = null;
+    this.modalCancelCallback = null;
+    this.modalVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  private mostrarModalConfirmacion(
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    onCancel?: () => void
+  ): void {
+    this.modalTitle = title;
+    this.modalMessage = message;
+    this.modalType = 'warning';
+    this.modalButtonText = 'Confirmar';
+    this.showConfirmButtons = true;
+    this.modalConfirmCallback = onConfirm;
+    this.modalCancelCallback = onCancel || null;
+    this.modalVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModal(): void {
+    this.modalVisible = false;
+    this.showConfirmButtons = false;
+    this.modalConfirmCallback = null;
+    this.modalCancelCallback = null;
+    this.cdr.markForCheck();
+  }
+
+  confirmarModal(): void {
+    if (this.modalConfirmCallback) {
+      this.modalConfirmCallback();
+    }
+    this.cerrarModal();
+  }
+
+  cancelarModal(): void {
+    if (this.modalCancelCallback) {
+      this.modalCancelCallback();
+    }
+    this.cerrarModal();
+  }
+
+  // ============================================
+  // OBTENER VINCULACIÓN ACTIVA (ESTUDIANTE)
+  // ============================================
   obtenerVinculacionActiva(): void {
     this.loading = true;
     this.cdr.markForCheck();
+
     this.vinculacionService.obtenerVinculacionActiva()
       .pipe(finalize(() => {
         this.loading = false;
@@ -127,44 +233,36 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
             this.idVinculacion = Number(response.id_vinculacion);
             this.cargarDatos();
           } else {
-            this.error = 'No se encontró una vinculación activa para este estudiante.';
+            this.mostrarModal('Sin vinculación', 'No se encontró una vinculación activa para este estudiante.', 'warning');
             this.cdr.markForCheck();
           }
         },
         error: (err) => {
-          console.error('❌ Error al obtener vinculación activa:', err);
-          this.error = 'Error al obtener la vinculación activa.';
+          console.error('Error al obtener vinculación activa:', err);
+          this.mostrarModal('Error', err.error?.message || 'Error al obtener la vinculación activa.', 'error');
           this.cdr.markForCheck();
         }
       });
   }
 
+  // ============================================
+  // CARGAR DATOS
+  // ============================================
   cargarDatos(): void {
     this.loading = true;
     this.error = null;
     this.errorHora = null;
     this.cdr.markForCheck();
-    console.log('🔵 Cargando Registro Asistencia Tutor para vinculación:', this.idVinculacion);
-    
-    console.log('🔵 Cargando fechas del proyecto para ID:', this.idVinculacion);
 
     this.inicioActividadesService.obtenerInicioActividades(this.idVinculacion)
       .subscribe({
         next: (data) => {
-          console.log('📦 Fechas del proyecto recibidas:', data);
-          console.log('📅 fecha_inicio recibida:', data.fecha_inicio);
-          console.log('📅 fecha_fin recibida:', data.fecha_fin);
-          
           this.fechaInicioProyecto = data.fecha_inicio || '';
           this.fechaFinProyecto = data.fecha_fin || '';
-          
-          console.log('✅ fechaInicioProyecto asignada:', this.fechaInicioProyecto);
-          console.log('✅ fechaFinProyecto asignada:', this.fechaFinProyecto);
-          
           this.cdr.markForCheck();
         },
         error: (err) => {
-          console.error('❌ Error al obtener fechas del proyecto:', err);
+          console.error('Error al obtener fechas del proyecto:', err);
           this.fechaInicioProyecto = '';
           this.fechaFinProyecto = '';
           this.cdr.markForCheck();
@@ -178,7 +276,6 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       }))
       .subscribe({
         next: (data) => {
-          console.log('📦 Datos de Asistencia Tutor recibidos:', data);
           this.data = data;
           this.observacionEdit = data.totales.observaciones || '';
           this.observacionOriginal = this.observacionEdit;
@@ -186,16 +283,18 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           this.cdr.markForCheck();
         },
         error: (err) => {
-          console.error('❌ Error al cargar Asistencia Tutor:', err);
-          this.error = 'No se pudo cargar el registro de asistencia del tutor.';
+          console.error('Error al cargar Asistencia Tutor:', err);
+          this.mostrarModal('Error', err.error?.message || 'No se pudo cargar el registro de asistencia del tutor.', 'error');
           this.cdr.markForCheck();
         }
       });
   }
 
+  // ============================================
+  // VALIDACIONES
+  // ============================================
   validarFecha(fecha: string): boolean {
     if (!this.fechaInicioProyecto || !this.fechaFinProyecto) {
-      console.warn('⚠️ No hay fechas de proyecto para validar');
       return true;
     }
 
@@ -208,12 +307,12 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
     fechaFin.setHours(0, 0, 0, 0);
 
     if (fechaActividad < fechaInicio) {
-      alert(`❌ La fecha no puede ser anterior a ${this.formatearFecha(this.fechaInicioProyecto)}`);
+      this.mostrarModal('Fecha inválida', `La fecha no puede ser anterior a ${this.formatearFecha(this.fechaInicioProyecto)}`, 'warning');
       return false;
     }
 
     if (fechaActividad > fechaFin) {
-      alert(`❌ La fecha no puede ser posterior a ${this.formatearFecha(this.fechaFinProyecto)}`);
+      this.mostrarModal('Fecha inválida', `La fecha no puede ser posterior a ${this.formatearFecha(this.fechaFinProyecto)}`, 'warning');
       return false;
     }
 
@@ -223,36 +322,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
   formatearFecha(fecha: string): string {
     if (!fecha) return 'N/A';
     try {
-      console.log('🔍 Formateando fecha:', fecha);
-      
       let fechaStr = fecha;
       if (fecha.includes('T')) {
         fechaStr = fecha.split('T')[0];
       }
-      
       const date = new Date(fechaStr + 'T00:00:00');
-      
-      if (isNaN(date.getTime())) {
-        console.warn('⚠️ Fecha inválida:', fecha);
-        return fecha;
-      }
-      
-      const fechaFormateada = date.toLocaleDateString('es-ES', {
+      if (isNaN(date.getTime())) return fecha;
+      return date.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
       });
-      
-      console.log('✅ Fecha formateada:', fechaFormateada);
-      return fechaFormateada;
-    } catch (error) {
-      console.error('❌ Error al formatear fecha:', error);
+    } catch {
       return fecha;
     }
   }
 
   // ============================================
-  // OBSERVACIONES - AUTO-GUARDADO (SOLO DOCENTE Y TUTOR_EMPRESARIAL)
+  // OBSERVACIONES - AUTO-GUARDADO
   // ============================================
   onObservacionChange(): void {
     if (!this.puedeEditarObservaciones) return;
@@ -289,21 +376,20 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       }))
       .subscribe({
         next: () => {
-          console.log('✅ Observación guardada automáticamente');
           this.observacionOriginal = this.observacionEdit;
           this.observacionGuardada = true;
-          
+
           if (this.data) {
             this.data.totales.observaciones = this.observacionEdit;
           }
-          
+
           this.mostrarFeedback('Observación guardada ✅');
           this.editandoObservacion = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
-          console.error('❌ Error al guardar observación:', err);
-          this.error = 'Error al guardar la observación.';
+          console.error('Error al guardar observación:', err);
+          this.mostrarModal('Error', err.error?.message || 'Error al guardar la observación.', 'error');
           this.observacionGuardada = false;
           this.cdr.markForCheck();
         }
@@ -378,7 +464,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
     this.loading = true;
     this.cdr.markForCheck();
-    
+
     this.service.crearAsistencia(this.nuevaActividad)
       .pipe(finalize(() => {
         this.loading = false;
@@ -389,20 +475,19 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
           this.cargarDatos();
           this.mostrandoFormulario = false;
           this.errorHora = null;
+          this.mostrarModal('Éxito', 'Actividad registrada correctamente.', 'success');
         },
         error: (err) => {
-          console.error('❌ Error al agregar actividad:', err);
-          
-          let mensaje = err.error?.message || err.message || 'Error al agregar actividad.';
-          
-          console.log('📩 Mensaje de error recibido:', mensaje);
-          
-          if (mensaje.includes('Ya existe un registro') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
+          console.error('Error al agregar actividad:', err);
+
+          const mensaje = err.error?.message || err.message || 'Error al agregar actividad.';
+
+          if (mensaje.includes('Ya existe') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
             this.errorHora = '⚠️ ' + mensaje;
           } else {
-            this.error = mensaje;
+            this.mostrarModal('Error', mensaje, 'error');
           }
-          
+
           this.cdr.markForCheck();
         }
       });
@@ -446,7 +531,7 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
     this.loading = true;
     this.cdr.markForCheck();
-    
+
     this.service.actualizarAsistencia(this.editandoId, this.editandoActividad)
       .pipe(finalize(() => {
         this.loading = false;
@@ -456,18 +541,19 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         next: () => {
           this.cargarDatos();
           this.cancelarEdicion();
+          this.mostrarModal('Éxito', 'Actividad actualizada correctamente.', 'success');
         },
         error: (err) => {
-          console.error('❌ Error al actualizar actividad:', err);
-          
-          let mensaje = err.error?.message || err.message || 'Error al actualizar actividad.';
-          
-          if (mensaje.includes('Ya existe un registro') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
+          console.error('Error al actualizar actividad:', err);
+
+          const mensaje = err.error?.message || err.message || 'Error al actualizar actividad.';
+
+          if (mensaje.includes('Ya existe') || mensaje.includes('duplicada') || mensaje.includes('fecha')) {
             this.errorHora = '⚠️ ' + mensaje;
           } else {
-            this.error = mensaje;
+            this.mostrarModal('Error', mensaje, 'error');
           }
-          
+
           this.cdr.markForCheck();
         }
       });
@@ -475,11 +561,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
 
   eliminarActividad(id: number): void {
     if (!this.puedeEditarActividades) return;
-    if (!confirm('¿Está seguro de eliminar esta actividad?')) return;
-    
+
+    this.actividadAEliminar = id;
+
+    this.mostrarModalConfirmacion(
+      'Confirmar eliminación',
+      '¿Está seguro de eliminar esta actividad? Esta acción no se puede deshacer.',
+      () => this.confirmarEliminarActividad(),
+      () => { this.actividadAEliminar = null; }
+    );
+  }
+
+  confirmarEliminarActividad(): void {
+    const id = this.actividadAEliminar;
+    if (id === null) return;
+
     this.loading = true;
     this.cdr.markForCheck();
-    
+
     this.service.eliminarAsistencia(id)
       .pipe(finalize(() => {
         this.loading = false;
@@ -488,19 +587,24 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
       .subscribe({
         next: () => {
           this.cargarDatos();
+          this.mostrarModal('Eliminado', 'Actividad eliminada correctamente.', 'success');
+          this.actividadAEliminar = null;
         },
         error: (err) => {
-          console.error('❌ Error al eliminar actividad:', err);
-          this.error = err.error?.message || 'Error al eliminar actividad.';
+          console.error('Error al eliminar actividad:', err);
+          this.mostrarModal('Error', err.error?.message || 'Error al eliminar actividad.', 'error');
+          this.actividadAEliminar = null;
           this.cdr.markForCheck();
         }
       });
   }
 
-  // ✅ Exportar a Excel (visible para TODOS)
+  // ============================================
+  // EXPORTAR A EXCEL (VISIBLE PARA TODOS)
+  // ============================================
   async exportarExcel(): Promise<void> {
     if (!this.idVinculacion || !this.data) {
-      alert('No hay datos para exportar.');
+      this.mostrarModal('Sin datos', 'No hay datos para exportar.', 'warning');
       return;
     }
     try {
@@ -509,9 +613,10 @@ export class RegistroAsistenciaTutorComponent implements OnInit {
         'R.A.T',
         this.data
       );
+      this.mostrarModal('Éxito', 'Archivo Excel exportado correctamente.', 'success');
     } catch (error) {
-      console.error('❌ Error al exportar Excel:', error);
-      alert('Error al exportar el archivo Excel.');
+      console.error('Error al exportar Excel:', error);
+      this.mostrarModal('Error', 'Error al exportar el archivo Excel.', 'error');
     }
   }
 }

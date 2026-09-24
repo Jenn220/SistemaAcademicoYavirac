@@ -77,7 +77,7 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "buildTarget": "sistema-academico-frontend:build",
+            "buildTarget": "sistema-academico-frontend:build:development",
             "proxyConfig": "proxy.conf.json"
           },
           "configurations": {

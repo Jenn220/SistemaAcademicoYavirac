@@ -59,7 +59,8 @@ CREATE TABLE public.vinculacion_estudiante (
     fecha_fin date NOT NULL,
     total_horas_estudiante numeric(5,2) DEFAULT 0 NOT NULL,
     total_horas_docente numeric(5,2) DEFAULT 0 NOT NULL,
-    estado character varying(30) DEFAULT 'EN_CURSO'::character varying NOT NULL
+    estado character varying(30) DEFAULT 'EN_CURSO'::character varying NOT NULL,
+    editado boolean DEFAULT false NOT NULL  -- 🔥 NUEVO CAMPO
 );
     `);
 

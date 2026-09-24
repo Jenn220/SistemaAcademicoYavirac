@@ -1,0 +1,165 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:17.6-alpine
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - mate_private
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+    deploy:
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+    security_opt:
+      - no-new-privileges:true
+
+
+  backend:
+    image: ghcr.io/jenn220/sistema-academico-backend:${IMAGE_TAG:-develop}
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+
+      CORS_ORIGIN: https://mate.byronrm.com
+
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      COMMIT_SHA: ${COMMIT_SHA:-unknown}
+
+    command:
+      [
+        "sh",
+        "-c",
+        "npm run migration:run:prod && exec node dist/main.js"
+      ]
+
+    networks:
+      - mate_private
+      - traefik-public
+
+    deploy:
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+
+        - "traefik.http.routers.mate-api-secure.rule=Host(`mate.byronrm.com`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.mate-api-secure.entrypoints=https"
+        - "traefik.http.routers.mate-api-secure.tls=true"
+        - "traefik.http.routers.mate-api-secure.tls.certresolver=http"
+        - "traefik.http.routers.mate-api-secure.priority=100"
+        - "traefik.http.routers.mate-api-secure.service=mate-api"
+
+        - "traefik.http.services.mate-api.loadbalancer.server.port=3000"
+
+    security_opt:
+      - no-new-privileges:true
+
+
+  frontend:
+    image: ghcr.io/jenn220/sistema-academico-frontend:${IMAGE_TAG:-develop}
+
+    networks:
+      - traefik-public
+
+    deploy:
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+
+        # HTTP -> HTTPS
+        - "traefik.http.routers.mate-http.rule=Host(`mate.byronrm.com`)"
+        - "traefik.http.routers.mate-http.entrypoints=http"
+        - "traefik.http.routers.mate-http.middlewares=mate-https-redirect"
+        - "traefik.http.routers.mate-http.service=mate-web"
+
+        - "traefik.http.middlewares.mate-https-redirect.redirectscheme.scheme=https"
+
+        # HTTPS Angular
+        - "traefik.http.routers.mate-web-secure.rule=Host(`mate.byronrm.com`)"
+        - "traefik.http.routers.mate-web-secure.entrypoints=https"
+        - "traefik.http.routers.mate-web-secure.tls=true"
+        - "traefik.http.routers.mate-web-secure.tls.certresolver=http"
+        - "traefik.http.routers.mate-web-secure.priority=10"
+        - "traefik.http.routers.mate-web-secure.service=mate-web"
+
+        - "traefik.http.services.mate-web.loadbalancer.server.port=80"
+
+
+volumes:
+
+  postgres_data:
+    name: mate_postgres_data
+
+
+networks:
+
+  mate_private:
+    driver: overlay
+
+  traefik-public:
+    external: true

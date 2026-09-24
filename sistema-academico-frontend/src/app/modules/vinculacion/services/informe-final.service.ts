@@ -21,7 +21,7 @@ export interface EvaluacionParams {
 @Injectable({ providedIn: 'root' })
 export class InformeFinalService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api';  // ← Aquí está la corrección
+  private apiUrl = '/api';  // ← Aquí está la corrección
 
   obtenerInformeFinal(idVinculacion: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/vinculacion/informe-final/${idVinculacion}`);

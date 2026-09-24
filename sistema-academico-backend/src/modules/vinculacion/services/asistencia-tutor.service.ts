@@ -1,3 +1,5 @@
+
+
 import { 
   Injectable, 
   Inject, 
@@ -26,6 +28,30 @@ export class AsistenciaTutorService {
     @InjectRepository(VinculacionEstudianteEntity)
     private readonly vinculacionRepo: Repository<VinculacionEstudianteEntity>,
   ) {}
+
+  // ========== MÉTODO AUXILIAR: VALIDAR SI EL PERÍODO ESTÁ ACTIVO ==========
+  private async validarPeriodoActivoPorVinculacion(idVinculacion: number) {
+    const query = `
+      SELECT pc.estado AS estado_periodo
+      FROM vinculacion_estudiante vinc
+      INNER JOIN matricula_detalle md ON md.id_matricula_detalle = vinc.id_matricula_detalle
+      INNER JOIN oferta_asignatura oa ON oa.id_oferta_asignatura = md.id_oferta_asignatura
+      INNER JOIN periodo_carrera pc ON pc.id_periodo_carrera = oa.id_periodo_carrera
+      WHERE vinc.id_vinculacion = $1
+      LIMIT 1
+    `;
+    const resultado = await this.vinculacionRepo.query(query, [idVinculacion]);
+    
+    if (resultado.length === 0) {
+      throw new NotFoundException(`No se encontró la vinculación con ID ${idVinculacion}`);
+    }
+
+    const estadoPeriodo = resultado[0].estado_periodo;
+
+    if (estadoPeriodo === 'FINALIZADO') {
+      throw new BadRequestException('No se puede realizar esta acción porque el período académico/carrera se encuentra FINALIZADO.');
+    }
+  }
 
   // ========== CALCULAR DIFERENCIA DE HORAS ==========
   private calcularDiferenciaHoras(horaInicio: string, horaFin: string): number {
@@ -136,10 +162,13 @@ export class AsistenciaTutorService {
     }
   }
 
-  // ========== CREAR ASISTENCIA TUTOR ==========
+  // ========== CREAR ASISTENCIA TUTOR (BLOQUEA SI FINALIZADO) ==========
   async crearAsistenciaTutor(datos: CreateAsistenciaTutorDto) {
     try {
       if (datos.id_vinculacion) {
+        // Validar que el período esté activo antes de permitir el POST
+        await this.validarPeriodoActivoPorVinculacion(datos.id_vinculacion);
+
         const existeFecha = await this.repository.buscarPorFechaYVinculacion(
           datos.id_vinculacion,
           datos.fecha
@@ -166,7 +195,7 @@ export class AsistenciaTutorService {
         data: resultado 
       };
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof ConflictException) {
+      if (error instanceof BadRequestException || error instanceof ConflictException || error instanceof NotFoundException) {
         throw error;
       }
 
@@ -180,15 +209,25 @@ export class AsistenciaTutorService {
     }
   }
 
-  // ========== ACTUALIZAR ASISTENCIA TUTOR ==========
-  async actualizarAsistenciaTutor(id: number, datos: UpdateAsistenciaTutorDto) {
+  // ========== ACTUALIZAR ASISTENCIA TUTOR (BLOQUEA SI FINALIZADO) ==========
+async actualizarAsistenciaTutor(id: number, datos: UpdateAsistenciaTutorDto) {
     try {
       const registroActual = await this.repository.buscarPorId(id);
       if (!registroActual) {
         throw new NotFoundException(`El registro de asistencia con ID ${id} no existe.`);
       }
 
+      // 🛡️ Corregido a 'actividad_realizada' (singular)
+      if (datos.actividad_realizada !== undefined) {
+        if (!datos.actividad_realizada || datos.actividad_realizada.trim() === '') {
+          throw new BadRequestException('El nombre o descripción de la actividad no puede estar vacío.');
+        }
+      }
+
       const idVinculacion = datos.id_vinculacion || registroActual.id_vinculacion;
+
+      // Validar que el período esté activo antes de permitir el PATCH
+      await this.validarPeriodoActivoPorVinculacion(idVinculacion);
 
       const fechaActualStr = registroActual.fecha instanceof Date
         ? registroActual.fecha.toISOString().split('T')[0]
@@ -244,16 +283,24 @@ export class AsistenciaTutorService {
     }
   }
 
-  // ========== ELIMINAR ASISTENCIA TUTOR ==========
+  // ========== ELIMINAR ASISTENCIA TUTOR (BLOQUEA SI FINALIZADO) ==========
   async eliminarAsistenciaTutor(id: number) {
     try {
+      const registroActual = await this.repository.buscarPorId(id);
+      if (!registroActual) {
+        throw new NotFoundException(`El registro de asistencia con ID ${id} no existe.`);
+      }
+
+      // Validar que el período esté activo antes de permitir el DELETE
+      await this.validarPeriodoActivoPorVinculacion(registroActual.id_vinculacion);
+
       const eliminado = await this.repository.eliminarAsistenciaTutor(id);
       if (!eliminado) {
         throw new NotFoundException(`El registro de asistencia con ID ${id} no existe.`);
       }
       return { statusCode: 200, message: `Asistencia con ID ${id} eliminada exitosamente.` };
     } catch (error) {
-      if (error instanceof NotFoundException) throw error;
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
 
       const mensaje = error instanceof Error ? error.message : String(error);
 
@@ -273,7 +320,9 @@ export class AsistenciaTutorService {
 
   async actualizarObservacion(idVinculacion: number, observaciones: string) {
     try {
-      // 1. Verificar si ya existe una observación para esta vinculación y tipo de reporte
+      // Validar que el período esté activo antes de modificar observaciones
+      await this.validarPeriodoActivoPorVinculacion(idVinculacion);
+
       const querySelect = `
         SELECT id_observacion FROM vinculacion_reporte_observacion 
         WHERE id_vinculacion = $1 AND tipo_reporte = $2 
@@ -282,7 +331,6 @@ export class AsistenciaTutorService {
       const existente = await this.vinculacionRepo.query(querySelect, [idVinculacion, 'ASISTENCIA_TUTOR']);
 
       if (existente && existente.length > 0) {
-        // 2. Si existe, actualizamos
         const queryUpdate = `
           UPDATE vinculacion_reporte_observacion 
           SET observacion = $3 
@@ -290,7 +338,6 @@ export class AsistenciaTutorService {
         `;
         await this.vinculacionRepo.query(queryUpdate, [idVinculacion, 'ASISTENCIA_TUTOR', observaciones]);
       } else {
-        // 3. Si no existe, insertamos
         const queryInsert = `
           INSERT INTO vinculacion_reporte_observacion (id_vinculacion, tipo_reporte, observacion)
           VALUES ($1, $2, $3);

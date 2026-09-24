@@ -562,6 +562,93 @@
       font-size: 14px;
       font-weight: 600;
     }
+
+        // ============================================
+    // BOTONES DE EDICIÓN DE OBSERVACIONES (ACTIVIDADES)
+    // - ESTILO IGUAL AL DE ✏️ Editar Objetivos
+    // ============================================
+    .input-observacion-edit {
+      width: 100%;
+      min-width: 150px;
+      padding: 0.3rem 0.5rem;
+      border: 2px solid #28a745;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Times New Roman', Times, serif;
+      background: #fafffe;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #163d8c;
+        box-shadow: 0 0 0 4px rgba(22, 61, 140, 0.06);
+      }
+    }
+
+    .btn-edit-obs-actividad {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: #163d8c;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+
+      &:hover {
+        background: #e8f0fe;
+        color: #0f2d66;
+        transform: scale(1.1);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .btn-save-obs-actividad {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #28a745;
+      color: #ffffff;
+      border: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+
+      &:hover {
+        background: #1e7e34;
+        transform: scale(1.05);
+      }
+    }
+
+    .btn-cancel-obs-actividad {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #6c757d;
+      color: #ffffff;
+      border: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #5a6268;
+        transform: scale(1.05);
+      }
+    }
   }
 
   // ============================================

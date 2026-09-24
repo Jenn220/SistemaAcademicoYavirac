@@ -30,7 +30,7 @@ export class UpdateActividadEstudianteDto {
   @IsNumber({}, { message: 'El total de horas debe ser un número.' })
   horas_total?: number; 
 
-  @IsOptional()
+ @IsOptional()
   @IsString()
   actividades_realizadas?: string;
   

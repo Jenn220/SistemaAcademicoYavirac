@@ -14,7 +14,7 @@ export class InicioActividadesTutorAdapter implements IVinculacionInicioActivida
 
   async obtenerIniciosActividadesPorDocenteRaw(idDocente: number): Promise<any> {
     const query = `
-      SELECT 
+      SELECT
         vinc.id_vinculacion,
         vinc.nombre_proyecto,
         vinc.fecha_inicio,
@@ -27,20 +27,22 @@ export class InicioActividadesTutorAdapter implements IVinculacionInicioActivida
     `;
     return await this.repo.query(query, [idDocente]);
   }
-async obtainInicioActividadesTutorRaw(idVinculacion: number): Promise<any> {
+
+  async obtainInicioActividadesTutorRaw(idVinculacion: number): Promise<any> {
     const query = `
-      SELECT 
+      SELECT
         CONCAT(doc.nombres, ' ', doc.apellidos) AS tutor_nombre,
         doc.cedula AS tutor_cedula,
         vinc.nombre_proyecto AS proyecto_nombre,
         vinc.fecha_inicio AS fecha_proyecto,
-        vinc.fecha_fin, -- 👈 AGREGA ESTA LÍNEA AQUÍ
+        vinc.fecha_fin,
+        vinc.editado,  -- 🔥 AGREGADO
         car.nombre AS carrera,
         inf.actividad_macro AS descripcion_actividades,
         COALESCE(er.nombre_entidad, emp.razon_social, 'Sin Institución Asignada') AS entidad_beneficiaria,
         er.tutor_entidad_receptora AS tutor_entidad,
         COALESCE(
-          NULLIF(TRIM(CONCAT(coord.nombres, ' ', coord.apellidos)), ''), 
+          NULLIF(TRIM(CONCAT(coord.nombres, ' ', coord.apellidos)), ''),
           'Sin Coordinador Asignado'
         ) AS coordinador
       FROM vinculacion_estudiante vinc
@@ -60,38 +62,47 @@ async obtainInicioActividadesTutorRaw(idVinculacion: number): Promise<any> {
     return rows.length > 0 ? rows[0] : null;
   }
 
-// Inicio-Actividades-Tutor.ts (Adapter)
-async actualizarInicioActividadesRaw(
-  idVinculacion: number,
-  datos: { nombre_proyecto?: string; fecha_inicio?: string; fecha_fin?: string }
-): Promise<boolean> {
-  const { nombre_proyecto, fecha_inicio, fecha_fin } = datos;
+  async actualizarInicioActividadesRaw(
+    idVinculacion: number,
+    datos: { nombre_proyecto?: string; fecha_inicio?: string; fecha_fin?: string }
+  ): Promise<boolean> {
+    const { nombre_proyecto, fecha_inicio, fecha_fin } = datos;
 
-  // ✅ AGREGAR fecha_inicio al UPDATE
-  const query = `
-    UPDATE vinculacion_estudiante
-    SET 
-      nombre_proyecto = COALESCE($1, nombre_proyecto),
-      fecha_inicio = COALESCE($2, fecha_inicio),
-      fecha_fin = COALESCE($3, fecha_fin)
-    WHERE id_vinculacion = $4;
-  `;
-  
-  await this.repo.query(query, [
-    nombre_proyecto ?? null,
-    fecha_inicio ?? null,  // ✅ AGREGADO
-    fecha_fin ?? null,
-    idVinculacion,
-  ]);
+    const query = `
+      UPDATE vinculacion_estudiante
+      SET
+        nombre_proyecto = COALESCE($1, nombre_proyecto),
+        fecha_inicio = COALESCE($2, fecha_inicio),
+        fecha_fin = COALESCE($3, fecha_fin)
+      WHERE id_vinculacion = $4;
+    `;
 
-  return true;
-}
+    await this.repo.query(query, [
+      nombre_proyecto ?? null,
+      fecha_inicio ?? null,
+      fecha_fin ?? null,
+      idVinculacion,
+    ]);
+
+    return true;
+  }
+
   async actualizarFechaFin(idVinculacion: number, fechaFin: string): Promise<void> {
-  const query = `
-    UPDATE vinculacion_estudiante 
-    SET fecha_fin = $1 
-    WHERE id_vinculacion = $2
-  `;
-  await this.repo.query(query, [fechaFin, idVinculacion]);
-}
+    const query = `
+      UPDATE vinculacion_estudiante
+      SET fecha_fin = $1
+      WHERE id_vinculacion = $2
+    `;
+    await this.repo.query(query, [fechaFin, idVinculacion]);
+  }
+
+  // 🔥 NUEVO MÉTODO: Marcar como editado
+  async marcarComoEditado(idVinculacion: number): Promise<void> {
+    const query = `
+      UPDATE vinculacion_estudiante
+      SET editado = true
+      WHERE id_vinculacion = $1
+    `;
+    await this.repo.query(query, [idVinculacion]);
+  }
 }

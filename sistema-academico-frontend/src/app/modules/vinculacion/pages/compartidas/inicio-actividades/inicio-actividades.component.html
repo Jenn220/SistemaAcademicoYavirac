@@ -1,12 +1,15 @@
 <div class="inicio-actividades-container">
-  <div *ngIf="isLoading" class="loading">Cargando...</div>
-  
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    Cargando...
+  </div>
+
   <div *ngIf="!isLoading && error" class="error">{{ error }}</div>
-  
+
   <div *ngIf="!isLoading && !error && data" class="documento">
     <app-volver-archivos *ngIf="isDocente" />
-    
-    <!-- ✅ BOTÓN DE EXPORTACIÓN A EXCEL -->
+
+    <!-- BOTÓN DE EXPORTACIÓN A EXCEL -->
     <div class="acciones-export">
       <button (click)="exportarExcel()" class="btn-export-excel" title="Exportar a Excel">
         📊 Exportar a Excel
@@ -24,8 +27,8 @@
     </div>
 
     <div class="contenido">
-      
-      <!-- ✅ BOTÓN DE EDICIÓN ARRIBA (SOLO DOCENTE) -->
+
+      <!-- BOTÓN DE EDICIÓN ARRIBA (SOLO DOCENTE) -->
       <div *ngIf="isDocente" class="seccion acciones-top">
         <div *ngIf="!editMode">
           <div *ngIf="isEditingEnabled" class="accion-editar-top">
@@ -57,22 +60,22 @@
         <p><strong>{{ data.proyecto_nombre }}</strong></p>
       </div>
 
-      <!-- Fecha -->
+      <!-- Fecha - AHORA USA FECHA ACTUAL -->
       <div class="seccion">
-        <p><strong>Fecha:</strong> {{ formatearFecha(data.fecha_inicio) }}</p>
+        <p><strong>Fecha:</strong> {{ fechaActual }}</p>
       </div>
 
       <!-- Cuerpo del documento -->
       <div class="seccion">
         <p>
-          Yo, <strong>{{ data.tutor_nombre }}</strong> con C.I. Nro. 
+          Yo, <strong>{{ data.tutor_nombre }}</strong> con C.I. Nro.
           <strong>{{ data.tutor_cedula }}</strong>
           tengo a bien informar que siguiendo con el cronograma de actividades establecido en el proyecto de vinculación:
         </p>
         <p><strong>{{ data.proyecto_nombre }}</strong></p>
         <p>
-          Informo que el día de hoy 
-          <strong>{{ formatearFecha(data.fecha_inicio) }}</strong> del año en curso,
+          Informo que el día de hoy
+          <strong>{{ fechaActual }}</strong> del año en curso,
           se procedió a dar inicio con el desarrollo del mismo.
         </p>
       </div>
@@ -96,43 +99,42 @@
         <p><strong>Carrera:</strong> {{ data.carrera }}</p>
         <p><strong>Entidad Beneficiaria:</strong> {{ data.entidad_beneficiaria }}</p>
         <p><strong>Tutor Entidad Receptora:</strong> {{ data.tutor_entidad || 'Sin asignar' }}</p>
-        
+
         <div class="campo-editable">
           <label for="nombre_proyecto">
             <strong>Nombre del Proyecto</strong>
             <span class="required">*</span>
           </label>
-          <input 
+          <input
             id="nombre_proyecto"
-            type="text" 
+            type="text"
             [(ngModel)]="editedFields.nombre_proyecto"
             placeholder="Ingrese el nombre del proyecto"
             class="input-text"
           />
         </div>
-        
-        <!-- ✅ NUEVO CAMPO: Fecha de Inicio -->
+
         <div class="campo-editable">
           <label for="fecha_inicio">
             <strong>Fecha de Inicio</strong>
             <span class="required">*</span>
           </label>
-          <input 
+          <input
             id="fecha_inicio"
-            type="date" 
+            type="date"
             [(ngModel)]="editedFields.fecha_inicio"
             class="input-date"
           />
         </div>
-        
+
         <div class="campo-editable">
           <label for="fecha_fin">
             <strong>Fecha de Finalización</strong>
             <span class="required">*</span>
           </label>
-          <input 
+          <input
             id="fecha_fin"
-            type="date" 
+            type="date"
             [(ngModel)]="editedFields.fecha_fin"
             class="input-date"
           />
@@ -142,15 +144,15 @@
         </div>
 
         <div class="botones-accion">
-          <button 
-            class="btn-guardar" 
+          <button
+            class="btn-guardar"
             (click)="guardarCambios()"
             [disabled]="isLoading">
             <span *ngIf="!isLoading">💾 Guardar Cambios</span>
             <span *ngIf="isLoading">⏳ Guardando...</span>
           </button>
-          <button 
-            class="btn-cancelar" 
+          <button
+            class="btn-cancelar"
             (click)="cancelarEdicion()"
             [disabled]="isLoading">
             ❌ Cancelar
@@ -188,9 +190,18 @@
         <p><strong>{{ data.tutor_nombre }}</strong></p>
         <p>TUTOR DEL PROYECTO</p>
       </div>
-      
+
     </div>
   </div>
 
   <div *ngIf="!isLoading && !error && !data" class="sin-datos">No hay datos disponibles</div>
 </div>
+
+<!-- ✅ MODAL -->
+<app-modal
+  *ngIf="modalVisible"
+  [title]="modalTitle"
+  [message]="modalMessage"
+  [type]="modalType"
+  (onClose)="cerrarModal()">
+</app-modal>
