@@ -323,11 +323,27 @@
                 <tr class="fila-autonomas">
 
                     <td>{{ registro.registros.length + 1 }}</td>
-                    <td>{{ registro.registros[0]?.fecha }} - {{ registro.registros[registro.registros.length - 1]?.fecha }}</td>
+                    <td class="celda-rango-fechas">
+                      @if(esEstudiante && editando){
+                        <div class="rango-fechas">
+                          <input type="date" class="form-control form-control-sm" [(ngModel)]="registro.fechaHorasAutonomasDesde" />
+                          <span>-</span>
+                          <input type="date" class="form-control form-control-sm" [(ngModel)]="registro.fechaHorasAutonomasHasta" />
+                        </div>
+                      } @else {
+                        {{ registro.fechaHorasAutonomasDesde }} - {{ registro.fechaHorasAutonomasHasta }}
+                      }
+                    </td>
                     <td>-</td>
                     <td>-</td>
                     <td>-</td>
-                    <td>{{ registro.horasAutonomas }}</td>
+                    <td class="celda-horas-dia">
+                      @if(esEstudiante && editando){
+                        <input type="number" class="form-control form-control-sm campo-horas-dia" [(ngModel)]="registro.horasAutonomas" min="0" />
+                      } @else {
+                        {{ registro.horasAutonomas }}
+                      }
+                    </td>
                     <td></td>
                     <td>HORAS AUTÓNOMAS</td>
 
@@ -345,7 +361,7 @@
 
             </strong>
 
-            {{ registro.subtotalHorasPractica }}
+            {{ totalHorasFasePractica }}
 
         </div>
 
