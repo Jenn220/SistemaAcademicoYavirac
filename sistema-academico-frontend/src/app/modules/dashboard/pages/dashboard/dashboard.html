@@ -1,11 +1,17 @@
 <div class="dashboard">
+
+  <!-- =====================================================
+       HERO
+       ===================================================== -->
   <section class="hero">
+
     <!-- Bienvenida -->
     <div class="welcome-card">
       <h1>
         ¡Bienvenido (a){{ nombreUsuario !== 'Usuario' ? ', ' + nombreUsuario : '' }}!
         <span>👋</span>
       </h1>
+
       <p>
         Nos alegra tenerte de vuelta.
         Aquí tienes un resumen de lo más importante de hoy.
@@ -14,93 +20,252 @@
 
     <!-- Banner -->
     <div class="banner-card">
+
       <div class="banner-content">
         <h2>Formamos profesionales</h2>
+
         <h3>
           comprometidos con el
           <br>
           desarrollo y la sociedad
         </h3>
       </div>
-      <img src="assets/images/plano.png" alt="Banner">
+
+      <img
+        src="assets/images/plano.png"
+        alt="Banner institucional"
+      >
+
     </div>
+
   </section>
 
-  <!-- Loading -->
-  <div *ngIf="isLoading" class="loading-spinner">
+
+  <!-- =====================================================
+       LOADING
+       ===================================================== -->
+  <div
+    *ngIf="isLoading"
+    class="loading-spinner"
+  >
     Cargando estadísticas...
   </div>
 
-  <!-- Error -->
-  <div *ngIf="error" class="error-message">
+
+  <!-- =====================================================
+       ERROR
+       ===================================================== -->
+  <div
+    *ngIf="error"
+    class="error-message"
+  >
     {{ error }}
   </div>
 
-  <!-- Stats Grid -->
-  <section class="stats-grid" *ngIf="!isLoading">
+
+  <!-- =====================================================
+       ESTADÍSTICAS
+       ===================================================== -->
+  <section
+    class="stats-grid"
+    *ngIf="!isLoading"
+  >
+
+    <!-- ESTUDIANTES -->
     <div class="stat-card">
-      <div class="stat-icon orange">👥</div>
-      <div class="stat-content">
-        <span class="stat-title">Total de estudiantes</span>
-        <div class="stat-number">{{ stats.estudiantes.total }}</div>
-        <div class="stat-growth positive">↗ +{{ stats.estudiantes.crecimiento }}%</div>
-        <small>vs. mes anterior</small>
+
+      <div class="stat-icon orange">
+        👥
       </div>
+
+      <div class="stat-content">
+
+        <span class="stat-title">
+          Total de estudiantes
+        </span>
+
+        <div class="stat-number">
+          {{ stats.estudiantes.total }}
+        </div>
+
+        <div class="stat-growth positive">
+          ↗ +{{ stats.estudiantes.crecimiento }}%
+        </div>
+
+        <small>
+          vs. mes anterior
+        </small>
+
+      </div>
+
       <div class="mini-chart orange-chart"></div>
+
     </div>
 
+
+    <!-- DOCENTES -->
     <div class="stat-card">
-      <div class="stat-icon blue">🎓</div>
-      <div class="stat-content">
-        <span class="stat-title">Total de docentes</span>
-        <div class="stat-number">{{ stats.docentes.total }}</div>
-        <div class="stat-growth positive">↗ +{{ stats.docentes.crecimiento }}%</div>
-        <small>vs. mes anterior</small>
+
+      <div class="stat-icon blue">
+        🎓
       </div>
+
+      <div class="stat-content">
+
+        <span class="stat-title">
+          Total de docentes
+        </span>
+
+        <div class="stat-number">
+          {{ stats.docentes.total }}
+        </div>
+
+        <div class="stat-growth positive">
+          ↗ +{{ stats.docentes.crecimiento }}%
+        </div>
+
+        <small>
+          vs. mes anterior
+        </small>
+
+      </div>
+
       <div class="mini-chart blue-chart"></div>
+
     </div>
 
+
+    <!-- CARRERAS -->
     <div class="stat-card">
-      <div class="stat-icon orange">📚</div>
-      <div class="stat-content">
-        <span class="stat-title">Carreras activas</span>
-        <div class="stat-number">{{ stats.carreras.total }}</div>
-        <div class="stat-growth positive">↗ +{{ stats.carreras.crecimiento }}</div>
-        <small>vs. mes anterior</small>
+
+      <div class="stat-icon orange">
+        📚
       </div>
+
+      <div class="stat-content">
+
+        <span class="stat-title">
+          Carreras activas
+        </span>
+
+        <div class="stat-number">
+          {{ stats.carreras.total }}
+        </div>
+
+        <div class="stat-growth positive">
+          ↗ +{{ stats.carreras.crecimiento }}
+        </div>
+
+        <small>
+          vs. mes anterior
+        </small>
+
+      </div>
+
       <div class="mini-chart orange-chart"></div>
+
     </div>
 
+
+    <!-- MATERIAS -->
     <div class="stat-card">
-      <div class="stat-icon blue">📖</div>
-      <div class="stat-content">
-        <span class="stat-title">Materias registradas</span>
-        <div class="stat-number">{{ stats.materias.total }}</div>
-        <div class="stat-growth positive">↗ +{{ stats.materias.crecimiento }}%</div>
-        <small>vs. mes anterior</small>
+
+      <div class="stat-icon blue">
+        📖
       </div>
+
+      <div class="stat-content">
+
+        <span class="stat-title">
+          Materias registradas
+        </span>
+
+        <div class="stat-number">
+          {{ stats.materias.total }}
+        </div>
+
+        <div class="stat-growth positive">
+          ↗ +{{ stats.materias.crecimiento }}%
+        </div>
+
+        <small>
+          vs. mes anterior
+        </small>
+
+      </div>
+
       <div class="mini-chart blue-chart"></div>
+
     </div>
+
   </section>
 
+
+  <!-- =====================================================
+       MISIÓN / VISIÓN + VALORES
+       ===================================================== -->
   <section class="bottom-section">
+
+    <!-- ===================================================
+         MISIÓN Y VISIÓN
+         =================================================== -->
     <div class="vision-card">
-      <h2>Visión institucional</h2>
-      <p>
-        Transformamos el futuro a través de la excelencia y el rigor académico.
-      </p>
+
+      <!-- Misión -->
+      <div class="vision-block">
+
+        <h2>
+          Misión institucional
+        </h2>
+
+        <p>
+          Formar profesionales de excelencia enfocados en
+          Ciencia, Tecnología y Sociedad.
+        </p>
+
+      </div>
+
+
+      <!-- Visión -->
+      <div class="vision-block">
+
+        <h2>
+          Visión institucional
+        </h2>
+
+        <p>
+          Al 2027, ser una institución de vanguardia en la
+          formación tecnológica y conservación del patrimonio.
+        </p>
+
+      </div>
+
     </div>
+
+
+    <!-- ===================================================
+         VALORES INSTITUCIONALES
+         =================================================== -->
     <div class="values-card">
-      <h1>
-        EXCELENCIA
-        <span>•</span>
-        INNOVACIÓN
-        <span>•</span>
-        COMPROMISO
-      </h1>
+
+      <div class="values-header">
+
+        <h1>
+          Liderazgo
+          <span>•</span>
+          Innovación
+          <span>•</span>
+          Compromiso
+        </h1>
+
+      </div>
+
       <div class="values-bar">
         <div class="gradient"></div>
       </div>
+
     </div>
+
   </section>
+
 </div>
