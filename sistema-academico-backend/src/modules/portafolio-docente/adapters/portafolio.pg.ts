@@ -48,7 +48,7 @@ async findOfertasByDocente(idDocente: number): Promise<OfertaDocenteDto[]> {
   );
 }
 
-  async findEstudiantesByOferta(idOfertaAsignatura: number): Promise<EstudianteOfertaDto[]> {
+  async findEstudiantesByOferta(idOfertaAsignatura: number, idDocente: number): Promise<EstudianteOfertaDto[]> {
     return this.dataSource.query(
       `
       SELECT
@@ -60,10 +60,11 @@ async findOfertasByDocente(idDocente: number): Promise<OfertaDocenteDto[]> {
       FROM matricula_detalle md
       JOIN matricula  m ON md.id_matricula = m.id_matricula
       JOIN estudiante e ON m.id_estudiante = e.id_estudiante
-      WHERE md.id_oferta_asignatura = $1
+      JOIN oferta_asignatura oa ON md.id_oferta_asignatura = oa.id_oferta_asignatura
+      WHERE md.id_oferta_asignatura = $1 AND oa.id_docente = $2
       ORDER BY e.apellidos, e.nombres
       `,
-      [idOfertaAsignatura],
+      [idOfertaAsignatura, idDocente],
     );
   }
 

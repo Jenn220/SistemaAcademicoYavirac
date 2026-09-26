@@ -23,7 +23,15 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
     return count > 0;
   }
 
-  async generarReporte(dto: CreateReporteNotasDto): Promise<ReporteNotasResponseDto> {
+  async generarReporte(dto: CreateReporteNotasDto, idDocente: number): Promise<ReporteNotasResponseDto> {
+    const oferta = await this.dataSource.query(
+      `SELECT 1 FROM oferta_asignatura WHERE id_oferta_asignatura = $1 AND id_docente = $2`,
+      [dto.id_oferta_asignatura, idDocente],
+    );
+    if (!oferta.length) {
+      throw new NotFoundException('La oferta académica no existe o no pertenece a este docente');
+    }
+
     await this.dataSource.transaction(async (manager) => {
       const reporte = manager.create(PortafolioReporteNotas, {
         idPeriodo: dto.id_periodo,
@@ -53,11 +61,24 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
       }
     });
 
-    const reporteCreado = await this.findByOfertaAndTipo(dto.id_oferta_asignatura, dto.tipo_reporte);
+    const reporteCreado = await this.findByOfertaAndTipo(dto.id_oferta_asignatura, dto.tipo_reporte, idDocente);
     return reporteCreado!;
   }
 
-  async actualizarNotas(idReporteNotas: number, estudiantes: NotaEstudianteDto[]): Promise<void> {
+  async actualizarNotas(idReporteNotas: number, idDocente: number, estudiantes: NotaEstudianteDto[]): Promise<void> {
+    const reporte = await this.dataSource.query(
+      `
+      SELECT prn.id_reporte_notas
+      FROM portafolio_reporte_notas prn
+      JOIN oferta_asignatura oa ON prn.id_oferta_asignatura = oa.id_oferta_asignatura
+      WHERE prn.id_reporte_notas = $1 AND oa.id_docente = $2
+      `,
+      [idReporteNotas, idDocente],
+    );
+    if (!reporte.length) {
+      throw new NotFoundException('El reporte de notas no existe o no pertenece a este docente');
+    }
+
     await this.dataSource.transaction(async (manager) => {
       for (const est of estudiantes) {
         const resultado = await manager.query(
@@ -82,6 +103,7 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
   async findByOfertaAndTipo(
     idOfertaAsignatura: number,
     tipoReporte: string,
+    idDocente: number,
   ): Promise<ReporteNotasResponseDto | null> {
     const cabecera = await this.dataSource.query(
       `
@@ -108,9 +130,9 @@ export class AceptacionNotasPg implements IAceptacionNotasRepository {
       JOIN periodo_academico pa ON prn.id_periodo = pa.id_periodo
       LEFT JOIN periodo_carrera pc ON pc.id_periodo = prn.id_periodo AND pc.id_carrera = c.id_carrera
       LEFT JOIN docente co         ON pc.id_coordinador = co.id_docente
-      WHERE prn.id_oferta_asignatura = $1 AND prn.tipo_reporte = $2
+      WHERE prn.id_oferta_asignatura = $1 AND prn.tipo_reporte = $2 AND oa.id_docente = $3
       `,
-      [idOfertaAsignatura, tipoReporte],
+      [idOfertaAsignatura, tipoReporte, idDocente],
     );
 
     if (!cabecera.length) return null;

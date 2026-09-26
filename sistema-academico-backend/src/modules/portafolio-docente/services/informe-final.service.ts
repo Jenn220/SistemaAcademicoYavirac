@@ -17,11 +17,11 @@ export class InformeFinalService {
     return informe;
   }
 
-  async createInformeFinal(dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal> {
-    return this.informeFinalRepo.create(dto);
+  async createInformeFinal(idDocente: number, dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal> {
+    return this.informeFinalRepo.create(idDocente, dto);
   }
 
-  async actualizarHorario(idInformeFinal: number, horario: string): Promise<PortafolioInformeFinal> {
-    return this.informeFinalRepo.updateHorario(idInformeFinal, horario);
+  async actualizarHorario(idInformeFinal: number, idDocente: number, horario: string): Promise<PortafolioInformeFinal> {
+    return this.informeFinalRepo.updateHorario(idInformeFinal, idDocente, horario);
   }
 }

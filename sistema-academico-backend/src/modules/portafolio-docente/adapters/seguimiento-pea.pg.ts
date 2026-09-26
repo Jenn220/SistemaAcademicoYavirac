@@ -19,7 +19,8 @@ export class SeguimientoPeaPg implements ISeguimientoPeaRepository {
     return count > 0;
   }
 
-  async create(dto: CreateSeguimientoPeaDto): Promise<SeguimientoPeaResponseDto> {
+  async create(dto: CreateSeguimientoPeaDto, idDocente: number): Promise<SeguimientoPeaResponseDto> {
+    await this.verificarOfertaDelDocente(dto.id_oferta_asignatura, idDocente);
     await this.verificarRepresentanteMatriculado(dto.id_oferta_asignatura, dto.id_representante);
 
     await this.repo.save(
@@ -29,22 +30,23 @@ export class SeguimientoPeaPg implements ISeguimientoPeaRepository {
       }),
     );
 
-    const creado = await this.findByOferta(dto.id_oferta_asignatura);
+    const creado = await this.findByOferta(dto.id_oferta_asignatura, idDocente);
     return creado!;
   }
 
-  async updateRepresentante(idSeguimientoPea: number, idRepresentante: number): Promise<void> {
+  async updateRepresentante(idSeguimientoPea: number, idDocente: number, idRepresentante: number): Promise<void> {
     const seguimiento = await this.repo.findOneBy({ idSeguimientoPea });
     if (!seguimiento) {
       throw new NotFoundException(`No existe el seguimiento PEA con id ${idSeguimientoPea}`);
     }
 
+    await this.verificarOfertaDelDocente(seguimiento.idOfertaAsignatura, idDocente, idSeguimientoPea);
     await this.verificarRepresentanteMatriculado(seguimiento.idOfertaAsignatura, idRepresentante);
 
     await this.repo.update({ idSeguimientoPea }, { idRepresentante });
   }
 
-  async findByOferta(idOfertaAsignatura: number): Promise<SeguimientoPeaResponseDto | null> {
+  async findByOferta(idOfertaAsignatura: number, idDocente: number): Promise<SeguimientoPeaResponseDto | null> {
     const result = await this.dataSource.query(
       `
       SELECT
@@ -68,9 +70,9 @@ export class SeguimientoPeaPg implements ISeguimientoPeaRepository {
       JOIN periodo_academico pa ON pc.id_periodo = pa.id_periodo
       JOIN docente d            ON oa.id_docente = d.id_docente
       LEFT JOIN estudiante e    ON psp.id_representante = e.id_estudiante
-      WHERE psp.id_oferta_asignatura = $1
+      WHERE psp.id_oferta_asignatura = $1 AND oa.id_docente = $2
       `,
-      [idOfertaAsignatura],
+      [idOfertaAsignatura, idDocente],
     );
 
     if (!result.length) return null;
@@ -92,6 +94,25 @@ export class SeguimientoPeaPg implements ISeguimientoPeaRepository {
         email: row.email,
       },
     };
+  }
+
+  private async verificarOfertaDelDocente(
+    idOfertaAsignatura: number,
+    idDocente: number,
+    idSeguimientoPea?: number,
+  ): Promise<void> {
+    const pertenece = await this.dataSource.query(
+      `SELECT 1 FROM oferta_asignatura WHERE id_oferta_asignatura = $1 AND id_docente = $2`,
+      [idOfertaAsignatura, idDocente],
+    );
+
+    if (!pertenece.length) {
+      throw new NotFoundException(
+        idSeguimientoPea
+          ? `No existe el seguimiento PEA con id ${idSeguimientoPea} para este docente`
+          : 'La oferta académica no existe o no pertenece a este docente',
+      );
+    }
   }
 
   private async verificarRepresentanteMatriculado(

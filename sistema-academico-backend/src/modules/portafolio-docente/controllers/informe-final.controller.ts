@@ -22,15 +22,16 @@ export class InformeFinalController {
   }
 
   @Post()
-  createInformeFinal(@Body() dto: CreateInformeFinalDto) {
-    return this.informeFinalService.createInformeFinal(dto);
+  createInformeFinal(@Req() req: AuthenticatedRequest, @Body() dto: CreateInformeFinalDto) {
+    return this.informeFinalService.createInformeFinal(req.user.idDocente!, dto);
   }
 
   @Patch(':id_informe_final')
   actualizarHorario(
+    @Req() req: AuthenticatedRequest,
     @Param('id_informe_final', ParseIntPipe) idInformeFinal: number,
     @Body() dto: UpdateHorarioInformeFinalDto,
   ) {
-    return this.informeFinalService.actualizarHorario(idInformeFinal, dto.horario);
+    return this.informeFinalService.actualizarHorario(idInformeFinal, req.user.idDocente!, dto.horario);
   }
 }

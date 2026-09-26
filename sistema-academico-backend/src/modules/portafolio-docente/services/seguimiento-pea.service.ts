@@ -14,18 +14,18 @@ export class SeguimientoPeaService {
     private readonly seguimientoPeaRepo: ISeguimientoPeaRepository,
   ) {}
 
-  async create(dto: CreateSeguimientoPeaDto): Promise<SeguimientoPeaResponseDto> {
+  async create(dto: CreateSeguimientoPeaDto, idDocente: number): Promise<SeguimientoPeaResponseDto> {
     const yaExiste = await this.seguimientoPeaRepo.existsByOferta(dto.id_oferta_asignatura);
     if (yaExiste) {
       throw new ConflictException(
         'Ya existe un seguimiento PEA generado para esta oferta académica',
       );
     }
-    return this.seguimientoPeaRepo.create(dto);
+    return this.seguimientoPeaRepo.create(dto, idDocente);
   }
 
-  async getByOferta(idOfertaAsignatura: number): Promise<SeguimientoPeaResponseDto> {
-    const seguimiento = await this.seguimientoPeaRepo.findByOferta(idOfertaAsignatura);
+  async getByOferta(idOfertaAsignatura: number, idDocente: number): Promise<SeguimientoPeaResponseDto> {
+    const seguimiento = await this.seguimientoPeaRepo.findByOferta(idOfertaAsignatura, idDocente);
     if (!seguimiento) {
       throw new NotFoundException('Seguimiento PEA no encontrado para esta oferta académica');
     }
@@ -34,8 +34,9 @@ export class SeguimientoPeaService {
 
   async updateRepresentante(
     idSeguimientoPea: number,
+    idDocente: number,
     dto: UpdateRepresentanteSeguimientoPeaDto,
   ): Promise<void> {
-    return this.seguimientoPeaRepo.updateRepresentante(idSeguimientoPea, dto.id_representante);
+    return this.seguimientoPeaRepo.updateRepresentante(idSeguimientoPea, idDocente, dto.id_representante);
   }
 }

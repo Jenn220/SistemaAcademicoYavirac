@@ -17,7 +17,10 @@ export class PortafolioController {
   }
 
   @Get('oferta/:id_oferta_asignatura/estudiantes')
-  getEstudiantesDeOferta(@Param('id_oferta_asignatura', ParseIntPipe) idOfertaAsignatura: number) {
-    return this.portafolioService.getEstudiantesDeOferta(idOfertaAsignatura);
+  getEstudiantesDeOferta(
+    @Req() req: AuthenticatedRequest,
+    @Param('id_oferta_asignatura', ParseIntPipe) idOfertaAsignatura: number,
+  ) {
+    return this.portafolioService.getEstudiantesDeOferta(idOfertaAsignatura, req.user.idDocente!);
   }
 }

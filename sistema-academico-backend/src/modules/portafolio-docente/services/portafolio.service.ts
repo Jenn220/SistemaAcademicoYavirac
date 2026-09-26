@@ -14,7 +14,7 @@ export class PortafolioService {
     return this.portafolioRepo.findOfertasByDocente(idDocente);
   }
 
-  getEstudiantesDeOferta(idOfertaAsignatura: number): Promise<EstudianteOfertaDto[]> {
-    return this.portafolioRepo.findEstudiantesByOferta(idOfertaAsignatura);
+  getEstudiantesDeOferta(idOfertaAsignatura: number, idDocente: number): Promise<EstudianteOfertaDto[]> {
+    return this.portafolioRepo.findEstudiantesByOferta(idOfertaAsignatura, idDocente);
   }
 }

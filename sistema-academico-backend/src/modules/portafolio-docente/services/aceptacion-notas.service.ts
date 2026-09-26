@@ -14,7 +14,7 @@ export class AceptacionNotasService {
     private readonly aceptacionNotasRepo: IAceptacionNotasRepository,
   ) {}
 
-  async generarReporte(dto: CreateReporteNotasDto): Promise<ReporteNotasResponseDto> {
+  async generarReporte(dto: CreateReporteNotasDto, idDocente: number): Promise<ReporteNotasResponseDto> {
     const yaExiste = await this.aceptacionNotasRepo.existsByOfertaAndTipo(
       dto.id_oferta_asignatura,
       dto.tipo_reporte,
@@ -24,18 +24,18 @@ export class AceptacionNotasService {
         `Ya existe un reporte de ${dto.tipo_reporte} generado para esta materia`,
       );
     }
-    return this.aceptacionNotasRepo.generarReporte(dto);
+    return this.aceptacionNotasRepo.generarReporte(dto, idDocente);
   }
 
-  async getReporte(idOfertaAsignatura: number, tipoReporte: string): Promise<ReporteNotasResponseDto> {
-    const reporte = await this.aceptacionNotasRepo.findByOfertaAndTipo(idOfertaAsignatura, tipoReporte);
+  async getReporte(idOfertaAsignatura: number, tipoReporte: string, idDocente: number): Promise<ReporteNotasResponseDto> {
+    const reporte = await this.aceptacionNotasRepo.findByOfertaAndTipo(idOfertaAsignatura, tipoReporte, idDocente);
     if (!reporte) {
       throw new NotFoundException('Reporte de notas no encontrado para esta materia y tipo');
     }
     return reporte;
   }
 
-  async actualizarNotas(idReporteNotas: number, dto: UpdateNotasAceptacionDto): Promise<void> {
-    return this.aceptacionNotasRepo.actualizarNotas(idReporteNotas, dto.estudiantes);
+  async actualizarNotas(idReporteNotas: number, idDocente: number, dto: UpdateNotasAceptacionDto): Promise<void> {
+    return this.aceptacionNotasRepo.actualizarNotas(idReporteNotas, idDocente, dto.estudiantes);
   }
 }

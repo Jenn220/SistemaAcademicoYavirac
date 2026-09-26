@@ -3,10 +3,6 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class CreateInformeFinalDto {
   @IsNotEmpty()
   @IsNumber()
-  id_docente: number;
-
-  @IsNotEmpty()
-  @IsNumber()
   id_periodo: number;
 
   @IsNotEmpty()

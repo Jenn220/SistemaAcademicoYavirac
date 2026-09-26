@@ -4,8 +4,8 @@ import { PortafolioInformeFinal } from '../domain/informe-final.entity';
 
 export interface IInformeFinalRepository {
   findByDocenteAndOferta(idDocente: number, idOfertaAsignatura: number): Promise<InformeFinalResponseDto | null>;
-  create(dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal>;
-  updateHorario(idInformeFinal: number, horario: string): Promise<PortafolioInformeFinal>;
+  create(idDocente: number, dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal>;
+  updateHorario(idInformeFinal: number, idDocente: number, horario: string): Promise<PortafolioInformeFinal>;
 }
 
 export const INFORME_FINAL_REPOSITORY = 'INFORME_FINAL_REPOSITORY';

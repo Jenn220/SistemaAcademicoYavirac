@@ -64,7 +64,7 @@ export class InformeFinalPg implements IInformeFinalRepository {
   };
 }
 
-  async create(dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal> {
+  async create(idDocente: number, dto: CreateInformeFinalDto): Promise<PortafolioInformeFinal> {
     const oferta = await this.dataSource.query(
       `
       SELECT oa.id_oferta_asignatura
@@ -73,7 +73,7 @@ export class InformeFinalPg implements IInformeFinalRepository {
       WHERE oa.id_docente = $1 AND oa.id_asignatura = $2
         AND oa.id_paralelo = $3 AND pc.id_periodo = $4
       `,
-      [dto.id_docente, dto.id_asignatura, dto.id_paralelo, dto.id_periodo],
+      [idDocente, dto.id_asignatura, dto.id_paralelo, dto.id_periodo],
     );
 
     if (!oferta.length) {
@@ -89,13 +89,22 @@ export class InformeFinalPg implements IInformeFinalRepository {
     return this.repo.save(informe);
   }
 
-  async updateHorario(idInformeFinal: number, horario: string): Promise<PortafolioInformeFinal> {
-    const informe = await this.repo.findOneBy({ idInformeFinal });
-    if (!informe) {
-      throw new NotFoundException('Informe final no encontrado');
+  async updateHorario(idInformeFinal: number, idDocente: number, horario: string): Promise<PortafolioInformeFinal> {
+    const existe = await this.dataSource.query(
+      `
+      SELECT pif.id_informe_final
+      FROM portafolio_informe_final pif
+      JOIN oferta_asignatura oa ON pif.id_oferta_asignatura = oa.id_oferta_asignatura
+      WHERE pif.id_informe_final = $1 AND oa.id_docente = $2
+      `,
+      [idInformeFinal, idDocente],
+    );
+    if (!existe.length) {
+      throw new NotFoundException('Informe final no encontrado para este docente');
     }
 
-    informe.horario = horario;
-    return this.repo.save(informe);
+    const informe = await this.repo.findOneBy({ idInformeFinal });
+    informe!.horario = horario;
+    return this.repo.save(informe!);
   }
 }
