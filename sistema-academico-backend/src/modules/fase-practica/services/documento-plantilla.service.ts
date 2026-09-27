@@ -251,7 +251,8 @@ export class DocumentoPlantillaService {
       `SELECT m.id_matricula, m.id_carrera, m.id_periodo, c.nombre as carrera_nombre, c.codigo as carrera_codigo
         FROM matricula m
         JOIN carrera c ON c.id_carrera = m.id_carrera
-         WHERE m.id_estudiante = $1 AND m.estado = 'ACTIVA'
+         WHERE m.id_estudiante = $1
+        ORDER BY m.id_matricula DESC
         LIMIT 1`,
       [estudiante.id_estudiante],
     );
